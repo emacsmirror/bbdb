@@ -1,3 +1,43 @@
+Sun Oct  5 20:16:00 1997  Matt Simmons <simmonmt@acm.org>
+	* bbdb.el: BBDB 1.53unoff released
+
+Sun Oct  5 19:53:12 1997  Boris Goldowsky <boris@gnu.ai.mit.edu>
+	* tex/bbdb-cols.tex, tex/bbdb-print-brief.tex, tex/bbdb-print.tex,
+	  lisp/bbdb-print.el: New version of bbdb-print
+
+Sun Oct  5 19:51:21 1997  Jamie Zawinski <jwz@netscape.com>
+	* utils/bbdb-cid.pl, utils/bbdb-src.pl, utils/bbdb-to-netscape.el:
+	  New utilities
+	* lisp/bbdb-com.el (bbdb-parse-phone-number): Changed comment to
+	  reflect new area codes that don't have [012] as their second digit
+	* lisp/bbdb-srv.el (bbdb/srv-auto-create-mail-news-dispatcher):
+	  Classification of messages as mail or news
+	* lisp/bbdb-srv.el (bbdb-src-add-phone): Supports caller ID util
+	* lisp/bbdb-srv.el (bbdb/srv-handle-headers): Make sure *BBDB* is
+	  bottommost buffer
+
+Sun Oct  5 19:51:20 1997  Christopher Kline <ckline@media.mit.edu>
+	* utils/bbdb-areacode-split.pl: New utility
+	
+Sun Oct  5 19:51:19 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* A grand reorg: .tex files -> tex subdirectory,
+	                 .texinfo files -> texinfo subdirectory,
+			 .el files -> lisp subdirectory,
+	* Makefile: modified all Makefiles to deal with reorg,
+	            rewrote XEmacs package section
+	* lisp/bbdb.el (bbdb-frob-mode-line): I like version numbers on modelines
+	* lisp/bbdb.el (bbdb-version-date): Separate date from version number
+	* lisp/bbdb.el (bbdb-version): Modified to deal with version
+	  number separate from date
+
+Mon Sep 29 18:49:47 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* Makefile: patch to avoid building bbdb-srv and bbdb-reportmail
+	          if gnuserv and reportmail (respectively) aren't present
+	* bbdb.el (bbdb-frob-mode-line): Print the version number on the
+                  mode line
+
 Sun Sep 28 00:50:07 1997  Matt Simmons  <simmonmt@acm.org>
 
 	* bbdb.el: BBDB 1.52unoff released
