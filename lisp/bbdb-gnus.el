@@ -47,45 +47,6 @@
    (defvar gnus-Subject-mode-map)
    (defvar gnus-Subject-buffer))
 
-(defun bbdb/gnus-get-addresses (&optional only-first-address)
-  "Return real name and email address of sender respectively recipients.
-If an address matches `gnus-ignored-from-addresses' it will be ignored.
-If `gnus-ignored-from-addresses' is nil we use `bbdb-user-mail-names'
-instead.
-The headers to search can be configured by `bbdb-get-addresses-headers'."
-  (save-restriction
-    (goto-char (point-min))
-    (narrow-to-region (point-min)
-              (if (search-forward "\n\n" nil 'force)
-              (match-end 0)
-            (point-max)))
-
-    (let ((headers bbdb-get-addresses-headers)
-          (uninteresting-senders (or (if (boundp 'gnus-ignored-from-addresses)
-                                         gnus-ignored-from-addresses)
-                                     bbdb-user-mail-names))
-          addrlist header adlist fn ad)
-      (while headers
-        (setq header (mail-fetch-field (car headers)))
-        (when header
-          (setq adlist (funcall bbdb-extract-address-components-func header))
-          (while adlist
-            (setq fn (caar adlist)
-                  ad (cadar adlist))
-
-            ;; ignore uninteresting addresses, this is kinda gross!
-            (if (or (not (stringp uninteresting-senders))
-                    (not (or
-                          (and fn (string-match uninteresting-senders fn))
-                          (and ad (string-match uninteresting-senders ad)))))
-                (add-to-list 'addrlist (car adlist)))
-
-            (if (and only-first-address addrlist)
-                (setq adlist nil headers nil)
-              (setq adlist (cdr adlist)))))
-        (setq headers (cdr headers)))
-      (nreverse addrlist))))
-
 (defun bbdb/gnus-get-message-id ()
   "Return the message-id of the current message."
   (save-excursion
@@ -95,7 +56,6 @@ The headers to search can be configured by `bbdb-get-addresses-headers'."
     (let ((case-fold-search t))
       (if (re-search-forward "^Message-ID:\\s-*\\(<.+>\\)" (point-max) t)
           (match-string 1)))))
-
 
 (defcustom bbdb/gnus-update-records-mode 'annotating
 ;  '(if (gnus-new-flag msg) 'annotating 'searching)
@@ -165,8 +125,12 @@ C-g again it will stop scanning."
         (let ((bbdb-update-records-mode (or bbdb/gnus-update-records-mode
                                             bbdb-update-records-mode)))
           (setq records (bbdb-update-records
-                         (bbdb/gnus-get-addresses
-                          bbdb-get-only-first-address-p)
+                         (bbdb-get-addresses
+                          bbdb-get-only-first-address-p
+                          (or (if (boundp 'gnus-ignored-from-addresses)
+                                  gnus-ignored-from-addresses)
+                              bbdb-user-mail-names)
+                          'mail-fetch-field)
                          bbdb/news-auto-create-p
                          offer-to-create)))
         (if (and bbdb-message-caching-enabled msg-id)
@@ -196,12 +160,15 @@ of the BBDB record corresponding to the sender of this message."
       (bbdb-record-edit-notes record t))))
 
 ;;;###autoload
-(defun bbdb/gnus-show-records (&optional headers)
+(defun bbdb/gnus-show-records (&optional address-class)
   "Display the contents of the BBDB for all addresses of this message.
 This buffer will be in `bbdb-mode', with associated keybindings."
   (interactive)
   (gnus-summary-select-article)
-  (let ((bbdb-get-addresses-headers (or headers bbdb-get-addresses-headers))
+  (let ((bbdb-get-addresses-headers
+         (if address-class
+             (list (assoc address-class bbdb-get-addresses-headers))
+           bbdb-get-addresses-headers))
         (bbdb/gnus-update-records-mode 'annotating)
         (bbdb-message-cache nil)
         (bbdb-user-mail-names nil)
@@ -217,7 +184,7 @@ This buffer will be in `bbdb-mode', with associated keybindings."
 (defun bbdb/gnus-show-all-recipients ()
   "Show all recipients of this message. Counterpart to `bbdb/vm-show-sender'."
   (interactive)
-  (bbdb/gnus-show-records  bbdb-get-addresses-to-headers))
+  (bbdb/gnus-show-records 'recipients))
 
 (defun bbdb/gnus-show-sender (&optional show-recipients)
   "Display the contents of the BBDB for the senders of this message.
@@ -230,7 +197,7 @@ This buffer will be in `bbdb-mode', with associated keybindings."
         ((= 16 show-recipients)
          (bbdb/gnus-show-records))
         (t
-         (if (null (bbdb/gnus-show-records bbdb-get-addresses-from-headers))
+         (if (null (bbdb/gnus-show-records 'authors))
              (bbdb/gnus-show-all-recipients)))))
 
 (defun bbdb/gnus-pop-up-bbdb-buffer (&optional offer-to-create)
