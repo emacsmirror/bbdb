@@ -1,3 +1,8 @@
+2000-08-10  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb.el (bbdb-annotate-notes): `regexp-quote' the
+	annotation before matching it on existing notes
+
 2000-08-03  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el (bbdb-notes-default-separator): new user option

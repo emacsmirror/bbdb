@@ -2250,10 +2250,10 @@ Called by `bbdb-auto-notes-hook'."
       (assoc (symbol-name fieldname) (bbdb-propnames))
       (bbdb-set-propnames (append (bbdb-propnames)
                                   (list (list (symbol-name fieldname))))))
-    (let ((notes (bbdb-string-trim
-                   (or (bbdb-record-getprop bbdb-record fieldname) ""))))
-    (if (or (string= "" annotation) (string-match annotation notes))
-        nil
+  (let ((notes (bbdb-string-trim
+                (or (bbdb-record-getprop bbdb-record fieldname) ""))))
+    (unless (or (string= "" annotation)
+                (string-match (regexp-quote annotation) notes))
       (bbdb-record-putprop bbdb-record fieldname
                            (if (or replace (string= notes ""))
                                annotation
