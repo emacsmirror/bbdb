@@ -9,6 +9,7 @@
 @c
 
 @ifinfo
+@dircategory Emacs
 @direntry
 * BBDB: (bbdb).             The Insidious Big Brother Database.
 @end direntry
