@@ -22,6 +22,11 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.55  1997/11/02 07:37:44  simmonmt
+;; Added REPLACE argument to bbdb/gnus-annotate-sender.  Variable to
+;; catch changes to bbdb/gnus-score-default.  Commented out most of score
+;; insinuation code.  Variable aliases.  Added in-bbdb format letter.
+;;
 ;; Revision 1.54  1997/10/26 04:56:51  simmonmt
 ;; Integration of Brian Edmonds <edmonds@cs.ubc.ca>'s gnus-bbdb.el.  Got
 ;; scoring and summary buffer stuff.  Need to do splitting
@@ -64,13 +69,14 @@ the user confirms the creation."
 					    offer-to-create)
 					offer-to-create)))))
 
-(defun bbdb/gnus-annotate-sender (string)
+(defun bbdb/gnus-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
-corresponding to the sender of this message."
+corresponding to the sender of this message.  If REPLACE is non-nil,
+replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
 			 (error "The Insidious Big Brother Database is read-only.")
 			 (read-string "Comments: "))))
-  (bbdb-annotate-notes (bbdb/gnus-update-record t) string))
+  (bbdb-annotate-notes (bbdb/gnus-update-record t) string 'notes replace))
 
 (defun bbdb/gnus-edit-notes (&optional arg)
   "Edit the notes field or (with a prefix arg) a user-defined field
@@ -136,16 +142,20 @@ displaying the record corresponding to the sender of the current message."
   "*The number of characters used to display From: info in GNUS, if you have
 set gnus-optional-headers to 'bbdb/gnus-lines-and-from.")
 
-(defvar bbdb/gnus-header-prefer-real-names nil
+(defvar bbdb/gnus-summary-prefer-real-names nil
   "*If T, then the GNUS subject list will display real names instead of network
 addresses (gnus-optional-headers is 'bbdb/gnus-lines-and-from.)")
+(defvaralias 'bbdb/gnus-header-prefer-real-names
+  'bbdb/gnus-summary-prefer-real-names)
 
-(defvar bbdb/gnus-mark-known-posters t
+(defvar bbdb/gnus-summary-mark-known-posters t
   "*If T, then the GNUS subject list will contain an indication of those 
 messages posted by people who have entries in the Insidious Big
 Brother Database (assuming `gnus-optional-headers' is
 'bbdb/gnus-lines-and-from. [for those versions of Gnus that still have
 `gnus-optional-headers'])")
+(defvaralias 'bbdb/gnus-mark-known-posters
+  'bbdb/gnus-summary-mark-known-posters)
 
 (defvar bbdb/gnus-summary-known-poster-mark "+"
   "This is the default character to prefix author names with if
@@ -153,13 +163,15 @@ gnus-bbdb-summary-mark-known-posters is t.  If the poster's record has
 an entry in the field named by bbdb-message-marker-field, then that will
 be used instead.")
 
-(defvar bbdb/gnus-header-show-bbdb-names t
-  "*If both this variable and bbdb/gnus-header-prefer-real-names are true,
-then for messages from folks who are in your database, the name displayed 
-will be the primary name in the database, rather than the one in the From
-line of the message.  This doesn't affect the names of people who aren't
-in the database, of course.  (gnus-optional-headers must be
-bbdb/gnus-lines-and-from.)")
+(defvar bbdb/gnus-summary-show-bbdb-names t
+  "*If both this variable and bbdb/gnus-summary-prefer-real-names are true,
+then for messages from authors who are in your database, the name
+displayed will be the primary name in the database, rather than the
+one in the From line of the message.  This doesn't affect the names of
+people who aren't in the database, of course.  (gnus-optional-headers
+must be bbdb/gnus-lines-and-from.)")
+(defvaralias 'bbdb/gnus-header-show-bbdb-names
+  'bbdb/gnus-summary-show-bbdb-names)
 
 (defvar bbdb/gnus-summary-prefer-bbdb-data t
   "If t, then for posters who are in our BBDB, replace the information
@@ -171,12 +183,29 @@ otherwise display his/her primary net address if we have one.  If it is
 set to the symbol bbdb, then real names will be used from the BBDB if
 present, otherwise the net address in the post will be used.  If
 bbdb/gnus-summary-prefer-bbdb-data is nil, then this has no effect.")
+(defvaralias 'bbdb/gnus-header-prefer-real-names
+  'bbdb/gnus-summary-prefer-real-names)
 
 (defvar bbdb/gnus-summary-user-format-letter "B"
   "This is the gnus-user-format-function- that will be used to insert
-the information from the BBDB in the summary buffer.  Unless you've
-alread got other code using user format B, you might as well stick with
-the default.")
+the information from the BBDB in the summary buffer (using
+`bbdb/gnus-summary-get-author').  This format code is meant to replace
+codes that insert sender names or addresses (like %A or %n). Unless
+you've alread got other code using user format B, you might as well
+stick with the default.  Additionally, if the value of this variable
+is nil, no format function will be installed for
+`bbdb/gnus-summary-get-author'.  See also
+`bbdb/gnus-summary-in-bbdb-format-letter', which installs a format
+code for `bbdb/gnus-summary-author-in-bbdb'")
+
+(defvar bbdb/gnus-summary-in-bbdb-format-letter "b"
+  "This is the gnus-user-format-function- that will be used to insert
+`bbdb/gnus-summary-known-poster-mark' (using
+`bbdb/gnus-summary-author-in-bbdb') if the poster is in the BBDB, and
+\" \" if not.  If the value of this variable is nil, no format code
+will be installed for `bbdb/gnus-summary-author-in-bbdb'.  See also
+`bbdb/gnus-summary-user-format-letter', which installs a format code
+for `bbdb/gnus-summary-get-author'.")
 
 (defvar bbdb-message-marker-field 'mark-char
   "*The field whose value will be used to mark messages by this user in GNUS.")
@@ -189,8 +218,8 @@ strings.  In the future this should change."
   (let* ((length bbdb/gnus-lines-and-from-length)
 	 (lines (nntp-header-lines header))
 	 (from (nntp-header-from header))
-	 (data (and (or bbdb/gnus-mark-known-posters
-			bbdb/gnus-header-show-bbdb-names)
+	 (data (and (or bbdb/gnus-summary-mark-known-posters
+			bbdb/gnus-summary-show-bbdb-names)
 		    (condition-case ()
 			(mail-extract-address-components from)
 		      (error nil))))
@@ -224,7 +253,7 @@ strings.  In the future this should change."
 		 (while (string-match "[][]" name)
 		   (aset name (match-beginning 0) ? ))))
       (setq string (format "%s%3d:%s"
-			   (if (and record bbdb/gnus-mark-known-posters)
+			   (if (and record bbdb/gnus-summary-mark-known-posters)
 			       (or (bbdb-record-getprop
 				    record bbdb-message-marker-field)
 				   "*")
@@ -235,7 +264,6 @@ strings.  In the future this should change."
 	    ((< L length) (concat string (make-string (- length L) ? )))
 	    (t string))))
 
-;;;###autoload
 (defun bbdb/gnus-summary-get-author (header)
   "Given a GNUS message header, returns the appropriate piece of
 information to identify the author in a GNUS summary line, depending on
@@ -282,6 +310,22 @@ This function is meant to be used with the user function defined in
 		" ")
 	    name)))
 
+(defun bbdb/gnus-summary-author-in-bbdb (header)
+  "Given a Gnus message header, returns
+  `bbdb/gnus-summary-known-poster-mark' if the poster is in the BBDB,
+  \" \" otherwise."
+  (let* ((from (mail-header-from header))
+	 (data (condition-case ()
+		   (mail-extract-address-components from)
+		 (error nil)))
+	 (name (car data))
+	 (net (cadr data)))
+    (if (and data (bbdb-search-simple name
+		   (if (and net bbdb-canonicalize-net-hook)
+		       (bbdb-canonicalize-address net)
+		     net)))
+	bbdb/gnus-summary-known-poster-mark " ")))
+
 ;;
 ;; Scoring
 ;;
@@ -294,6 +338,11 @@ checked for a score to add to the net addresses in the same record.")
   "If this is set, then every net address in the BBDB that does not have
 an associated score field will be assigned this score.  A value of nil
 implies a default score of zero.")
+
+(defvar bbdb/gnus-score-default-internal nil
+  "Internal variable for detecting changes to
+`bbdb/gnus-score-default'.  You should not set this variable directly -
+set `bbdb/gnus-score-default' instead.")
 
 (defvar bbdb/gnus-score-alist nil
   "The text version of the scoring structure returned by
@@ -328,13 +377,20 @@ addresses better than the traditionally static global scorefile."
 
 (defun bbdb/gnus-score-as-text (group)
   "Returns a SCORE file format string built from the BBDB."
-  (if (and bbdb/gnus-score-alist (not bbdb/gnus-score-rebuild-alist)) nil
+  (when (or (when (/= (or bbdb/gnus-score-default 0)
+		      (or bbdb/gnus-score-default-internal 0))
+	      (setq bbdb/gnus-score-default-internal
+		    bbdb/gnus-score-default)
+	      t)
+	    (not bbdb/gnus-score-alist)
+	    bbdb/gnus-score-rebuild-alist)
     (setq bbdb/gnus-score-rebuild-alist nil)
     (setq bbdb/gnus-score-alist
 	  (concat "((touched nil) (\"from\"\n"
 		  (mapconcat
 		   (lambda (rec)
-		     (let ((score (or (bbdb-record-getprop rec bbdb/gnus-score-field)
+		     (let ((score (or (bbdb-record-getprop rec
+							   bbdb/gnus-score-field)
 				      bbdb/gnus-score-default))
 			   (net (bbdb-record-net rec)))
 		       (if (not (and score net)) nil
@@ -365,24 +421,47 @@ addresses better than the traditionally static global scorefile."
 	 (define-key gnus-summary-mode-map ";" 'bbdb/gnus-edit-notes)))
 
   ;; Set up user field for use in gnus-summary-line-format
-  (if (eval (read (concat "(fboundp 'gnus-user-format-function-"
-			  bbdb/gnus-summary-user-format-letter ")")))
-      (error "Redefine bbdb/gnus-summary-user-format-letter or %uB in Gnus")
-    (eval (read (concat "(defun gnus-user-format-function-"
-			bbdb/gnus-summary-user-format-letter
-			" (header) (bbdb/gnus-summary-get-author header))"))))
+  (let ((get-author-user-fun (intern
+			      (concat "gnus-user-format-function-"
+				      bbdb/gnus-summary-user-format-letter)))
+	(in-bbdb-user-fun (intern
+			   (concat "gnus-user-format-function-"
+				   bbdb/gnus-summary-in-bbdb-format-letter))))
+					; The big one - whole name
+    (when bbdb/gnus-summary-user-format-letter
+      (if (and (fboundp get-author-user-fun)
+	       (not (eq (symbol-function get-author-user-fun)
+			'bbdb/gnus-summary-get-author)))
+	  (bbdb-warn (concat
+		      "Redefine bbdb/gnus-summary-user-format-letter, "
+		      "%%u" bbdb/gnus-summary-user-format-letter " in Gnus, "
+		      "or set bbdb/gnus-define-format-functions to nil."))
+	(fset get-author-user-fun 'bbdb/gnus-summary-get-author)))
+    
+    ; One tick.  One tick only, please
+    (when bbdb/gnus-summary-in-bbdb-format-letter
+      (if (and (fboundp in-bbdb-user-fun)
+	       (not (eq (symbol-function in-bbdb-user-fun)
+			'bbdb/gnus-summary-author-in-bbdb)))
+	  (bbdb-warn (concat
+		      "Redefine bbdb/gnus-summary-in-bbdb-format-letter, "
+		      "%%u" bbdb/gnus-summary-in-bbdb-format-letter " in Gnus,"
+		      " or set bbdb/gnus-define-format-functions to nil."))
+	(fset in-bbdb-user-fun 'bbdb/gnus-summary-author-in-bbdb))))
 
   ;; Scoring
   (add-hook 'bbdb-after-change-hook 'bbdb/gnus-score-invalidate-alist)
-  (if (boundp 'gnus-score-find-score-files-function)
-      (setq gnus-score-find-score-files-function
-	    (cond ((functionp gnus-score-find-score-files-function)
-		   (list gnus-score-find-score-files-function
-			 'bbdb/gnus-score))
-		  ((listp gnus-score-find-score-files-function)
-		   (append gnus-score-find-score-files-function
-			   'bbdb/gnus-score))
-		  (t 'bbdb/gnus-score)))))
+;  (setq gnus-score-find-score-files-function
+;	(if (boundp 'gnus-score-find-score-files-function)
+;	    (cond ((functionp gnus-score-find-score-files-function)
+;		   (list gnus-score-find-score-files-function
+;			 'bbdb/gnus-score))
+;		  ((listp gnus-score-find-score-files-function)
+;		   (append gnus-score-find-score-files-function
+;			   'bbdb/gnus-score))
+;		  (t 'bbdb/gnus-score))
+;	  'bbdb/gnus-score))
+  )
 
 (defun bbdb-insinuate-message ()
   "Call this function to hook BBDB into message-mode."
