@@ -1,3 +1,9 @@
+2000-07-20  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb-com.el (bbdb-finger): use `bbdb-get-record'
+	* lisp/bbdb-whois.el (bbdb-whois): use `bbdb-get-record'
+	* lisp/bbdb-ftp.el (bbdb-ftp): use `bbdb-get-record'
+
 2000-07-18  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb-com.el (bbdb-define-all-aliases): distinguish between

@@ -25,6 +25,11 @@
 ;; $Revision$
 ;;
 ;; $Log$
+;; Revision 1.58  2000/07/20 21:40:40  sds
+;; * lisp/bbdb-com.el (bbdb-finger): use `bbdb-get-record'
+;; * lisp/bbdb-whois.el (bbdb-whois): use `bbdb-get-record'
+;; * lisp/bbdb-ftp.el (bbdb-ftp): use `bbdb-get-record'
+;;
 ;; Revision 1.57  2000/07/13 17:07:00  sds
 ;; minor doc fixes to comply with the standards
 ;;
@@ -135,36 +140,27 @@
       nil)))
 
 ;;;###autoload
-(defun bbdb-ftp (bbdb-record)
+(defun bbdb-ftp (bbdb-record &optional which)
   "Use ange-ftp to open an ftp-connection to a BBDB record's name.
 If this command is executed from the *BBDB* buffer, ftp the site of
-the record at point; otherwise, it prompts for an ftp-site.
-\\<bbdb-mode-map>"
-  (interactive (list (if (string= bbdb-buffer-name (buffer-name))
-			 (bbdb-current-record)
-		       (let (r (p "BBDB Ftp: "))
-			 (while (not r)
-			   (setq r (bbdb-completing-read-record p))
-			   (if (not r) (ding))
-			   (setq p "Not in the BBDB!  Ftp: "))
-			 r))))
-  (if (not (consp bbdb-record)) (setq bbdb-record (list bbdb-record)))
-  (while bbdb-record
-    (bbdb-ftp-internal (car bbdb-record))
-    (setq bbdb-record (cdr bbdb-record))))
+the record at point; otherwise, it prompts for an ftp-site."
+  (interactive (list (bbdb-get-record "Visit (FTP): ")
+                     (or current-prefix-arg 0)))
+  (if (bbdb-record-ftp-site bbdb-record)
+      (bbdb-ftp-internal bbdb-record)
+      (find-file-other-window
+       (read-string "fetch: " (bbdb-get-field bbdb-record 'ftp which)))))
 
 (defun bbdb-ftp-internal (bbdb-record)
-  (let* ((site (or (bbdb-record-ftp-site bbdb-record) ""))
-		 (dir  (or (bbdb-record-ftp-dir bbdb-record) bbdb-default-ftp-dir))
-		 (user (or (bbdb-record-ftp-user bbdb-record) bbdb-default-ftp-user))
-		 (file-string (concat "/" user "@" site ":" dir )))
-	(if bbdb-inside-electric-display
-		(bbdb-electric-throw-to-execute (list 'bbdb-ftp-internal bbdb-record)))
-    (cond (site
-		   (find-file-other-window file-string))
-		  (t
-		   (error
-			"Not an ftp site.  Check bbdb-ftp-site-name-designator-prefix")))))
+  (let* ((site (bbdb-record-ftp-site bbdb-record))
+         (dir  (or (bbdb-record-ftp-dir bbdb-record) bbdb-default-ftp-dir))
+         (user (or (bbdb-record-ftp-user bbdb-record) bbdb-default-ftp-user))
+         (file-string (concat "/" user "@" site ":" dir )))
+    (if bbdb-inside-electric-display
+        (bbdb-electric-throw-to-execute (list 'bbdb-ftp-internal bbdb-record)))
+    (if site
+        (find-file-other-window file-string)
+      (error "Not an ftp site.  Check bbdb-ftp-site-name-designator-prefix"))))
 
 (defun bbdb-read-new-ftp-site-record ()
   "Prompt for and return a completely new BBDB record that is

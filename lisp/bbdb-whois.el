@@ -38,19 +38,11 @@
 
 ;;;###autoload
 (defun bbdb-whois (the-record &optional server)
-  (interactive (list (if (string= bbdb-buffer-name (buffer-name))
-			 (bbdb-current-record)
-		       (let (r (p "BBDB Whois: "))
-			 (while (not r)
-			   (setq r (bbdb-completing-read-record p))
-			   (if (not r) (ding))
-			   (setq p "Not in the BBDB!  Whois: "))
-			 r))
+  (interactive (list (bbdb-get-record "BBDB Whois: ")
 		     (and current-prefix-arg
 			  (read-string "Query whois server: "
 				       bbdb-whois-server))))
-  (or server
-      (setq server bbdb-whois-server))
+  (or server (setq server bbdb-whois-server))
   (if (or (bbdb-record-lastname the-record) (bbdb-record-firstname the-record))
       ;; XXX we seem to get called with a vector of nils.
       (save-excursion
@@ -178,7 +170,7 @@
 				       (mapconcat 'identity
 						  (nreverse lines)
 						  "\n")))
-	    
+
 	      ;; Snarf the last-update date.
 	      (if (re-search-forward "Record last updated on \\(\\S *\\)\\."
 				     nil t)
@@ -192,7 +184,7 @@
 	  (message "No whois information for %s" bbdb-whois-name)))
       (delete-process proc)
       (kill-buffer (current-buffer)))))
-	      
+
 (defun bbdb-find-phone (string record)
   "Return the vector entry if STRING is a phone number listed in RECORD."
   (let ((phone nil)
