@@ -29,13 +29,13 @@
 %%% The address-list file should look something like this:
 
 %%% \input file          % this format file's filename
-%%% \setsize6            % point size of type to use
-%%%                      % or \setpssize6 to use PostScript fonts. (optional)
-%%% \setseparator3       % which style of separators, 0-7
+%%% \setsize{6}          % point size of type to use
+%%%                      % or \setpssize{6} to use PostScript fonts. (optional)
+%%% \setseparator{3}     % which style of separators, 0-7
 %%%
 %%% \separator{A}        % include a separator here
 %%%
-%%% \beginrecord
+%%% \beginrecord         % and start a record
 %%% \name{A. Name}
 %%% \phone{location: (xxx) xxx-xxxx}
 %%% \address{1234 Main Street\\
@@ -44,7 +44,7 @@
 %%% \notes{blah blah}
 %%% \endrecord
 %%% 
-%%% \endaddresses
+%%% \endaddresses        % done
 %%% \bye
 
 \nopagenumbers
@@ -63,7 +63,7 @@
   \font\bf=ecbx#1
   \font\it=\ifnum #1=6 ecti7 \else ecti#1 \fi
   \font\tt=ectt#1
-  \font\bigbf=ecbx10 scaled \magstep3
+  \font\bigbf=ecbx#1 scaled \magstep3
   \rm
   \baselineskip=#1pt
   \ifnum #1>9 \advance\baselineskip by 1pt \fi

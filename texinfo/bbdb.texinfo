@@ -8,6 +8,10 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.22  2000/04/16 12:47:00  kuepper
+@c bbdb-print documentation
+@c Fix \bigbf
+@c
 @c Revision 1.21  2000/03/30 11:13:59  bbdb-writer
 @c Fixed xref entries per mail from gareth rees.
 @c
@@ -2701,8 +2705,9 @@ List of TeX files to @code{\input}.  If the filenames are not absolute, the
 files must be located somewhere in the TeX input path.
 
 @item ps-fonts
-Postscript fonts will be used if the value is non-@code{nil}.  Standard TeX
-fonts will be used otherwise.  
+Postscript fonts (TimesNewRoman and Courier) will be used if the value
+is non-@code{nil}.  Standard TeX fonts (ec-fonts) will be used
+otherwise.
 
 @item font-size
 The integer point size of the font to be used.
