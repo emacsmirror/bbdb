@@ -20,14 +20,14 @@
 
 ;;; This file lets you do stuff like
 ;;;
-;;;	o  automatically update a "timestamp" field each time a record is
+;;; o  automatically update a "timestamp" field each time a record is
 ;;;        modified
-;;;	o  automatically add some string to the notes field(s) based on the
-;;;	   contents of header fields of the current message
-;;;	o  only automatically create entries when certain header fields
-;;;	   are matched
-;;;	o  don't automatically create entries when certain header fields
-;;;	   are matched
+;;; o  automatically add some string to the notes field(s) based on the
+;;;    contents of header fields of the current message
+;;; o  only automatically create entries when certain header fields
+;;;    are matched
+;;; o  don't automatically create entries when certain header fields
+;;;    are matched
 ;;;
 ;;; Read the docstrings; read the texinfo file.
 
@@ -35,9 +35,13 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.62  2001/01/08 12:35:14  waider
+;; Added Bill Carpenter-provided function
+;;   'bbdb-ignore-selected-messages-confirmation'
+;;
 ;; Revision 1.61  2000/11/16 11:59:40  fenk
 ;; (bbdb-extract-field-value): added
-;; 	(case-fold-search t) as headers should be checked case insensitive
+;;  (case-fold-search t) as headers should be checked case insensitive
 ;;
 ;; Revision 1.60  2000/08/03 18:04:50  sds
 ;; * lisp/bbdb.el (bbdb-notes-default-separator): new user option
@@ -95,8 +99,8 @@
 for the given record which contains the time when it was last modified.  If
 there is such a field there already, it is changed, otherwise it is added."
   (bbdb-record-putprop record 'timestamp (format-time-string
-					  bbdb-time-internal-format
-					  (current-time))))
+                      bbdb-time-internal-format
+                      (current-time))))
 
 ;;;###autoload
 (defun bbdb-creation-date-hook (record)
@@ -104,8 +108,8 @@ there is such a field there already, it is changed, otherwise it is added."
 which is the current time string."
   ;; hey buddy, we've known about your antics since the eighties...
   (bbdb-record-putprop record 'creation-date (format-time-string
-					      bbdb-time-internal-format
-					      (current-time))))
+                          bbdb-time-internal-format
+                          (current-time))))
 
 
 ;;; Determining whether to create a record based on the content of the
@@ -116,23 +120,23 @@ which is the current time string."
   "Returns a marker at the beginning of the header block of the current
 message.  This will not necessarily be in the current buffer."
   (cond ((memq major-mode '(vm-mode vm-summary-mode))
-	 (if vm-mail-buffer (set-buffer vm-mail-buffer))
-	 (vm-start-of (car vm-message-pointer)))
-	((memq major-mode '(rmail-mode rmail-summary-mode))
-	 (if (and (boundp 'rmail-buffer) rmail-buffer)
-	     (set-buffer rmail-buffer))
-	 (point-min-marker))
-	((memq major-mode
-	       '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
-	 (set-buffer gnus-article-buffer)
-	 (point-min-marker))
-	;; MH-E clause added by knabe.
-	((eq major-mode 'mh-folder-mode)
-	 (mh-show)
-	 (set-buffer mh-show-buffer)
-	 (point-min-marker))
-	(t (point-min-marker))
-	))
+     (if vm-mail-buffer (set-buffer vm-mail-buffer))
+     (vm-start-of (car vm-message-pointer)))
+    ((memq major-mode '(rmail-mode rmail-summary-mode))
+     (if (and (boundp 'rmail-buffer) rmail-buffer)
+         (set-buffer rmail-buffer))
+     (point-min-marker))
+    ((memq major-mode
+           '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
+     (set-buffer gnus-article-buffer)
+     (point-min-marker))
+    ;; MH-E clause added by knabe.
+    ((eq major-mode 'mh-folder-mode)
+     (mh-show)
+     (set-buffer mh-show-buffer)
+     (point-min-marker))
+    (t (point-min-marker))
+    ))
 
 
 ;;;###autoload
@@ -148,19 +152,19 @@ beginning of the message headers."
   ;; exist only in the message.
   (setq field-name (concat (regexp-quote field-name) "[ \t]*:[ \t]*"))
   (let ((case-fold-search t)
-	done)
+    done)
     (while (not (or done
-		    (looking-at "\n") ; we're at BOL
-		    (eobp)))
+            (looking-at "\n") ; we're at BOL
+            (eobp)))
       (if (looking-at field-name)
-	  (progn
-	    (goto-char (match-end 0))
-	    (setq done (buffer-substring (point)
-					 (progn (end-of-line) (point))))
-	    (while (looking-at "\n[ \t]")
-	      (setq done (concat done " "
-			   (buffer-substring (match-end 0)
-			     (progn (end-of-line 2) (point))))))))
+      (progn
+        (goto-char (match-end 0))
+        (setq done (buffer-substring (point)
+                     (progn (end-of-line) (point))))
+        (while (looking-at "\n[ \t]")
+          (setq done (concat done " "
+               (buffer-substring (match-end 0)
+                 (progn (end-of-line 2) (point))))))))
       (forward-line 1))
     done))
 
@@ -180,8 +184,8 @@ Maximegalon U., or (that's *or*) people posting about time travel.
 See also bbdb-ignore-some-messages-alist, which has the opposite effect."
   :group 'bbdb-noticing-records
   :type '(repeat (cons
-		  (string :tag "Header name")
-		  (regexp :tag "Regex to match on header value"))))
+          (string :tag "Header name")
+          (regexp :tag "Regex to match on header value"))))
 
 
 (defcustom bbdb-ignore-some-messages-alist '()
@@ -200,41 +204,77 @@ or messages sent to or CCed to either of two mailing lists.
 See also bbdb-ignore-most-messages-alist, which has the opposite effect."
   :group 'bbdb-noticing-records
   :type '(repeat (cons
-		  (string :tag "Header name")
-		  (regexp :tag "Regex to match on header value"))))
+          (string :tag "Header name")
+          (regexp :tag "Regex to match on header value"))))
 
 
 ;;;###autoload
 (defun bbdb-ignore-most-messages-hook (&optional invert-sense)
   "For use as the value of bbdb/news-auto-create-p or bbdb/mail-auto-create-p.
 This will automatically create BBDB entries for messages which match
-the bbdb-ignore-some-messages-alist (which see) and *no* others."
+the bbdb-ignore-most-messages-alist (which see) and *no* others."
   ;; don't need to optimize this to check the cache, because if
   ;; bbdb/*-update-record uses the cache, this won't be called.
   (let ((rest (if invert-sense
-		  bbdb-ignore-some-messages-alist
-		  bbdb-ignore-most-messages-alist))
-	(case-fold-search t)
-	(done nil)
-	(b (current-buffer))
-	(marker (bbdb-header-start))
-	field regexp fieldval)
+          bbdb-ignore-some-messages-alist
+          bbdb-ignore-most-messages-alist))
+    (case-fold-search t)
+    (done nil)
+    (b (current-buffer))
+    (marker (bbdb-header-start))
+    field regexp fieldval)
     (set-buffer (marker-buffer marker))
     (save-restriction
       (widen)
       (while (and rest (not done))
-	(goto-char marker)
-	(setq field (car (car rest))
-	      regexp (cdr (car rest))
-	      fieldval (bbdb-extract-field-value field))
-	(if (and fieldval (string-match regexp fieldval))
-	    (setq done t))
-	(setq rest (cdr rest))))
+    (goto-char marker)
+    (setq field (car (car rest))
+          regexp (cdr (car rest))
+          fieldval (bbdb-extract-field-value field))
+    (if (and fieldval (string-match regexp fieldval))
+        (setq done t))
+    (setq rest (cdr rest))))
     (set-buffer b)
     (if invert-sense
-	(not done)
-	done)))
+    (not done)
+    done)))
 
+;;; Provided by Bill Carpenter.
+(defvar bbdb-ignore-selected-messages-confirmation
+  "*If bbdb-ignore-selected-messages-hook is used as an
+auto-create-hook, this variable governs whether you are prompted for
+creation of BBDB entries." nil)
+
+(defun bbdb-ignore-selected-messages-hook ()
+  "For use as a bbdb/news-auto-create-hook or bbdb/mail-auto-create-hook.
+This will automatically create BBDB entries for messages based on a
+combination of bbdb-ignore-some-messages-alist and
+bbdb-ignore-most-messages-alist.  It first looks at the SOME list.  If
+that doesn't disqualify a message, then it looks at the MOST list.  If
+that qualifies the message, the record is auto-created, but a
+confirmation is conditionally sought, based on the value of
+bbdb-ignore-selected-messages-confirmation."
+  (if (bbdb-ignore-some-messages-hook)
+      ;; wasn't ruled out
+      (if (bbdb-ignore-most-messages-hook)
+          ;; was ruled in
+          (if bbdb-ignore-selected-messages-confirmation
+              (let ((case-fold-search t)
+                    (marker (bbdb-header-start))
+                    record-exists from)
+                (save-excursion
+                  (set-buffer (marker-buffer marker))
+                  (save-restriction
+                    (widen)
+                    (goto-char marker)
+                    (setq from (bbdb-extract-field-value "FROM"))))
+                (setq record-exists (bbdb-annotate-message-sender from))
+                (or record-exists
+                    (y-or-n-p (concat "Create BBDB record from " from "? "))))
+            ;; no confirmation desired so let it be
+            t)
+        nil)
+    nil))
 
 ;;;###autoload
 (defun bbdb-ignore-some-messages-hook ()
@@ -309,11 +349,11 @@ a different value when in mail as when in news.
 See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'."
   :group 'bbdb-noticing-records
   :type '(repeat (bbdb-alist-with-header
-		  (string :tag "Header name")
-		  (repeat (cons
-			   (regexp :tag "Regexp to match on header value")
-			   (string :tag "String for notes if regexp matches")))
-		  )))
+          (string :tag "Header name")
+          (repeat (cons
+               (regexp :tag "Regexp to match on header value")
+               (string :tag "String for notes if regexp matches")))
+          )))
 
 (defcustom bbdb-auto-notes-ignore nil
   "Alist of headers and regexps to ignore in `bbdb-auto-notes-hook'.
@@ -331,8 +371,8 @@ to a single field, not to the entire message.  For that, use the variable
 `bbdb-auto-notes-ignore-all'."
   :group 'bbdb-noticing-records
   :type '(repeat (cons
-		  (string :tag "Header name")
-		  (regexp :tag "Regexp to match on header value"))))
+          (string :tag "Header name")
+          (regexp :tag "Regexp to match on header value"))))
 
 (defcustom bbdb-auto-notes-ignore-all nil
   "Alist of headers and regexps which cause the entire message to be ignored
@@ -349,8 +389,8 @@ Note that this is different from `bbdb-auto-notes-ignore', which applies
 only to a particular header field, rather than the entire message."
   :group 'bbdb-noticing-records
   :type '(repeat (cons
-		  (string :tag "Header name")
-		  (regexp :tag "Regexp to match on header value"))))
+          (string :tag "Header name")
+          (regexp :tag "Regexp to match on header value"))))
 
 
 ;;;###autoload
@@ -473,30 +513,30 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
   ;; Note that in Emacs 18 match data are clipped to current buffer
   ;; size...so the buffer had better not be smaller than STRING (arrrrggggh!!)
   (let ((pos 0)
-	(len (length newtext))
-	(expanded-newtext ""))
+    (len (length newtext))
+    (expanded-newtext ""))
     (while (< pos len)
       (setq expanded-newtext
-	    (concat expanded-newtext
-		    (let ((c (aref newtext pos)))
-		      (if (= ?\\ c)
-			  (cond ((= ?\& (setq c (aref newtext
-						      (setq pos (1+ pos)))))
-				 (substring string
-					    (match-beginning 0)
-					    (match-end 0)))
-				((and (>= c ?1)
-				      (<= c ?9))
-				 ;; return empty string if N'th
-				 ;; sub-regexp did not match:
-				 (let ((n (- c ?0)))
-				   (if (match-beginning n)
-				       (substring string
-						  (match-beginning n)
-						  (match-end n))
-				     "")))
-				(t (char-to-string c)))
-			(char-to-string c)))))
+        (concat expanded-newtext
+            (let ((c (aref newtext pos)))
+              (if (= ?\\ c)
+              (cond ((= ?\& (setq c (aref newtext
+                              (setq pos (1+ pos)))))
+                 (substring string
+                        (match-beginning 0)
+                        (match-end 0)))
+                ((and (>= c ?1)
+                      (<= c ?9))
+                 ;; return empty string if N'th
+                 ;; sub-regexp did not match:
+                 (let ((n (- c ?0)))
+                   (if (match-beginning n)
+                       (substring string
+                          (match-beginning n)
+                          (match-end n))
+                     "")))
+                (t (char-to-string c)))
+            (char-to-string c)))))
       (setq pos (1+ pos)))
     expanded-newtext))
 
@@ -506,11 +546,11 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
 
 (defcustom bbdb-canonical-hosts
   (mapconcat 'regexp-quote
-	     '("cs.cmu.edu" "ri.cmu.edu" "edrc.cmu.edu" "andrew.cmu.edu"
-	       "mcom.com" "netscape.com" "cenatls.cena.dgac.fr"
-	       "cenaath.cena.dgac.fr" "irit.fr" "enseeiht.fr" "inria.fr"
-	       "cs.uiuc.edu" "xemacs.org")
-	     "\\|")
+         '("cs.cmu.edu" "ri.cmu.edu" "edrc.cmu.edu" "andrew.cmu.edu"
+           "mcom.com" "netscape.com" "cenatls.cena.dgac.fr"
+           "cenaath.cena.dgac.fr" "irit.fr" "enseeiht.fr" "inria.fr"
+           "cs.uiuc.edu" "xemacs.org")
+         "\\|")
   "Certain sites have a single mail-host; for example, all mail originating
 at hosts whose names end in \".cs.cmu.edu\" can (and probably should) be
 addressed to \"user@cs.cmu.edu\" instead.  This variable lists other hosts
@@ -520,7 +560,7 @@ which behave the same way."
 
 (defmacro bbdb-match-substring (string match)
   (list 'substring string
-	(list 'match-beginning match) (list 'match-end match)))
+    (list 'match-beginning match) (list 'match-end match)))
 
 ;;;###autoload
 (defun sample-bbdb-canonicalize-net-hook (addr)
@@ -567,7 +607,7 @@ which behave the same way."
    ;; more than 80 characters long...)
    ;;
    ((string-match "\\`\\([^@!]+\\)%\\([^@%!]+\\)@hplb\\.hpl\\.hp\\.com\\'"
-		  addr)
+          addr)
     (concat (bbdb-match-substring addr 1) "@" (bbdb-match-substring addr 2)))
    ;;
    ;; Another local mail-configuration botch: sometimes mail shows up
@@ -602,19 +642,19 @@ which behave the same way."
   "Deletes redundant network addresses.
 For use as a value of `bbdb-change-hook'.  See `bbdb-net-redundant-p'."
   (let* ((nets (bbdb-record-net record))
-	 (rest nets)
-	 net new redundant)
+     (rest nets)
+     net new redundant)
     (while rest
       (setq net (car rest))
       (if (bbdb-net-redundant-p net nets)
-	  (setq redundant (cons net redundant))
-	(setq new (cons net new)))
+      (setq redundant (cons net redundant))
+    (setq new (cons net new)))
       (setq rest (cdr rest)))
     (cond (redundant
-	   (message "Deleting redundant nets %s..."
-		    (mapconcat 'identity (nreverse redundant) ", "))
-	   (setq new (nreverse new))
-	   (bbdb-record-set-net record new)
-	   t))))
+       (message "Deleting redundant nets %s..."
+            (mapconcat 'identity (nreverse redundant) ", "))
+       (setq new (nreverse new))
+       (bbdb-record-set-net record new)
+       t))))
 
 (provide 'bbdb-hooks)
