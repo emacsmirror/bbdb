@@ -26,25 +26,31 @@
 (require 'bbdb)
 (require 'bbdb-com)
 
+;; compiler whinage. Some of this is legacy stuff that would probably
+;; be better deleted.
+(defvar scrollbar-height nil)
+(or (fboundp 'set-specifier)
+    (fset 'set-specifier 'ignore))
+
 (if (string-match "XEmacs\\|Lucid" emacs-version)
     (progn
       (define-key bbdb-mode-map 'button3 'bbdb-menu)
       (define-key bbdb-mode-map 'button2 (lambda (e)
                                            (interactive "e")
                                            (mouse-set-point e)
-                                           (bbdb-elide-record nil))))
+                                           (bbdb-toggle-records-display-layout 0 ))))
   (define-key bbdb-mode-map [mouse-3] 'bbdb-menu)
   (define-key bbdb-mode-map [mouse-2] (lambda (e)
                                         (interactive "e")
                                         (mouse-set-point e)
-                                        (bbdb-elide-record nil))))
+                                        (bbdb-toggle-records-display-layout 0))))
 
 (eval-and-compile
   (if (fboundp 'find-face)
       (fset 'bbdb-find-face 'find-face)
     (if (fboundp 'internal-find-face) ;; GRR.
         (fset 'bbdb-find-face 'internal-find-face)
-      (fset bbdb-find-face 'ignore)))) ; noop - you probably don't HAVE faces.
+      (fset 'bbdb-find-face 'ignore)))) ; noop - you probably don't HAVE faces.
 
 (or (bbdb-find-face 'bbdb-name)
     (face-differs-from-default-p (make-face 'bbdb-name))
@@ -214,7 +220,8 @@
 Not done for GNU Emacs just yet, since it doesn't have image support
 as of GNU Emacs 20.7"
   (if (not (or (and (boundp 'highlight-headers-hack-x-face-p)
-                    highlight-headers-hack-x-face-p)
+                    (funcall (intern                               ;; compiler
+                              "highlight-headers-hack-x-face-p"))) ;; ick.
                (and (featurep 'xemacs)
                     (string-match "^21\\." emacs-version)))) ;; XXX
       () ;; nothing doing
@@ -227,7 +234,7 @@ as of GNU Emacs 20.7"
         (condition-case data
             (let* ((h (concat "X-Face: " (car face))) ;; from vm-display-xface
                    (g (intern h vm-xface-cache)))
-              (if (find-face 'vm-xface) ;; heck, why not use the same face?
+              (if (bbdb-find-face 'vm-xface) ;; use the same face as VM
                   nil
                 (make-face 'vm-xface)
                 (set-face-background 'vm-xface "white")
