@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.4  1998/01/06 06:45:39  simmonmt
+# Added deploy target.  Added migrate.el
+#
 # Revision 1.3  1997/11/02 06:32:38  simmonmt
 # Support for bbdb-sc.el
 #
@@ -45,7 +48,8 @@ MHE	= -eval '(progn (if (not (string-match "$(MHEDIR)" ""))            \
 
 DEPSRCS=	bbdb-com.el  bbdb-hooks.el  bbdb-gnus.el  bbdb-mhe.el \
 		bbdb-rmail.el bbdb-vm.el bbdb-ftp.el bbdb-whois.el \
-		bbdb-xemacs.el bbdb-print.el bbdb-srv.el bbdb-reportmail.el
+		bbdb-xemacs.el bbdb-print.el bbdb-srv.el bbdb-reportmail.el \
+		bbdb-migrate.el
 
 DEPBINS=	${DEPSRCS:.el=.elc}
 SRCS=		bbdb.el  $(DEPSRCS)
@@ -66,6 +70,7 @@ auto-autoloads.elc: auto-autoloads.el
 bbdb.elc:            bbdb.el
 bbdb-com.elc:        bbdb.elc bbdb-com.el
 bbdb-ftp.elc:        bbdb.elc bbdb-ftp.el
+bbdb-migrate.elc:    bbdb.elc bbdb-migrate.el
 bbdb-print.elc:      bbdb.elc bbdb-print.el
 bbdb-snarf.elc:      bbdb.elc bbdb-snarf.el
 bbdb-whois.elc:      bbdb.elc bbdb-whois.el
@@ -104,8 +109,9 @@ bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
 
 autoloads: auto-autoloads.elc
 
-extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc bbdb-srv.elc \
-	bbdb-reportmail.elc bbdb-snarf.elc bbdb-w3.elc bbdb-sc.elc
+extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc  \
+	bbdb-srv.elc bbdb-reportmail.elc bbdb-snarf.elc bbdb-w3.elc \
+	bbdb-sc.elc bbdb-migrate.el
 bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc extras
 rmail:	bbdb bbdb-rmail.elc
 vm:	bbdb bbdb-vm.elc
@@ -114,6 +120,19 @@ gnus:	bbdb bbdb-gnus.elc
 # aliases
 mh:	mhe
 mh-e:	mhe
+
+deploy:
+	@for fname in `cd RCS; ls |sed 's/,v$$//g'` ; do \
+	  if [ -w "$$fname" ] ; then \
+	    echo "File $$fname needs to be checked in" ; \
+	    exit 1 ; \
+	  fi ; \
+	done ; \
+	if [ -z "$REVTAG" ] ; then \
+	  echo "REVTAG needs to be set" ; \
+	fi ; \
+	rcs "-n$REVTAG": RCS/* ; \
+	co -kv RCS/*
 
 clean:
 	$(RM) bbdb.elc bbdb-*.elc bbdb.info auto-autoloads.elc
