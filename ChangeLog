@@ -1,3 +1,12 @@
+2000-10-20  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-com.el (bbdb-complete-name): If there are multiple
+	nets and the address is already completed then cycle trough the
+	list of nets.
+
+	* lisp/bbdb-snarf.el (bbdb-extract-address-components): added an
+	optional argument `ignore-errors'.
+
 2000-10-15  Waider  <waider@waider.ie>
 
 	* lisp/Makefile:
