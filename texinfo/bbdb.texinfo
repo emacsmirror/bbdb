@@ -1629,6 +1629,9 @@ If more than one person has the same mail-alias, then that alias expands
 to the addresses of all of those people; in this way you can maintain
 mailing lists within the BBDB.@refill
 
+When you want to group aliases as in @code{.mailrc} you may just
+retained the group aliases in your @code{.mailrc}.
+
 To actually define the aliases which are stored in the BBDB, call the
 function @code{bbdb-define-all-aliases} from your
 @code{mail-setup-hook}.  This will search the database, and call
@@ -1639,6 +1642,28 @@ function @code{bbdb-define-all-aliases} from your
 
 There are features of the @b{BBDB} that are available only for specific
 mail- and news-readers.  These features are described below.
+
+The headers which are parsed for email addresses and what records are
+displayed can be controlled by the following variables:
+@vindex bbdb-get-addresses-from-headers
+@vindex bbdb-get-addresses-to-headers
+@vindex bbdb-get-addresses-headers
+@vindex bbdb-get-only-first-address-p
+@code{bbdb-get-addresses-from-headers} controls which headers are parsed
+for sender addresses when calling the show-sender function of your MUA.
+@code{bbdb-get-addresses-to-headers} controls which headers are parsed
+for recipients addresses when calling the show-all-recipients function
+of your MUA.  When using the pop up feature it will search for the
+addresses in @code{bbdb-get-addresses-headers} and display them.  By
+default it will list only the first address, but by setting
+@code{bbdb-get-only-first-address-p} to @code{nil} one will will get
+records for all addresses.
+
+If there is no MUA specific variable for ignoring certain addresses then
+those addresses matching @code{bbdb-user-mail-names} will be ignored.
+
+@b{BBDB} adds the bindings @kbd{:} for showing all senders and @kbd{;}
+for editing the notes of the sender.
 
 @menu
 * Gnus Features::                       Gnus-specific Features
@@ -1876,7 +1901,6 @@ message summary.
 * VM Message Summary::                  @b{BBDB} information in message summary
 * VM what records are displayed::
 * VM automatic setup of vm-set-auto-folder-alist::
-* VM snarfing all email addresses::
 * VM automatic adding of labels::
 @end menu
 
@@ -1899,23 +1923,14 @@ significantly slow down summary generation for large folders.
 @node VM what records are displayed, VM automatic setup of vm-set-auto-folder-alist, VM Message Summary, VM Features
 @subsubsection VM configuration of what records the @b{BBDB} buffer shows
 
-@vindex bbdb/vm-get-from-headers
-@vindex bbdb/vm-get-only-first-from-p
 @vindex vm-summary-uninteresting-senders
 
-VM users can cause their @b{BBDB} buffer to display not only the sender of a
-message but also all recipients listed in the headers.
-
-The headers which are searched for email addresses can be customized by
-the variable @code{bbdb/vm-get-from-headers}.  Email addresses which
-match @code{vm-summary-uninteresting-senders} are ignored.
+Email addresses which match @code{vm-summary-uninteresting-senders} are
+ignored.
 
 The records in the @b{BBDB} buffer are listed in the same order as found.
-By setting  @code{bbdb/vm-get-only-first-from-p} to @code{t} one will
-get just the first address. If set to @code{nil} one will get records
-for all addresses.
 
-@node VM automatic setup of vm-set-auto-folder-alist, VM snarfing all email addresses, VM what records are displayed, VM Features
+@node VM automatic setup of vm-set-auto-folder-alist, VM automatic adding of labels, VM what records are displayed, VM Features
 @subsubsection VM automatic setup of @code{vm-set-auto-folder-alist}
 
 @vindex bbdb/vm-set-auto-folder-alist-field
@@ -1928,17 +1943,7 @@ The record field can contain a string which is used as folder name or
 if it starts with a @code{'} it is treated as lisp expression returning
 a folder name.
 
-@node VM snarfing all email addresses, VM automatic adding of labels, VM automatic setup of vm-set-auto-folder-alist, VM Features
-@subsubsection VM snarfing all email addresses
-
-@vindex bbdb/vm-snarf-all-headers
-@findex bbdb/vm-snarf-all
-
-By calling @code{bbdb/vm-snarf-all} all the headers
-listed in @code{bbdb/vm-snarf-all-headers} searched for email addresses
-and the corresponding BBDB records are added resp. updated.
-
-@node VM automatic adding of labels, , VM snarfing all email addresses, VM Features
+@node VM automatic adding of labels, , VM automatic setup of vm-set-auto-folder-alist, VM Features
 @subsubsection VM automatic adding of labels
 
 @vindex bbdb/vm-auto-add-label-list
@@ -2280,6 +2285,37 @@ done only across the set of primary network addresses (the first address
 in the list of addresses for a given user).  If it is
 @code{primary-or-name}, completion is done across primaries and real
 names. @refill
+
+@item bbdb-expand-mail-aliases
+@vindex bbdb-expand-mail-aliases
+@cindex Completion
+@cindex Name completion
+@cindex Mail address completion
+@cindex Address completion
+If non-nil, expand mail aliases in `bbdb-complete-name'.
+@refill
+
+@item bbdb-complete-name-allow-cycling
+@vindex bbdb-complete-name-allow-cycling
+@cindex Completion
+@cindex Name completion
+@cindex Mail address completion
+@cindex Address completion
+Wheater to allow cycling of email addresses when calling
+`bbdb-complete-name' on a completed address in a composition buffer."
+THIS CURRENTLY DOES NOT WORK FOR GNU EMACS!
+@refill
+
+@item bbdb-complete-name-full-completion
+@vindex bbdb-complete-name-full-completion
+@cindex Completion
+@cindex Name completion
+@cindex Mail address completion
+@cindex Address completion
+Show full expanded completion rather than partial matches.
+If t then do it always, if a number then just is the number of
+completions for a specific match is below that number.
+@refill
 
 @item bbdb-user-mail-names
 @vindex bbdb-user-mail-names
