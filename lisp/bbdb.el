@@ -43,7 +43,7 @@
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
-(defconst bbdb-file-format 5)
+(defconst bbdb-file-format 6)
 (defvar bbdb-file-format-migration nil
   "A cons of two elements: the version read, and the version to write.
 nil if the database was read in and is to be written in the current
@@ -388,6 +388,14 @@ this to be set to t in all but one of them."
   :group 'bbdb-database
   :type '(choice (const :tag "Database is read-only" t)
                  (const :tag "Database is writable" nil)))
+
+(defcustom bbdb-continental-zip-regexp "^\\s *[A-Z][A-Z]?\\s *-\\s *[0-9][0-9][0-9]"
+  "Regexp matching continental zip codes.
+Addresses with zip codes matching the regexp will be formated using
+`bbdb-format-address-continental'.  The regexp should match zip codes
+of the form CH-8052, NL-2300RA, and SE-132 54."
+  :group 'bbdb-record-display
+  :type 'regexp)
 
 (defcustom bbdb-auto-revert-p nil
   "*If this variable is true and the BBDB file is noticed to have changed on
@@ -917,49 +925,10 @@ If the note is absent, returns a zero length string."
                 (format " x%d" (bbdb-phone-extension phone))
                 ""))))
 
-(defun bbdb-address-zip-string (addr)
-  "Transform the zip data into a formated string."
-   ;; if a cons cell
-  (if (consp (bbdb-address-zip addr))
-      ;; if a cons cell with two strings
-      (if (and (stringp (car (bbdb-address-zip addr)))
-               (stringp (car (cdr (bbdb-address-zip addr)))))
-          ;; if the second string starts with 4 digits
-          (if (string-match "^[0-9][0-9][0-9][0-9]"
-                            (car (cdr (bbdb-address-zip addr))))
-              (concat (car (bbdb-address-zip addr))
-                      "-"
-                      (car (cdr (bbdb-address-zip addr))))
-            ;; if ("abc" "efg")
-            (concat (car (bbdb-address-zip addr))
-                    " "
-                    (car (cdr (bbdb-address-zip addr)))))
-        ;; if ("SE" (123 45))
-        (if (and (stringp (nth 0 (bbdb-address-zip addr)))
-                 (consp (nth 1 (bbdb-address-zip addr)))
-                 (integerp (nth 0 (nth 1 (bbdb-address-zip addr))))
-                 (integerp (nth 1 (nth 1 (bbdb-address-zip addr)))))
-            (format "%s-%d %d"
-                    (nth 0 (bbdb-address-zip addr))
-                    (nth 0 (nth 1 (bbdb-address-zip addr)))
-                    (nth 1 (nth 1 (bbdb-address-zip addr))))
-          ;; if a cons cell with two numbers
-          (if (and (integerp (car (bbdb-address-zip addr)))
-                   (integerp (car (cdr (bbdb-address-zip addr)))))
-              (format "%05d-%04d" (car (bbdb-address-zip addr))
-                      (car (cdr (bbdb-address-zip addr))))
-            ;; else a cons cell with a string an a number (possible error
-            ;; if a cons cell with a number and a string -- note the
-            ;; order!)
-            (format "%s-%d" (car (bbdb-address-zip addr))
-                    (car (cdr (bbdb-address-zip addr)))))))
-    ;; if nil or zero
-    (if (or (eq 0 (bbdb-address-zip addr))
-            (null (bbdb-address-zip addr)))
-        ""
-      ;; else a number, could be 3 to 5 digits (possible error: assuming
-      ;; no leading zeroes in zip codes)
-      (format "%d" (bbdb-address-zip addr)))))
+;; Legacy function.  Used to convert a zip datastructure string into a
+;; formated string.  As zip codes are plain strings now, use
+;; `bbdb-address-zip' instead.
+(defalias 'bbdb-address-zip-string 'bbdb-address-zip)
 
 (defmacro bbdb-record-lessp (record1 record2)
   (list 'string< (list 'bbdb-record-sortkey record1)
@@ -1056,21 +1025,12 @@ See also `bbdb-address-print-formatting-alist'.")
 
 (defun bbdb-address-is-continental (addr)
   "Return non-nil if the address ADDR is a continental address.
-A continental address has zip codes of the form
-CH-8052, NL-2300RA or SE-132 54.
+This is done by comparing the zip code to `bbdb-continental-zip-regexp'.
 
 This is a possible identifying function for
 `bbdb-address-formatting-alist' and
 `bbdb-address-print-formatting-alist'."
-  (and (consp (bbdb-address-zip addr))
-       (stringp (car (bbdb-address-zip addr)))
-       (let ((z (car (cdr (bbdb-address-zip addr)))))
-         (or (integerp z)
-             (and (stringp z)
-                  (string-match "^[0-9][0-9][0-9][0-9]" z))
-             (and (consp z)
-                  (integerp (nth 0 z))
-                  (integerp (nth 1 z)))))))
+  (string-match bbdb-continental-zip-regexp (bbdb-address-zip addr)))
 
 (defun bbdb-format-streets (addr)
   "Insert street subfields of address ADDR in current buffer.
@@ -1097,8 +1057,8 @@ The result looks like this:
   (insert (format " %14s: " (bbdb-address-location addr)))
   (bbdb-format-streets addr)
   (let ((c (bbdb-address-city addr))
-        (s (bbdb-address-state addr))
-        (z (bbdb-address-zip-string addr)))
+    (s (bbdb-address-state addr))
+    (z (bbdb-address-zip addr)))
     (if (or (> (length c) 0)
             (> (length z) 0)
             (> (length s) 0))
@@ -1130,8 +1090,8 @@ The result looks like this:
   (insert (format " %14s: " (bbdb-address-location addr)))
   (bbdb-format-streets addr)
   (let ((c (bbdb-address-city addr))
-        (s (bbdb-address-state addr))
-        (z (bbdb-address-zip-string addr)))
+    (s (bbdb-address-state addr))
+    (z (bbdb-address-zip addr)))
     (if (or (> (length c) 0)
             (> (length z) 0)
             (> (length s) 0))
@@ -1185,7 +1145,7 @@ formatted and inserted into the current buffer.  This is used by
            (let ((p (point)))
              (beginning-of-line)
              (if (<= (- p (point))
-		     (+ 2 bbdb-pop-up-elided-display-name-end))
+             (+ 2 bbdb-pop-up-elided-display-name-end))
                  (goto-char p)
                (goto-char (+ (point) bbdb-pop-up-elided-display-name-end))
                (setq p (point))
@@ -1195,37 +1155,37 @@ formatted and inserted into the current buffer.  This is used by
            (let ((phone (car (bbdb-record-phones record)))
                  (net (car (bbdb-record-net record)))
                  (notes (bbdb-record-raw-notes record)))
-	     (if bbdb-pop-up-elided-display-fields
-		 (let ((field-list bbdb-pop-up-elided-display-fields)
-		       field contentfun formatfun value)
-		   (indent-to bbdb-pop-up-elided-display-name-end)
-		   (insert " ") ; guarantee one space after name
-		   (while field-list
-		     (setq field (car field-list))
-		     (setq contentfun (intern (concat "bbdb-record-"
-						      (symbol-name field))))
-		     (if (fboundp contentfun)
-			 (setq value (eval (list contentfun record)))
-		       (setq value (bbdb-record-getprop record field)))
-		     (when value
-		       (setq formatfun (intern (concat "bbdb-format-popup"
-						       (symbol-name field))))
-		       (if (fboundp formatfun)
-			   (insert (funcall formatfun value))
-			 (insert (format "%s" value)))
-		       (insert "; "))
-		     (setq field-list (cdr field-list))))
-	       (if (or phone net notes)
-		   (progn (indent-to bbdb-pop-up-elided-display-name-end)
-			  (insert (if notes ". " "  "))))
-	       (cond (phone (insert (bbdb-phone-string phone))
-			    (indent-to 70)
-			    (insert " ("); don't ask, it compiles better
-			    (insert (bbdb-phone-location phone))
-			    (insert ")"))
-		     (net   (insert net)))))
-	   (insert "\n")
-	   )
+         (if bbdb-pop-up-elided-display-fields
+         (let ((field-list bbdb-pop-up-elided-display-fields)
+               field contentfun formatfun value)
+           (indent-to bbdb-pop-up-elided-display-name-end)
+           (insert " ") ; guarantee one space after name
+           (while field-list
+             (setq field (car field-list))
+             (setq contentfun (intern (concat "bbdb-record-"
+                              (symbol-name field))))
+             (if (fboundp contentfun)
+             (setq value (eval (list contentfun record)))
+               (setq value (bbdb-record-getprop record field)))
+             (when value
+               (setq formatfun (intern (concat "bbdb-format-popup"
+                               (symbol-name field))))
+               (if (fboundp formatfun)
+               (insert (funcall formatfun value))
+             (insert (format "%s" value)))
+               (insert "; "))
+             (setq field-list (cdr field-list))))
+           (if (or phone net notes)
+           (progn (indent-to bbdb-pop-up-elided-display-name-end)
+              (insert (if notes ". " "  "))))
+           (cond (phone (insert (bbdb-phone-string phone))
+                (indent-to 70)
+                (insert " ("); don't ask, it compiles better
+                (insert (bbdb-phone-location phone))
+                (insert ")"))
+             (net   (insert net)))))
+       (insert "\n")
+       )
           (t
            (insert "\n")
            (let* ((bbdb-elided-display brief) ;pfeh.
@@ -2652,14 +2612,14 @@ before the record is created, otherwise it is created without confirmation
       ;; first try to get a reasonable default name if not given
       ;; often I get things like <firstname>.<surname>@ ...
       (if (or (null name) (and (stringp name) (string= "" name)))
-	  (if (string-match "^[^@]+" net)
-	      (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
+      (if (string-match "^[^@]+" net)
+          (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
       (setq record (if (or (null
-			    (bbdb-invoke-hook-for-value prompt-to-create-p))
-			   (bbdb-y-or-n-p (format "%s is not in the db; add? "
-						  (or name net))))
-		       (make-vector bbdb-record-length nil))
-	    created-p (not (null record)))
+                (bbdb-invoke-hook-for-value prompt-to-create-p))
+               (bbdb-y-or-n-p (format "%s is not in the db; add? "
+                          (or name net))))
+               (make-vector bbdb-record-length nil))
+        created-p (not (null record)))
       (if record
           (bbdb-record-set-cache record (make-vector bbdb-cache-length nil)))
       (if created-p (bbdb-invoke-hook 'bbdb-create-hook record)))
@@ -2755,38 +2715,38 @@ before the record is created, otherwise it is created without confirmation
                   match)
                 nil
               (if (let ((bbdb-always-add-addresses bbdb-always-add-addresses))
-		    (if (functionp bbdb-always-add-addresses)
-			(setq bbdb-always-add-addresses
-			      (funcall bbdb-always-add-addresses)))
-		    (cond
-		     ;; add automatically it
-		     ((eq bbdb-always-add-addresses t)
-		      t)
-		     ;; do not add it
-		     (bbdb-always-add-addresses ; non-t and non-nil = never
-		      nil)
-		     ;; ask the user if it should be added
-		     (t
-		      (and
-		       (not (equal net "???"))
-		       (let ((the-first-bit
-			      (format "add address \"%s\" to \"" net))
-			     ;; this groveling is to prevent the "(y or n)"
-			     ;; from falling off the right edge of the screen.
-			     (the-next-bit (mapconcat 'identity
-						      (bbdb-record-net record)
-						      ", "))
-			     (w (window-width (minibuffer-window))))
-			 (if (> (+ (length the-first-bit)
-				   (length the-next-bit) 15) w)
-			     (setq the-next-bit
-				   (concat
-				    (substring
-				     the-next-bit
-				     0 (max 0 (- w (length the-first-bit) 20)))
-				    "...")))
-			 (bbdb-y-or-n-p (concat the-first-bit the-next-bit
-						"\"? ")))))))
+            (if (functionp bbdb-always-add-addresses)
+            (setq bbdb-always-add-addresses
+                  (funcall bbdb-always-add-addresses)))
+            (cond
+             ;; add automatically it
+             ((eq bbdb-always-add-addresses t)
+              t)
+             ;; do not add it
+             (bbdb-always-add-addresses ; non-t and non-nil = never
+              nil)
+             ;; ask the user if it should be added
+             (t
+              (and
+               (not (equal net "???"))
+               (let ((the-first-bit
+                  (format "add address \"%s\" to \"" net))
+                 ;; this groveling is to prevent the "(y or n)"
+                 ;; from falling off the right edge of the screen.
+                 (the-next-bit (mapconcat 'identity
+                              (bbdb-record-net record)
+                              ", "))
+                 (w (window-width (minibuffer-window))))
+             (if (> (+ (length the-first-bit)
+                   (length the-next-bit) 15) w)
+                 (setq the-next-bit
+                   (concat
+                    (substring
+                     the-next-bit
+                     0 (max 0 (- w (length the-first-bit) 20)))
+                    "...")))
+             (bbdb-y-or-n-p (concat the-first-bit the-next-bit
+                        "\"? ")))))))
                   (let ((front-p (cond ((null bbdb-new-nets-always-primary)
                                         (bbdb-y-or-n-p
                                          (format

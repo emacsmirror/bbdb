@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.16  2000/11/27 12:59:53  waider
+;; Alex's zipcode changes. WARNING: New database format.
+;;
 ;; Revision 1.15  2000/08/05 15:38:04  waider
 ;; When converting the streets to a list, delete "nil" as well as "".
 ;;
@@ -84,7 +87,8 @@
   '((3 . "* Date format for `creation-date' and `timestamp' has changed,
   from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")
     (4 . "* Country field added.")
-    (5 . "* More flexible street address.")))
+    (5 . "* More flexible street address.")
+    (6 . "* Zip codes are stored as plain strings.")))
 
 ;;;###autoload
 (defun bbdb-migration-query (ondisk)
@@ -152,7 +156,9 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
     (3 (bbdb-record-addresses bbdb-record-set-addresses
         bbdb-migrate-add-country-field))
     (4 (bbdb-record-addresses bbdb-record-set-addresses
-        bbdb-migrate-streets-to-list)))
+        bbdb-migrate-streets-to-list))
+    (5 (bbdb-record-addresses bbdb-record-set-addresses
+        bbdb-migrate-zip-codes-to-strings)))
   "The alist of (version . migration-spec-list).
 See `bbdb-migrate-record-lambda' for details.")
 
@@ -162,7 +168,9 @@ See `bbdb-migrate-record-lambda' for details.")
     (3 (bbdb-record-addresses bbdb-record-set-addresses
         bbdb-unmigrate-add-country-field))
     (4 (bbdb-record-addresses bbdb-record-set-addresses
-        bbdb-unmigrate-streets-to-list)))
+        bbdb-unmigrate-streets-to-list))
+    (5 (bbdb-record-addresses bbdb-record-set-addresses
+        bbdb-unmigrate-zip-codes-to-strings)))
   "The alist of (version . migration-spec-list).
 See `bbdb-migrate-record-lambda' for details.")
 
@@ -193,6 +201,99 @@ V1 defaults to `bbdb-file-format'."
       (setq spec (append spec (cdr (assoc vv bbdb-migration-spec)))
             vv (if (< v0 v1) (1+ vv) (1- vv))))
     (bbdb-migrate-record-lambda spec)))
+
+(defun bbdb-migrate-zip-codes-to-strings (addrs)
+  "Make all zip codes plain strings.
+This uses the code that used to be in bbdb-address-zip-string."
+  ;; apply the function to all addresses in the list and return a
+  ;; modified list of addresses
+  (mapcar (lambda (addr)
+	    (let ((zip (if (stringp (bbdb-address-zip addr))
+			   (bbdb-address-zip addr)
+			 ;; if not a string, make it a string...
+			 (if (consp (bbdb-address-zip addr))
+			     ;; if a cons cell with two strings
+			     (if (and (stringp (car (bbdb-address-zip addr)))
+				      (stringp (car (cdr (bbdb-address-zip addr)))))
+				 ;; if the second string starts with 4 digits
+				 (if (string-match "^[0-9][0-9][0-9][0-9]"
+						   (car (cdr (bbdb-address-zip addr))))
+				     (concat (car (bbdb-address-zip addr))
+					     "-"
+					     (car (cdr (bbdb-address-zip addr))))
+				   ;; if ("abc" "efg")
+				   (concat (car (bbdb-address-zip addr))
+					   " "
+					   (car (cdr (bbdb-address-zip addr)))))
+			       ;; if ("SE" (123 45))
+			       (if (and (stringp (nth 0 (bbdb-address-zip addr)))
+					(consp (nth 1 (bbdb-address-zip addr)))
+					(integerp (nth 0 (nth 1 (bbdb-address-zip addr))))
+					(integerp (nth 1 (nth 1 (bbdb-address-zip addr)))))
+				   (format "%s-%d %d"
+					   (nth 0 (bbdb-address-zip addr))
+					   (nth 0 (nth 1 (bbdb-address-zip addr)))
+					   (nth 1 (nth 1 (bbdb-address-zip addr))))
+				 ;; if a cons cell with two numbers
+				 (if (and (integerp (car (bbdb-address-zip addr)))
+					  (integerp (car (cdr (bbdb-address-zip addr)))))
+				     (format "%05d-%04d" (car (bbdb-address-zip addr))
+					     (car (cdr (bbdb-address-zip addr))))
+				   ;; else a cons cell with a string an a number (possible error
+				   ;; if a cons cell with a number and a string -- note the
+				   ;; order!)
+				   (format "%s-%d" (car (bbdb-address-zip addr))
+					   (car (cdr (bbdb-address-zip addr)))))))
+			   ;; if nil or zero
+			   (if (or (eq 0 (bbdb-address-zip addr))
+				   (null (bbdb-address-zip addr)))
+			       ""
+			     ;; else a number, could be 3 to 5 digits (possible error: assuming
+			     ;; no leading zeroes in zip codes)
+			     (format "%d" (bbdb-address-zip addr)))))))
+	      (bbdb-address-set-zip addr zip))
+	    addr)
+	  addrs))
+
+(defun bbdb-unmigrate-zip-codes-to-strings (addrs)
+  "Make zip code string into zip code datastructures.
+This uses the code that used to be in bbdb-parse-zip-string."
+  ;; apply the function to all addresses in the list and return a
+  ;; modified list of addresses
+  (mapcar (lambda (addr)
+	    (let ((string (bbdb-address-zip addr))
+		  (zip (cond ((string-match "^[ \t\n]*$" string) 0)
+			     ;; Matches 1 to 6 digits.
+			     ((string-match "^[ \t\n]*[0-9][0-9]?[0-9]?[0-9]?[0-9]?[0-9]?[ \t\n]*$" string)
+			      (string-to-int string))
+			     ;; Matches 5 digits and 3 or 4 digits.
+			     ((string-match "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]?\\)[ \t\n]*$" string)
+			      (list (bbdb-subint string 1) (bbdb-subint string 2)))
+			     ;; Match zip codes for Canada, UK, etc. (result is ("LL47" "U4B")).
+			     ((string-match
+			       "^[ \t\n]*\\([A-Za-z0-9]+\\)[ \t\n]+\\([A-Za-z0-9]+\\)[ \t\n]*$"
+			       string)
+			      (list (substring string (match-beginning 1) (match-end 1))
+				    (substring string (match-beginning 2) (match-end 2))))
+			     ;; Match zip codes for continental Europe.  Examples "CH-8057"
+			     ;; or "F - 83320" (result is ("CH" "8057") or ("F" "83320")).
+			     ;; Support for "NL-2300RA" added at request from Carsten Dominik
+			     ;; <dominik@astro.uva.nl>
+			     ((string-match
+			       "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+ ?[A-Z]*\\)[ \t\n]*$" string)
+			      (list (substring string (match-beginning 1) (match-end 1))
+				    (substring string (match-beginning 2) (match-end 2))))
+			     ;; Match zip codes from Sweden where the five digits are grouped 3+2
+			     ;; at the request from Mats Lofdahl <MLofdahl@solar.stanford.edu>.
+			     ;; (result is ("SE" (133 36)))
+			     ((string-match
+			       "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+\\)[ \t\n]+\\([0-9]+\\)[ \t\n]*$" string)
+			      (list (substring string (match-beginning 1) (match-end 1))
+				    (list (bbdb-subint string 2)
+					  (bbdb-subint string 3)))))))
+	      (bbdb-address-set-zip addr zip)
+	      addr))
+	  addrs))
 
 (defun bbdb-migrate-change-dates (rec)
   "Change date formats in timestamp and creation-date fields from
@@ -278,11 +379,11 @@ as an argument."
   (cons (car field) (bbdb-time-convert (cdr field) "%e %b %y")))
 
 (defun bbdb-migrate-add-country-field (addrl)
-  "Add a courntry field to each address in the address list."
+  "Add a country field to each address in the address list."
   (mapcar (lambda (addr) (vconcat addr [""])) addrl))
 
 (defun bbdb-unmigrate-add-country-field (addrl)
-  "Remove the courntry field from each address in the address list."
+  "Remove the country field from each address in the address list."
   ;; Some version 4 zip codes will be illegal version 3 (as used in
   ;; 2.00.06) zip codes.  This problem has not been solved.
   (mapcar (lambda (addr)

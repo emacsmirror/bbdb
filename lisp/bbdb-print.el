@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.65  2000/11/27 12:59:53  waider
+;; Alex's zipcode changes. WARNING: New database format.
+;;
 ;; Revision 1.64  2000/07/13 17:07:00  sds
 ;; minor doc fixes to comply with the standards
 ;;
@@ -442,7 +445,7 @@ The result looks like this:
                      "")
           (let ((c (bbdb-address-city addr))
 		(s (bbdb-address-state addr))
-		(z (bbdb-address-zip-string addr)))
+		(z (bbdb-address-zip addr)))
 	    (if (or (> (length c) 0)
 		    (> (length z) 0)
 		    (> (length s) 0))
@@ -482,7 +485,7 @@ The result looks like this:
                      "")
 	  (let ((c (bbdb-address-city addr))
 		(s (bbdb-address-state addr))
-		(z (bbdb-address-zip-string addr)))
+		(z (bbdb-address-zip addr)))
 	    (if (or (> (length c) 0)
 		    (> (length z) 0)
 		    (> (length s) 0))

@@ -67,7 +67,7 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
       (setq header (vm-get-header-contents msg (car headers)))
       (when header
     (setq adlist (bbdb-extract-address-components
-		  (vm-decode-mime-encoded-words-in-string header)))
+          (vm-decode-mime-encoded-words-in-string header)))
     (while adlist
       (setq fn (caar adlist)
         ad (cadar adlist))
@@ -77,10 +77,10 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
       (if (or
            (not (stringp vm-summary-uninteresting-senders))
            (not
-	    (or (and fn
-		     (string-match vm-summary-uninteresting-senders fn))
-		(and ad
-		     (string-match vm-summary-uninteresting-senders ad)))))
+        (or (and fn
+             (string-match vm-summary-uninteresting-senders fn))
+        (and ad
+             (string-match vm-summary-uninteresting-senders ad)))))
           (add-to-list 'fromlist (car adlist)))
 
       (if (and only-first-from fromlist)
@@ -130,11 +130,11 @@ C-g again it will stop scanning."
   (vm-error-if-folder-empty)
 
   (let ((msg (car vm-message-pointer))
-	(inhibit-local-variables nil)   ; vm binds this to t...
-	(enable-local-variables t)	; ...or vm bind this to nil.
-	(inhibit-quit nil)		; vm better not bind this to t!
-	(bbdb/vm-offer-to-create offer-to-create)
-	cache records)
+    (inhibit-local-variables nil)   ; vm binds this to t...
+    (enable-local-variables t)  ; ...or vm bind this to nil.
+    (inhibit-quit nil)      ; vm better not bind this to t!
+    (bbdb/vm-offer-to-create offer-to-create)
+    cache records)
 
     ;; ignore cache if we may be creating a record, since the cache
     ;; may otherwise tell us that the user didn't want a record for
@@ -151,61 +151,61 @@ C-g again it will stop scanning."
       (and msg
            (let ((addrs (bbdb/vm-get-from msg bbdb/vm-get-only-first-from-p))
                  (bbdb-records (bbdb-records))
-		 (processed-addresses 0)
-		 (bbdb/vm-update-records-mode 'annotating)
-		 rec)
+         (processed-addresses 0)
+         (bbdb/vm-update-records-mode 'annotating)
+         rec)
              (mapc (lambda (bbdb/vm-address)
-		     (condition-case nil
-			 (progn
-			   (setq rec
-				 (cond ((eq bbdb/vm-update-records-mode
-					    'annotating)
-					(bbdb-annotate-message-sender
-					 bbdb/vm-address t
-					 (or (bbdb-invoke-hook-for-value
-					      bbdb/mail-auto-create-p)
-					     bbdb/vm-offer-to-create);; force create
-					 'bbdb/vm-prompt-for-create))
-				       ((eq bbdb/vm-update-records-mode
-					    'searching)
-					;; search for the first record having
-					;; this net  
-					(let ((net (cadr bbdb/vm-address))
-					      record)
-					  (setq record (bbdb-search
-							bbdb-records
-							nil nil net))
-					  (if record (car record) nil))))
-				 processed-addresses (+ processed-addresses 1))
-			   (when (and (not bbdb-silent-running)
-				      (not (eq bbdb/vm-offer-to-create 'quit))
-				      (= 0 (% processed-addresses 5)))
-			     (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs))))
-			       (display-message 'progress mess))
-			   (sit-for 0)))
-		       (quit (cond ((eq bbdb/vm-update-records-mode
-					'annotating)
-				    (setq bbdb/vm-update-records-mode
-					  'searching))
-				   ((eq bbdb/vm-update-records-mode 'searching)
-				    nil)
-				   ((eq bbdb/vm-update-records-mode 'next)
-				    (setq bbdb/vm-update-records-mode
-					  'annotating))
-				   (t
-				    (setq bbdb/vm-update-records-mode 'quit)))
-			     nil))
+             (condition-case nil
+             (progn
+               (setq rec
+                 (cond ((eq bbdb/vm-update-records-mode
+                        'annotating)
+                    (bbdb-annotate-message-sender
+                     bbdb/vm-address t
+                     (or (bbdb-invoke-hook-for-value
+                          bbdb/mail-auto-create-p)
+                         bbdb/vm-offer-to-create);; force create
+                     'bbdb/vm-prompt-for-create))
+                       ((eq bbdb/vm-update-records-mode
+                        'searching)
+                    ;; search for the first record having
+                    ;; this net
+                    (let ((net (cadr bbdb/vm-address))
+                          record)
+                      (setq record (bbdb-search
+                            bbdb-records
+                            nil nil net))
+                      (if record (car record) nil))))
+                 processed-addresses (+ processed-addresses 1))
+               (when (and (not bbdb-silent-running)
+                      (not (eq bbdb/vm-offer-to-create 'quit))
+                      (= 0 (% processed-addresses 5)))
+                 (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs))))
+                   (display-message 'progress mess))
+               (sit-for 0)))
+               (quit (cond ((eq bbdb/vm-update-records-mode
+                    'annotating)
+                    (setq bbdb/vm-update-records-mode
+                      'searching))
+                   ((eq bbdb/vm-update-records-mode 'searching)
+                    nil)
+                   ((eq bbdb/vm-update-records-mode 'next)
+                    (setq bbdb/vm-update-records-mode
+                      'annotating))
+                   (t
+                    (setq bbdb/vm-update-records-mode 'quit)))
+                 nil))
 
-		     ;; people should be listed only once so we use
-		     ;; add-to-list
-		     (if rec (add-to-list 'records rec)))
+             ;; people should be listed only once so we use
+             ;; add-to-list
+             (if rec (add-to-list 'records rec)))
 
-		   addrs)
+           addrs)
              (setq records (nreverse records))
-	     (bbdb/vm-encache-message msg records))))
-    
+         (bbdb/vm-encache-message msg records))))
+
     (if (not bbdb-silent-running)
-	(display-message 'progress "Updating of BBDB records finished"))
+    (display-message 'progress "Updating of BBDB records finished"))
     records))
 
 (defvar bbdb/vm-offer-to-create nil
@@ -220,33 +220,33 @@ C-g again it will stop scanning."
 
 ;; This is a hack.  The function is called by bbdb-annotate-message-sender and
 ;; uses the above variable in order to manipulate bbdb/vm-update-records.
-;; Some cases are handled with signals in order to keep the changes in 
+;; Some cases are handled with signals in order to keep the changes in
 ;; bbdb-annotate-message-sender as minimal as possible.
 (defun bbdb/vm-prompt-for-create ()
   (let ((old-offer-to-create bbdb/vm-offer-to-create))
     (when (or (bbdb-invoke-hook-for-value bbdb/prompt-for-create-p)
-	      bbdb/vm-offer-to-create)
+          bbdb/vm-offer-to-create)
       (when (not (characterp bbdb/vm-offer-to-create))
-	(message (format "%s is not in the db; add? (y,!,n,s,q)"
-			 (or (car bbdb/vm-address) (cadr bbdb/vm-address))))
-	(setq bbdb/vm-offer-to-create (read-char)))
-      
+    (message (format "%s is not in the db; add? (y,!,n,s,q)"
+             (or (car bbdb/vm-address) (cadr bbdb/vm-address))))
+    (setq bbdb/vm-offer-to-create (read-char)))
+
       (cond ((eq bbdb/vm-offer-to-create ?y)
-	     (setq bbdb/vm-offer-to-create old-offer-to-create)
-	     nil) 
-	    ((eq bbdb/vm-offer-to-create ?!)
-	     nil)
-	    ((eq bbdb/vm-offer-to-create ?n)
-	     (setq bbdb/vm-update-records-mode 'next
-		   bbdb/vm-offer-to-create old-offer-to-create)
-	     (signal 'quit nil))
-	    ((eq bbdb/vm-offer-to-create ?q)
-	     (setq bbdb/vm-update-records-mode 'quit)
-	     (signal 'quit nil))
-	    ((eq bbdb/vm-offer-to-create ?s)
-	     (setq bbdb/vm-update-records-mode 'searching)
-	     (signal 'quit nil))))))
-	  
+         (setq bbdb/vm-offer-to-create old-offer-to-create)
+         nil)
+        ((eq bbdb/vm-offer-to-create ?!)
+         nil)
+        ((eq bbdb/vm-offer-to-create ?n)
+         (setq bbdb/vm-update-records-mode 'next
+           bbdb/vm-offer-to-create old-offer-to-create)
+         (signal 'quit nil))
+        ((eq bbdb/vm-offer-to-create ?q)
+         (setq bbdb/vm-update-records-mode 'quit)
+         (signal 'quit nil))
+        ((eq bbdb/vm-offer-to-create ?s)
+         (setq bbdb/vm-update-records-mode 'searching)
+         (signal 'quit nil))))))
+
 ;;;###autoload
 (defun bbdb/vm-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record
@@ -323,14 +323,14 @@ configuration of what is being displayed."
 Respects vm-summary-uninteresting-senders."
   (if (and vm-summary-uninteresting-senders (not to-p))
       (let ((case-fold-search nil))
-	(if (string-match vm-summary-uninteresting-senders (vm-su-from m))
-	    (concat vm-summary-uninteresting-senders-arrow
-		    (vm-summary-function-B m t))
-	  (or (bbdb/vm-alternate-full-name  (vm-su-from m))
-	      (vm-su-full-name m))))
+    (if (string-match vm-summary-uninteresting-senders (vm-su-from m))
+        (concat vm-summary-uninteresting-senders-arrow
+            (vm-summary-function-B m t))
+      (or (bbdb/vm-alternate-full-name  (vm-su-from m))
+          (vm-su-full-name m))))
     (or (bbdb/vm-alternate-full-name (if to-p (vm-su-to m) (vm-su-from m)))
-	(vm-decode-mime-encoded-words-in-string
-	 (if to-p (vm-su-to-names m) (vm-su-full-name m))))))
+    (vm-decode-mime-encoded-words-in-string
+     (if to-p (vm-su-to-names m) (vm-su-full-name m))))))
 
 (defun bbdb/vm-alternate-full-name (address)
   (if address
@@ -427,8 +427,8 @@ for new email addresses."
   (vm-check-for-killed-summary)
 
   (let ((bbdb/vm-get-from-headers bbdb/vm-snarf-all-headers)
-	(bbdb/vm-get-only-first-from-p nil)
-	(bbdb-message-cache nil))
+    (bbdb/vm-get-only-first-from-p nil)
+    (bbdb-message-cache nil))
     (bbdb/vm-pop-up-bbdb-buffer offer-to-create)))
 
 
@@ -500,11 +500,11 @@ This is how you hook it in.
 (defun bbdb-insinuate-vm ()
   "Call this function to hook BBDB into VM."
   (cond ((boundp 'vm-select-message-hook) ; VM 5.36+
-	 (add-hook 'vm-select-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
-	((boundp 'vm-show-message-hook) ; VM 5.32.L+
-	 (add-hook 'vm-show-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
-	(t
-	 (error "vm versions older than 5.36 no longer supported")))
+     (add-hook 'vm-select-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
+    ((boundp 'vm-show-message-hook) ; VM 5.32.L+
+     (add-hook 'vm-show-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
+    (t
+     (error "vm versions older than 5.36 no longer supported")))
   (define-key vm-mode-map ":" 'bbdb/vm-show-sender)
    ;;  (define-key vm-mode-map "'" 'bbdb/vm-show-all-recipients) ;; not yet
   (define-key vm-mode-map ";" 'bbdb/vm-edit-notes)

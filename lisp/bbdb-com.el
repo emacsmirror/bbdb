@@ -332,46 +332,40 @@ is nil...\)"
 
 ;;; Parsing other things
 
-;;; Ideally we'd pass the country field in here to help with
-;;; parsing. Or maybe even the entire address string, in case you have
-;;; a handy postcode database.
-(defun bbdb-parse-zip-string (string)
-  (cond ((string-match "^[ \t\n]*$" string) 0)
-        ;; Matches 1 to 6 digits.
-        ((string-match "^[ \t\n]*[0-9][0-9]?[0-9]?[0-9]?[0-9]?[0-9]?[ \t\n]*$" string)
-         (string-to-int string))
-        ;; Matches 5 digits and 3 or 4 digits.
-        ((string-match "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]?\\)[ \t\n]*$" string)
-         (list (bbdb-subint string 1) (bbdb-subint string 2)))
-        ;; Match zip codes for Canada, UK, etc. (result is ("LL47" "U4B")).
-        ((string-match
-          "^[ \t\n]*\\([A-Za-z0-9]+\\)[ \t\n]+\\([A-Za-z0-9]+\\)[ \t\n]*$"
-          string)
-         (list (substring string (match-beginning 1) (match-end 1))
-               (substring string (match-beginning 2) (match-end 2))))
-        ;; Match zip codes for continental Europe.  Examples "CH-8057"
-        ;; or "F - 83320" (result is ("CH" "8057") or ("F" "83320")).
-        ;; Support for "NL-2300RA" added at request from Carsten Dominik
-        ;; <dominik@astro.uva.nl>
-        ((string-match
-          "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+ ?[A-Z]*\\)[ \t\n]*$" string)
-         (list (substring string (match-beginning 1) (match-end 1))
-               (substring string (match-beginning 2) (match-end 2))))
-        ;; Match zip codes from Sweden where the five digits are grouped 3+2
-        ;; at the request from Mats Lofdahl <MLofdahl@solar.stanford.edu>.
-        ;; (result is ("SE" (133 36)))
-        ((string-match
-          "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+\\)[ \t\n]+\\([0-9]+\\)[ \t\n]*$" string)
-         (list (substring string (match-beginning 1) (match-end 1))
-               (list (bbdb-subint string 2)
-                     (bbdb-subint string 3))))
-        ;; Add some error messages
-        ((string-match "-[^-]+-" string)
-         (error "too many dashes in zip code."))
-        ((< (length string) 3)
-         (error "not enough digits in zip code."))
-        (t (error "not a valid zip code."))))
+(defvar bbdb-check-zip-codes-p t
+  "If non-nil, require legal zip codes when entering an address.  
+The format of legal zip codes is determined by the variable
+`bbdb-legal-zip-codes'.")
 
+(defvar bbdb-legal-zip-codes
+  '(;; Matches 1 to 6 digits.
+    "^[ \t\n]*[0-9][0-9]?[0-9]?[0-9]?[0-9]?[0-9]?[ \t\n]*$"
+    ;; Matches 5 digits and 3 or 4 digits.
+    "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]?\\)[ \t\n]*$"
+    ;; Match zip codes for Canada, UK, etc. (result is ("LL47" "U4B")).
+    "^[ \t\n]*\\([A-Za-z0-9]+\\)[ \t\n]+\\([A-Za-z0-9]+\\)[ \t\n]*$"
+    ;; Match zip codes for continental Europe.  Examples "CH-8057"
+    ;; or "F - 83320" (result is ("CH" "8057") or ("F" "83320")).
+    ;; Support for "NL-2300RA" added at request from Carsten Dominik
+    ;; <dominik@astro.uva.nl>
+    "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+ ?[A-Z]*\\)[ \t\n]*$"
+    ;; Match zip codes from Sweden where the five digits are grouped 3+2
+    ;; at the request from Mats Lofdahl <MLofdahl@solar.stanford.edu>.
+    ;; (result is ("SE" (133 36)))
+    "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+\\)[ \t\n]+\\([0-9]+\\)[ \t\n]*$")
+  "List of regexps that match legal zip codes.
+Wether this is used at all depends on the variable `bbdb-check-zip-codes-p'.")
+
+(defun bbdb-parse-zip-string (string)
+  "Check wether STRING is a legal zip code.
+Do this only if `bbdb-check-zip-codes-p' is non-nil."
+  (if (and bbdb-check-zip-codes-p
+	   (not (memq t (mapcar (lambda (regexp)
+				  ;; if it matches, (not (not index-of-match)) returns t
+				  (not (not (string-match regexp string))))
+				bbdb-legal-zip-codes))))
+      (error "not a valid zip code.")
+    string))
 
 (defun bbdb-read-new-record ()
   "Prompt for and return a completely new BBDB record.
@@ -471,8 +465,7 @@ COMPANY is a string or nil.
 NET is a comma-separated list of email addresses, or a list of strings.
  An error is signalled if that name is already in use.
 ADDRS is a list of address objects.  An address is a vector of the form
-   [\"location\" (\"line1\" \"line2\" ... ) \"State\" zip \"Country\"]
- where `zip' is nil, an integer, or a cons.
+   [\"location\" (\"line1\" \"line2\" ... ) \"State\" \"Zip\" \"Country\"].
 PHONES is a list of phone-number objects.  A phone-number is a vector of
  the form
    [\"location\" areacode prefix suffix extension-or-nil]
@@ -502,27 +495,19 @@ NOTES is a string, or an alist associating symbols with strings."
                                             (car rest))))))
             (setq rest (cdr rest)))))
     (setq addrs
-          (mapcar
-           (lambda (addr)
-             (while (or (not (vectorp addr))
-                        (/= (length addr) bbdb-address-length))
-               (setq addr (signal 'wrong-type-argument (list 'vectorp addr))))
-             (bbdb-check-type (aref addr 0) stringp) ; XXX use bbdb-addresses
-             (bbdb-check-type (aref addr 1) listp)
-             (bbdb-check-type (aref addr 2) stringp)
-             (bbdb-check-type (aref addr 3) stringp)
-                                ; FIXME this seems to be too stringent, still.
-                                ;         (while (and (aref addr 4)
-                                ;             (not (integerp (aref addr 4)))
-                                ;             (not (and (consp (aref addr 4))
-                                ;                   (integerp (car (aref addr 4)))
-                                ;                   (integerp (car (cdr (aref addr 4))))
-                                ;                   (null (cdr (cdr (aref addr 4)))))))
-                                ;       (aset addr 4 (signal 'wrong-type-argument
-                                ;                    (list 'zipcodep (aref addr 4))))) ;;; zipcodep isn't REAL.
-             (bbdb-check-type (aref addr 5) stringp)
-             addr)
-           addrs))
+	  (mapcar
+	   (lambda (addr)
+	     (while (or (not (vectorp addr))
+			(/= (length addr) bbdb-address-length))
+	       (setq addr (signal 'wrong-type-argument (list 'vectorp addr))))
+	     (bbdb-check-type (aref addr 0) stringp) ;;; XXX use bbdb-addresses
+	     (bbdb-check-type (aref addr 1) listp)
+	     (bbdb-check-type (aref addr 2) stringp)
+	     (bbdb-check-type (aref addr 3) stringp)
+	     (bbdb-check-type (aref addr 4) stringp)
+	     (bbdb-check-type (aref addr 5) stringp)
+	     addr)
+	   addrs))
     (setq phones
           (mapcar
            (lambda (phone)
@@ -928,18 +913,18 @@ State:           state
 Zip Code:        zip
 Country:         country"
   (let* ((str (let ((l) (s) (n 0))
-        (while (not (string= "" (setq s (bbdb-read-string
-                         (format "Street, line %d: " (+ 1 n))
-                         (nth n (bbdb-address-streets addr))))))
-          (setq l (append l (list s)))
-          (setq n (1+ n)))
-        l))
-         (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
-         (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
+		(while (not (string= "" (setq s (bbdb-read-string
+						 (format "Street, line %d: " (+ 1 n))
+						 (nth n (bbdb-address-streets addr))))))
+		  (setq l (append l (list s)))
+		  (setq n (1+ n)))
+		l))
+	 (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
+	 (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
          (zip (bbdb-error-retry
                (bbdb-parse-zip-string
                 (bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
-         (country (bbdb-read-string "Country: " (bbdb-address-country addr))))
+	 (country (bbdb-read-string "Country: " (bbdb-address-country addr))))
     (bbdb-address-set-streets addr str)
     (bbdb-address-set-city addr cty)
     (bbdb-address-set-state addr ste)
