@@ -1894,13 +1894,6 @@ multi-line layout."
                     "Type \\[switch-to-buffer] RET to unshow the bbdb-list window.")
                 "Type \\[switch-to-buffer-other-window] RET to restore old contents of the bbdb-list window.")))))))
 
-(defun bbdbq-mk (s)
-  (let ((l (length s)) (r "") (i 0))
-    (while (< i l)
-      (setq r (format "%s\\%o" r (aref s i))
-            i (+ 1 i)))
-    r))
-
 (defun bbdbq ()
   (if (not (zerop (logand (random) 31))) nil
     (let ((v '["\104\157\156\47\164\40\163\165\163\160\145\143\164\40\171\157\
@@ -1909,9 +1902,12 @@ multi-line layout."
 \40\102\145\40\123\151\154\145\156\164\40\55\55\40\104\151\145" "\114\157\166\
 \145\40\102\151\147\40\102\162\157\164\150\145\162" "\114\145\145\40\110\141\
 \162\166\145\171\40\117\163\167\141\154\144\40\141\143\164\145\144\40\141\154\
-\157\156\145" "\111\40\153\156\157\167\40\145\166\145\162\171\164\150\151\156\
-\147\40\141\142\157\165\164\40\171\157\165" "\111\40\163\141\167\40\171\157\
-\165\40\144\157\40\151\164"]))
+\157\156\145" "\101\114\114\40\131\117\125\122\40\102\101\123\105\40\101\122\
+\105\40\102\105\114\117\116\107\40\124\117\40\125\123" "\127\141\162\40\151\
+\163\40\120\145\141\143\145" "\106\162\145\145\144\157\155\40\151\163\40\123
+\154\141\166\145\162\171" "\111\147\156\157\162\141\156\143\145\40\151\163\40\
+\123\164\162\145\156\147\164\150" "\120\162\157\154\145\163\40\141\156\144\40\
+\141\156\151\155\141\154\163\40\141\162\145\40\146\162\145\145"]))
       (message (aref v (% (logand 255 (random)) (length v))))
       (message " "))))
 
@@ -1964,6 +1960,31 @@ multi-line layout."
                                   (or ht '(bbdb-hashtable)))))
         (list 'and 's (list 'set 's (list 'bbdb-remove! record
                                           (list 'symbol-value 's))))))
+
+(defsubst bbdb-search-intertwingle (name net)
+  "Find bbdb records matching NAME and NET.
+
+This is a more stringent version of bbdb-search-simple, which I am
+not inclined to modify for fear of damaging other code that currently
+relies on it. BBDB internals should be migrated to use this function
+to identify which record is referred to by a name/net combination,
+since search-simple has been overloaded with other functionality.
+
+The name comes from
+http://www.mozilla.org/blue-sky/misc/199805/intertwingle.html, which
+any budding BBDB hacker should be at least vaguely familiar with."
+  (bbdb-records t)
+  (if name (setq name (downcase name))
+    (setq name ""))
+  (if net (setq net (downcase net))
+    (setq net ""))
+  (let ((net-recs (bbdb-gethash (downcase net)))
+        recs)
+    (while net-recs
+      (if (string= name (downcase (bbdb-record-name (car net-recs))))
+          (add-to-list 'recs (car net-recs)))
+      (setq net-recs (cdr net-recs)))
+    recs))
 
 (defsubst bbdb-search-simple (name net)
   "name is a string; net is a string or list of strings."
