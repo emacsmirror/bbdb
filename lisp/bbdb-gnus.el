@@ -32,7 +32,7 @@
 
 ;; Cater for older emacs (19.34) with default Gnus installation.
 (eval-and-compile
-  (condition-case error
+  (condition-case nil
       (progn
         (require 'gnus-win)
         (require 'gnus-sum)
@@ -340,17 +340,18 @@ documentation for the following variables for more details:
 This function is meant to be used with the user function defined in
   `bbdb/gnus-summary-user-format-letter'"
   (let* ((from (mail-header-from header))
-     (data (and bbdb/gnus-summary-show-bbdb-names
-            (condition-case ()
-            (mail-extract-address-components from)
-              (error nil))))
-     (name (car data))
-     (net (car (cdr data)))
-     (record (and data
-              (bbdb-search-simple name
-               (if (and net bbdb-canonicalize-net-hook)
-               (bbdb-canonicalize-address net)
-             net)))))
+         (data (and bbdb/gnus-summary-show-bbdb-names
+                    (condition-case nil
+                        (mail-extract-address-components from)
+                      (error nil))))
+         (name (car data))
+         (net (car (cdr data)))
+         (record (and data
+                      (bbdb-search-simple
+                       name
+                       (if (and net bbdb-canonicalize-net-hook)
+                           (bbdb-canonicalize-address net)
+                         net)))))
     (if (and record name (member (downcase name) (bbdb-record-net record)))
     ;; bogon!
     (setq record nil))
