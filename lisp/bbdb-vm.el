@@ -36,11 +36,6 @@
 (or (boundp 'vm-mode-map)
     (load-library "vm-vars"))
 
-(defgroup bbdb-mua-specific-vm nil
-  "VM-specific BBDB customizations"
-  :group 'bbdb-mua-specific)
-(put 'bbdb-mua-specific-vm 'custom-loads '("bbdb-vm"))
-
 (defcustom bbdb/vm-get-from-headers
   '(;; authors headers
     "From:" "Sender:" "Resent-From:" "Reply-To:"
@@ -55,7 +50,7 @@ more time to search more headers!"
 (defcustom bbdb/vm-get-only-first-from-p
   t
   "*If t `bbdb/vm-update-records' will return only the first one.
-Changing this variable will show it effect only after clearing the
+Changing this variable will show its effect only after clearing the
 `bbdb-message-cache' of a folder or closing and visiting it again."
   :group 'bbdb-mua-specific-vm
   :type 'boolean)
@@ -76,11 +71,18 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
     (while adlist
       (setq fn (caar adlist)
         ad (cadar adlist))
-      (if (and (stringp vm-summary-uninteresting-senders)
-               (not ;; ignore uninteresting addresses
-                (or (and fn (string-match vm-summary-uninteresting-senders fn))
-                    (string-match vm-summary-uninteresting-senders ad))))
+
+      ;; ignore uninteresting addresses
+      ;; this is kinda gross!
+      (if (or
+           (not (stringp vm-summary-uninteresting-senders))
+           (not
+        (or (and fn
+             (string-match vm-summary-uninteresting-senders fn))
+            (and ad
+             (string-match vm-summary-uninteresting-senders ad)))))
           (add-to-list 'fromlist (car adlist)))
+
       (if (and only-first-from fromlist)
           (setq adlist nil headers nil)
         (setq adlist (cdr adlist)))))
@@ -94,12 +96,12 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
   (bbdb-records)
   (if bbdb-message-caching-enabled
       (let ((records (assq message-key bbdb-message-cache))
-	    (invalid nil))
-	(mapcar (lambda (record)
-		  (if (bbdb-record-deleted-p record)
-		      (setq invalid t)))
-		(cdr records))
-	(if invalid nil records))))
+        (invalid nil))
+    (mapcar (lambda (record)
+          (if (bbdb-record-deleted-p record)
+              (setq invalid t)))
+        (cdr records))
+    (if invalid nil records))))
 
 (defun bbdb/vm-encache-message (message-key bbdb-record)
   "Don't call this multiple times with the same args, it doesn't replace."
@@ -137,7 +139,7 @@ in this message."
     (if (not offer-to-create)
         (setq cache (and msg (bbdb/vm-message-cache-lookup msg))))
 
-    (if (and cache)
+    (if cache
         (setq records (if bbdb/vm-get-only-first-from-p
                           (if (cadr cache) ;; stop it from returning '(nil)
                               (list (cadr cache))
@@ -357,9 +359,9 @@ for new email addresses."
   (bbdb/vm-pop-up-bbdb-buffer t)
 
   (let ((bbdb/vm-get-from-headers bbdb/vm-snarf-all-headers)
-	(bbdb/vm-get-only-first-from-p nil)
-	(bbdb-message-cache nil)
-	records)
+    (bbdb/vm-get-only-first-from-p nil)
+    (bbdb-message-cache nil)
+    records)
     (setq records (bbdb/vm-update-records offer-to-create))
     (bbdb-display-records records)))
 
