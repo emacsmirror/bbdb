@@ -1,3 +1,17 @@
+2000-08-18  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb.el (bbdb-annotate-message-sender): the user will be
+	asked for adding new addresses to net only if `create-p' is `t'.
+
+	* texinfo/bbdb.texinfo (VM Features): Documentation of new VM
+	features.
+
+	* lisp/bbdb-vm.el (bbdb/vm-get-only-first-from-p): was formally
+	`bbdb/vm-get-first-from-p' which is not so self explanatory.  The
+	default value is now `t' in order to keep the old BBDB behavior.
+	(bbdb/vm-get-from): partially rewritten in order to make it more
+	readable. 
+
 2000-08-14  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb-com.el: require `cl' at compile time for `flet'
