@@ -56,6 +56,7 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PATH_PROG(RM, rm, /bin/rm)
+AC_PATH_PROG(GREP, grep, /bin/grep)
 
 dnl ah ah ah.
 AC_MSG_CHECKING([for my keys])
@@ -131,6 +132,17 @@ dnl then make it 'quiet'.
 if test "${RM}" = "/bin/rm" -o "${RM}" = "/usr/bin/rm"; then
   RM="${RM} -f"
 fi
+
+dnl More Hacky. Figure out the correct way to get contextual grep.
+dnl FIXME this should only be switched on for developers since it's
+dnl only required by the test stuff.
+if ${GREP} -C foo configure.ac > /dev/null 2>&1; then
+   GREPCONTEXT="-C"
+else
+   GREPCONTEXT="-C5"
+fi
+
+AC_SUBST(GREPCONTEXT)
 
 AC_OUTPUT
 
