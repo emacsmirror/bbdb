@@ -2929,7 +2929,7 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map [(o)]          'bbdb-omit-record)
   (define-key bbdb-mode-map [(?\;)]        'bbdb-record-edit-notes)
   (define-key bbdb-mode-map [(m)]          'bbdb-send-mail)
-  (define-key bbdb-mode-map [(meta d)]     'bbdb-dial)
+  (define-key bbdb-mode-map "\M-d"         'bbdb-dial)
   (define-key bbdb-mode-map [(f)]          'bbdb-finger)
   (define-key bbdb-mode-map [(F)]          'bbdb-ftp)
   (define-key bbdb-mode-map [(i)]          'bbdb-info)
@@ -2938,7 +2938,7 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map [(control x) (control t)]
                                            'bbdb-transpose-fields)
   (define-key bbdb-mode-map [(w)]          'bbdb-www)
-  (define-key bbdb-mode-map [(meta w)]     'bbdb-whois)
+  (define-key bbdb-mode-map "\M-w"         'bbdb-whois)
   (define-key bbdb-mode-map [(P)]          'bbdb-print)
   (define-key bbdb-mode-map [(h)]          'other-window)
   (define-key bbdb-mode-map [(=)]          'delete-other-windows)
@@ -2962,12 +2962,13 @@ passed as arguments to initiate the appropriate insinuations.
 
 (defun bbdb-insinuate-sendmail ()
   "Call this function to hook BBDB into sendmail (that is, M-x mail)."
-  (define-key mail-mode-map [(meta tab)] 'bbdb-complete-name))
+  (define-key mail-mode-map "\M-\t" 'bbdb-complete-name))
 
-
-(provide 'bbdb)  ; provide before loading things which might require
+;;;###autoload
+(defun bbdb-insinuate-message ()
+  "Call this function to hook BBDB into `message-mode'."
+  (define-key message-mode-map "\M-\t" 'bbdb-complete-name))
 
-(run-hooks 'bbdb-load-hook)
 
 (defmacro safe-require (thing)
   (list 'condition-case nil (list 'require thing) '(file-error nil)))
@@ -2981,7 +2982,8 @@ passed as arguments to initiate the appropriate insinuations.
   (beep 1)
   (apply 'message args))
 
-;;;###autoload
-(defun bbdb-insinuate-message ()
-  "Call this function to hook BBDB into `message-mode'."
-  (define-key message-mode-map "[(meta tab)]" 'bbdb-complete-name))
+
+(provide 'bbdb)  ; provide before loading things which might require
+
+(run-hooks 'bbdb-load-hook)
+
