@@ -69,7 +69,9 @@ the user confirms the creation."
                     (or (bbdb-invoke-hook-for-value
                          bbdb/news-auto-create-p)
                         offer-to-create)
-                    offer-to-create)))))
+		    (or (bbdb-invoke-hook-for-value
+			 bbdb/prompt-for-create-p)
+			offer-to-create))))))
 
 ;;;###autoload
 (defun bbdb/gnus-annotate-sender (string &optional replace)
