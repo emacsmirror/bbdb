@@ -258,7 +258,7 @@
 Not done for GNU Emacs just yet, since it doesn't have image support
 as of GNU Emacs 20.7"
   (if (not (or (and (boundp 'highlight-headers-hack-x-face-p)
-                    (funcall (intern                               ;; compiler
+                    (symbol-value (intern                          ;; compiler
                               "highlight-headers-hack-x-face-p"))) ;; ick.
                (and (featurep 'xemacs)
                     (string-match "^21\\." emacs-version)))) ;; XXX
