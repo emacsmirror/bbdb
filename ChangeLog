@@ -1,3 +1,46 @@
+1999-01-24  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 2.00.06 released
+
+1999-01-24  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb-gnus.el: (bbdb/gnus-score-as-text) Handle the fact
+	  that `score' could be either an int or a string.
+	
+1999-01-21  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb-com.el (bbdb-info): Made it work with Info-directory-list
+
+1999-01-21  Sam Steingold  <sds@goems.com>
+
+	* lisp/bbdb.el (bbdb-display-records-1): bind
+	  `temp-buffer-setup-hook' and `temp-buffer-show-hook' to nil.
+	  This fixes the problem of `view-mode' conflicting with
+	  `bbdb-mode'.
+	
+1999-01-08  Jean-Yves Perrier  <perrier@nagra-kudelski.ch>
+
+	* lisp/bbdb-comp.el (bbdb-redisplay-records): Don't bug out
+	  with mark.
+
+1999-01-08  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb.el (bbdb-string-trim): Make it remove *all* text
+	  properties from the string instead of just a few select ones.
+	  Inspired by Sam Steingold <sds@goems.com>.
+
+1999-01-08  Sam Steingold  <sds@goems.com>
+
+	* lisp/bbdb.el (bbdb-save-db-timeout): Correct comment.
+
+1998-12-31  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb-snarf.el (bbdb-snarf-region): Autoload
+
+1998-12-31  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-snarf-signature): Created
+
 1998-12-31  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 2.00.05 released
