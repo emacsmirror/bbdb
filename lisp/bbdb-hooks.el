@@ -35,6 +35,11 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.54  1998/01/06 06:05:31  simmonmt
+;; Added provide of bbdb-hooks.  Fixed custom specs (added cons type
+;; instead of group where appropriate).  Replaced bbdb-time-string
+;; function with bbdb-time-internal-format variable.
+;;
 ;; Revision 1.53  1997/12/01 05:00:49  simmonmt
 ;; Customized, added sshteingold@cctrading.com's change to time-string
 ;; function to use a format string.
@@ -54,22 +59,22 @@
 (defun Nukem-til-they-glow ()
   (the-v18-byte-compiler-sucks-wet-farts-from-dead-pigeons))
 
-(defun bbdb-time-string ()
-  "Returns a string for use as a timestamp.  See `bbdb-time-format'
-for customization details."
-  (format-time-string "%Y-%m-%d"))
+(defvar bbdb-time-internal-format "%Y-%m-%d"
+  "The internal date format.")
 
 (defun bbdb-timestamp-hook (record)
   "For use as a bbdb-change-hook; maintains a notes-field called `timestamp'
 for the given record which contains the time when it was last modified.  If
 there is such a field there already, it is changed, otherwise it is added."
-  (bbdb-record-putprop record 'timestamp (bbdb-time-string)))
+  (bbdb-record-putprop record 'timestamp (format-time-string
+					  bbdb-time-internal-format)))
 
 (defun bbdb-creation-date-hook (record)
   "For use as a bbdb-create-hook; adds a notes-field called `creation-date'
 which is the current time string."
   ;; hey buddy, we've known about your antics since the eighties...
-  (bbdb-record-putprop record 'creation-date (bbdb-time-string)))
+  (bbdb-record-putprop record 'creation-date (format-time-string
+					      bbdb-time-internal-format)))
 
 
 ;;; Determining whether to create a record based on the content of the 
@@ -140,7 +145,7 @@ Maximegalon U., or (that's *or*) people posting about time travel.
 
 See also bbdb-ignore-some-messages-alist, which has the opposite effect."
   :group 'bbdb-noticing-records
-  :type '(repeat (group
+  :type '(repeat (cons
 		  (string :tag "Header name")
 		  (regexp :tag "Regex to match on header value"))))
 
@@ -160,7 +165,7 @@ or messages sent to or CCed to either of two mailing lists.
 
 See also bbdb-ignore-most-messages-alist, which has the opposite effect."
   :group 'bbdb-noticing-records
-  :type '(repeat (group
+  :type '(repeat (cons
 		  (string :tag "Header name")
 		  (regexp :tag "Regex to match on header value"))))
 
@@ -269,7 +274,7 @@ See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'."
   :group 'bbdb-noticing-records
   :type '(repeat (group
 		  (string :tag "Header name")
-		  (repeat (group
+		  (repeat (cons
 			   (regexp :tag "Regexp to match on header value")
 			   (string :tag "String for notes if regexp matches"))))))
 
@@ -288,7 +293,7 @@ gatewayed to gnu.* newsgroups.  Note that this exclusion applies only
 to a single field, not to the entire message.  For that, use the variable
 bbdb-auto-notes-ignore-all."
   :group 'bbdb-noticing-records
-  :type '(repeat (group
+  :type '(repeat (cons
 		  (string :tag "Header name")
 		  (regexp :tag "Regexp to match on header value"))))
 
@@ -306,7 +311,7 @@ would exclude any notes recording for message coming from BLAT.COM.
 Note that this is different from `bbdb-auto-notes-ignore', which applies
 only to a particular header field, rather than the entire message."
   :group 'bbdb-noticing-records
-  :type '(repeat (group
+  :type '(repeat (cons
 		  (string :tag "Header name")
 		  (regexp :tag "Regexp to match on header value"))))
 
@@ -575,3 +580,5 @@ For use as a value of `bbdb-change-hook'.  See `bbdb-net-redundant-p'."
 	   (setq new (nreverse new))
 	   (bbdb-record-set-net record new)
 	   t))))
+
+(provide 'bbdb-hooks)
