@@ -1,3 +1,13 @@
+2001-12-26  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el (bbdb-complete-name):
+	Mostly rewritten to consolidate the last four years(!) of code
+	glomming.
+
+	* lisp/bbdb.el (bbdb-search-intertwingle):
+	New function. More stringent version of bbdb-search-simple,
+	intended for internal bbdb use only
+
 2001-11-19  Waider  <waider@waider.ie>
 
 	* lisp/bbdb.el (bbdb-format-address):
