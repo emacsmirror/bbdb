@@ -1,3 +1,65 @@
+Sun Nov 30 23:26:21 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 1.57unoff released
+
+Sun Nov 30 22:47:04 1997  <sshteingold@cctrading.com>
+
+	* lisp/bbdb-hooks.el (bbdb-time-string): Uses format string now
+	* lisp/bbdb-com.el (bbdb-display-some): Added
+	* lisp/bbdb-com.el (bbdb-kill-older): Created
+	* lisp/bbdb-com.el (bbdb-timestamp-older): Created
+	* lisp/bbdb-com.el (bbdb-timestamp-newer): Created
+	* lisp/bbdb-com.el (bbdb-creation-older): Created
+	* lisp/bbdb-com.el (bbdb-creation-newer): Created
+
+Sun Nov 30 22:44:42 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/auto-autoloads.el: Autoloads for date functions
+	* lisp/bbdb-com.el (bbdb-complete-clicked-name): Make 19.34 happy
+	* lisp/bbdb-com.el (bbdb-compare-records): Created
+	* lisp/bbdb-com.el: Customized variables
+	* lisp/bbdb-gnus.el: Customized variables
+	* lisp/bbdb-hooks.el: Customized variables
+	* lisp/bbdb.el: Customized variables
+	* lisp/bbdb.el: Added timezone require to support date functions
+	* lisp/bbdb.el: Added migration functions, changed database version
+	* lisp/bbdb.el: Added definitions for utility functions that don't 
+	                appear in all Emacsen (in the case of string>, in none)
+	* lisp/bbdb.el (defstruct): Added documentation
+	* lisp/bbdb.el (bbdb-format-record): Can now define printing
+	                                     functions for each note field
+		                             (bbdb-format-record-fieldname)
+	* lisp/bbdb.el (bbdb-copy-thing): Created
+	* lisp/bbdb.el (bbdb-initialize): Created - Use it to initialize
+	* texinfo/Makefile (clean): Changed since we now distribute *.info*
+	* texinfo/Makefile (reallyclean): clean + removes *.info*
+	* texinfo/bbdb.texinfo: Removed `BBDB database' per jwz, added
+	                        prereq section, more special fields, some
+				internals.
+	* INSTALL: Created
+				
+Thu Oct 30 07:06:15 1997  Hrvoje Niksic <hniksic@srce.hr>
+
+	* lisp/bbdb.el: Custom blob to make defcustom and defgroup
+	  transparent in non-customized Emacsen
+
+Sun Nov 30 12:03:41 1997  Soren Dayton <csdayton@cs.uchicago.edu>
+
+	* lisp/bbdb-print.el (bbdb-print-tex-quote): Escape tildes properly
+
+Tue Nov 10 20:10:53 1997 Jens-Ulrik Holger Petersen <petersen@kurims.kyoto-u.ac.jp>
+
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus): Improve output of
+	  warning messages.
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-known-poster-mark): Correct 
+	  docstring. 
+
+Sat Nov  8 17:00:21 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el (bbdb-string-trim): Just remove 'face property.
+	* lisp/bbdb.el: Define `defvaralias' as empty function if it's not 
+	  defined.  (GNU Emacs doesn't have it)
+
 Sun Nov  2 01:32:23 1997  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 1.56unoff released 

@@ -6,17 +6,16 @@ Features
 ========
 
 ---------------------------------------------------------------------------------
-PURPOSE: Y2K
+PURPOSE: Easier BBDB extension
 
-CANDIDATE: <unwritten>
-   AUTHOR: <unknown>
-    WHERE: <my head>
+CANDIDATE: Soren Dayton's bbdb-extend-set
+   AUTHOR: Soren Dayton <csdayton@cs.uchicago.edu>
+    WHERE: xcdyb30f3hb.fsf@ra.cs.uchicago.edu
 
-STATUS: Investigatory
- SINCE: 12-Oct-1997
- ADDED: 12-Oct-1997
-REASON: Looking to see where patches will be required.  Currently (w/o 
-        looking at the code at all) creation-date and timestamp
+STATUS: Pending
+ SINCE: 09-Nov-1997
+ ADDED: 09-Nov-1997
+REASON: Need to finish documentation first
 ---------------------------------------------------------------------------------
 
 Patches
@@ -129,19 +128,7 @@ REASON: I integrated the ones that looked most important at first
 MAYBE?
 ======
 
---------------------------------------------------------------------------------
-PURPOSE: international character extraction from mail names/addresses
-
-CANDIDATE: mail-extract-address-components
-   AUTHOR: Raymond Toy <toy@rtp.ericsson.se>
-    WHERE: <27077.864998003@rtp.ericsson.se> Fri, 30 May 1997 09:13:23 -0400
-
-STATUS: Preliminary Denial
-  WHEN: 27-Sep-1997
-REASON: I've removed mail-extr from the distribution since it's distributed with
-        Emacs.  Should this patch be submitted to the maintainers of Emacs, or
-        should I find a way to sneak it into BBDB?
---------------------------------------------------------------------------------
+*** NONE ***
 
 Documentation
 =============
@@ -153,6 +140,7 @@ Add documentation of Soren Dayton's message for bbdb-send-mail-internal
            ...    of Christopher Kline's bbdb-unlazy-lock.pl
            ...    of the Gnus Summary Buffer stuff from gnus-bbdb
            ...    of bbdb-sc.el
+           ...    of sshteingold's time functions
 Changes to bbdb-print.el
 bbdb-snarf, bbbd-w3, message-mode stuff
 Add documentation bbdb-srv
