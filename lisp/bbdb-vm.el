@@ -22,6 +22,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.55  1998/04/11 07:06:47  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back
+;;
 ;; Revision 1.54  1998/02/23 07:14:01  simmonmt
 ;; Use add-hook, not bbdb-add-hook
 ;;
@@ -85,6 +88,7 @@
 ;    )
   )
 
+;;;###autoload
 (defun bbdb/vm-update-record (&optional offer-to-create)
   "Returns the record corresponding to the current VM message, 
 creating or modifying it as necessary.  A record will be created if 
@@ -115,6 +119,7 @@ the user confirms the creation."
 			     offer-to-create)
 			 offer-to-create))))))))))
 
+;;;###autoload
 (defun bbdb/vm-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
 corresponding to the sender of this message.  If REPLACE is non-nil,
@@ -137,6 +142,7 @@ of the BBDB record corresponding to the sender of this message."
 	(bbdb-record-edit-property record nil t)
       (bbdb-record-edit-notes record t))))
 
+;;;###autoload
 (defun bbdb/vm-show-sender ()
   "Display the contents of the BBDB for the sender of this message.
 This buffer will be in bbdb-mode, with associated keybindings."
@@ -202,6 +208,7 @@ Respects vm-summary-uninteresting-senders."
 		(bbdb-record-name entry))))))
 
 
+;;;###autoload
 (defun bbdb-insinuate-vm ()
   "Call this function to hook BBDB into VM."
   (cond ((boundp 'vm-select-message-hook) ; VM 5.36+

@@ -36,6 +36,7 @@
   :group 'bbdb-utilities
   :type 'string)
 
+;;;###autoload
 (defun bbdb-whois (the-record &optional server)
   (interactive (list (if (string= bbdb-buffer-name (buffer-name))
 			 (bbdb-current-record)

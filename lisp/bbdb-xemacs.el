@@ -47,6 +47,7 @@
     (face-differs-from-default-p (make-face 'bbdb-field-name))
     (copy-face 'bold 'bbdb-field-name))
 
+;;;###autoload
 (defun bbdb-fontify-buffer ()
   (save-excursion
     (set-buffer bbdb-buffer-name)
@@ -259,6 +260,7 @@
    ))
 
 
+;;;###autoload
 (defun bbdb-menu (e)
   (interactive "e")
   (mouse-set-point e)
@@ -289,6 +291,7 @@
 (add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
 
 ;; Utility functions that mask others to provide XEmacs-specific functionality
+;;;###autoload
 (defun bbdb-xemacs-display-completion-list (list &optional callback data)
   "Wrapper for display-completion-list.  Allows callbacks on XEmacs
 display-completion-list is called with `:activate-callback CALLBACK'

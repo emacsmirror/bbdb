@@ -20,6 +20,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.6  1998/04/11 07:06:30  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back
+;;
 ;; Revision 1.5  1998/01/06 06:18:22  simmonmt
 ;; Removed autoloads and added provide for bbdb-w3
 ;;
@@ -40,6 +43,7 @@
 ;;
 ;;
 
+;;;###autoload
 (defun bbdb-www (all)
   "Visit URL's stored in `www' fields of the current record.
 \\[bbdb-apply-next-command-to-all-records]\\[bbdb-www] \
@@ -59,6 +63,7 @@ Non-interactively, do all records if arg is nonnil."
     (if (not got-one)
 	(error "No WWW field!"))))
 
+;;;###autoload
 (defun bbdb-www-grab-homepage (record)
   "Grab the current URL and store it in the bbdb database"
   (interactive (list (bbdb-completing-read-record "Add WWW homepage for: ")))
@@ -72,6 +77,7 @@ Non-interactively, do all records if arg is nonnil."
   (bbdb-change-record record t)
   (bbdb-display-records (list record)))
 
+;;;###autoload
 (defun bbdb-insinuate-w3 ()
   "Call this function to hook BBDB into W3."
   (add-hook 'w3-mode-hook
