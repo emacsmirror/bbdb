@@ -24,6 +24,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.20  2004/03/22 15:55:03  waider
+;; * Minor docstring fix (Stefan Monnier)
+;; * Catch error if attempting to kill only window in frame (Stefan Monnier)
+;;
 ;; Revision 1.19  2002/08/19 22:49:12  waider
 ;; Jim Blandy's fix for migrating notes.
 ;;
@@ -101,9 +105,9 @@
 
 ;;;###autoload
 (defun bbdb-migration-query (ondisk)
-  "Ask if the database is to be migrated.  ONDISK is the version
-number of the database as currently stored on disk.  Returns the
-version for the saved database."
+  "Ask if the database is to be migrated.
+ONDISK is the version number of the database as currently stored on
+disk.  Returns the version for the saved database."
   (save-excursion
     (let ((wc (current-window-configuration))
       (buf (get-buffer-create "*BBDB Migration Info*"))
@@ -135,7 +139,11 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
         (y-or-n-p (concat "Upgrade BBDB to version "
                   (format "%d" bbdb-file-format)
                   "? ")))
-      (delete-window win)
+      (condition-case nil
+          (delete-window win)
+        ;; The window might be the only one on its frame.  Hopefully, it's
+        ;; a dedicated window and the kill-buffer below will DTRT.
+        (error nil))
       (kill-buffer buf)
       (set-window-configuration wc)
       (if update bbdb-file-format ondisk))))
@@ -146,7 +154,7 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 `bbdb-file-format-migration') to the current version (in
 `bbdb-file-format')."
   (bbdb-mapc (bbdb-migrate-versions-lambda (car bbdb-file-format-migration))
-	     records)
+         records)
   records)
 
 ;;;###autoload
