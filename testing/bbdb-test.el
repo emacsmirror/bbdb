@@ -420,34 +420,50 @@ starting with \"Test\""
 (defvar bbdb-test/bbdb-completion-type
   '(bbdb-test/bbdb-complete-name ;; test function
     ;; variable setting, (input output completions)
+
+    ;; With completion-type set to nil, completion happens across all
+    ;; names and all email addresses.
+
+    ;; multiple completions, but all in the same record should result
+    ;; in the first mail address in that record.
     (nil ("waider"
-          "waider@"
-          ("Ronan Waide <waider@dspsrv.com>"
-           "Ronan Waide <waider@waider.ie>"))
-         ;; test cycling
+          "Ronan Waide <waider@waider.ie>"
+          nil)
+         ;; completing a completed record should cycle to the next
+         ;; email address.
          ("Ronan Waide <waider@waider.ie>"
           "Ronan Waide <waider@dspsrv.com>"
           nil)
+         ;; completing on the name should return the first email
+         ;; address
          ("ronan waide"
           "Ronan Waide <waider@waider.ie>"
           nil)
+         ;; completing on a unique email address should return that
+         ;; email address
          ("ronan.waide"
           "Ronan.Waide@euroconex.com"
           nil)
-         ("Ronan"
-          "Ronan"
-          ("Ronan.Waide@euroconex.com"
-           "Ronan Waide <waider@waider.ie>"))
+         ;; completing on a username vs. a name
+         ("Ronan."
+          "Ronan.Waide@euroconex.com"
+          nil)
+         ;; unique email address
          ("Robert.Fenk@g"
           "Robert.Fenk@gmx.de"
           nil)
+         ;; unique email address, case insensitive. again,
+         ;; single-record match.
          ("Robert.Fenk"
-          "robert.fenk@"
-          ("Robert.Fenk@forwiss.de"
-           "Robert.Fenk@gmx.de"))
+          "Robert.Fenk@gmx.de"
+          nil)
+         ;; unique email address
          ("jwz"
           "Jamie Zawinski <jwz@jwz.org>"
           nil))
+
+    ;; When set to 'name, completion should only occur on the NAME
+    ;; field
     (name ("waider"
            "waider"
            nil)
@@ -457,16 +473,21 @@ starting with \"Test\""
           ("ronan waide"
            "Ronan Waide <waider@waider.ie>"
            nil))
+
+    ;; 'net => complete across NET field only
     (net ("waider"
-          "waider@"
-          ("Ronan Waide <waider@dspsrv.com>"
-           "Ronan Waide <waider@waider.ie>"))
+          "Ronan Waide <waider@waider.ie>"
+          nil)
          ("jwz"
           "Jamie Zawinski <jwz@jwz.org>"
           nil))
+
+    ;; only complete on the primary email address
     (primary ("waider"
               "Ronan Waide <waider@waider.ie>"
               nil))
+
+    ;; complete on primary email address or name
     (primary-or-name ("waider"
                       "Ronan Waide <waider@waider.ie>"
                       nil)
@@ -474,8 +495,10 @@ starting with \"Test\""
                       "Ronan Waide <waider@waider.ie>"
                       nil)
                      ("first"
-                      "First.Last@location1.org"
-                      nil))
+                      "first"
+                      ("First.Last@location1.org" "First.Second@location1.org")))
+
+    ;; same as above
     (name-or-primary ("waider"
                       "Ronan Waide <waider@waider.ie>"
                       nil)
