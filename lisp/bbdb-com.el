@@ -587,7 +587,7 @@ NOTES is a string, or an alist associating symbols with strings."
     ;; get to beginning of this record
     (beginning-of-line)
     (let ((p (point)))
-      (while (not (or (eobp) (looking-at "^[^ \t\n]")))
+      (while (not (or (eobp) (bobp) (looking-at "^[^ \t\n]")))
 	(forward-line -1))
       (let* ((record (or (bbdb-current-record planning-on-modifying)
 			 (error "unperson")))
