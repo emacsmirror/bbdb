@@ -93,20 +93,21 @@
 (if (fboundp 'extent-at)
     (fset 'bbdb-extent-at 'extent-at)
   (defun bbdb-extent-at (pos buf tag) "NOT FULL XEMACS IMPLEMENTATION"
-    (save-window-excursion
-      (save-excursion
-        (set-buffer buf) ;; XXX and this is why
-        (let ((o (overlays-at pos))
-              minpri retval)
-          (while (car o)
-            (let ((x (car o)))
-              (and (overlayp x)
-                   (overlay-get x tag)
-                   (if (or (null minpri) (> minpri (overlay-get x 'priority)))
-                       (setq retval x
-                             minpri (overlay-get x 'priority))))
-              (setq o (cdr o))))
-          retval)))))
+;; these lines upset VM, and are unnecessary for our use of bbdb-extent-at
+;;    (save-window-excursion
+;;      (save-excursion
+;;        (set-buffer buf)
+    (let ((o (overlays-at pos))
+          minpri retval)
+      (while (car o)
+        (let ((x (car o)))
+          (and (overlayp x)
+               (overlay-get x tag)
+               (if (or (null minpri) (> minpri (overlay-get x 'priority)))
+                   (setq retval x
+                         minpri (overlay-get x 'priority))))
+          (setq o (cdr o))))
+      retval)))
 
 (if (fboundp 'highlight-extent)
     (fset 'bbdb-highlight-extent 'highlight-extent)
