@@ -55,9 +55,14 @@ version.")
 confusion when doing completion.  If 't it will prompt the users on how
 to merge records when duplicates are detected.")
 
+(eval-and-compile
+  (if (fboundp 'unless) nil
+    (defmacro unless (bool &rest forms) `(if ,bool nil ,@forms))
+    (defmacro when (bool &rest forms) `(if ,bool (progn ,@forms)))))
+
 ;; This nonsense is to get the definition of defsubst loaded in when this file
-;; is loaded,without necessarily forcing the compiler to be loaded if we're 
-;; running in an emacs with bytecomp-runtime.el predumped.  We are using 
+;; is loaded,without necessarily forcing the compiler to be loaded if we're
+;; running in an emacs with bytecomp-runtime.el predumped.  We are using
 ;; `require' as a way to get compile-time evaluation of this form so that this
 ;; works in the old compiler as well as the new one.
 ;;
@@ -98,7 +103,7 @@ to merge records when duplicates are detected.")
     ;; We have the old custom-library, hack around it!
     (defmacro defgroup (&rest args)
       nil)
-    (defmacro defcustom (var value doc &rest args) 
+    (defmacro defcustom (var value doc &rest args)
       (` (defvar (, var) (, value) (, doc))))
     (defmacro defface (var value doc &rest args)
       (` (make-face (, var))))
@@ -256,7 +261,7 @@ commands be different."
 records for people you receive mail from.  If this is a function name
 or lambda, then it is called with no arguments to decide whether an
 entry should be automatically created.  You can use this to, for example,
-not create records for messages which have reached you through a 
+not create records for messages which have reached you through a
 particular mailing list, or to only create records automatically if
 the mail has a particular subject."
   :group 'bbdb-noticing-records
@@ -265,14 +270,14 @@ the mail has a particular subject."
 		 (function :tag "Create with function" bbdb-)))
 
 (defcustom bbdb/news-auto-create-p nil
-  "*If this is t, then GNUS will automatically create new bbdb 
+  "*If this is t, then GNUS will automatically create new bbdb
 records for people you receive mail from.  If this is a function name
 or lambda, then it is called with no arguments to decide whether an
 entry should be automatically created.  You can use this to, for
 example, create or not create messages which have a particular
 subject.  If you want to autocreate messages based on the current
 newsgroup, it's probably a better idea to set this variable to t or
-nil from your gnus-select-group-hook (for Gnus - use
+nil from your `gnus-select-group-hook' (for Gnus - use
 gnus-Select-group-hook for GNUS) instead."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
@@ -283,7 +288,7 @@ gnus-Select-group-hook for GNUS) instead."
   "*If this is true, then BBDB will not prompt you when it notices a
 name change, that is, when the \"real name\" in a message doesn't correspond
 to a record already in the database with the same network address.  As in,
-\"John Smith <jqs@frob.com>\" versus \"John Q. Smith <jqs@frob.com>\".  
+\"John Smith <jqs@frob.com>\" versus \"John Q. Smith <jqs@frob.com>\".
 Normally you will be asked if you want to change it."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Prompt for name changes" t)
@@ -298,17 +303,17 @@ if you want both names to map to the same record."
 
 (defcustom bbdb-readonly-p nil
   "*If this is true, then nothing will attempt to change the bbdb database
-implicitly, and you will be prevented from doing it explicitly.  If you have 
-more than one emacs running at the same time, you might want to arrange for 
+implicitly, and you will be prevented from doing it explicitly.  If you have
+more than one emacs running at the same time, you might want to arrange for
 this to be set to t in all but one of them."
   :group 'bbdb-database
   :type '(choice (const :tag "Database is read-only" t)
 		 (const :tag "Database is writable" nil)))
 
 (defcustom bbdb-auto-revert-p nil
-  "*If this variable is true and the BBDB file is noticed to have changed on 
+  "*If this variable is true and the BBDB file is noticed to have changed on
 disk, it will be automatically reverted without prompting you first.  Otherwise
-you will be asked. (But if the file has changed and you hae made changes in 
+you will be asked. (But if the file has changed and you hae made changes in
 memory as well, you will always be asked.)"
   :group 'bbdb-saving
   :type '(choice (const :tag "Revert unchanged database without prompting" t)
@@ -335,12 +340,12 @@ RMAIL, or GNUS.  If 'horiz, stack the window horizontally if there is room."
   :type 'integer)
 
 (defcustom bbdb-completion-type nil
-  "*Controls the behaviour of 'bbdb-complete-name'.  If nil, completion is 
+  "*Controls the behaviour of 'bbdb-complete-name'.  If nil, completion is
 done across the set of all full-names and user-ids in the bbdb-database;
-if the symbol 'name, completion is done on names only; if the symbol 'net, 
-completion is done on network addresses only; if it is 'primary, then 
+if the symbol 'name, completion is done on names only; if the symbol 'net,
+completion is done on network addresses only; if it is 'primary, then
 completion is done only across the set of primary network addresses (the
-first address in the list of addresses for a given user).  If it is 
+first address in the list of addresses for a given user).  If it is
 'primary-or-name, completion is done across primaries and real names."
   :group 'bbdb-record-use
   :type '(choice (const :tag "Complete across names and net addresses" nil)
@@ -349,7 +354,7 @@ first address in the list of addresses for a given user).  If it is
 		 (const :tag "Complete across primary net addresses" primary)
 		 (const :tag "Complete across names and primary net addresses"
 			primary-or-name)))
-  
+
 (defcustom bbdb-completion-display-record t
   "*Whether bbdb-complete-name (\\<mail-mode-map>\\[bbdb-complete-name] \
 in mail-mode) will update the *BBDB* buffer
@@ -372,7 +377,7 @@ this is nil, it will default to the value of (user-login-name)."
   "*If this is true, then when the Insidious Big Brother Database notices
 a new email address for a person, it will automatically add it to the list
 of addresses.  If it is nil, you will be asked whether to add it.  If it is
-the symbol 'never (really, if it is any non-t, non-nil value) then new 
+the symbol 'never (really, if it is any non-t, non-nil value) then new
 network addresses will never be automatically added.
 
 See also the variable `bbdb-new-nets-always-primary' for control of whether
@@ -383,8 +388,8 @@ the addresses go at the front of the list or the back."
 		 (const :tag "Never add new addresses" never)))
 
 (defcustom bbdb-new-nets-always-primary nil
-  "*If this is true, then when the Insidious Big Brother Database adds a new 
-address to a record, it will always add it to the front of the list of 
+  "*If this is true, then when the Insidious Big Brother Database adds a new
+address to a record, it will always add it to the front of the list of
 addresses, making it the primary address.  If this is nil, you will be asked.
 If it is the symbol 'never (really, if it is any non-t, non-nil value) then
 new network addresses will always be added at the end of the list."
@@ -417,7 +422,7 @@ just save it without asking."
   "*Whether caching of the message->bbdb-record association should be used
 for the interfaces which support it (VM, MH, and RMAIL).  This can speed
 things up a lot.  One implication of this variable being true is that the
-bbdb-notice-hook will not be called each time a message is selected, but
+`bbdb-notice-hook' will not be called each time a message is selected, but
 only the first time.  Likewise, if selecting a message would generate a
 question (whether to add an address, change the name, etc) you will only
 be asked that question the very first time the message is selected."
@@ -431,15 +436,15 @@ be asked that question the very first time the message is selected."
   :type 'hook)
 
 (defcustom bbdb-list-hook nil
-  "*Hook or hooks invoked after the bbdb-list-buffer is filled in.  Invoked
-with no arguments."
+  "*Hook or hooks invoked after the `bbdb-list-buffer' is filled in.
+Invoked with no arguments."
   :group 'bbdb-hooks
   :type 'hook)
 
 (defcustom bbdb-create-hook 'bbdb-creation-date-hook
   "*Hook or hooks invoked each time a new bbdb-record is created.  Invoked
-with one argument, the new record.  This is called *before* the record is 
-added to the database.  Note that bbdb-change-hook will be called as well."
+with one argument, the new record.  This is called *before* the record is
+added to the database.  Note that `bbdb-change-hook' will be called as well."
   :group 'bbdb-hooks
   :type 'hook)
 
@@ -455,8 +460,8 @@ bbdb-create-hook will be called."
   "*Hook or hooks invoked each time a bbdb-record is altered.  Invoked with
 one argument, the record.  This is called *after* the bbdb-database buffer
 is modified, so if you want to modify the record each time it is changed,
-you should use the `bbdb-change-hook' instead.  Note that if a new bbdb 
-record is created, both this hook and bbdb-create-hook will be called."
+you should use the `bbdb-change-hook' instead.  Note that if a new bbdb
+record is created, both this hook and `bbdb-create-hook' will be called."
   :group 'bbdb-hooks
   :type 'hook)
 
@@ -466,7 +471,7 @@ string.  Whenever the Insidious Big Brother Database \"notices\" a message,
 the corresponding network address will be passed to this function first, as
 a kind of \"filter\" to do whatever transformations upon it you like before
 it is compared against or added to the database.  For example: it is the case
-that CS.CMU.EDU is a valid return address for all mail originating at a 
+that CS.CMU.EDU is a valid return address for all mail originating at a
 machine in the .CS.CMU.EDU domain.  So, if you wanted all such addresses to
 be canonically hashed as user@CS.CMU.EDU, instead of as user@host.CS.CMU.EDU,
 you might set this variable to a function like this:
@@ -493,9 +498,9 @@ If a record has an address of the form foo@baz.com, setting this to t
 will cause subsequently-noticed addresses like foo@bar.baz.com to be
 ignored (since we already have a more general form of that address.)
 This is similar in function to one of the possible uses of the variable
-`bbdb-canonicalize-net-hook' but is somewhat more automatic.  (This 
+`bbdb-canonicalize-net-hook' but is somewhat more automatic.  (This
 can't quite be implemented in terms of the canonicalize-net-hook because
-it needs access to the database to determine whether an address is 
+it needs access to the database to determine whether an address is
 redundant, and the canonicalize-net-hook is purely a textual manipulation
 which is performed before any database access.)"
   :group 'bbdb-noticing-records
@@ -505,26 +510,26 @@ which is performed before any database access.)"
 (defcustom bbdb-notice-hook nil
   "*Hook or hooks invoked each time a bbdb-record is \"noticed\", that is,
 each time it is displayed by the news or mail interfaces.  Invoked with
-one argument, the new record.  The record need not have been modified for 
-this to be called - use bbdb-change-hook for that.  You can use this to, 
-for example, add something to the notes field based on the subject of the 
+one argument, the new record.  The record need not have been modified for
+this to be called - use `bbdb-change-hook' for that.  You can use this to,
+for example, add something to the notes field based on the subject of the
 current message.  It is up to your hook to determine whether it is running
 in GNUS, VM, MH, or RMAIL, and to act appropriately.
 
-Also note that bbdb-change-hook will NOT be called as a result of any
+Also note that `bbdb-change-hook' will NOT be called as a result of any
 modifications you may make to the record inside this hook.
 
 Beware that if the variable `bbdb-message-caching-enabled' is true (a good
-idea) then when you are using VM, MH, or RMAIL, this hook will be called only 
+idea) then when you are using VM, MH, or RMAIL, this hook will be called only
 the first time that message is selected.  (The GNUS interface does not use
-caching.)  When debugging the value of this hook, it is a good idea to set 
+caching.)  When debugging the value of this hook, it is a good idea to set
 caching-enabled to nil."
   :group 'bbdb-hooks
   :type 'hook)
 
 (defcustom bbdb-after-read-db-hook nil
-  "*Hook or hooks invoked (with no arguments) just after the Insidious Big 
-Brother Database is read in.  Note that this can be called more than once if 
+  "*Hook or hooks invoked (with no arguments) just after the Insidious Big
+Brother Database is read in.  Note that this can be called more than once if
 the BBDB is reverted."
   :group 'bbdb-hooks
   :type 'hook)
@@ -539,7 +544,7 @@ WARNING:  This hook will be run the first time you traverse the Custom menus
   :type 'hook)
 
 (defcustom bbdb-initialize-hook nil
-  "*Hook or hooks invoked (with no arguments) when the Insidious Big Brother 
+  "*Hook or hooks invoked (with no arguments) when the Insidious Big Brother
 Database initialization function `bbdb-initialize' is run."
   :group 'bbdb-hooks
   :type 'hook)
@@ -551,7 +556,7 @@ Database initialization function `bbdb-initialize' is run."
 
 
 ;;; These are the buffer-local variables we use.
-;;; They are mentioned here so that the compiler doesn't warn about them 
+;;; They are mentioned here so that the compiler doesn't warn about them
 ;;; when byte-compile-warn-about-free-variables is on.
 
 (defvar bbdb-records nil)
@@ -748,6 +753,14 @@ that holds the number of slots."
 	  (bbdb-record-raw-notes record)
 	nil))))
 
+(defun bbdb-get-field (rec field &optional nn)
+  "Get the N-th element (or all if nil) of the notes FIELD of the REC.
+If the note is absent, returns a zero length string."
+  (let ((note (or (bbdb-record-getprop rec field) "")))
+    (if nn
+        (nth nn (split-string note " ,;\t\n\f\r\v"))
+        note)))
+
 ;; this works on the 'company field as well.
 (defun bbdb-record-putprop (record property newval)
   (if (memq property '(name address addresses phone phones net aka AKA))
@@ -817,9 +830,9 @@ that holds the number of slots."
       (if (and (stringp (car (bbdb-address-zip addr)))
 	       (stringp (car (cdr (bbdb-address-zip addr)))))
 	  ;; if the second string starts with 4 digits
-	  (if (string-match "^[0-9][0-9][0-9][0-9]" 
+	  (if (string-match "^[0-9][0-9][0-9][0-9]"
 			    (car (cdr (bbdb-address-zip addr))))
-	      (concat (car (bbdb-address-zip addr)) 
+	      (concat (car (bbdb-address-zip addr))
 		      "-"
 		      (car (cdr (bbdb-address-zip addr))))
 	    ;; if ("abc" "efg")
@@ -831,7 +844,7 @@ that holds the number of slots."
 		 (consp (nth 1 (bbdb-address-zip addr)))
 		 (integerp (nth 0 (nth 1 (bbdb-address-zip addr))))
 		 (integerp (nth 1 (nth 1 (bbdb-address-zip addr)))))
-	    (format "%s-%d %d" 
+	    (format "%s-%d %d"
 		    (nth 0 (bbdb-address-zip addr))
 		    (nth 0 (nth 1 (bbdb-address-zip addr)))
 		    (nth 1 (nth 1 (bbdb-address-zip addr))))
@@ -876,7 +889,7 @@ that holds the number of slots."
 			  (message "Error: %s" (nth 1 --c--)))
 			(sit-for 2)))))))
 
-;;; I no longer remember why I felt this was necessary, but I think it 
+;;; I no longer remember why I felt this was necessary, but I think it
 ;;; might have been because of the bug in the save-excursion of 18.55-57
 (defmacro bbdb-save-buffer-excursion (&rest body)
   (list 'save-excursion
@@ -994,13 +1007,13 @@ This is a possible identifying function for
 
 (defun bbdb-format-streets (addr)
   "Insert street subfields of address ADDR in current buffer.
-This may be used by formatting functions listed in 
+This may be used by formatting functions listed in
 `bbdb-address-formatting-alist'."
-  (mapcar (function (lambda(str) 
-                      (if (= 0 (length (bbdb-string-trim str)))
-                          ()
-                        (indent-to 17) 
-                        (insert str "\n"))))
+  (mapcar (lambda(str)
+            (if (= 0 (length (bbdb-string-trim str)))
+                ()
+                (indent-to 17)
+                (insert str "\n")))
           (bbdb-address-streets addr)))
 
 (defun bbdb-format-address-continental (addr)
@@ -1026,7 +1039,7 @@ The result looks like this:
 	    (> (length s) 0))
 	(progn
 	  (indent-to 17)
-	  (insert z (if (and (> (length z) 0) 
+	  (insert z (if (and (> (length z) 0)
 			     (> (length c) 0)) " " "")
 		  c (if (and (or (> (length z) 0)
 				 (> (length c) 0))
@@ -1058,7 +1071,7 @@ The result looks like this:
 	    (> (length s) 0))
 	(progn
 	  (indent-to 17)
-	  (insert c (if (and (> (length c) 0) 
+	  (insert c (if (and (> (length c) 0)
 			     (> (length s) 0)) ", " "")
 		  s (if (and (or (> (length c) 0)
 				 (> (length s) 0))
@@ -1207,7 +1220,7 @@ present).  Returns a string containing the date in the new format."
 (defcustom bbdb-elided-display nil
   "*Set this to t if to make the bbdb-display commands default to displaying
 one line per record instead of a full listing.  Set this to a list of some
-of the symbols '(address phone net notes) to select those fields to be left 
+of the symbols '(address phone net notes) to select those fields to be left
 out of the listing (you can't leave out the name field).
 
 This is the default state for Meta-x bbdb and friends.  You can have a
@@ -1231,7 +1244,7 @@ out of the listing (you can't leave out the name field).
 The default state for Meta-x bbdb and friends is controlled by the variable
 `bbdb-elided-display'; this variable (`bbdb-pop-up-elided-display') is the
 default for when the BBDB buffer is automatically updated by the mail and
-news interfaces.  If bbdb-pop-up-elided-display is unbound, then 
+news interfaces.  If bbdb-pop-up-elided-display is unbound, then
 bbdb-elided-display will be consulted instead by mail and news.")
 
 
@@ -1256,8 +1269,8 @@ bbdb-elided-display will be consulted instead by mail and news.")
   (if (or (null records)
 	  (consp (car records)))
       nil
-    (setq records (mapcar (function (lambda (x)
-			    (list x bbdb-elided-display (make-marker))))
+    (setq records (mapcar (lambda (x)
+			    (list x bbdb-elided-display (make-marker)))
 			  records)))
   (let ((b (current-buffer))
         (temp-buffer-setup-hook nil)
@@ -1276,8 +1289,7 @@ bbdb-elided-display will be consulted instead by mail and news.")
 	    (setq records (append bbdb-records records))
 	    (setq records
 		  (sort records
-			(function (lambda (x y)
-				    (bbdb-record-lessp (car x) (car y))))))))
+                        (lambda (x y) (bbdb-record-lessp (car x) (car y)))))))
       (make-local-variable 'mode-line-buffer-identification)
       (make-local-variable 'mode-line-modified)
       (set (make-local-variable 'bbdb-showing-changed-ones) nil)
@@ -1435,8 +1447,8 @@ bbdb-elided-display will be consulted instead by mail and news.")
 (defun bbdb-changed-records ()
   (bbdb-with-db-buffer (bbdb-records nil t) bbdb-changed-records))
 
-(defmacro bbdb-build-name (f l) 
-  (list 'downcase 
+(defmacro bbdb-build-name (f l)
+  (list 'downcase
 	(list 'if (list 'and f l)
 	      (list 'concat f " " l)
 	      (list 'or f l "")))
@@ -1447,7 +1459,7 @@ bbdb-elided-display will be consulted instead by mail and news.")
     (let ((ret l)
 	  (n   (cdr l)))
       (while n
-	(if (eq e (car n)) 
+	(if (eq e (car n))
 	    (setcdr l (cdr n)) ; skip n
 	  (setq l n))          ; keep n
 	(setq n (cdr n))
@@ -1476,7 +1488,7 @@ bbdb-elided-display will be consulted instead by mail and news.")
 
 (defmacro bbdb-puthash (name record &optional ht)
   (list 'let (list (list 'sym (list 'intern name (or ht '(bbdb-hashtable)))))
-	(list 'set 'sym (list 'cons record 
+	(list 'set 'sym (list 'cons record
 			      '(and (boundp sym) (symbol-value sym))))
 	)
   )
@@ -1484,7 +1496,7 @@ bbdb-elided-display will be consulted instead by mail and news.")
 (defmacro bbdb-remhash (name record &optional ht)
   (list 'let (list (list 's (list 'intern-soft name
 				  (or ht '(bbdb-hashtable)))))
-	(list 'and 's (list 'set 's (list 'bbdb-remove! record 
+	(list 'and 's (list 'set 's (list 'bbdb-remove! record
 					  (list 'symbol-value 's))))))
 
 (defsubst bbdb-search-simple (name net)
@@ -1510,7 +1522,7 @@ bbdb-elided-display will be consulted instead by mail and news.")
 	      (nets     net-recs))
 	  (while nets
 	    (if (eq (car nets) name-rec)
-		(setq nets      '() 
+		(setq nets      '()
 		      name-recs '()
 		      ret name-rec)
 	      (setq nets (cdr nets))
@@ -1556,7 +1568,7 @@ separators.  Returns the list."
 
 
 (defsubst bbdb-hash-record (record)
-  "Insert the record in the appropriate hashtables.  This must be called 
+  "Insert the record in the appropriate hashtables.  This must be called
 while the .bbdb buffer is selected."
   (let ((name    (bbdb-record-name-1  record))  ; faster version
 	(company (bbdb-record-company record))
@@ -1696,7 +1708,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 	(progn
 	  (goto-char (1- (match-end 0)))
 	  (setq bbdb-propnames
-		(mapcar (function (lambda (x) (list (symbol-name x))))
+		(mapcar (lambda (x) (list (symbol-name x)))
 			(read (point-marker)))))))
   ;; look backwards for file version, and convert if necessary.
   ;; (at least, I'll write this code if I ever change the file format again...)
@@ -1738,7 +1750,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 						   bbdb-file-format)))))
   ;; A trap to catch a bug
   ;;(assert (not (null (car bbdb-file-format-migration))))
-  
+
   (bbdb-debug
    (or (eobp) (looking-at "[\[]")
        (error "no following bracket: bbdb corrupted"))
@@ -1806,7 +1818,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
       (if bbdb-no-duplicates-p
 	  ;; warn the user that there is a duplicate...
 	  (let* ((name (bbdb-record-name record))
-		 (tmp  (and name (bbdb-gethash (downcase name) 
+		 (tmp  (and name (bbdb-gethash (downcase name)
 					       bbdb-hashtable))))
 	    (if tmp (message "Duplicate BBDB record encountered: %s" name))
 	    )
@@ -1986,8 +1998,8 @@ already sorted.)  Returns the new head."
 (defvar inside-bbdb-change-record nil "hands off")
 
 (defun bbdb-change-record (record need-to-sort)
-  "Update the database after a change to the given record.  Second arg 
-NEED-TO-SORT is whether the name has changed.  You still need to worry 
+  "Update the database after a change to the given record.  Second arg
+NEED-TO-SORT is whether the name has changed.  You still need to worry
 about updating the name hash-table."
   (if inside-bbdb-change-record
       record
@@ -2002,7 +2014,7 @@ about updating the name hash-table."
       (if (memq record (bbdb-records)) ; checks file synchronization too.
 	  (if (not need-to-sort) ;; If we don't need to sort, overwrite it.
 	      (progn
-		(bbdb-overwrite-record-internal record unmigrated)   
+		(bbdb-overwrite-record-internal record unmigrated)
 		(bbdb-debug
 		 (if (not (memq record (bbdb-records)))
 		     (error "Overwrite in change doesn't work"))))
@@ -2077,7 +2089,7 @@ doesn't know how to deal with."
       ;; record in the database!
       (insert-before-markers ";;; user-fields: \n")
       (forward-char -1))
-    (prin1 (mapcar (function (lambda (x) (intern (car x))))
+    (prin1 (mapcar (lambda (x) (intern (car x)))
 		   bbdb-propnames)
 	   (current-buffer))
     bbdb-propnames))
@@ -2251,7 +2263,7 @@ The keybindings, more precisely:
 (defcustom bbdb-save-db-timeout nil
   "*If non-nil, then when bbdb-save-db is asking you whether to save the db,
 it will time out to `yes' after this many seconds.  This only works if the
-function y-or-n-p-with-timeout is defined."
+function `y-or-n-p-with-timeout' is defined."
   :group 'bbdb-save
   :type '(choice (const :tag "Don't time out" nil)
 		 (integer :tag "Time out after this many seconds" 5)))
@@ -2338,7 +2350,7 @@ function, it is changed to a list of functions."
 ;;; message-caching, to speed up the the mail interfaces
 
 (defvar bbdb-buffers-with-message-caches '()
-  "A list of all the buffers which have stuff on their bbdb-message-cache 
+  "A list of all the buffers which have stuff on their bbdb-message-cache
 local variable.  When we re-parse the .bbdb file, we need to flush all of
 these caches.")
 
@@ -2462,7 +2474,7 @@ these caches.")
 (defun bbdb-net-redundant-p (net old-nets)
   "Returns non-nil if NET represents a sub-domain of one of the OLD-NETS.
 The returned value is the address which makes this one redundant.
-For example, \"foo@bar.baz.com\" is redundant w.r.t. \"foo@baz.com\", 
+For example, \"foo@bar.baz.com\" is redundant w.r.t. \"foo@baz.com\",
 and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\"."
   (let ((redundant-addr nil))
     (while (and (not redundant-addr) old-nets)
@@ -2491,7 +2503,7 @@ A record may be created by this; a record or nil is returned.
 If bbdb-readonly-p is true, then a record will never be created.
 If CREATE-P is true, then a record may be created, otherwise it won't.
 If PROMPT-TO-CREATE-P is true, then the user will be asked for confirmation
-before the record is created, otherwise it is created without confirmation 
+before the record is created, otherwise it is created without confirmation
 \(assuming that CREATE-P is true\).  "
   (let* ((data (if (consp from)
 		   from ; if from is a cons, it's pre-parsed (hack hack)
@@ -2538,7 +2550,7 @@ before the record is created, otherwise it is created without confirmation
 	             net name old-name)
 		    (sit-for 2))
 		(setq old-net (cdr old-net)))))))
-    
+
     (if (or record
 	    bbdb-readonly-p
 	    (not create-p)
@@ -2701,7 +2713,7 @@ before the record is created, otherwise it is created without confirmation
 *BBDB* buffer in the bottom 'bbdb-pop-up-target-lines' lines (unless
 the *BBDB* buffer is already visible, in which case do nothing.)
 
-If 'bbdb-use-pop-up' is the symbol 'horiz, and the first window 
+If 'bbdb-use-pop-up' is the symbol 'horiz, and the first window
 matching HORIZ-PREDICATE is sufficiently wide (> 100 columns) then
 the window will be split vertically rather than horizontally."
   (let ((b (current-buffer)))
@@ -2840,7 +2852,7 @@ passed as arguments to initiate the appropriate insinuations.
    sc         Initialize BBDB support for the Supercite message
               citation package.
    w3         Initialize BBDB support for Web browsers."
-  
+
   (fset 'advertized-bbdb-delete-current-field-or-record
   	'bbdb-delete-current-field-or-record)
 
@@ -2851,11 +2863,11 @@ passed as arguments to initiate the appropriate insinuations.
   (cond ((member 'gnus to-insinuate)         ;; Gnus 3.15 or newer
 	 (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus)
 	 (setq to-insinuate (delq 'gnus to-insinuate))))
-  
+
   (cond ((member 'mh-e to-insinuate)         ;; MH-E
 	 (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh)
 	 (setq to-insinuate (delq 'mh-e to-insinuate))))
-  
+
   (cond ((member 'rmail to-insinuate)        ;; RMAIL
 	 (add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail)
 	 (setq to-insinuate (delq 'rmail to-insinuate))))
@@ -2907,21 +2919,21 @@ passed as arguments to initiate the appropriate insinuations.
   (if (fboundp 'set-keymap-prompt)
       (set-keymap-prompt bbdb-mode-search-map
 			 "(Search [n]ame, [c]ompany, net [a]ddress, n[o]tes)?"))
-  
+
   (define-key bbdb-mode-search-map [(n)] 'bbdb-name)
   (define-key bbdb-mode-search-map [(c)] 'bbdb-company)
   (define-key bbdb-mode-search-map [(a)] 'bbdb-net)
   (define-key bbdb-mode-search-map [(o)] 'bbdb-notes)
-  
+
   )
 
 (if bbdb-mode-map
     nil
   (setq bbdb-mode-map (make-keymap))
   (suppress-keymap bbdb-mode-map)
-  
+
   (define-key bbdb-mode-map [(S)]          'bbdb-mode-search-map)
-  
+
   (define-key bbdb-mode-map [(*)]          'bbdb-apply-next-command-to-all-records)
   (define-key bbdb-mode-map [(e)]          'bbdb-edit-current-field)
   (define-key bbdb-mode-map [(n)]          'bbdb-next-record)
@@ -2955,7 +2967,7 @@ passed as arguments to initiate the appropriate insinuations.
 ;; Set up autoloads if they've not been done already
 (if (not (featurep 'bbdb-autoloads))
     (let ((bbdbid "Insidious Big Brother Database autoload"))
-      
+
       ;; tie it all together...
       ;;
       (autoload 'bbdb	    "bbdb-com" bbdbid t)
@@ -2969,15 +2981,15 @@ passed as arguments to initiate the appropriate insinuations.
       (autoload 'bbdb-finger  "bbdb-com" bbdbid t)
       (autoload 'bbdb-info    "bbdb-com" bbdbid t)
       (autoload 'bbdb-help    "bbdb-com" bbdbid t)
-      
+
       (autoload 'bbdb-insinuate-vm      "bbdb-vm"    "Hook BBDB into VM")
       (autoload 'bbdb-insinuate-rmail   "bbdb-rmail" "Hook BBDB into RMAIL")
       (autoload 'bbdb-insinuate-mh      "bbdb-mhe"   "Hook BBDB into MH-E")
       (autoload 'bbdb-insinuate-gnus    "bbdb-gnus"  "Hook BBDB into GNUS")
       (autoload 'bbdb-insinuate-message "bbdb-gnus"  "Hook BBDB into message")
-      
+
       (autoload 'bbdb-apply-next-command-to-all-records "bbdb-com" bbdbid t)
-      
+
       (autoload 'bbdb-insert-new-field               "bbdb-com" bbdbid t)
       (autoload 'bbdb-edit-current-field             "bbdb-com" bbdbid t)
       (autoload 'bbdb-transpose-fields               "bbdb-com" bbdbid t)
@@ -3002,7 +3014,7 @@ passed as arguments to initiate the appropriate insinuations.
       (autoload 'bbdb-creation-older                 "bbdb-com" bbdbid t)
       (autoload 'bbdb-creation-newer                 "bbdb-com" bbdbid t)
       (autoload 'bbdb-creation-no-change             "bbdb-com" bbdbid t)
-      
+
       (autoload 'bbdb/vm-show-sender              "bbdb-vm"    bbdbid t)
       (autoload 'bbdb/vm-annotate-sender          "bbdb-vm"    bbdbid t)
       (autoload 'bbdb/vm-update-record            "bbdb-vm"    bbdbid t)
@@ -3017,7 +3029,7 @@ passed as arguments to initiate the appropriate insinuations.
       (autoload 'bbdb/gnus-update-record          "bbdb-gnus"  bbdbid t)
       (autoload 'bbdb/gnus-lines-and-from         "bbdb-gnus"  bbdbid nil)
       (autoload 'bbdb/gnus-score                  "bbdb-gnus"  bbdbid nil)
-      
+
       (autoload 'bbdb-extract-field-value          "bbdb-hooks" bbdbid nil)
       (autoload 'bbdb-timestamp-hook               "bbdb-hooks" bbdbid nil)
       (autoload 'bbdb-ignore-most-messages-hook    "bbdb-hooks" bbdbid nil)
@@ -3025,31 +3037,31 @@ passed as arguments to initiate the appropriate insinuations.
       (autoload 'bbdb-auto-notes-hook              "bbdb-hooks" bbdbid nil)
       (autoload 'sample-bbdb-canonicalize-net-hook "bbdb-hooks" bbdbid nil)
       (autoload 'bbdb-creation-date-hook	         "bbdb-hooks" bbdbid nil)
-      
+
       (autoload 'bbdb-fontify-buffer                 "bbdb-xemacs" bbdbid nil)
       (autoload 'bbdb-menu                           "bbdb-xemacs" bbdbid t)
       (autoload 'bbdb-xemacs-display-completion-list "bbdb-xemacs" bbdbid nil)
-      
+
       (autoload 'bbdb-www               "bbdb-w3" bbdbid nil)
       (autoload 'bbdb-www-grab-homepage "bbdb-w3" bbdbid nil)
       (autoload 'bbdb-insinuate-w3      "bbdb-w3" bbdbid nil)
-      
+
       (autoload 'bbdb-migration-query             "bbdb-migrate" bbdbid nil)
       (autoload 'bbdb-migrate                     "bbdb-migrate" bbdbid nil)
       (autoload 'bbdb-migrate-rewrite-all         "bbdb-migrate" bbdbid nil)
       (autoload 'bbdb-migrate-update-file-version "bbdb-migrate" bbdbid nil)
       (autoload 'bbdb-unmigrate-record            "bbdb-migrate" bbdbid nil)
-      
+
       (autoload 'bbdb-ftp             "bbdb-ftp" bbdbid t)
       (autoload 'bbdb-create-ftp-site "bbdb-ftp" bbdbid t)
-      
+
       (autoload 'bbdb-print                "bbdb-print"      bbdbid t)
       (autoload 'bbdb-insinuate-reportmail "bbdb-reportmail" bbdbid nil)
       (autoload 'bbdb-insinuate-sc         "bbdb-sc"         bbdbid nil)
       (autoload 'bbdb-snarf                "bbdb-snarf"      bbdbid t)
       (autoload 'bbdb-whois                "bbdb-whois"      bbdbid t)
       (autoload 'bbdb-srv                  "bbdb-srv"        bbdbid t)
-      
+
       ;;; RMAIL, MHE, and VM interfaces might need these.
       (autoload 'mail-strip-quoted-names "mail-utils")
       (autoload 'mail-fetch-field "mail-utils")
@@ -3068,10 +3080,10 @@ passed as arguments to initiate the appropriate insinuations.
 (cond ((string-match "XEmacs\\|Lucid" emacs-version)
        (bbdb-add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
        (define-key bbdb-mode-map 'button3 'bbdb-menu)
-       
+
        ;; Above
        (fset 'bbdb-warn 'warn)
-       
+
        ;; bbdb-com.el
        (fset 'bbdb-display-completion-list 'bbdb-xemacs-display-completion-list)
        ))

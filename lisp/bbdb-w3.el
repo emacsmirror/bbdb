@@ -20,6 +20,20 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.7  2000/05/02 18:19:17  sds
+;; * lisp/bbdb.el, lisp/bbdb-com.el: define `unless' and `when' if
+;; necessary, do not quote `lambda' in code, do quote (`') functions
+;; and variables in doc strings.
+;; * lisp/bbdb.el (bbdb-get-field): new helper function.
+;; * lisp/bbdb-com.el (bbdb-notes-sort-order): new variable
+;; (bbdb-sort-notes, bbdb-sort-phones, bbdb-sort-addresses): new
+;; functions, suitable for `bbdb-change-hook'.
+;; (bbdb-get-record): new helper function.
+;; * lisp/bbdb-w3.el (bbdb-www): do not browse to multiple URLs
+;; simultaneously, allow multiple URLs for the same record instead.
+;; (bbdb-www-grab-homepage): add the URL if there is such a fields
+;; already.
+;;
 ;; Revision 1.6  1998/04/11 07:06:30  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back
 ;;
@@ -43,37 +57,31 @@
 ;;
 ;;
 
+(require 'browse-url)
+
 ;;;###autoload
-(defun bbdb-www (all)
-  "Visit URL's stored in `www' fields of the current record.
+(defun bbdb-www (rec &optional which)
+  "Visit URLs stored in the `www' field of the current record.
 \\[bbdb-apply-next-command-to-all-records]\\[bbdb-www] \
 means to try all records currently visible.
 Non-interactively, do all records if arg is nonnil."
-  (interactive (list (bbdb-do-all-records-p)))
-  (let ((urls (mapcar '(lambda (r) (bbdb-record-getprop r 'www))
-		      (if all 
-			  (mapcar 'car bbdb-records)
-			(list (bbdb-current-record)))))
-	(got-one nil))
-    (while urls
-      (cond ((car urls)
-	     (or (fboundp 'browse-url) (autoload 'browse-url "browse-url"))
-	     (browse-url (setq got-one (car urls)))))
-      (setq urls (cdr urls)))
-    (if (not got-one)
-	(error "No WWW field!"))))
+  (interactive (list (bbdb-get-record "Visit (WWW): ")
+                     (or current-prefix-arg 0)))
+  (browse-url (read-string "fetch: " (bbdb-get-field rec 'www which))))
 
 ;;;###autoload
 (defun bbdb-www-grab-homepage (record)
   "Grab the current URL and store it in the bbdb database"
   (interactive (list (bbdb-completing-read-record "Add WWW homepage for: ")))
   ;; if there is no database record for this person, create one
-  (cond ((null record)
-	 (setq record (bbdb-read-new-record))
-	 (bbdb-invoke-hook 'bbdb-create-hook record))
-	;; .. ok, it already exists ..
-	(t nil))
-  (bbdb-record-putprop record 'www (url-view-url t))
+  (unless record
+    (setq record (bbdb-read-new-record))
+    (bbdb-invoke-hook 'bbdb-create-hook record))
+  (if (bbdb-record-getprop record 'www)
+      (bbdb-record-putprop
+       record 'www
+       (concat (bbdb-record-getprop record 'www) "," (url-view-url t)))
+    (bbdb-record-putprop record 'www (url-view-url t)))
   (bbdb-change-record record t)
   (bbdb-display-records (list record)))
 
@@ -81,6 +89,6 @@ Non-interactively, do all records if arg is nonnil."
 (defun bbdb-insinuate-w3 ()
   "Call this function to hook BBDB into W3."
   (add-hook 'w3-mode-hook
-	    '(lambda () (define-key w3-mode-map ":" 'bbdb-www-grab-homepage))))
+	    (lambda () (define-key w3-mode-map ":" 'bbdb-www-grab-homepage))))
 
 (provide 'bbdb-w3)
