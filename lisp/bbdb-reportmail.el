@@ -35,8 +35,10 @@
 ;; To use this, simply add the following lines AFTER you load in your
 ;; bbdb, set bbdb variables, etc.
 ;;
-;;  (require 'bbdb-reportmail)
 ;;  (bbdb-insinuate-reportmail)
+;;
+;; (A require used to be necessary - it is no longer needed as long as
+;; bbdb-insinuate-reportmail is called)
 
 ;;; History:
 
@@ -47,6 +49,15 @@
 ;;
 ;; v1.00 26 June 1997
 ;;       Initial release.
+
+;;
+;; $Id$
+;;
+;; $Log$
+;; Revision 1.53  1998/01/06 06:10:06  simmonmt
+;; Changed setup documentation and added RCS ID and Log strings
+;;
+;;
 
 ;;-----------------------------------------------------------------------
 
