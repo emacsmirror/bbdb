@@ -1732,20 +1732,18 @@ multi-line layout."
 	(bbdb-format-record-layout-multi-line layout record field-list)))))
 
 (defun bbdb-frob-mode-line (n)
-  (setq mode-line-buffer-identification
-        (if (> n 0)
-            (list 24
-                  (if (string-match "^\\*\\(.+\\)\\*$"  bbdb-buffer-name)
-                      (match-string 1 bbdb-buffer-name)
-                    "BBDB")
-                  ": "
-                  (list 10
-                        (format "%d/%d" n (length (bbdb-records))))
-                  '(bbdb-showing-changed-ones " !!" "   "))
-          '("- Insidious Big Brother Database v" bbdb-version " "
-            mode-line-modified "-"))
-        mode-line-modified
-        '(bbdb-readonly-p "--%%%%-" (bbdb-modified-p "--**-" "-----"))))
+  (setq
+   ;; identification
+   mode-line-buffer-identification
+   (if (> n 0)
+       (list 24 (buffer-name) ": "
+             (list 10 (format "%d/%d" n (length (bbdb-records))))
+             '(bbdb-showing-changed-ones " !!" "   "))
+     (list (buffer-name) ": Insidious Big Brother Database v" bbdb-version " "
+           mode-line-modified "-"))
+   ;; modified indicator
+   mode-line-modified
+   '(bbdb-readonly-p "--%%%%-" (bbdb-modified-p "--**-" "-----"))))
 
 (defun bbdb-display-records-1 (records &optional append layout)
   (setq append (or append (bbdb-append-records-p)))
@@ -1763,7 +1761,6 @@ multi-line layout."
   (let ((first (car (car records))))
     (save-excursion
       (display-buffer (get-buffer-create bbdb-buffer-name))
-      (bbdb-pop-up-bbdb-buffer)
       (set-buffer bbdb-buffer-name)
 
       ;; If append is unset, clear the buffer.
@@ -3361,6 +3358,13 @@ before the record is created, otherwise it is created without confirmation
 
 
 ;;; window configuration hackery
+(defcustom bbdb-multiple-buffers nil
+  "When non-nil we create a new buffer of every buffer causing pop-ups.
+You can also set this to a function returning a buffer name."
+  :group 'bbdb-record-display
+  :type '(choice (const :tag "Enabled" nil)
+                 (const :tag "Disabled" nil)
+                 (function :tag "User defined function")))
 
 (defun bbdb-pop-up-bbdb-buffer (&optional horiz-predicate)
   "Find the largest window on the screen, and split it, displaying the
@@ -3369,8 +3373,28 @@ the *BBDB* buffer is already visible, in which case do nothing.)
 
 If 'bbdb-use-pop-up' is the symbol 'horiz, and the first window
 matching HORIZ-PREDICATE is sufficiently wide (> 100 columns) then
-the window will be split vertically rather than horizontally."
-  (let ((b (current-buffer)))
+the window will be split vertically rather than horizontally.
+
+If `bbdb-multiple-buffers' is set we create a new BBDB buffer when not
+already within one.  The new buffer-name starts with a space, i.e. it does
+not clutter the buffer-list."
+
+  ;; create new BBDB buffer if multiple buffers are desired.
+  (let ((b (current-buffer))
+        (new-bbdb-buffer-name bbdb-buffer-name))
+
+    (when (and bbdb-multiple-buffers (not (eq major-mode 'bbdb-mode)))
+      (cond ((memq major-mode '(vm-presentation-mode vm-summary-mode
+                                                     vm-virtual-mode))  
+             (vm-select-folder-buffer))
+            ((memq major-mode '(gnus-summary-mode gnus-group-mode))
+             (set-buffer gnus-article-buffer)))
+      (make-local-variable 'bbdb-buffer-name)
+      (if (functionp bbdb-multiple-buffers)
+          (setq bbdb-buffer-name (funcall bbdb-multiple-buffers))
+        (setq bbdb-buffer-name (concat " *BBDB: " (buffer-name) "*")))
+      (setq new-bbdb-buffer-name bbdb-buffer-name))
+    
    (if (get-buffer-window bbdb-buffer-name)
        nil
      (if (and (eq bbdb-use-pop-up 'horiz)
@@ -3401,12 +3425,17 @@ the window will be split vertically rather than horizontally."
         (select-window (next-window))
         ;; make it display *BBDB*...
         (let ((pop-up-windows nil))
-          (switch-to-buffer (get-buffer-create bbdb-buffer-name)))
+          (switch-to-buffer (get-buffer-create new-bbdb-buffer-name)))
         ;; select the original window we were in...
         (select-window first-window)))
-    ;; and make sure the current buffer is correct as well.
-    (set-buffer b)
-    nil)))
+     ;; make sure the new BBDB buffer also has its name as local var
+     (when  bbdb-multiple-buffers
+       (set-buffer (get-buffer new-bbdb-buffer-name))
+       (make-local-variable 'bbdb-buffer-name)
+       (setq bbdb-buffer-name new-bbdb-buffer-name))
+     ;; and make sure the current buffer is correct as well.
+     (set-buffer b)
+     nil)))
 
 (defun bbdb-pop-up-bbdb-buffer-horizontally (predicate)
   (if (<= (frame-width) 112)
