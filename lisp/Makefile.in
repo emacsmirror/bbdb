@@ -58,7 +58,7 @@ DEPBINS=	${DEPSRCS:.el=.elc}
 SRCS=		bbdb.el  $(DEPSRCS)
 BINS=		bbdb.elc $(DEPBINS)
 
-all:	rmail gnus vm mhe bbdb info autoloads
+all:	rmail gnus vm mhe bbdb info autoloadsc
 
 bbdb-autoloads.el: $(DEPSRCS)
 	@rm -f $@;
@@ -118,12 +118,14 @@ bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
 	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc $(VM) \
 	-f batch-byte-compile $(@:.elc=.el)
 
-autoloads: bbdb-autoloads.elc
+autoloads: bbdb-autoloads.el
+
+autoloadsc: bbdb-autoloads.elc
 
 extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc  \
 	bbdb-srv.elc bbdb-reportmail.elc bbdb-snarf.elc bbdb-w3.elc \
 	bbdb-sc.elc bbdb-merge.elc bbdb-migrate.elc
-bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc autoloads extras
+bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc autoloadsc extras
 rmail:	bbdb bbdb-rmail.elc
 vm:	bbdb bbdb-vm.elc
 mhe:	bbdb bbdb-mhe.elc
@@ -132,20 +134,12 @@ gnus:	bbdb bbdb-gnus.elc
 mh:	mhe
 mh-e:	mhe
 
-deploy:
-	@for fname in `cd RCS; ls |sed 's/,v$$//g'` ; do \
-	  if [ -w "$$fname" ] ; then \
-	    echo "File $$fname needs to be checked in" ; \
-	    exit 1 ; \
-	  fi ; \
-	done ; \
-	if [ -z "$(REVTAG)" ] ; then \
-	  echo "REVTAG needs to be set" ; \
-	  exit 1 ; \
-	fi ; \
-	rcs "-n$(REVTAG)": RCS/* ; \
-	co -kv RCS/*
-
-
+# Assorted clean-up targets
 clean:
-	-rm bbdb.elc bbdb-*.elc bbdb.info bbdb-autoloads.elc
+	$(RM) -f bbdb*.elc
+
+distclean: clean
+
+cvsclean: distclean
+	$(RM) -f bbdb-autoloads.el  # Generated file
+	$(RM) -f Makefile
