@@ -1,3 +1,7 @@
+2000-08-10  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb.el (bbdb-join): dropped an unused variable
+
 2000-08-10  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb.el (bbdb-quiet-about-name-mismatches): if a number it
@@ -22,9 +26,9 @@
 	* lisp/bbdb-snarf.el (bbdb-snarf-nice-real-name-regexp): regexp
 	matching unwanted characters used by
 	(bbdb-snarf-nice-real-name): removes unwanted characters from real
-	names/email addresses. 
+	names/email addresses.
 	(bbdb-extract-address-component-regexps): alist of regexps and
-	transformation-instructions used by 
+	transformation-instructions used by
 	(bbdb-extract-address-components): is for the extraction of full
 	name and email address from headers.  This function is a bit more
 	configurable than `mail-extract-address-components' and it will
@@ -33,21 +37,21 @@
 	* lisp/bbdb-vm.el (bbdb/vm-get-from): uses now
 	bbdb-extract-address-components to extract all recipients and uses
 	vm-summary-uninteresting-senders for ignoring senders, which is
-	more consistently with respect VM.  One can set the variable 
+	more consistently with respect VM.  One can set the variable
 	`bbdb/vm-get-from-headers' and `bbdb/vm-get-first-from-p' in order
 	to control what headers are processed and what is display is what
 	order.
-	(bbdb/vm-message-cache-lookup): 
+	(bbdb/vm-message-cache-lookup):
 	(bbdb/vm-encache-message): We use our own caching functions
 	instead of the bbdb default functions since we are handling a set
 	of records and not a single one.
 	(bbdb/vm-update-record): is now just a call to
 	(bbdb/vm-update-records): which performs the actual work of
-	finding and updating records.   
+	finding and updating records.
 	(bbdb/vm-set-auto-folder-alist): Is a function from Mark Thomas
 	<mthomas@jprc.com> which sets `vm-auto-folder-alist' according to
 	the field `bbdb/vm-set-auto-folder-alist-field'.
-	
+
 2000-08-10  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el (bbdb-annotate-notes): `regexp-quote' the
@@ -66,7 +70,7 @@
 	* lisp/Makefile (bbdb-autoloads.el): Added setting of variable
 	autoload-package-name and deletion of bbdb-autoloads.el file before
 	creation.
-	
+
 2000-08-01  Waider  <waider@stepstone.ie>
 
 	* lisp/bbdb.el:

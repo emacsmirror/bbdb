@@ -1571,9 +1571,8 @@ The inverse function of `bbdb-join'."
 (defun bbdb-join (list separator)
   "Join a LIST to a string where the list elements are separated by SEPARATOR.
 The inverse function of `bbdb-split'."
-  (let (string)
-    (if (null list) nil
-      (mapconcat 'identity list separator))))
+  (when list
+    (mapconcat 'identity list separator)))
 
 (defsubst bbdb-hash-record (record)
   "Insert the record in the appropriate hashtables.  This must be called
@@ -2554,7 +2553,7 @@ before the record is created, otherwise it is created without confirmation
         nil
       ;; otherwise, the db is writable, and we may create a record.
       ;; first try to get a reasonable default name if not given
-      ;; often I get things like <firstname>.<surname>@ ... 
+      ;; often I get things like <firstname>.<surname>@ ...
       (if (or (null name) (and (stringp name) (string= "" name)))
 	  (if (string-match "^[^@]+" net)
 	      (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
