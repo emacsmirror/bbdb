@@ -3,7 +3,16 @@
 ;;; This file is the part of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1995 Jamie Zawinski <jwz@netscape.com>.
 ;;; Invoking BBDB from another process, via `gnudoit'.
-;;; last change 25-apr-96.
+
+;;
+;; $Id$
+;;
+;; $Log$
+;; Revision 1.52  1997/10/06 01:09:36  simmonmt
+;; jwz patches to support caller ID script, mail/news classification
+;; routine, make sure *BBDB* is bottommost buffer
+;;
+;;
 
 ;;; This requires the `gnuserv' and `itimer' packages.
 ;;;
@@ -30,7 +39,18 @@
 ;;; `bbdb/srv-display-delay' seconds (default 2.)  This is to prevent rapid
 ;;; display of records from queueing up and swamping the emacs server process.
 
-
+;;; A trivial application of this is the shell command:
+;;;
+;;;    echo 'From: Jamie Zawinski <jwz@netscape.com>' | bbdb-srv.perl
+;;;
+;;; which will cause the corresponding record to be displayed.
+;;; A more interesting application of this is:
+;;;
+;;;    setenv NS_MSG_DISPLAY_HOOK bbdb-srv.perl
+;;;
+;;; which will hook BBDB up to Mozilla (Unix Netscape Mail and Netscape News
+;;; versions 3.0b2 and later only.)
+ 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
 ;;; published by the Free Software Foundation; either version 2, or (at your
@@ -57,7 +77,12 @@ process via the `gnudoit' mechanism.
 If this is t, then records will automatically be created; if this is a
 function name or lambda, then it is called with no arguments to decide 
 whether an entry should be automatically created.  You can use this to,
-for example, create or not create messages which have a particular subject.")
+for example, create or not create messages which have a particular subject.
+
+bbdb/srv-auto-create-mail-news-dispatcher is a good value for this --
+that function will try to decide if this is a mail message or a news
+message, and then run either bbdb/news-auto-create-p or
+bbdb/mail-auto-create-p as appropriate.")
 
 (defvar bbdb/srv-display-delay 2
   "*How long we must be idle before displaying a record.")
@@ -105,7 +130,13 @@ the various hooks (like `bbdb-notice-hook' and `bbdb/news-auto-create-p')."
     (let ((w (get-buffer-window bbdb-buffer-name)))
       (if w
 	  nil
-	(bbdb-pop-up-bbdb-buffer)
+	(setq w (selected-window))
+	(unwind-protect
+	    (progn
+	      (if (fboundp 'frame-lowest-window)
+		  (select-window (frame-lowest-window)))
+	      (bbdb-pop-up-bbdb-buffer))
+	  (select-window w))
 	(setq w (get-buffer-window bbdb-buffer-name))
 	(if (fboundp 'set-window-buffer-dedicated)
 	    (set-window-buffer-dedicated w bbdb-buffer-name))))
@@ -115,9 +146,10 @@ the various hooks (like `bbdb-notice-hook' and `bbdb/news-auto-create-p')."
 		 (bbdb-electric-p nil)
 		 (bbdb-elided-display (bbdb-pop-up-elided-display))
 		 (b (current-buffer)))
-	     (bbdb-display-records (list record))
+	     (save-window-excursion ;; needed to get around XEmacs 19.15 bug?
+	       (bbdb-display-records (list record)))
 	     (set-buffer b)))
-	  ((and (not create-p) bbdb/srv-pending-map)
+	  ((and from (not create-p) bbdb/srv-pending-map)
 	   (setq bbdb/srv-pending-headers headers)
 	   (save-excursion
 	     (set-buffer bbdb-buffer-name)
@@ -170,5 +202,57 @@ requested for a couple of seconds."
     nil))
 
 (fset 'bbdb-srv 'bbdb/srv-handle-headers-with-delay)
+
+(autoload 'bbdb-header-start "bbdb-hooks")
+
+(defun bbdb/srv-auto-create-mail-news-dispatcher ()
+  "For use as the value of bbdb/srv-auto-create-p.
+This will try to decide if this is a mail message or a news message, and then
+run either bbdb/news-auto-create-p or bbdb/mail-auto-create-p as appropriate.
+\(The heuristic is that news messages never have a Status or X-Mozilla-Status
+header; and that mail messages never have Path headers.)"
+  (let (mail-p)
+    (save-excursion
+      (let ((start (bbdb-header-start)))
+	(set-buffer (marker-buffer start))
+	(setq mail-p
+	      (cond ((progn (goto-char start)
+			    (bbdb-extract-field-value "Status"))
+		     t)
+		    ((progn (goto-char start)
+			    (bbdb-extract-field-value "X-Mozilla-Status"))
+		     t)
+		    ((progn (goto-char start)
+			    (bbdb-extract-field-value "Path"))
+		     nil)
+		    (t t)))))		; can't tell -- guess mail.
+    (bbdb-invoke-hook-for-value
+     (if mail-p bbdb/mail-auto-create-p bbdb/news-auto-create-p))))
+
+
+;; For caller-id stuff
+
+(defun bbdb-srv-add-phone (phone-string)
+  (let* ((record (bbdb-completing-read-record
+		  (format "Add %s to: " phone-string)))
+	 (phone (make-vector (if bbdb-north-american-phone-numbers-p
+				 bbdb-phone-length
+			       2)
+			     nil)))
+    (if (= 2 (length phone))
+	(aset phone 1 phone-string)
+      (let ((newp (bbdb-parse-phone-number phone-string)))
+	(bbdb-phone-set-area phone (nth 0 newp))
+	(bbdb-phone-set-exchange phone (nth 1 newp))
+	(bbdb-phone-set-suffix phone (nth 2 newp))
+	(bbdb-phone-set-extension phone (or (nth 3 newp) 0))))
+    (bbdb-phone-set-location phone
+     (read-string "Phone number description: " "cid"))
+
+    (bbdb-record-set-phones record
+			    (nconc (bbdb-record-phones record) (list phone)))
+    (bbdb-change-record record nil)
+    (bbdb-display-records (list record))
+    nil))
 
 (provide 'bbdb-srv)
