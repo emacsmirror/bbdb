@@ -1,5 +1,28 @@
+2001-06-10  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el 
+	  (bbdb-read-string): 
+	  Allow specifying a list of completions, which causes
+            completing-read to be invoked instead of read-string.
+
+	* lisp/bbdb-com.el 
+	  (bbdb-prompt-for-create):
+	  Fixed some XEmacsisms to work with GNUmacs. PLEASE TEST YOUR
+	    CODE AGAINST BOTH EMACS VARIANTS BEFORE CHECKING IT IN.
+	* (bbdb-address-edit-default): 
+	  If no data is entered for the address, enter a spurious country
+	    name. This is a temporary hack to get around a problem in
+	    address display when the address has no data. 
+        * (general)
+	  Fixed the occasional documentation typo.
+	  Added completion for Phone and Address labels.
+	  Added bbdb-default-country as an attempt to stop you from
+	    entering blank addresses. Also because it was requested.
+
+	* html/index.html: Fixed URL for Martin Schwenke.
+
 2001-06-05 Waider <waider@waider.ie>
-    * Makefile.in: Fixed tarball build to work with new autoconf stuff
+        * Makefile.in: Fixed tarball build to work with new autoconf stuff
 
 2001-06-05  Didier Verna  <didier@xemacs.org>
 
