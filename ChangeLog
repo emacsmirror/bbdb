@@ -1,3 +1,14 @@
+2002-04-18  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-read-new-record): Added completion for
+	labels.
+
+	* lisp/bbdb-vm.el (bbdb/vm-show-all-recipients),
+			  (bbdb/vm-show-sender),
+	  lisp/bbdb-gnus.el (bbdb/gnus-show-sender),
+	                    (bbdb/gnus-show-all-recipients):
+        Fixed  */show-all-reciepients to always do what it should do!
+
 2002-03-20  Waider  <waider@waider.ie>
 
 	* texinfo/bbdb.texinfo:
