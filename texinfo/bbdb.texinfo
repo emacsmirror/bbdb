@@ -3573,9 +3573,9 @@ Sorting individual types of fields - Sam Steingold's method.
 @item
 Button 3 menus (Mark Moll and Soren Dayton)
 
-@c@item
-@c@b{BBDB}-controlled mail splitting in Gnus.  Add hook for Soren to make
-@csplitting better.  Routine from Brian Edmonds.
+@c @item
+@c @b{BBDB}-controlled mail splitting in Gnus.  Add hook for Soren to make
+@c splitting better.  Routine from Brian Edmonds.
 @c Anyone have contact info for Soren Dayton?
 
 @item
@@ -3605,9 +3605,9 @@ because GNUS runs its exit-hooks too early.  This should be fixed.@refill
 String area codes (German area codes can begin with zeroes) patch from
 @code{Michael Sperber <sperber@@informatik.uni-tuebingen.de>}
 
-@c@item
-@cInternationalization of addresses.  Country code to control formats for
-@cprinting, etc.  Country->Format mapping.
+@c @item
+@c Internationalization of addresses.  Country code to control formats for
+@c printing, etc.  Country->Format mapping.
 
 @item
 Default country variable, similar to @code{bbdb-default-area-code}.
