@@ -1,3 +1,4 @@
+# Main Makefile for BBDB
 @SET_MAKE@
 
 TAR = @TAR@
@@ -7,7 +8,7 @@ RM   = @RM@
 LN_S = @LN_S@
 
 ETAGS = @ETAGS@
-EMACS = @EMACS@ -no-site-file -no-init-file
+EMACS_PROG = @EMACS_PROG@ -no-site-file -no-init-file
 
 SUBDIRS = lisp texinfo tex utils
 
@@ -15,12 +16,15 @@ TARFILES = ChangeLog INSTALL Makefile README                        \
            aclocal.m4 configure configure.ac install-sh Makefile.in \
            bits lisp misc tex texinfo utils
 
-syntax:
-	@echo "" ;\
-	echo "*** make one or more of: rmail vm mhe gnus all bbdb" ;\
-	echo ""
+all: Makefile bbdb info @BBDB_RMAIL@ @BBDB_VM@ @BBDB_MHE@ @BBDB_GNUS@
 
-all: bbdb rmail vm mhe gnus info
+Makefile: configure Makefile.in
+	@echo "Makefile.in or configure has changed. Please rerun configure!"
+	exit 1
+
+configure: configure.ac
+	@echo "configure.ac has changed. Please rerun autoconf!"
+	exit 1
 
 bbdb:
 	cd lisp; $(MAKE) bbdb
@@ -56,32 +60,26 @@ uninstall-pkg:
           ( cd $$i && $(MAKE) uninstall-pkg ) ; \
         done
 
-local-clean:
-
-clean: local-clean
+clean:
 	cd lisp; $(MAKE) clean
 	cd texinfo; $(MAKE) clean
 
-local-distclean: local-clean
+distclean:
+	@for i in $(SUBDIRS) ; do           \
+          ( cd $$i && $(MAKE) distclean ) ; \
+        done
 	-$(RM) config.cache config.status config.log
 	-$(RM) *.tar.gz
 	-$(RM) .#*
 
-distclean: local-distclean
-	@for i in $(SUBDIRS) ; do           \
-          ( cd $$i && $(MAKE) distclean ) ; \
-        done
-
 # Backward compatibility
 reallyclean: distclean
 
-local-cvsclean: local-distclean
-	-$(RM) Makefile configure
-
-cvsclean: local-cvsclean
+cvsclean:
 	@for i in $(SUBDIRS) ; do          \
           ( cd $$i && $(MAKE) cvsclean ) ; \
         done
+	-$(RM) Makefile configure
 
 
 # tarball

@@ -16,7 +16,7 @@ RM   = @RM@
 LN_S = @LN_S@
 
 MAKEINFO = @MAKEINFO@
-EMACSINFO = @EMACS@ -no-site-file -no-init-file -batch -q -l infohack.el -f batch-makeinfo
+EMACSINFO = @EMACS_PROG@ -no-site-file -no-init-file -batch -q -l infohack.el -f batch-makeinfo
 
 PACKAGEDIR = @PACKAGEDIR@
 SYMLINKS = @SYMLINKS@

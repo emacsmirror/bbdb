@@ -8,7 +8,7 @@ INSTALL_DATA = @INSTALL_DATA@
 RM   = @RM@
 LN_S = @LN_S@
 
-EMACS = @EMACS@ -no-site-file -no-init-file
+EMACS_PROG = @EMACS_PROG@ -no-site-file -no-init-file
 
 GNUSDIR = @GNUSDIR@
 MHEDIR = @MHEDIR@
@@ -42,7 +42,7 @@ PUSHPATH= -eval "`\
            dir=\". $(OTHERDIRS)\"; \
 	   echo \(setq load-path \(append \(list ; \
            for i in $$dir ; do \
-              echo \\"$$i\\"\ ; \
+              echo \(expand-file-name \\"$$i\\"\)\ ; \
 	   done ;\
 	   echo \) load-path\)\) ; \
            `"
@@ -58,7 +58,11 @@ DEPBINS=	${DEPSRCS:.el=.elc}
 SRCS=		bbdb.el  $(DEPSRCS)
 BINS=		bbdb.elc $(DEPBINS)
 
-all:	rmail gnus vm mhe bbdb info autoloadsc
+all: Makefile rmail gnus vm mhe bbdb autoloadsc
+
+Makefile: Makefile.in
+	@echo "Makefile.in has changed, rerun configure!"
+	exit 1
 
 install-pkg: uninstall-pkg bbdb autoloadsc
 	@if test "x$(SYMLINKS)" = "xno" ; then                 \
@@ -83,7 +87,7 @@ bbdb-autoloads.el: $(DEPSRCS)
 	@-$(RM) $@;
 	@echo "(provide 'bbdb-autoloads)" > $@;
 	@echo "" >> $@;
-	@$(EMACS) -batch -q -l autoload \
+	@$(EMACS_PROG) -batch -q -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
 		--eval "(if (featurep 'xemacs) (delete-file generated-autoload-file))" \
 		--eval '(setq make-backup-files nil)' \
@@ -92,7 +96,7 @@ bbdb-autoloads.el: $(DEPSRCS)
 
 bbdb-autoloads.elc: bbdb-autoloads.el
 	@echo "Compiling bbdb-autoloads.el..."
-	@$(EMACS) -batch -q -f batch-byte-compile ./$^
+	@$(EMACS_PROG) -batch -q -f batch-byte-compile ./$^
 
 bbdb.elc:            bbdb.el
 bbdb-com.elc:        bbdb.elc bbdb-com.el
@@ -108,46 +112,46 @@ bbdb-xemacs.elc:     bbdb.elc bbdb-xemacs.el
 
 .el.elc:
 	@echo Compiling $<...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -f batch-byte-compile $<
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc -f batch-byte-compile $<
 
 bbdb.elc:	bbdb.el
 	@echo Compiling bbdb.el...
-	@$(EMACS) -batch -q -f batch-byte-compile ./bbdb.el
+	@$(EMACS_PROG) -batch -q -f batch-byte-compile ./bbdb.el
 
 bbdb-gnus.elc:	bbdb.elc bbdb-gnus.el
 	@echo Compiling bbdb-gnus.el...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc $(GNUS)   \
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc $(GNUS)   \
 		-f batch-byte-compile $(@:.elc=.el)
 bbdb-mhe.elc:	bbdb.elc bbdb-mhe.el
 	@echo Compiling bbdb-mhe.el...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc $(MHE)    \
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc $(MHE)    \
 		-f batch-byte-compile $(@:.elc=.el)
 bbdb-rmail.elc:	bbdb.elc bbdb-rmail.el
 	@echo Compiling bbdb-rmail.el...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc $(RMAIL)  \
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc $(RMAIL)  \
 		-f batch-byte-compile $(@:.elc=.el)
 bbdb-vm.elc:	bbdb.elc bbdb-vm.el
 	@echo Compiling bbdb-vm.el...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc $(VM)     \
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc $(VM)     \
 		-f batch-byte-compile $(@:.elc=.el)
 
 bbdb-srv.elc:   bbdb.elc bbdb-srv.el
 	@echo Compiling bbdb-srv.el...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(progn (or (fboundp (quote define-obsolete-variable-alias)) (if (locate-library "gnuserv-compat") (load "gnuserv-compat" t t))) (if (and (locate-library "gnuserv") (locate-library "itimer")) (byte-compile-file "bbdb-srv.el") (message "Optional package bbdb-srv skipped - gnuserv not found")))'
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(progn (or (fboundp (quote define-obsolete-variable-alias)) (if (locate-library "gnuserv-compat") (load "gnuserv-compat" t t))) (if (and (locate-library "gnuserv") (locate-library "itimer")) (byte-compile-file "bbdb-srv.el") (message "Optional package bbdb-srv skipped - gnuserv not found")))'
 
 bbdb-reportmail.elc: bbdb.elc bbdb-reportmail.el
 	@echo Compiling bbdb-reportmail.el...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "reportmail") (byte-compile-file "bbdb-reportmail.el") (message "Optional package bbdb-reportmail skipped - reportmail not found"))'
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "reportmail") (byte-compile-file "bbdb-reportmail.el") (message "Optional package bbdb-reportmail skipped - reportmail not found"))'
 
 bbdb-sc.elc: bbdb.elc bbdb-sc.el
 	@echo Compiling bbdb-sc.el...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "supercite") (byte-compile-file "bbdb-sc.el") (message "Optional package bbdb-sc skipped - supercite not found"))'
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "supercite") (byte-compile-file "bbdb-sc.el") (message "Optional package bbdb-sc skipped - supercite not found"))'
 
 # bbdb-hooks uses VM macros if it can find VM.
 
 bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
 	@echo Compiling bbdb-hooks.el...
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc \
+	@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc \
 	-eval '(and (not (string= "$(VMDIR)" "")) \
 		    (setq load-path (cons "$(VMDIR)" load-path)) \
 		    (load "vm" t t) \

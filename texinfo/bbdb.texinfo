@@ -1634,8 +1634,10 @@ retained the group aliases in your @code{.mailrc}.
 
 To actually define the aliases which are stored in the BBDB, call the
 function @code{bbdb-define-all-aliases} from your
-@code{mail-setup-hook}.  This will search the database, and call
-@code{define-mail-alias} to define each of the resulting aliases.@refill
+@code{mail-setup-hook} (or @code{message-setup-hook} if you use
+Message mode coming with Gnus).  This will search the database, and
+call @code{define-mail-alias} to define each of the resulting
+aliases.@refill
 
 @node Reader-specific Features, Other Packages, Interfaces, Top
 @section Reader-specific Features

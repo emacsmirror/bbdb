@@ -1,3 +1,72 @@
+2001-11-19  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el (bbdb-format-address):
+	Several people contributed a patch to fix this. Alex Schroeder's
+      	  was the most general as it handles both printing and
+	  non-printing situations.
+
+	* lisp/bbdb-print.el
+	Some more fixes from Alex.
+
+	* aclocal.m4:
+	Use EMACS_PROG instead of EMACS to solve all problems related to
+	that variable.
+
+	* configure.ac:
+	Default XEmacs package dir to /usr/blah rather than
+	/usr/local/blah
+	Improve switches for MH-E, RMAIL, VM and GNUS
+
+2001-11-12  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
+	Allow '+' as part of an email address
+	
+	* lisp/bbdb-com.el (bbdb-complete-name-allow-cycling):
+	Documentation fix
+	(bbdb-get-help-window):
+	Removed dead code
+
+	* lisp/bbdb.el
+	Try to autoload the message-mode and mail-mode keymaps rather than
+	defining them as nil.
+
+2001-11-11  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-vm.el (bbdb/vm-set-auto-folder-alist-field):
+	Move into mua-specific group
+	(bbdb/vm-set-auto-folder-alist):
+	Documentation typo
+
+2001-11-06  Waider  <waider@waider.ie>
+
+	* texinfo/bbdb.texinfo (Mail Sending Interfaces):
+	Mention message-setup-hook in the mail aliases section
+	(Raymond Scholz)
+
+2001-10-14  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-gnus.el
+	(bbdb/gnus-pop-up-bbdb-buffer):
+	Move the call to bbdb-display-records back inside the (when...)
+	I had two bug reports for this (Sudesh Joseph and Michael
+	Totschnig).
+
+	* lisp/bbdb.el:
+	Added Nix's patch to make inside-bbdb-notice-hook work as
+	advertised, also other bbdb-expire support.
+	(bbdb-search-simple): 
+	Try company name if record name is unset, before falling back to
+	"". (Martin Schwenke)	
+
+	* lisp/bbdb-com.el
+	(bbdb-complete-name):
+	Restored the original code to handle making sure primary addresses
+	get picked first, since the code I'd replaced it with had some
+	dubious side-effects.
+	(bbdb-create-internal):
+	Documentation fix. (Ueli Schläpfer)
+
 2001-09-20  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb.el (bbdb-create-hook), (bbdb-notice-hook):
@@ -35,6 +104,11 @@
 	authors of a message.  Support for new features of
 	bbdb-auto-notes-alist.  Honor bbdb-silent-running.
 
+2001-09-18  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-snarf.el (bbdb-rfc822-addresses):
+	Cope with rfc822-addresses returning nil as the car.
+
 2001-09-11  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-print.el (bbdb-print-field-shown-p): Added as a
@@ -51,6 +125,31 @@
 	the hook functions are able to tell the type (author/recp) of an
 	address. 
 
+2001-09-09  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-gui.el: 
+	Fixed bogus fset (fsetting variable instead of 'variable)
+	(bbdb-hack-x-face): 
+	use bbdb-find-face, not find-face
+
+	* configure.ac: 
+	If $(RM) is actually rm, add the -f flag
+	Add --with-<insinuation target>. Needs work, though.
+
+	* Makefile.in
+	Default target is now 'all'
+	Added configure and Makefile targets
+
+	* lisp/Makefile.in
+	Added Makefile target
+	Call expand-file-name when building load-path
+
+	* lisp/bbdb.el 
+	(bbdb-initialize): 
+	Fixed vm entry. vm-load-hook no longer exists!
+	(bbdb-mode): 
+	Removed references to bbdb-elide-record
+
 2001-09-05  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-complete-name-hooks): Fixed the
@@ -63,7 +162,7 @@
 	* lisp/bbdb.el (bbdb-annotate-message-sender): calling of
 	bbdb-create-hook functions moved to the end of function
 	(bbdb-display-layout-alist): replaced by the nice version
-	provieded by Alex Schroeder <alex@gnu.org>
+	provided by Alex Schroeder <alex@gnu.org>
 
 2001-08-31  Robert Fenk  <Robert.Fenk@gmx.de>
 
@@ -105,6 +204,10 @@
 	(bbdb-format-record-layout-one-line),
 	(bbdb-format-record-one-line-*): Function specific to certain
 	layouts.
+
+2001-08-26  Steve Youngs  <youngs@xemacs.org>
+
+	* lisp/bbdb.el (bbdb-initialize): Autoload it.
 
 2001-08-13  Jeff Mincy  <jeff@delphioutpost.com>
 
