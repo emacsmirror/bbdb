@@ -328,8 +328,10 @@ is nil...\)"
 
 (defun bbdb-parse-zip-string (string)
   (cond ((string-match "^[ \t\n]*$" string) 0)
-	((string-match "^[ \t\n]*[0-9][0-9][0-9][0-9][0-9][ \t\n]*$" string)
+	;; Matches 3 to 6 digits.
+	((string-match "^[ \t\n]*[0-9][0-9][0-9][0-9]?[0-9]?[0-9]?[ \t\n]*$" string)
 	 (string-to-int string))
+	;; Matches 5 digits and 4 digits.
 	((string-match "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]\\)[ \t\n]*$" string)
 	 (list (bbdb-subint string 1) (bbdb-subint string 2)))
 	;; Match zip codes for Canada, UK, etc. (result is ("LL47" "U4B")).
@@ -338,15 +340,28 @@ is nil...\)"
 	  string)
 	 (list (substring string (match-beginning 1) (match-end 1))
 	       (substring string (match-beginning 2) (match-end 2))))
+	;; Match zip codes for continental Europe.  Examples "CH-8057"
+	;; or "F - 83320" (result is ("CH" "8057") or ("F" "83320")).
+	;; Support for "NL-2300RA" added at request from Carsten Dominik
+	;; <dominik@astro.uva.nl>
+	((string-match
+	  "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+ ?[A-Z]*\\)[ \t\n]*$" string)
+	 (list (substring string (match-beginning 1) (match-end 1))
+	       (substring string (match-beginning 2) (match-end 2))))
+	;; Match zip codes from Sweden where the five digits are grouped 3+2
+	;; at the request from Mats Lofdahl <MLofdahl@solar.stanford.edu>.
+	;; (result is ("SE" (133 36)))
+	((string-match
+	  "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+\\)[ \t\n]+\\([0-9]+\\)[ \t\n]*$" string)
+	 (list (substring string (match-beginning 1) (match-end 1))
+	       (list (bbdb-subint string 2)
+		     (bbdb-subint string 3))))
+	;; Add some error messages
 	((string-match "-[^-]-" string)
 	 (error "too many dashes in zip code."))
-	((string-match "[^-0-9 \t\n]" string)
-	 (error "illegal characters in zip code."))
-	((string-match "[0-9][0-9][0-9][0-9][0-9][0-9]" string)
-	 (error "too many digits in zip code."))
-	((< (length string) 5)
+	((< (length string) 3)
 	 (error "not enough digits in zip code."))
-	(t (error "not a valid 5-digit or 5+4 digit zip code."))))
+	(t (error "not a valid zip code."))))
 
 
 (defun bbdb-read-new-record ()
@@ -447,8 +462,8 @@ COMPANY is a string or nil.
 NET is a comma-separated list of email addresses, or a list of strings.
  An error is signalled if that name is already in use.
 ADDRS is a list of address objects.  An address is a vector of the form
-   [\"location\" \"line1\" \"line2\" \"line3\" \"City\" \"State\" zip]
- where `zip' is nil, an integer, or a cons of two integers.
+   [\"location\" \"line1\" \"line2\" \"line3\" \"City\" \"State\" zip \"Country\"]
+ where `zip' is nil, an integer, or a cons.
 PHONES is a list of phone-number objects.  A phone-number is a vector of
  the form
    [\"location\" areacode prefix suffix extension-or-nil]
@@ -496,6 +511,7 @@ NOTES is a string, or an alist associating symbols with strings."
 				    (null (cdr (cdr (aref addr 6)))))))
 		(aset addr 6 (signal 'wrong-type-argument
 				     (list 'zipcodep (aref addr 6)))))
+	      (bbdb-check-type (aref addr 7) stringp)
 	      addr))
 	    addrs))
     (setq phones
@@ -609,7 +625,9 @@ NOTES is a string, or an alist associating symbols with strings."
 				       nil (list L))
 				   (if (string= "" (bbdb-address-street3 addr))
 				       nil (list L))
-				   (list L)))))
+				   (list L)
+				   (if (string= "" (bbdb-address-country addr))
+				       nil (list L))))))
 			       (bbdb-record-addresses record))))
 		   (if (and (bbdb-record-net record)
 			    (bbdb-field-shown-p 'net))
@@ -859,9 +877,22 @@ section, then the entire field is edited, not just the current line."
 		       bbdb-record))
     need-to-sort))
 
-(defun bbdb-record-edit-address (addr &optional location)
-  (let* ((loc (or location (bbdb-read-string "Location: " (bbdb-address-location addr))))
-	 (st1 (bbdb-read-string "Street, line 1: " (bbdb-address-street1 addr)))
+(defun bbdb-address-edit-default (addr)
+  "Function to use for address editing.
+The sub-fields are queried using the default order and using the
+default names.  Set `bbdb-address-editing-function' to an alternate
+address editing function if you don't like this function.  It is
+mostly used for US style addresses.
+
+The sub-fields and the prompts used are:
+Street, line 1:  street1  
+Street, line 2:  street2
+Street, line 3:  street3
+City:            city
+State:           state
+Zip Code:        zip
+Country:         country"
+  (let* ((st1 (bbdb-read-string "Street, line 1: " (bbdb-address-street1 addr)))
 	 (st2 (if (string= st1 "") ""
 		  (bbdb-read-string "Street, line 2: " (bbdb-address-street2 addr))))
 	 (st3 (if (string= st2 "") ""
@@ -870,15 +901,31 @@ section, then the entire field is edited, not just the current line."
 	 (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
 	 (zip (bbdb-error-retry
 		(bbdb-parse-zip-string
-		  (bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr))))))
-    (bbdb-address-set-location addr loc)
+		  (bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
+	 (country (bbdb-read-string "Country: " (bbdb-address-country addr))))
     (bbdb-address-set-street1 addr st1)
     (bbdb-address-set-street2 addr st2)
     (bbdb-address-set-street3 addr st3)
     (bbdb-address-set-city addr cty)
     (bbdb-address-set-state addr ste)
     (bbdb-address-set-zip addr zip)
+    (bbdb-address-set-country addr country)
     nil))
+
+(defvar bbdb-address-editing-function 'bbdb-address-edit-default
+  "Function to use for address editing.
+The function must accept a BBDB address as parameter and allow the
+user to edit it.  This variable is called from `bbdb-record-edit-address'.
+The default value is the symbol `bbdb-address-edit-default'.")
+
+(defun bbdb-record-edit-address (addr &optional location)
+  "Edit an address ADDR.
+If optional parameter LOCATION is non-nil, edit the location sub-field
+of the address as well.  The address itself is edited using the editing
+function in `bbdb-address-editing-function'."
+  (let ((loc (or location (bbdb-read-string "Location: " (bbdb-address-location addr)))))
+    (bbdb-address-set-location addr loc))
+  (funcall bbdb-address-editing-function addr))
 
 (defun bbdb-record-edit-phone (phone-number)
   (let ((newl (bbdb-read-string "Location: "
@@ -1400,7 +1447,8 @@ given address is the address the mail is destined to; this is formatted like
 \"Firstname Lastname <addr>\" unless both the first name and last name are
 constituents of the address, as in John.Doe@SomeHost, or the address is
 already in the form \"Name <foo>\" or \"foo (Name)\", in which case the
-address is used as-is."
+address is used as-is. If bbdb-dwim-net-address-allow-redundancy is non-nil,
+the name is always included."
   (or net (setq net (car (bbdb-record-net record))))
   (or net (error "record unhas network addresses"))
   (let* ((override (bbdb-record-getprop record 'mail-name))
