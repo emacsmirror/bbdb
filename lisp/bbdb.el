@@ -69,10 +69,6 @@ prompt the users on how to merge records when duplicates are detected.")
   (defmacro with-current-buffer (buf &rest body)
     `(save-current-buffer (set-buffer ,buf) ,@body)))
 
-(unless (fboundp 'display-message)
-  (defmacro display-message (type mess)
-    `(message ,mess)))
-
 (unless (fboundp 'defvaralias)
   (defun defvaralias (&rest args)))
 
@@ -1323,7 +1319,7 @@ them.  The formating functions should be named according to the following
 pattern bbdb-format-popup-<field>.  They should take one argument which is
 the raw field content and return a string."
   :group 'bbdb
-  :type 'list)
+  :type 'sexp)
 
 (defmacro bbdb-pop-up-elided-display ()
   '(if (boundp 'bbdb-pop-up-elided-display)
