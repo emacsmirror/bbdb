@@ -1,21 +1,60 @@
+2000-10-15  Waider  <waider@waider.ie>
+
+	* lisp/Makefile:
+	Fix to allow building with Martin Schwenke's gnuserv.
+
+	* lisp/bbdb-srv.el:
+	Fixed to work with newer version of gnuserv provided by Martin
+	Schwenke and downloadable from
+	http://linuxcare.com.au/people/martins/hacks/emacs/
+
+	* lisp/bbdb-vm.el:
+	Cleaned up some of the customization stuff.
+	Fixed handling of vm-uninteresting-senders
+
+	* lisp/bbdb.el:
+	Cleaned up some of the customization stuff.
+
+	* lisp/bbdb-gnus.el:
+	Added Brian Edmonds' filing hackery, modified to fit in bbdb's concept
+	of a namespace.
+	Cleaned up some compiler noise.
+
+	* lisp/bbdb-com.el:
+	Fixed the compose-mail selection for bbdb-send-mail-style. Thanks to
+	Raymond Scholz for pointing out that it wasn't actually working.
+
+2000-10-04  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el (bbdb-send-mail-internal): 
+	Added in compose-mail bits. Whoops.
+
+2000-09-20  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el:
+	Fix primary-or-name search to pay attention to bbdb-case-fold-search
+	when checking names. (bug report: Eli Tziperman)
+
 2000-09-12  Robert Fenk  <fenk@forwiss.de>
 
-	* bbdb-vm.el (bbdb/vm-snarf-all): fixed wrong documentation
+	* lisp/bbdb-vm.el (bbdb/vm-snarf-all): 
+	fixed wrong documentation
 
 2000-09-11  Waider  <waider@stepstone.ie>
 
 	* lisp/bbdb-vm.el:
-	  Reinstated 2.00.06 behaviour of creating a record if necessary
-	    when : is pressed
-	  Added new function, bbdb/vm-show-all-recipients, to do the
-	    necessary fandango to show recipients for the current
-	    message. Map it to something in vm-mode-map if you wish to use
-	    it. I'd suggest "'". 
+	Reinstated 2.00.06 behaviour of creating a record if necessary
+	  when : is pressed
+	Added new function, bbdb/vm-show-all-recipients, to do the
+	  necessary fandango to show recipients for the current
+	  message. Map it to something in vm-mode-map if you wish to use
+	  it. I'd suggest "'". 
 
-2000-09-08  sds  <sds@klortho>
+2000-09-08  Sam Steingold  <sds@gnu.org>
 
-	* lisp/bbdb.el (bbdbq-mk): new function to create `subliminal'
-          messages. Also, two new messages.
+	* lisp/bbdb.el (bbdbq-mk): 
+	new function to create `subliminal' messages. Also, two new
+	messages.
 
 2000-09-08  Waider  <waider@waider.ie>
 
