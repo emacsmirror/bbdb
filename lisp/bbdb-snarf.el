@@ -96,7 +96,8 @@ If CONSUME-P is set, delete the text, if found."
   (interactive "sDefault label: ")
   (let ((end (point-marker)))
     (skip-chars-backward " \t")
-    (forward-char -1)
+    (if (not (= (point) (point-min)))
+        (forward-char -1))
     (if (looking-at ":")
     (let* ((label-end (point))
            (label (delete-and-return-region
@@ -159,7 +160,7 @@ more details."
       (while (re-search-forward "^[ \t]+" (point-max) t)
         (replace-match ""))
       (goto-char (point-min))
-      (while (re-search-forward "\\s +$" (point-max) t)
+      (while (re-search-forward "^\\s +$" (point-max) t)
         (replace-match ""))
 
       ;; first, pick out phone numbers
@@ -174,10 +175,12 @@ more details."
               (goto-char end);; not really phone
             (setq phone (bbdb-snarf-parse-phone-number
                          (delete-and-return-region begin end))
-                  phones (append phones (list (vconcat
-                                               (list (bbdb-snarf-extract-label
-                                                      "phone" t))
-                                               phone)))))))
+                  phones (append phones
+                                 (list (vconcat
+                                        (list (bbdb-snarf-extract-label
+                                               (bbdb-label-completion-default
+                                                'phone) t))
+                                        phone)))))))
 
       ;; next, web pages
       (goto-char (point-min))
@@ -236,9 +239,10 @@ more details."
               (goto-char (point-min))
               (setq address-lines (bbdb-snarf-address-lines)
                     address-vector (list (bbdb-snarf-make-address
-                                          "address"
+                                          (bbdb-label-completion-default
+                                           'address)
                                           address-lines
-                                          city
+                                           city
                                           state
                                           zip
                                           "";; FIXME: snarf country
@@ -315,6 +319,8 @@ more details."
 ; "
 ;       "some test cases")
 
+
+  
 (defun bbdb-merge-interactively (name company nets addrs phones notes)
   "Interactively add a new record; arguments same as \\[bbdb-create-internal]."
   (let*
