@@ -121,12 +121,12 @@
 (if (fboundp 'extent-face)
     (fset 'bbdb-extent-face 'extent-face)
   (defun bbdb-extent-face (extent)
-    (extent-property extent 'face)))
+    (overlay-get extent 'face)))
 
 (if (fboundp 'set-extent-face)
     (fset 'bbdb-set-extent-face 'set-extent-face)
   (defun bbdb-set-extent-face (extent face) "set the face for an overlay"
-    (bbdb-set-extent-property extent 'face face)))
+    (overlay-put extent 'face face)))
 
 (if (fboundp 'set-extent-begin-glyph)
     (fset 'bbdb-set-extent-begin-glyph 'set-extent-begin-glyph)
