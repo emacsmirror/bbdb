@@ -23,6 +23,7 @@
 ;;
 
 (require 'bbdb)
+(require 'bbdb-snarf)
 (require 'gnus)
 
 ;;; Compiler hushing
@@ -31,6 +32,8 @@
   (defvar gnus-optional-headers)                          ;; ??
   (defvar gnus-Subject-buffer)                            ;; ??
   (defvar gnus-Subject-mode-map)                          ;; ??
+  (defvar gnus-ignored-from-addresses)                    ;; gnus-sum
+  (require 'gnus-sum)
   (autoload 'gnus-summary-select-article "gnus-sum")
   (autoload 'gnus-article-narrow-to-signature "gnus-art")
   (autoload 'nntp-header-lines "nntp")
@@ -42,36 +45,126 @@
   (autoload 'bbdb-show-all-recipients "bbdb-com")
   (autoload 'rfc822-addresses "rfc822"))
 
+(defun bbdb/gnus-get-addresses (&optional only-first-address)
+  "Return real name and email address of sender respectively recipients.
+If an address matches `gnus-ignored-from-addresses' it will be ignored.
+If `gnus-ignored-from-addresses' is nil we use `bbdb-user-mail-names'
+instead.    
+The headers to search can be configured by `bbdb-get-addresses-headers'."
+  (save-restriction
+    (goto-char (point-min))
+    (narrow-to-region (point-min)
+                      (if (search-forward "\n\n" nil 'force)
+                          (- (point) 2)
+                        (point)))
+    
+    (let ((headers bbdb-get-addresses-headers)
+          (uninteresting-senders (or gnus-ignored-from-addresses
+                                     bbdb-user-mail-names))
+          addrlist header adlist fn ad)
+      (while headers
+        (setq header (mail-fetch-field (car headers)))
+        (when header
+          (setq adlist (bbdb-extract-address-components header))
+          (while adlist
+            (setq fn (caar adlist)
+                  ad (cadar adlist))
+            
+            ;; ignore uninteresting addresses, this is kinda gross!
+            (if (or (not (stringp uninteresting-senders))
+                    (not (or
+                          (and fn (string-match uninteresting-senders fn))
+                          (and ad (string-match uninteresting-senders ad)))))
+                (add-to-list 'addrlist (car adlist)))
+          
+            (if (and only-first-address addrlist)
+                (setq adlist nil headers nil)
+              (setq adlist (cdr adlist)))))
+        (setq headers (cdr headers)))
+      (nreverse addrlist))))
+
+(defun bbdb/gnus-get-message-id ()
+  "Return the message-id of the current message."
+  (save-excursion 
+    (set-buffer (get-buffer gnus-article-buffer))
+    (set-buffer gnus-original-article-buffer)
+    (goto-char (point-min))
+    (let ((case-fold-search t))
+      (if (re-search-forward "^Message-ID:\\s-*\\(<.+>\\)" (point-max) t)
+          (match-string 1)))))
+
+
+(defcustom bbdb/gnus-update-records-mode 'annotating
+;  '(if (gnus-new-flag msg) 'annotating 'searching)
+  "Controls how `bbdb/gnus-update-records' processes email addresses.
+Set this to an expression which evaluates either to 'searching or
+'annotating.  When set to 'annotating email addresses will be fed to
+`bbdb-annotate-message-sender' in order to update existing records or create
+new ones.  A value of 'searching will search just for existing records having
+the right net.
+
+The default is to annotate only new messages."
+  :group 'bbdb-mua-specific-gnus
+  :type '(choice (const :tag "annotating all messages"
+                        'annotating)
+                 (const :tag "annotating no messages"
+                        'searching)
+                 (const :tag "annotating only new messages"
+                        (if (equal ""
+                                   (gnus-summary-article-mark
+                                    (gnus-summary-article-number)))
+                            'annotating 'searching))
+                 (sexp   :tag "user defined")))
+
+
 ;;;###autoload
 (defun bbdb/gnus-update-record (&optional offer-to-create)
-  "returns the record corresponding to the current GNUS message, creating
+  "Return the record corresponding to the current GNUS message, creating
 or modifying it as necessary.  A record will be created if
 bbdb/news-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
 the user confirms the creation."
-    (set-buffer gnus-article-buffer)
-    (save-restriction
-      (widen)
-      ;;(gnus-article-show-all-headers)
-      (narrow-to-region (point-min)
-                        (progn (goto-char (point-min))
-                   (if (search-forward "\n\n" nil 'force)
-                   (- (point) 2)
-                 (point))))
-      (let ((from (mail-fetch-field "from"))
-            name net)
-        (if (or (null from)
-                (string-match (bbdb-user-mail-names)
-                              (mail-strip-quoted-names from)))
-            ;; if logged-in user sent this, use recipients.
-            (setq from (or (mail-fetch-field "to") from)))
-      (if from
-      (bbdb-annotate-message-sender from t
-                    (or (bbdb-invoke-hook-for-value
-                         bbdb/news-auto-create-p)
-                        offer-to-create)
-		    (or (bbdb-invoke-hook-for-value
-			 bbdb/prompt-for-create-p)
-			offer-to-create))))))
+  (let* ((bbdb-get-only-first-address-p t)
+         (records (bbdb/gnus-update-records offer-to-create)))
+    (if records (car records) nil)))
+
+
+;;;###autoload
+(defun bbdb/gnus-update-records (&optional offer-to-create)
+  "Return the records corresponding to the current GNUS message, creating
+or modifying it as necessary.  A record will be created if
+bbdb/news-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
+the user confirms the creation."
+  (let ((bbdb-update-records-mode (or bbdb/gnus-update-records-mode
+                                      bbdb-update-records-mode))
+        (bbdb/gnus-offer-to-create offer-to-create)
+        ;; here we may distiguish between different type of messages
+        ;; for those that have no message id we have to find something
+        ;; else as message key.
+        (msg-id (bbdb/gnus-get-message-id))
+        records cache)
+    (save-excursion 
+      (set-buffer (get-buffer gnus-article-buffer))
+      (message ">>%s<<<<<< flags"
+               (gnus-summary-article-mark
+                (gnus-summary-article-number)))
+      (if (and msg-id (not bbdb/gnus-offer-to-create))
+          (setq cache (bbdb-message-cache-lookup msg-id)))
+      (if cache
+          (setq records (if bbdb-get-only-first-address-p
+                          (if (cadr cache);; stop it from returning '(nil)
+                              (list (cadr cache))
+                            nil)
+                          (cdr cache)))
+        (let ((bbdb-update-records-mode (or bbdb/gnus-update-records-mode
+                                            bbdb-update-records-mode)))
+          (setq records (bbdb-update-records
+                         (bbdb/gnus-get-addresses
+                          bbdb-get-only-first-address-p)
+                         bbdb/news-auto-create-p
+                         offer-to-create)))
+        (if (and bbdb-message-caching-enabled msg-id)
+            (bbdb-encache-message msg-id records))))
+    records))
 
 ;;;###autoload
 (defun bbdb/gnus-annotate-sender (string &optional replace)
@@ -95,49 +188,70 @@ of the BBDB record corresponding to the sender of this message."
       (bbdb-record-edit-notes record t))))
 
 ;;;###autoload
-(defun bbdb/gnus-show-sender ()
-  "Display the contents of the BBDB for the sender of this message.
+(defun bbdb/gnus-show-records (&optional headers)
+  "Display the contents of the BBDB for all addresses of this message.
 This buffer will be in `bbdb-mode', with associated keybindings."
-  (interactive)
+  (interactive "P")
   (gnus-summary-select-article)
-  (or (bbdb/gnus-pop-up-bbdb-buffer t)
-      (error "unperson")))
+  (let ((bbdb-get-addresses-headers (or headers bbdb-get-addresses-headers))
+        (bbdb/gnus-update-records-mode 'annotating)
+        (bbdb/news-auto-create-p t)
+        (bbdb-message-cache nil)
+        records)
+    (setq records (bbdb/gnus-update-records t))
+    (if records
+        (bbdb-display-records records)
+      (bbdb-undisplay-records))))
 
+(defun bbdb/gnus-show-sender (&optional show-recipients)
+  "Display the contents of the BBDB for the senders of this message.
+With a prefix argument show the recipients instead.
+This buffer will be in `bbdb-mode', with associated keybindings."
+  (interactive "P")
+  (if show-recipients
+      (bbdb/gnus-show-records  bbdb-get-addresses-to-headers)
+    (bbdb/gnus-show-records  bbdb-get-addresses-from-headers)))
+       
+;;;###autoload
+(defun bbdb/gnus-show-all-recipients ()
+  "Show all recipients of this message. Counterpart to `bbdb/vm-show-sender'."
+  (interactive)
+  (bbdb/gnus-show-records  bbdb-get-addresses-to-headers))
 
 (defun bbdb/gnus-pop-up-bbdb-buffer (&optional offer-to-create)
   "Make the *BBDB* buffer be displayed along with the GNUS windows,
 displaying the record corresponding to the sender of the current message."
   (let ((bbdb-gag-messages t)
-    (record (bbdb/gnus-update-record offer-to-create))
-    (bbdb-electric-p nil))
+        (records (bbdb/gnus-update-records offer-to-create))
+        (bbdb-electric-p nil))
 
     (when bbdb-use-pop-up
     (let ((bbdb-elided-display (bbdb-pop-up-elided-display))
           (b (current-buffer)))
       ;; display the bbdb buffer iff there is a record for this article.
-        (if record
-         (bbdb-pop-up-bbdb-buffer
-             (lambda (w)
-                  (let ((b (current-buffer)))
-                (set-buffer (window-buffer w))
-                (prog1 (or (eq major-mode 'gnus-Article-mode)
-                       (eq major-mode 'gnus-article-mode))
-                   (set-buffer b)))))
-         (or bbdb-inside-electric-display
-             (not (get-buffer-window bbdb-buffer-name))
-             (let (w)
-               (delete-other-windows)
-                  (if (assq 'article gnus-buffer-configuration)
-               (gnus-configure-windows 'article)
-             (gnus-configure-windows 'SelectArticle))
-               (if (setq w (get-buffer-window
-                    (if (boundp 'gnus-summary-buffer)
-                    gnus-summary-buffer
-                      gnus-Subject-buffer)))
-                      (select-window w)))))
+      (if records
+          (bbdb-pop-up-bbdb-buffer
+           (lambda (w)
+             (let ((b (current-buffer)))
+               (set-buffer (window-buffer w))
+               (prog1 (or (eq major-mode 'gnus-Article-mode)
+                          (eq major-mode 'gnus-article-mode))
+                 (set-buffer b)))))
+        (or bbdb-inside-electric-display
+            (not (get-buffer-window bbdb-buffer-name))
+            (let (w)
+              (delete-other-windows)
+              (if (assq 'article gnus-buffer-configuration)
+                  (gnus-configure-windows 'article)
+                (gnus-configure-windows 'SelectArticle))
+              (if (setq w (get-buffer-window
+                           (if (boundp 'gnus-summary-buffer)
+                               gnus-summary-buffer
+                             gnus-Subject-buffer)))
+                  (select-window w)))))
       (set-buffer b)))
-    (if record (bbdb-display-records (list record)))
-    record))
+    (if records (bbdb-display-records records))
+    records))
 
 ;;
 ;; Announcing BBDB entries in the summary buffer
