@@ -1,3 +1,60 @@
+Mon Jan  5 20:40:03 1998  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 1.58unoff released
+	* lisp/auto-autoloads.el: Removed all autoloads except `bbdb-initialize'
+	* lisp/bbdb-com.el: Fixed copyright
+	* lisp/bbdb-com.el: Removed autoloads
+	* lisp/bbdb-com.el: Finger group changed
+	* lisp/bbdb-com.el (bbdb-compare-records): Changed to backquote notation
+	* lisp/bbdb-ftp.el: Customized
+	* lisp/bbdb-ftp.el: Added provide of bbdb-ftp
+	* lisp/bbdb-gnus.el: Removed autoloads
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-prefer-real-names): Reformatted doc
+	* lisp/bbdb-gnus.el (bbdb/gnus-score-as-text): Remove `when'
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus): Remove `when'
+	* lisp/bbdb-hooks.el: Added provide of bbdb-hooks
+	* lisp/bbdb-hooks.el (bbdb-time-internal-format): Replaces bbdb-time-string
+	* lisp/bbdb-hooks.el (bbdb-ignore-most-messages-alist): Fixed custom spec
+	* lisp/bbdb-hooks.el (bbdb-ignore-some-messages-alist): Fixed custom spec
+	* lisp/bbdb-hooks.el (bbdb-auto-notes-alist): Fixed custom spec
+	* lisp/bbdb-hooks.el (bbdb-auto-notes-ignore): Fixed custom spec
+	* lisp/bbdb-hooks.el (bbdb-auto-notes-ignore-all): Fixed custom spec
+	* lisp/bbdb-migrate.el: Created from migrate code in bbdb.el
+	* lisp/bbdb-print.el: Customized
+	* lisp/bbdb-print.el: Removed autoloads
+	* lisp/bbdb-reportmail.el: Changed setup docs, added RCS ID and Log strings
+	* lisp/bbdb-sc.el: Fixed jwz's e-mail address
+	* lisp/bbdb-sc.el: Customized
+	* lisp/bbdb-sc.el: Removed autoloads
+	* lisp/bbdb-sc.el: Added provide of bbdb-sc
+	* lisp/bbdb-snarf.el: Customized
+	* lisp/bbdb-snarf.el: Removed autoloads
+	* lisp/bbdb-srv.el: Rearranged copyright
+	* lisp/bbdb-srv.el: Customized
+	* lisp/bbdb-w3.el: Removed autoloads
+	* lisp/bbdb-w3.el: Added provide of bbdb-w3
+	* lisp/bbdb-whois.el: Added to copyright
+	* lisp/bbdb-whois.el: Customized
+	* lisp/bbdb-xemacs.el: Removed autoloads
+	* lisp/bbdb.el: Added define-widget definition for users without Custom
+	* lisp/bbdb.el: Added utilities custom groups
+	* lisp/bbdb.el: Removed migration code
+	* lisp/bbdb.el: Commented some code
+	* lisp/bbdb.el (bbdb-string-trim): Delete still more text properties
+	* lisp/bbdb.el (bbdb-save-db): Made error message slightly more obvious
+	* lisp/bbdb.el (bbdb-initialize): Added symbols for selective insinuation
+	* lisp/bbdb.el (bbdb-initialize): Rearranged and added some autoloads
+	* Makefile: Added migrate.el
+	* Makefile: Added deploy target
+	* texinfo/bbdb.texinfo: Changed `setq' to `add-hook' in setup instructions
+	* texinfo/bbdb.texinfo: Added to Internals section
+	
+Mon Dec  1 09:00:12 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 1.57Aunoff released
+	* texinfo/bbdb.texinfo: Documented new startup procedure
+	* INSTALL: Documented new startup procedure
+
 Sun Nov 30 23:26:21 1997  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 1.57unoff released
