@@ -3021,6 +3021,8 @@ return them."
   (concat "[-,. \t/\\]+\\("
           "[JjSs]r\\.?"
           "\\|V?\\(I\\.?\\)+V?"
+          (concat "\\|"
+                  (regexp-opt bbdb-lastname-prefixes))
           "\\)\\W*\\'"))
 
 (defun bbdb-divide-name (string)
@@ -3704,7 +3706,7 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map " "            'scroll-up)
   )
 
- 
+
 ;;; Support for the various Emacsen.  This is for features that the
 ;;; BBDB adds to itself for different Emacsen.  For definitions of
 ;;; functions that aren't present in various Emacsen (for example,
