@@ -1,3 +1,21 @@
+2003-10-10  Robert Widhopf  <bbdb@robf.de>
+
+	* lisp/bbdb-com.el (bbdb-edit-current-field): Handle field
+	detection gracefully at line-end of one-line display.
+	(reported by Dan Jacobson)
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-split-method): Honor Resent-*
+	headers if present. (Reported by Thomas Gerds)
+
+	* lisp/bbdb-com.el (bbdb-help): Added colons to separate help
+	items and thus avoid confusion (reported by Dan Jacobson)
+
+	* lisp/bbdb.el (bbdb-annotate-message-sender): Honor create-p for
+	creating new records if a similar record already exists.
+	
+	* lisp/bbdb-com.el (bbdb-prompt-for-create): Slightly changed the
+	semantics of the returned value to honor create-p.
+	
 2003-08-01  Robert Widhopf  <bbdb@robf.de>
 
 	* lisp/bbdb-com.el (bbdb-dwim-net-address-allow-redundancy): 
