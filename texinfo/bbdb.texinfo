@@ -8,6 +8,9 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.32  2000/11/07 12:55:39  waider
+@c Doc fix (Martin Buchholz)
+@c
 @c Revision 1.31  2000/09/12 10:43:00  waider
 @c Added "BBDB Development Team" to the list at the start.
 @c Fixed 'missing node' problem with older versions of makeinfo.
@@ -1090,7 +1093,7 @@ in the Gnus Summary Buffer.  For usage details, see @ref{Gnus Summary Buffer}.
 The value of this field is used in place of the @code{name} field when
 printing the database using @code{bbdb-print}.  @xref{bbdb-print}.
 @item www
-This field contains the URL assocated with the @b{BBDB} record.  Common uses
+This field contains the URL associated with the @b{BBDB} record.  Common uses
 are with @code{bbdb-snarf} (@pxref{bbdb-snarf}) and the @b{BBDB}/Web Browser
 functionality (for initialization details, see @ref{Web Browser Prep}.  For
 usage details, see @ref{Using Web Browsers}).
