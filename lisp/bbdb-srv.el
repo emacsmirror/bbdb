@@ -3,11 +3,29 @@
 ;;; This file is the part of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1995 Jamie Zawinski <jwz@netscape.com>.
 ;;; Invoking BBDB from another process, via `gnudoit'.
+;;; See the file bbdb.texinfo for documentation.
+;;;
+;;; The Insidious Big Brother Database is free software; you can redistribute
+;;; it and/or modify it under the terms of the GNU General Public License as
+;;; published by the Free Software Foundation; either version 2, or (at your
+;;; option) any later version.
+;;;
+;;; BBDB is distributed in the hope that it will be useful, but WITHOUT ANY
+;;; WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+;;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+;;; details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with GNU Emacs; see the file COPYING.  If not, write to
+;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ;;
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.53  1998/01/06 06:16:21  simmonmt
+;; Rearranged copyright and customized variables
+;;
 ;; Revision 1.52  1997/10/06 01:09:36  simmonmt
 ;; jwz patches to support caller ID script, mail/news classification
 ;; routine, make sure *BBDB* is bottommost buffer
@@ -51,26 +69,12 @@
 ;;; which will hook BBDB up to Mozilla (Unix Netscape Mail and Netscape News
 ;;; versions 3.0b2 and later only.)
  
-;;; The Insidious Big Brother Database is free software; you can redistribute
-;;; it and/or modify it under the terms of the GNU General Public License as
-;;; published by the Free Software Foundation; either version 2, or (at your
-;;; option) any later version.
-;;;
-;;; BBDB is distributed in the hope that it will be useful, but WITHOUT ANY
-;;; WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-;;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-;;; details.
-;;;
-;;; You should have received a copy of the GNU General Public License
-;;; along with GNU Emacs; see the file COPYING.  If not, write to
-;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-
 (require 'bbdb)
 (require 'gnuserv)
 (require 'itimer)
 
-(defvar bbdb/srv-auto-create-p nil
-  "*Like bbdb/news-auto-create-p and bbdb/mail-auto-create-p,
+(defcustom bbdb/srv-auto-create-p nil
+  "*Like `bbdb/news-auto-create-p' and `bbdb/mail-auto-create-p',
 but for the case where the record is being displayed by some external
 process via the `gnudoit' mechanism.
 
@@ -79,13 +83,20 @@ function name or lambda, then it is called with no arguments to decide
 whether an entry should be automatically created.  You can use this to,
 for example, create or not create messages which have a particular subject.
 
-bbdb/srv-auto-create-mail-news-dispatcher is a good value for this --
+`bbdb/srv-auto-create-mail-news-dispatcher' is a good value for this --
 that function will try to decide if this is a mail message or a news
-message, and then run either bbdb/news-auto-create-p or
-bbdb/mail-auto-create-p as appropriate.")
-
-(defvar bbdb/srv-display-delay 2
-  "*How long we must be idle before displaying a record.")
+message, and then run either `bbdb/news-auto-create-p' or
+`bbdb/mail-auto-create-p' as appropriate."
+  :group 'bbdb-utilities-server
+  :type '(choice (const :tag "Don't automatically create records" nil)
+		 (const :tag "Automatically create records" t)
+		 (sexp :tag "Use function to determine record creation"
+		       bbdb/srv-auto-create-mail-news-dispatcher)))
+  
+(defcustom bbdb/srv-display-delay 2
+  "*How long (in seconds) we must be idle before displaying a record."
+  :group 'bbdb-utilities-server
+  :type 'integer)
 
 (defvar bbdb/srv-pending-headers nil)
 (defvar bbdb/srv-pending-map
