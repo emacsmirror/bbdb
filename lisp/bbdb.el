@@ -91,11 +91,21 @@ prompt the users on how to merge records when duplicates are detected.")
 
 (eval-when-compile              ; pacify the compiler
  (defvar bbdb-address-print-formatting-alist) ; "bbdb-print"
+ (defvar bbdb-pop-up-elided-display-name-end) ; "bbdb-com"
+ (defvar bbdb-pop-up-elided-display-fields)   ; "bbdb-com"
  (defvar mail-mode-map)         ; "sendmail"
+ (defvar message-mode-map)      ; "message"
  (autoload 'widget-group-match "wid-edit")
  (autoload 'Electric-pop-up-window "electric")
  (autoload 'Electric-command-loop "electric")
  (autoload 'bbdb-snarf-nice-real-name "bbdb-snarf")
+ (autoload 'bbdb-migration-query "bbdb-migrate")
+ (autoload 'bbdb-migrate "bbdb-migrate")
+ (autoload 'bbdb-migrate-rewrite-all "bbdb-migrate")
+ (autoload 'bbdb-migrate-update-file-version "bbdb-migrate")
+ (autoload 'bbdb-unmigrate-record "bbdb-migrate")
+ (autoload 'bbdb-redisplay-records "bbdb-com")
+ (autoload 'y-or-n-p-with-timeout "timer")
  )
 
 ;; Make custom stuff work even without customize
@@ -1404,15 +1414,16 @@ the raw field content and return a string."
     (set-buffer b)))
 
 (defun bbdb-undisplay-records ()
-  (save-excursion
-    (set-buffer bbdb-buffer-name)
-    (setq bbdb-showing-changed-ones nil
-          mode-line-modified nil
-          bbdb-records nil
-          buffer-read-only nil)
-    (erase-buffer)
-    (setq buffer-read-only t)
-    (set-buffer-modified-p nil)))
+  (if (bufferp bbdb-buffer-name)
+      (save-excursion
+        (set-buffer bbdb-buffer-name)
+        (setq bbdb-showing-changed-ones nil
+              mode-line-modified nil
+              bbdb-records nil
+              buffer-read-only nil)
+        (erase-buffer)
+        (setq buffer-read-only t)
+        (set-buffer-modified-p nil))))
 
 ;;; Electric display stuff
 
