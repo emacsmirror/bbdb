@@ -37,37 +37,10 @@
   (or (boundp 'vm-mode-map)
       (load-library "vm-vars")))
 
-(defun bbdb/vm-get-addresses (msg &optional only-first-address)
-  "Return real name and email address of sender respectively recipient.
-If an address matches `vm-summary-uninteresting-senders' it will be ignored.
-If `vm-summary-uninteresting-senders' is nil we use `bbdb-user-mail-names'
-instead.
-The headers to search can be configured by `bbdb/vm-get-addresses-headers'."
-  (setq msg (vm-real-message-of msg))
-  (let ((headers bbdb-get-addresses-headers)
-        (uninteresting-senders (or vm-summary-uninteresting-senders
-                                   bbdb-user-mail-names))
-        addrlist header adlist fn ad)
-    (while headers
-      (setq header (vm-get-header-contents msg (concat (car headers) ":")))
-      (when header
-        (setq adlist (funcall bbdb-extract-address-components-func
-                      (vm-decode-mime-encoded-words-in-string header)))
-        (while adlist
-          (setq fn (caar adlist)
-                ad (cadar adlist))
-
-          ;; ignore uninteresting addresses, this is kinda gross!
-          (if (or (not (stringp uninteresting-senders))
-                  (not (or (and fn (string-match uninteresting-senders fn))
-                           (and ad (string-match uninteresting-senders ad)))))
-              (add-to-list 'addrlist (car adlist)))
-
-          (if (and only-first-address addrlist)
-              (setq adlist nil headers nil)
-            (setq adlist (cdr adlist)))))
-      (setq headers (cdr headers)))
-    (nreverse addrlist)))
+(defun bbdb/vm-get-header-content (header-field msg)
+  (let ((content (vm-get-header-contents msg (concat header-field ":"))))
+    (if content
+        (vm-decode-mime-encoded-words-in-string content))))
 
 (defcustom bbdb/vm-update-records-mode
   '(if (vm-new-flag msg) 'annotating 'searching)
@@ -130,8 +103,10 @@ C-g again it will stop scanning."
       (let ((bbdb-update-records-mode (or bbdb/vm-update-records-mode
                                           bbdb-update-records-mode)))
         (setq records (bbdb-update-records
-                       (bbdb/vm-get-addresses
-                        msg bbdb-get-only-first-address-p)
+                       (bbdb-get-addresses bbdb-get-only-first-address-p
+                                           vm-summary-uninteresting-senders
+                                           'bbdb/vm-get-header-content
+                                           (vm-real-message-of msg))
                        bbdb/mail-auto-create-p
                        offer-to-create))
 
@@ -163,12 +138,15 @@ of the BBDB record corresponding to the sender of this message."
       (bbdb-record-edit-notes record t))))
 
 ;;;###autoload
-(defun bbdb/vm-show-records (&optional headers)
+(defun bbdb/vm-show-records (&optional address-class)
   "Display the contents of the BBDB for the sender of this message.
 This buffer will be in bbdb-mode, with associated keybindings."
   (interactive)
   (vm-follow-summary-cursor)
-  (let ((bbdb-get-addresses-headers (or headers bbdb-get-addresses-headers))
+  (let ((bbdb-get-addresses-headers
+         (if address-class
+             (list (assoc address-class bbdb-get-addresses-headers))
+           bbdb-get-addresses-headers))
         (bbdb/vm-update-records-mode 'annotating)
         (bbdb-message-cache nil)
         ;; should we move this to bbdb/vm-show-sender?
@@ -185,7 +163,7 @@ This buffer will be in bbdb-mode, with associated keybindings."
 (defun bbdb/vm-show-all-recipients ()
   "Show all recipients of this message. Counterpart to `bbdb/vm-show-sender'."
   (interactive)
-  (bbdb/vm-show-records bbdb-get-addresses-to-headers))
+  (bbdb/vm-show-records 'recipients))
 
 ;;;###autoload
 (defun bbdb/vm-show-sender (&optional show-recipients)
@@ -199,7 +177,7 @@ This buffer will be in `bbdb-mode', with associated keybindings."
         ((= 16 show-recipients)
          (bbdb/vm-show-records))
         (t
-         (if (null (bbdb/vm-show-records bbdb-get-addresses-from-headers))
+         (if (null (bbdb/vm-show-records 'authors))
              (bbdb/vm-show-all-recipients)))))
 
 (defun bbdb/vm-pop-up-bbdb-buffer (&optional offer-to-create)
