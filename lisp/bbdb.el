@@ -1122,6 +1122,7 @@ present).  Returns a string containing the date in the new format."
 
 (defconst bbdb-buffer-name "*BBDB*")
 
+
 (defcustom bbdb-display-layout-alist 
   '((one-line   (order     . (phones mail-alias net notes))
                 (name-end  . 24)
@@ -1130,9 +1131,9 @@ present).  Returns a string containing the date in the new format."
                 (toggle    . t))
     (pop-up-multi-line (indention . 14)))
   "*An alist describing each display layout.
-The format of an element is (LAYOUT-NAME . (OPTION-ALIST)).
+The format of an element is (LAYOUT-NAME OPTION-ALIST).
 
-Currently htere are three different layout types, which are `one-line',
+Currently there are three different layout types, which are `one-line',
 `multi-line' and `full-multi-line'.   OPTION-ALIST specifies the options
 for the layout.  Valid options are:
 
@@ -1158,21 +1159,47 @@ Additionally there are two layouts derived from multi-line, which are
 full-multi-line and pop-up-multi-line and supporting the same layout
 options."
   :group 'bbdb
-  :type '(repeat (cons
-                  (choice :tag "Layout name"
-                          (const one-line)
-                          (const multi-line)
-                          (const full-multi-line)
-                          (symbol))
-                  (repeat (cons
-                           (choice :tag "Option name"
-                                   (const order)
-                                   (const omit)
-                                   (const indention)
-                                   (const name-end)
-                                   (const toggle))
-                           (sexp   :tag "Option value" nil))))))
-
+  :type `(repeat
+	  (cons :tag "Layout Definition"
+		(choice :tag "Layout type"
+			(const one-line)
+			(const multi-line)
+			(const full-multi-line)
+			(symbol))
+		(set :tag "Properties" 
+		     (cons :tag "Order" 
+			   (const :tag "List of fields to order by" order)
+			   (repeat (choice (const phone)
+					   (const address)
+					   (const net)
+					   (const AKA)
+					   (const notes)
+					   (symbol :tag "other")
+					   (const :tag "Remaining fields" t))))
+		     (choice :tag "Omit" 
+			     :value (omit . nil)
+			     (cons :tag "List of fields to omit"
+				   (const :tag "Fields not to display" omit) 
+				   (repeat (choice (const phone)
+						   (const address)
+						   (const net)
+						   (const AKA)
+						   (const notes)
+						   (symbol :tag "other"))))
+			     (const :tag "Exclude all fields except those listed in the order property" t))
+		     (cons :tag "Indentation" 
+			   :value (indention . 14) 
+			   (const :tag "Level of indentation for multi-line layout"
+				  indention)
+			   (number :tag "Column"))
+		     (cons :tag "End of name field" 
+			   :value (name-end . 24) 
+			   (const :tag "The column where the name should end in a one-line layout"
+				  name-end) 
+			   (number :tag "Column"))
+		     (cons :tag "Toggle" 
+			   (const :tag "The layout is included when toggling display layout" toggle) 
+			   boolean)))))
 (defcustom bbdb-display-layout nil
   "*The default display layout."
   :group 'bbdb
@@ -2999,7 +3026,7 @@ before the record is created, otherwise it is created without confirmation
               created-p (not (null record)))
         (if record
             (bbdb-record-set-cache record (make-vector bbdb-cache-length nil)))
-        (if created-p (bbdb-invoke-hook 'bbdb-create-hook record)))
+        )
       (if (or bogon-mode (null record))
           nil
         (bbdb-debug (if (bbdb-record-deleted-p record)
@@ -3188,8 +3215,9 @@ before the record is created, otherwise it is created without confirmation
                   (message "noticed %s's address \"%s\""
                            (bbdb-record-name record) net)
                 (message "noticed naked address \"%s\"" net))))
-        (if change-p
-            (bbdb-change-record record (eq change-p 'sort)))
+        
+        (if created-p (bbdb-invoke-hook 'bbdb-create-hook record))
+        (if change-p (bbdb-change-record record (eq change-p 'sort)))
         (bbdb-invoke-hook 'bbdb-notice-hook record)
         record))))
 
