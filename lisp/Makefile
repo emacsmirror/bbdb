@@ -4,6 +4,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.10  2000/08/01 14:09:38  fenk
+# Added setting of variable autoload-package-name and deletion of
+# bbdb-autoloads.el file before creation in order to create it with the right
+# featurep and contents.
+# Otherwise it was not working correctly with my Xemacs.
+#
 # Revision 1.9  2000/07/25 17:47:19  sds
 # use auto-generated autoloads consistently
 #
@@ -109,6 +115,8 @@ bbdb-autoloads.el: $(DEPSRCS)
 	$(EMACS) -batch -q -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
 		--eval '(setq make-backup-files nil)' \
+		--eval '(setq autoload-package-name "bbdb")' \
+		--eval '(delete-file generated-autoload-file)' \
 		-f batch-update-autoloads `pwd`
 
 bbdb-autoloads.elc: bbdb-autoloads.el
