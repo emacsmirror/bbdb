@@ -335,14 +335,19 @@ packages will not affect core @b{BBDB} functionality.
 @tab @center P[3]
 @end multitable
 
-@* @noindent @b{NOTES:}
+@* 
+@noindent
+@b{NOTES:}
 @enumerate
-@item The three year old GNUS mail/newsreader should still
+@item 
+The three year old GNUS mail/newsreader should still
 work.  Please keep in mind that you have a relatively recent Emacs (GNU
 19.34 or later, XEmacs 19.15 or later), you are probably using Gnus.
-@item As of this writing, Reportmail is available as
+@item
+As of this writing, Reportmail is available as
 part of the @code{edit-utils} package.
-@item As of this writing, @code{browse-url} is
+@item
+As of this writing, @code{browse-url} is
 available as part of the @code{mail-lib} package.
 @end enumerate
 
@@ -552,37 +557,37 @@ install the appropriate files to the appropriate places.  The final
 installation tree will take the following form:
 
 @table @code
- @item $(PACKAGEDIR)/
- @table @code
-  @item lisp/
-  @table @code
-   @item bbdb/
+@item $(PACKAGEDIR)/
+@table @code
+@item lisp/
+@table @code
+@item bbdb/
    @i{@b{BBDB} lisp source files.  This directory contains a copy of all
 @code{.el} and @code{.elc} files from the @file{lisp} source directory,
 or is a symbolic link to it.}
-  @end table
-  @item info/
-  @table @code
-   @item bbdb.info*
+@end table
+@item info/
+@table @code
+@item bbdb.info*
    @i{@b{BBDB} documentation files.  These are either copies of the info
 files from the @file{texinfo} source directory, or are symbolic links to
 them.}
-  @end table
-  @item etc/
-  @table @code
-   @item bbdb/
-   @table @code
-    @item tex/
+@end table
+@item etc/
+@table @code
+@item bbdb/
+@table @code
+@item tex/
     @i{@b{BBDB} support files for bbdb-print.  This directory contains a
 copy of the appropriate files from the @file{tex} source directory, or
 is a symbolic link to it.}
-    @item utils/
+@item utils/
     @i{@b{BBDB} miscellaneous utilities.  This directory contains a copy
 of the appropriate files from the @file{utils} source directory, or is a
 symbolic link to it.}
-   @end table
-  @end table
- @end table
+@end table
+@end table
+@end table
 @end table
 
 @node Initial Configuration,  , XEmacs Package, Installation
@@ -1778,12 +1783,15 @@ the @b{BBDB} for author data retrieval.  If it is @samp{t}, data from
 the @b{BBDB} will be used if available.  If it is @samp{nil}, data from
 the @b{BBDB} will not be used.
 
-@noindent In the following examples, assume the following:
+@noindent
+In the following examples, assume the following:
 
 @enumerate
-@item Message: @code{From: Jamie <jwz@@netscape.com>}@*
+@item 
+Message: @code{From: Jamie <jwz@@netscape.com>}@*
 @b{BBDB}: No record
-@item Message: @code{From: Matt <simmonmt@@acm.org>}@*
+@item 
+Message: @code{From: Matt <simmonmt@@acm.org>}@*
 @b{BBDB}: Name: @samp{Matthew}, Net: @samp{simmonmt@@purdue.edu}
 @end enumerate
 
@@ -1797,11 +1805,14 @@ the @b{BBDB} will not be used.
 @tab @center @code{bbdb}
 @tab @center @code{t}
 @item Printed in Summary buffer for
+@tab
+@tab
+@tab
 @item @center Case 1
 @tab @center Jamie
 @tab @center jwz@@netscape.com
 @tab @center Jamie
-@item @center Case 2
+@item @center Case 2 
 @tab @center Matthew
 @tab @center Matthew
 @tab @center Matt
@@ -3006,7 +3017,8 @@ from the information around point (the cursor).  If invoked as
 @code{bbdb-snarf-region} that determines the relevant region and passes it
 on.}, the active region is used to generate the record.
 
-@noindent @b{Restrictions:}
+@noindent
+@b{Restrictions:}
 
 @enumerate
 @item
@@ -3015,7 +3027,8 @@ on.}, the active region is used to generate the record.
 @code{bbdb-snarf} works best with things that look like mailing addresses.
 @end enumerate
 
-@noindent Example of an address that @code{bbdb-snarf} will recognize:
+@noindent
+Example of an address that @code{bbdb-snarf} will recognize:
 
 @example
 another test person
@@ -3078,13 +3091,15 @@ use @code{bbdb-srv}, set the @samp{NS_MSG_DISPLAY_HOOK} variable to
 @code{bbdb-srv.pl}@footnote{Use the full path to @code{bbdb-srv.pl} if
 it is not in the default path.} as follows:
 
-@noindent Bourne Shell (@file{/bin/sh}) and variants:
+@noindent
+Bourne Shell (@file{/bin/sh}) and variants:
 @example
 # NS_MSG_DISPLAY_HOOK bbdb-srv.pl
 # export NS_MSG_DISPLAY_HOOK
 @end example
 
-@noindent C-Shell (@file{/bin/csh}) and variants:
+@noindent
+C-Shell (@file{/bin/csh}) and variants:
 @example
 % setenv NS_MSG_DISPLAY_HOOK bbdb-srv.pl
 @end example
@@ -3503,7 +3518,8 @@ and Courier fonts are used.
 @node The Latest Version, The Future, Changes, Top
 @section The Latest Version
 
-@noindent Released versions of the @b{BBDB} can be found at the
+@noindent
+Released versions of the @b{BBDB} can be found at the
 following site:
 
 @itemize @bullet
@@ -3513,7 +3529,8 @@ WWW: @code{http://bbdb.sourceforge.net}
 FTP: @code{ftp://ftp.sourceforge.net/pub/bbdb}
 @end itemize
 
-@noindent Development versions of the @b{BBDB} can be obtained in the
+@noindent
+Development versions of the @b{BBDB} can be obtained in the
 following ways:
 
 @itemize @bullet
@@ -3541,7 +3558,8 @@ The future consists of Bugs and Features.
 @subsection Known Bugs
 
 @enumerate
-@item @b{@kbd{M-TAB} conflicts with ispell.}  Workaround: The binding
+@item
+@b{@kbd{M-TAB} conflicts with ispell.}  Workaround: The binding
 installed by the @b{BBDB} for address completion/expansion conflicts with
 that used by ispell.  The suggested workarounds are to rebind the ispell
 key (the @b{BBDB} binding is not configurable at this time), to manually
@@ -3555,18 +3573,21 @@ example of such a rebinding, supplied by Kai Groﬂjohan:
   (add-hook 'message-mode-hook 'my-message-mode-keys)
 @end lisp
 
-@item @b{@b{BBDB} and abbrev expansion is inconsistent.}  Workaround:
+@item
+@b{@b{BBDB} and abbrev expansion is inconsistent.}  Workaround:
 Currently, @kbd{M-TAB} must be used to expand/complete against @b{BBDB}
 names and net addresses, and @kbd{TAB} must be used to expand abbrevs (the
 values in the @code{mail-alias} field).  Unification is planned for a
 future version.
 
-@item @b{The @code{*BBDB*} buffer does not always come up when the first
+@item
+@b{The @code{*BBDB*} buffer does not always come up when the first
 article in a Gnus Summary Buffer is selected.}  Workaround:  Pressing
 @kbd{g} to reload the article.  This will cause the @code{*BBDB*} buffer
 to be displayed.
 
-@item @b{Expansion will fail when the name to be expanded is a subset of
+@item
+@b{Expansion will fail when the name to be expanded is a subset of
 the name for another record.}  For example, if you have entries for
 @samp{John} and @samp{Johnathan}, you will not be able to expand the
 name for @samp{John}.  Workaround:  Use the net address for the subset
@@ -3731,7 +3752,8 @@ Various other patches:
 @item
 @code{country-info}
 @end itemize
-@noindent Note that these files have not been investigated.  They may or
+@noindent
+Note that these files have not been investigated.  They may or
 may not be incorporated.
 
 @item
@@ -3804,14 +3826,16 @@ guaranteed to be supported and present only until the EOL date.  They
 may be removed without warning at any time thereafter.
 
 @enumerate
-@item @code{advertized-bbdb-delete-current-field-or-record}@*
+@item
+@code{advertized-bbdb-delete-current-field-or-record}@*
 Support for this function will be removed for version 2.2.  It is
 recommended that all code depending on this variable be switched to use
 @code{bbdb-delete-current-field-or-record}.  The two functions have the
 same calling conventions and effects.  This EOL statement was added for
 version 2.1.
 
-@item Support for the GNUS (not Gnus) newsreader@*
+@item
+Support for the GNUS (not Gnus) newsreader@*
 The GNUS-specific parts of the @b{BBDB} will be actively removed for the
 2.2 release.  No further maintenance and/or bugfixes are planned for
 GNUS code at this time.  This EOL statement was added for version 2.1.
