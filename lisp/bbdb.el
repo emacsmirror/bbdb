@@ -101,7 +101,6 @@ prompt the users on how to merge records when duplicates are detected.")
  (autoload 'widget-group-match "wid-edit")
  (autoload 'Electric-pop-up-window "electric")
  (autoload 'Electric-command-loop "electric")
- (autoload 'bbdb-snarf-nice-real-name "bbdb-snarf")
  (autoload 'bbdb-migration-query "bbdb-migrate")
  (autoload 'bbdb-migrate "bbdb-migrate")
  (autoload 'bbdb-migrate-rewrite-all "bbdb-migrate")
@@ -1336,9 +1335,11 @@ the raw field content and return a string."
 (defun bbdb-frob-mode-line (n)
   (setq mode-line-buffer-identification
         (if (> n 0)
-            (list 24 "BBDB: "
+            (list 24
+                  (replace-in-string bbdb-buffer-name "^\\*\\|\\*$" "")
+                  ": "
                   (list 10
-                    (format "%d/%d" n (length (bbdb-records))))
+                        (format "%d/%d" n (length (bbdb-records))))
                   '(bbdb-showing-changed-ones " !!" "   "))
           '("- Insidious Big Brother Database v" bbdb-version " "
             mode-line-modified "-"))
@@ -1356,8 +1357,10 @@ the raw field content and return a string."
         (temp-buffer-setup-hook nil)
         (temp-buffer-show-hook nil)
         (first (car (car records))))
+
     (with-output-to-temp-buffer bbdb-buffer-name
       (set-buffer bbdb-buffer-name)
+
       ;; If append is unset, clear the buffer.
       (unless append (bbdb-undisplay-records))
       ;; If we're appending these records to the ones already displayed,
@@ -2440,45 +2443,39 @@ these caches.")
         (setq bbdb-buffers-with-message-caches
               (cons buffer bbdb-buffers-with-message-caches)))))
 
+(defvar bbdb-message-cache nil
+  "Alist of (MESSAGE-KEY BBDB-RECORDS) cached in order to avoid updating
+messages each time they are visited.  This is used my all MUAs, while the
+MESSAGE-KEY is specific to the MUA and the cache is local for each MUA or MUA
+folder.")
+
 (make-variable-buffer-local 'bbdb-message-cache)
 
-(defmacro bbdb-message-cache-lookup (message-key
-                                     &optional message-sequence-buffer)
-  (list 'progn '(bbdb-records)  ; yuck, this is to make auto-revert happen
-                                ; in a convenient place.
-  (list 'and 'bbdb-message-caching-enabled
-        (let ((bod
-               (list 'let (list (list '--cons--
-                                      (list 'assq message-key 'bbdb-message-cache)))
-                     '(if (and --cons-- (bbdb-record-deleted-p (cdr --cons--)))
-                       (progn
-                         (setq bbdb-message-cache (delq --cons-- bbdb-message-cache))
-                         nil)
-                       (cdr --cons--)))))
-          (if message-sequence-buffer
-              (list 'save-excursion
-                    (list 'set-buffer message-sequence-buffer)
-                    bod)
-              bod)))))
+(defun bbdb-message-cache-lookup (message-key)
+  "Return cached bbeb records for MESSAGE-KEY.
+If not present or when the records have been modified return nil." 
+  (bbdb-records)
+  (if bbdb-message-caching-enabled
+      (let ((records (assq message-key bbdb-message-cache))
+            (invalid nil))
+        (if (and (not (listp records)) (bbdb-record-deleted-p records))
+            (setq invalid t)
+          (mapcar (lambda (record)
+                    (if (bbdb-record-deleted-p record)
+                        (setq invalid t)))
+                  (cdr records)))
+        (if invalid nil records))))
 
-(defmacro bbdb-encache-message (message-key bbdb-record &optional message-sequence-buffer)
-  "Don't call this multiple times with the same args, it doesn't replace."
-  (let ((bod (list 'let (list (list '--rec-- bbdb-record))
-                   (list 'if 'bbdb-message-caching-enabled
-                         (list 'and '--rec--
-                          (list 'progn
-                           '(notice-buffer-with-cache (current-buffer))
-                           (list 'cdr
-                            (list 'car
-                             (list 'setq 'bbdb-message-cache
-                              (list 'cons (list 'cons message-key '--rec--)
-                                    'bbdb-message-cache))))))
-                         '--rec--))))
-    (if message-sequence-buffer
-        (cons 'save-excursion
-              (list (list 'set-buffer message-sequence-buffer)
-                    bod))
-        bod)))
+(defun bbdb-encache-message (message-key bbdb-records)
+  "Cache the BBDB-RECORDS for a message identified by MESSAGE-KEY."
+  (and bbdb-message-caching-enabled
+       (add-to-list 'bbdb-message-cache (cons message-key bbdb-records))
+       (notice-buffer-with-cache (current-buffer))))
+
+(defun bbdb-decache-message (message-key)
+  "Remove an element form the cache."
+  (and bbdb-message-caching-enabled
+       (delq (assoc message-key bbdb-message-cache) bbdb-message-cache)))
 
 (defun bbdb-flush-all-caches ()
   (bbdb-debug
@@ -2566,7 +2563,7 @@ and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\"."
 
 
 (defun bbdb-annotate-message-sender (from &optional loudly create-p
-                                     prompt-to-create-p)
+                                          prompt-to-create-p)
   "Fills the record corresponding to the sender with as much info as possible.
 A record may be created by this; a record or nil is returned.
 If bbdb-readonly-p is true, then a record will never be created.
@@ -2584,228 +2581,252 @@ before the record is created, otherwise it is created without confirmation
      (if (equal name "") (error "mail-extr returned \"\" as name"))
      (if (equal net "") (error "mail-extr returned \"\" as net")))
 
-  (if (and net bbdb-canonicalize-net-hook)
-      (setq net (bbdb-canonicalize-address net)))
+    (if (and net bbdb-canonicalize-net-hook)
+        (setq net (bbdb-canonicalize-address net)))
 
-  (let ((change-p nil)
-        (record (bbdb-search-simple name net))
-        (created-p nil)
-        (fname name)
-        (lname nil)
-        old-name
-        bogon-mode)
-    (and record (setq old-name (bbdb-record-name record)))
+    (let ((change-p nil)
+          (record (bbdb-search-simple name net))
+          (created-p nil)
+          (fname name)
+          (lname nil)
+          old-name
+          bogon-mode)
+      (and record (setq old-name (bbdb-record-name record)))
 
-    ;; This is to prevent having losers like "John <blat@foop>" match
-    ;; against existing records like "Someone Else <john>".
-    ;;
-    ;; The solution implemented here is to never create or show records
-    ;; corresponding to a person who has a real-name which is the same
-    ;; as the network-address of someone in the db already.  This is not
-    ;; a good solution.
-    (let (down-name old-net)
-      (if (and record name
-               (not (equal (setq down-name (downcase name))
-                           (and old-name (downcase old-name)))))
-          (progn
-            (setq old-net (bbdb-record-net record))
-            (while old-net
-              (if (equal down-name (downcase (car old-net)))
-                  (progn
-                    (setq bogon-mode t
-                          old-net nil)
-                    (message
-         "Ignoring bogon %s's name \"%s\" to avoid name-clash with \"%s\""
-                     net name old-name)
-                    (sit-for 2))
-                (setq old-net (cdr old-net)))))))
+      ;; This is to prevent having losers like "John <blat@foop>" match
+      ;; against existing records like "Someone Else <john>".
+      ;;
+      ;; The solution implemented here is to never create or show records
+      ;; corresponding to a person who has a real-name which is the same
+      ;; as the network-address of someone in the db already.  This is not
+      ;; a good solution.
+      (let (down-name old-net)
+        (if (and record name
+                 (not (equal (setq down-name (downcase name))
+                             (and old-name (downcase old-name)))))
+            (progn
+              (setq old-net (bbdb-record-net record))
+              (while old-net
+                (if (equal down-name (downcase (car old-net)))
+                    (progn
+                      (setq bogon-mode t
+                            old-net nil)
+                      (message
+                       "Ignoring bogon %s's name \"%s\" to avoid name-clash with \"%s\""
+                       net name old-name)
+                      (sit-for 2))
+                  (setq old-net (cdr old-net)))))))
 
-    (if (or record
-            bbdb-readonly-p
-            (not create-p)
-            (not (or name net))
-            bogon-mode)
-        ;; no further action required
-        nil
-      ;; otherwise, the db is writable, and we may create a record.
-      ;; first try to get a reasonable default name if not given
-      ;; often I get things like <firstname>.<surname>@ ...
-      (if (or (null name) (and (stringp name) (string= "" name)))
-      (if (string-match "^[^@]+" net)
-          (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
-      (setq record (if (or (null
-                (bbdb-invoke-hook-for-value prompt-to-create-p))
-               (bbdb-y-or-n-p (format "%s is not in the db; add? "
-                          (or name net))))
-               (make-vector bbdb-record-length nil))
-        created-p (not (null record)))
-      (if record
-          (bbdb-record-set-cache record (make-vector bbdb-cache-length nil)))
-      (if created-p (bbdb-invoke-hook 'bbdb-create-hook record)))
-    (if (or bogon-mode (null record))
-        nil
-      (bbdb-debug (if (bbdb-record-deleted-p record)
-                      (error "nasty nasty deleted record nasty.")))
-      (if (and name
-               (not (equal (and name (downcase name))
-                           (and old-name (downcase old-name))))
-               (or (null bbdb-use-alternate-names)
-                   (not (bbdb-check-alternate-name name record)))
-               (let ((fullname (bbdb-divide-name name))
-                     tmp)
-                 (setq fname (car fullname)
-                       lname (nth 1 fullname))
-                 (not (and (equal (downcase fname)
-                                (and (setq tmp (bbdb-record-firstname record))
-                                     (downcase tmp)))
-                           (equal (downcase lname)
-                                  (and (setq tmp (bbdb-record-lastname record))
-                                       (downcase tmp)))))))
+      (if (or record
+              bbdb-readonly-p
+              (not create-p)
+              (not (or name net))
+              bogon-mode)
+          ;; no further action required
+          nil
+        ;; otherwise, the db is writable, and we may create a record.
+        ;; first try to get a reasonable default name if not given
+        ;; often I get things like <firstname>.<surname>@ ...
+        (if (or (null name) (and (stringp name) (string= "" name)))
+            (if (string-match "^[^@]+" net)
+                (setq name (bbdb-clean-username (match-string 0 net)))))
+        (setq record (if (or (null
+                              (bbdb-invoke-hook-for-value prompt-to-create-p))
+                             (bbdb-y-or-n-p
+                              (format "%s is not in the db; add? "
+                                      (or name net))))
+                         (make-vector bbdb-record-length nil))
+              created-p (not (null record)))
+        (if record
+            (bbdb-record-set-cache record (make-vector bbdb-cache-length nil)))
+        (if created-p (bbdb-invoke-hook 'bbdb-create-hook record)))
+      (if (or bogon-mode (null record))
+          nil
+        (bbdb-debug (if (bbdb-record-deleted-p record)
+                        (error "nasty nasty deleted record nasty.")))
+        (if (and name
+                 (not (equal (and name (downcase name))
+                             (and old-name (downcase old-name))))
+                 (or (null bbdb-use-alternate-names)
+                     (not (bbdb-check-alternate-name name record)))
+                 (let ((fullname (bbdb-divide-name name))
+                       tmp)
+                   (setq fname (car fullname)
+                         lname (nth 1 fullname))
+                   (not (and (equal (downcase fname)
+                                    (and (setq tmp
+                                               (bbdb-record-firstname record))
+                                         (downcase tmp)))
+                             (equal (downcase lname)
+                                    (and (setq tmp
+                                               (bbdb-record-lastname record))
+                                         (downcase tmp)))))))
 
-          ;; have a message-name, not the same as old name.
-          (cond (bbdb-readonly-p nil) ;; skip if readonly
+            ;; have a message-name, not the same as old name.
+            (cond (bbdb-readonly-p nil);; skip if readonly
 
-                ;; ignore name mismatches?
-                ;; NB 'quiet' means 'don't ask', not 'don't mention'
-        ((and bbdb-quiet-about-name-mismatches old-name)
-         (let ((sit-for-secs
-            (if (numberp bbdb-quiet-about-name-mismatches)
-                bbdb-quiet-about-name-mismatches
-              2)))
-           (if (or bbdb-silent-running (= 0 sit-for-secs)) nil
-             (message "name mismatch: \"%s\" changed to \"%s\""
-                  (bbdb-record-name record) name)
-             (sit-for sit-for-secs))))
-                ((or created-p
-                     (if bbdb-silent-running t
-               (if (null old-name)
-               (bbdb-y-or-n-p
-                (format "Assign name \"%s\" to address \"%s\"? "
-                    name (car (bbdb-record-net record))))
-             (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
-                                                old-name name)))))
-         (setq change-p 'sort)
+                  ;; ignore name mismatches?
+                  ;; NB 'quiet' means 'don't ask', not 'don't mention'
+                  ((and bbdb-quiet-about-name-mismatches old-name)
+                   (let ((sit-for-secs
+                          (if (numberp bbdb-quiet-about-name-mismatches)
+                              bbdb-quiet-about-name-mismatches
+                            2)))
+                     (if (or bbdb-silent-running (= 0 sit-for-secs)) nil
+                       (message "name mismatch: \"%s\" changed to \"%s\""
+                                (bbdb-record-name record) name)
+                       (sit-for sit-for-secs))))
+                  ((or created-p
+                       (if bbdb-silent-running t
+                         (if (null old-name)
+                             (bbdb-y-or-n-p
+                              (format "Assign name \"%s\" to address \"%s\"? "
+                                      name (car (bbdb-record-net record))))
+                           (bbdb-y-or-n-p
+                            (format "Change name \"%s\" to \"%s\"? "
+                                    old-name name)))))
+                   (setq change-p 'sort)
 
-         ;; Keep old name?
-         (and old-name bbdb-use-alternate-names
-              (not (member old-name (bbdb-record-aka record)))
-              ;; Silent mode: just add it.
-              (if bbdb-silent-running
-                  (bbdb-record-set-aka record
-                                       (cons old-name
-                                             (bbdb-record-aka record)))
-                ;; prompt user otherwise.
-                (if (bbdb-y-or-n-p
-                     (format "Keep name \"%s\" as an AKA? " old-name))
-                    (bbdb-record-set-aka record
-                                         (cons old-name
-                                               (bbdb-record-aka record)))
-                  (bbdb-remhash (downcase old-name) record))))
+                   ;; Keep old name?
+                   (and old-name bbdb-use-alternate-names
+                        (not (member old-name (bbdb-record-aka record)))
+                        ;; Silent mode: just add it.
+                        (if bbdb-silent-running
+                            (bbdb-record-set-aka record
+                                                 (cons old-name
+                                                       (bbdb-record-aka
+                                                        record)))
+                          ;; prompt user otherwise.
+                          (if (bbdb-y-or-n-p
+                               (format "Keep name \"%s\" as an AKA? "
+                                       old-name))
+                              (bbdb-record-set-aka record
+                                                   (cons old-name
+                                                         (bbdb-record-aka
+                                                          record)))
+                            (bbdb-remhash (downcase old-name) record))))
 
-         (bbdb-record-set-namecache record nil)
-         (bbdb-record-set-firstname record fname)
-         (bbdb-record-set-lastname record lname)
-         (bbdb-debug (or fname lname
-                 (error "bbdb: should have a name by now")))
-         (bbdb-puthash (downcase (bbdb-record-name record)) record))
+                   (bbdb-record-set-namecache record nil)
+                   (bbdb-record-set-firstname record fname)
+                   (bbdb-record-set-lastname record lname)
+                   (bbdb-debug (or fname lname
+                                   (error "bbdb: should have a name by now")))
+                   (bbdb-puthash (downcase (bbdb-record-name record)) record))
 
-                ;; not quiet about mismatches
-        ((and old-name bbdb-use-alternate-names
-              (not (member old-name (bbdb-record-aka record)))) ;; dedupe
-         (if (not bbdb-silent-running)
-             (bbdb-y-or-n-p
-              (format "Make \"%s\" an alternate for \"%s\"? "
-                      name old-name)))
-         (setq change-p 'sort)
-         (bbdb-record-set-aka
-          record (cons name (bbdb-record-aka record)))
-         (bbdb-puthash (downcase name) record))))
+                  ;; not quiet about mismatches
+                  ((and old-name bbdb-use-alternate-names
+                        ;; dedupe
+                        (not (member old-name (bbdb-record-aka record))))
+                   (if (not bbdb-silent-running)
+                       (bbdb-y-or-n-p
+                        (format "Make \"%s\" an alternate for \"%s\"? "
+                                name old-name)))
+                   (setq change-p 'sort)
+                   (bbdb-record-set-aka
+                    record (cons name (bbdb-record-aka record)))
+                   (bbdb-puthash (downcase name) record))))
 
-      ;; It's kind of a kludge that the "redundancy" concept is built in.
-      ;; Maybe I should just add a new hook here...  The problem is that the
-      ;; canonicalize-net-hook is run before database lookup, and thus can't
-      ;; refer to the database to determine whether a net is redundant.
-      (if bbdb-canonicalize-redundant-nets-p
-          (setq net (or (bbdb-net-redundant-p net (bbdb-record-net record))
-                        net)))
+        ;; It's kind of a kludge that the "redundancy" concept is built in.
+        ;; Maybe I should just add a new hook here...  The problem is that the
+        ;; canonicalize-net-hook is run before database lookup, and thus can't
+        ;; refer to the database to determine whether a net is redundant.
+        (if bbdb-canonicalize-redundant-nets-p
+            (setq net (or (bbdb-net-redundant-p net (bbdb-record-net record))
+                          net)))
 
-      (if (and net (not bbdb-readonly-p))
-          (if (null (bbdb-record-net record))
-              ;; names are always a sure match, so don't bother prompting here.
-              (progn (bbdb-record-set-net record (list net))
-                     (bbdb-puthash (downcase net) record) ; important!
-                     (or change-p (setq change-p t)))
-            ;; new address; ask before adding.
-            (if (let ((rest-net (bbdb-record-net record))
-                      (new (downcase net))
-                      (match nil))
-                  (while (and rest-net (null match))
-                    (setq match (string= new (downcase (car rest-net)))
-                          rest-net (cdr rest-net)))
-                  match)
-                nil
-              (if (let ((bbdb-always-add-addresses bbdb-always-add-addresses))
-            (if (functionp bbdb-always-add-addresses)
-            (setq bbdb-always-add-addresses
-                  (funcall bbdb-always-add-addresses)))
-            (cond
-             ;; add automatically it
-             ((eq bbdb-always-add-addresses t)
-              t)
-             ;; do not add it
-             (bbdb-always-add-addresses ; non-t and non-nil = never
-              nil)
-             ;; ask the user if it should be added
-             (t
-              (and
-               (not (equal net "???"))
-               (let ((the-first-bit
-                  (format "add address \"%s\" to \"" net))
-                 ;; this groveling is to prevent the "(y or n)"
-                 ;; from falling off the right edge of the screen.
-                 (the-next-bit (mapconcat 'identity
-                              (bbdb-record-net record)
-                              ", "))
-                 (w (window-width (minibuffer-window))))
-             (if (> (+ (length the-first-bit)
-                   (length the-next-bit) 15) w)
-                 (setq the-next-bit
-                   (concat
-                    (substring
-                     the-next-bit
-                     0 (max 0 (- w (length the-first-bit) 20)))
-                    "...")))
-             (bbdb-y-or-n-p (concat the-first-bit the-next-bit
-                        "\"? ")))))))
-                  (let ((front-p (cond ((null bbdb-new-nets-always-primary)
-                                        (bbdb-y-or-n-p
-                                         (format
-                                          "Make \"%s\" the primary address? "
-                                          net)))
-                                       ((eq bbdb-new-nets-always-primary t)
-                                        t)
-                                       (t nil))))
-                    (bbdb-record-set-net record
-                      (if front-p
-                          (cons net (bbdb-record-net record))
-                        (nconc (bbdb-record-net record) (list net))))
-                    (bbdb-puthash (downcase net) record)  ; important!
-                    (or change-p (setq change-p t)))))))
-      (bbdb-debug
-        (if (and change-p bbdb-readonly-p)
-            (error
-              "doubleplus ungood: how did we change anything in readonly mode?")))
-      (if (and loudly change-p (not bbdb-silent-running))
-          (if (eq change-p 'sort)
-              (message "noticed \"%s\"" (bbdb-record-name record))
+        (if (and net (not bbdb-readonly-p))
+            (if (null (bbdb-record-net record))
+                ;; names are always a sure match, so don't bother prompting
+                ;; here. 
+                (progn (bbdb-record-set-net record (list net))
+                       (bbdb-puthash (downcase net) record) ; important!
+                       (or change-p (setq change-p t)))
+              ;; new address; ask before adding.
+              (if (let ((rest-net (bbdb-record-net record))
+                        (new (downcase net))
+                        (match nil))
+                    (while (and rest-net (null match))
+                      (setq match (string= new (downcase (car rest-net)))
+                            rest-net (cdr rest-net)))
+                    match)
+                  nil
+                (if (let ((bbdb-always-add-addresses
+                           bbdb-always-add-addresses))
+                      (if (functionp bbdb-always-add-addresses)
+                          (setq bbdb-always-add-addresses
+                                (funcall bbdb-always-add-addresses)))
+                      (cond
+                       ;; add automatically it
+                       ((eq bbdb-always-add-addresses t)
+                        t)
+                       ;; do not add it
+                       (bbdb-always-add-addresses ; non-t and non-nil = never
+                        nil)
+                       ;; ask the user if it should be added
+                       (t
+                        (and
+                         (not (equal net "???"))
+                         (let ((the-first-bit
+                                (format "add address \"%s\" to \"" net))
+                               ;; this groveling is to prevent the "(y or n)"
+                               ;; from falling off the right edge of the
+                               ;; screen. 
+                               (the-next-bit (mapconcat 'identity
+                                                        (bbdb-record-net
+                                                         record)
+                                                        ", "))
+                               (w (window-width (minibuffer-window))))
+                           (if (> (+ (length the-first-bit)
+                                     (length the-next-bit) 15) w)
+                               (setq the-next-bit
+                                     (concat
+                                      (substring
+                                       the-next-bit
+                                       0 (max 0 (- w (length the-first-bit)
+                                                   20)))
+                                      "...")))
+                           (bbdb-y-or-n-p (concat the-first-bit the-next-bit
+                                                  "\"? ")))))))
+                    ;; then modify an existing record
+                    (let ((front-p (cond ((null bbdb-new-nets-always-primary)
+                                          (bbdb-y-or-n-p
+                                           (format
+                                            "Make \"%s\" the primary address? "
+                                            net)))
+                                         ((eq bbdb-new-nets-always-primary t)
+                                          t)
+                                         (t nil))))
+                      (bbdb-record-set-net record
+                                           (if front-p
+                                               (cons net (bbdb-record-net
+                                                          record))
+                                             (nconc (bbdb-record-net record)
+                                                    (list net))))
+                      (bbdb-puthash (downcase net) record) ; important!
+                      (or change-p (setq change-p t)))
+                  ;; else add a new one with the same name
+                  (if (bbdb-y-or-n-p (format "Create a new record for %s? "
+                                             (bbdb-record-name record)))
+                      (setq record
+                            (bbdb-create-internal name nil net nil nil nil)))
+                  ))))
+        
+        (bbdb-debug
+         (if (and change-p bbdb-readonly-p)
+             (error
+              "doubleplus ungood: how did we change anything in readonly mode?"
+              )))
+        (if (and loudly change-p (not bbdb-silent-running))
+            (if (eq change-p 'sort)
+                (message "noticed \"%s\"" (bbdb-record-name record))
               (if (bbdb-record-name record)
                   (message "noticed %s's address \"%s\""
                            (bbdb-record-name record) net)
-                  (message "noticed naked address \"%s\"" net))))
-      (if change-p
-          (bbdb-change-record record (eq change-p 'sort)))
-      (bbdb-invoke-hook 'bbdb-notice-hook record)
-      record))))
+                (message "noticed naked address \"%s\"" net))))
+        (if change-p
+            (bbdb-change-record record (eq change-p 'sort)))
+        (bbdb-invoke-hook 'bbdb-notice-hook record)
+        record))))
 
 
 
