@@ -108,7 +108,7 @@ C-g again it will stop scanning."
         records cache)
     (save-excursion
       (set-buffer gnus-article-buffer)
-      
+
       (if (and msg-id (not bbdb/gnus-offer-to-create))
           (setq cache (bbdb-message-cache-lookup msg-id)))
 
@@ -749,5 +749,66 @@ Redefine `bbdb/gnus-summary-in-bbdb-format-letter' to a different letter."
 ;         (t 'bbdb/gnus-score))
 ;     'bbdb/gnus-score))
   )
+
+;; Uwe Brauer
+(defun bbdb/gnus-nnimap-folder-list-from-bbdb ()
+  "Return a list of \( \"From\" email-regexp imap-folder-name\) tuples
+based on the contents of the bbdb.
+
+The folder-name is  the  value  of  the  'imap attribute on  the  bbdb
+record;  the email-regexp consists of  all the email addresses for the
+bbdb record  concatenated with with  OR.  bbdb records without a 'imap
+attribute are ignored.
+Here  is an example of a relevant BBDB entry:
+
+Uwe Brauer
+            net: oub@mat.ucm.es
+           imap: testimap
+
+
+This function  uses  regexp-opt  to  generate  the email-regexp  which
+automatically regexp-quotes  its arguments. Please  note: in oder that
+this will   work with the nnimap-split-fancy   method you have  to use
+macros, that is your setting will look like:
+
+\(setq
+ nnimap-split-rule  'nnimap-split-fancy
+ nnimap-split-inbox \"INBOX\"
+ nnimap-split-fancy
+ `\(|
+   ,@\(bbdb/gnus-nnimap-folder-list-from-bbdb\)
+   ...
+\)\)
+Note that `\( is the backquote NOT the quote '\(. "
+
+                                        ;(interactive)
+  (let ( ;; the raw-notes attribute of a bbdb record
+        notes-attr
+        ;; the value of the 'imap attribute of a bbdb record
+        folder-attr
+        ;; strings to put before and after the folder-attr
+        (folder-prefix "")
+        (folder-postfix "")
+        ;; a regexp matching all the email addresses from a bbdb record
+        email-regexp
+        ;; the list of (folder email) tuples to return
+        new-elmnt-list
+        )
+    ;; loop over the bbdb-records; if a imap attribute exists on
+    ;; the record, generate a regexp matching all the email addresses
+    ;; and add a tuple (folder email-regexp) to the new-elmnt-list
+    (dolist (record (bbdb-records))
+      (setq notes-attr (bbdb-record-raw-notes record))
+      (when (and (listp notes-attr)
+                 (setq folder-attr (cdr (assq 'imap notes-attr))))
+        (setq email-regexp (regexp-opt (mapcar 'downcase
+                                               (bbdb-record-net record))))
+        (unless (zerop (length email-regexp))
+          (setq new-elmnt-list
+                (cons (list "From" email-regexp (concat folder-prefix
+                                                        folder-attr folder-postfix))
+                      new-elmnt-list)))))
+    new-elmnt-list))
+
 
 (provide 'bbdb-gnus)
