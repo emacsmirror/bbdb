@@ -37,6 +37,11 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.59  1998/02/23 07:20:44  simmonmt
+;; Created deffaces standing macro, added to bbdb-initialize for
+;; bbdb-print and bbdb-ftp, added autoload for bbdb-com, use native
+;; add-hook if we can, fset it to bbdb-add-hook otherwise.
+;;
 ;; Revision 1.58  1998/01/06 06:39:49  simmonmt
 ;; Added define-widget definition for users without Custom.  Added Custom
 ;; groups for utilities (print, finger, etc).  Moved migration code to
@@ -78,7 +83,7 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "1.58")
+(defconst bbdb-version "1.59")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
@@ -133,6 +138,8 @@ version.")
       nil)
     (defmacro defcustom (var value doc &rest args) 
       (` (defvar (, var) (, value) (, doc))))
+    (defmacro defface (face spec doc &rest args)
+      nil)
     (defmacro define-widget (&rest args)
       nil)))
 
@@ -2513,8 +2520,12 @@ the window will be split vertically rather than horizontally."
 	  (set-buffer b)
 	  t)))))
 
-(defun bbdb-version () (interactive) (message "BBDB version %s (%s)"
-					      bbdb-version bbdb-version-date))
+(defun bbdb-version ()
+  (interactive)
+  (let ((version-string (format "BBDB version %s (%s)"
+			       bbdb-version bbdb-version-date)))
+    (if (interactive-p) (message version-string)
+      version-string)))
 
 ;;; resorting, which really shouldn't be necesary...
 
@@ -2575,7 +2586,7 @@ passed as arguments to initiate the appropriate insinuations.
 
    message    Initialize BBDB support for Message mode.
    reportmail Initialize BBDB support for the Reportmail mail
-              notification.
+              notification package.
    sc         Initialize BBDB support for the Supercite message
               citation package.
    w3         Initialize BBDB support for Web browsers."
@@ -2608,6 +2619,8 @@ passed as arguments to initiate the appropriate insinuations.
     (define-key bbdb-mode-map "q"      'bbdb-bury-buffer)
     (define-key bbdb-mode-map "\^X\^T" 'bbdb-transpose-fields)
     (define-key bbdb-mode-map "W"      'bbdb-www)
+    (define-key bbdb-mode-map "P"      'bbdb-print)
+
   )
 
   (let ((bbdbid "Insidious Big Brother Database autoload"))
@@ -2644,6 +2657,7 @@ passed as arguments to initiate the appropriate insinuations.
     (autoload 'bbdb-elide-record                   "bbdb-com" bbdbid t)
     (autoload 'bbdb-omit-record                    "bbdb-com" bbdbid t)
     (autoload 'bbdb-send-mail                      "bbdb-com" bbdbid t)
+    (autoload 'bbdb-show-all-recipients            "bbdb-com" bbdbid t)
     (autoload 'bbdb-complete-name                  "bbdb-com" bbdbid t)
     (autoload 'bbdb-yank                           "bbdb-com" bbdbid t)
     (autoload 'bbdb-completion-predicate           "bbdb-com" bbdbid)
@@ -2695,6 +2709,10 @@ passed as arguments to initiate the appropriate insinuations.
     (autoload 'bbdb-migrate-update-file-version "bbdb-migrate" bbdbid nil)
     (autoload 'bbdb-unmigrate-record            "bbdb-migrate" bbdbid nil)
 
+    (autoload 'bbdb-ftp             "bbdb-ftp" bbdbid t)
+    (autoload 'bbdb-create-ftp-site "bbdb-ftp" bbdbid t)
+
+    (autoload 'bbdb-print                "bbdb-print"      bbdbid t)
     (autoload 'bbdb-insinuate-reportmail "bbdb-reportmail" bbdbid nil)
     (autoload 'bbdb-insinuate-sc         "bbdb-sc"         bbdbid nil)
     (autoload 'bbdb-snarf                "bbdb-snarf"      bbdbid t)
@@ -2778,6 +2796,8 @@ passed as arguments to initiate the appropriate insinuations.
 	 ;; bbdb-com.el
 	 (fset 'bbdb-display-completion-list 'bbdb-xemacs-display-completion-list)
 	 ))
+  (if (not (fboundp 'add-hook))
+      (fset 'add-hook 'bbdb-add-hook))
 
   (run-hooks 'bbdb-load-hook)
   )
