@@ -8,6 +8,10 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.18  1998/04/11 07:36:10  simmonmt
+@c Added EOL list, EOL'd advertized-bbdb-delete-current-field-or-record
+@c and GNUS support.  Documented new bindings in *BBDB* buffer.
+@c
 @c Revision 1.17  1998/03/13 10:17:18  simmonmt
 @c This is for version 2.00
 @c
@@ -133,7 +137,7 @@ field (@samp{company} or @samp{notes,} for example); @refill
 * Mailing Lists::		The BBDB mailing lists
 * Changes::                     New in this version
 * The Latest Version::		Where to Get It
-* The Future::                  Known Bugs and the TODO list
+* The Future::                  Known Bugs, the TODO list and EOL statements
 * Thanks::			to the Ministry of Bugs
 
 * Concept Index::		Concept Index
@@ -505,6 +509,7 @@ After you install the package, you should probably redump XEmacs.
 @node Initial Configuration,  , XEmacs Package, Installation
 @subsection Initial Configuration
 @cindex Initial Configuration
+@findex bbdb-initialize
 
 The simplest way to configure the @b{BBDB} is to include the following
 forms in your Emacs configuration file:
@@ -987,7 +992,10 @@ A narrower search may be made by using the commands @kbd{bbdb-name},
 limit their searches to the name, company, email address, and notes
 fields, respectively.  If these commands are given a prefix argument,
 the listing displayed will be one line per entry; otherwise, the full
-database entry will be shown on multiple lines.@refill
+database entry will be shown on multiple lines.
+
+The functions described above are predefined to certain keys in the
+@code{*BBDB*} buffer.  @xref{BBDB Mode} for more details.
 
 @cindex User-defined fields
 The @code{bbdb-notes} command will prompt for the notes field to search
@@ -1299,6 +1307,42 @@ of the current record.  @xref{Using Web Browsers}.
 (@code{bbdb-print})  Creates a TeX file that contains a pretty-printed version 
 of @b{BBDB} records.  If prefixed by @kbd{*}, only the records currently
 displayed will print.  @xref{bbdb-print}.
+
+@item h
+@cindex Changing windows
+Moves point to another window via the @code{other-window} function.
+
+@item c
+@cindex Creating new records
+@findex bbdb-create
+(@code{bbdb-create})  Create a new database record from information
+supplied by the user.
+
+@item C
+@cindex Displaying changed records
+@findex bbdb-changed
+(@code{bbdb-changed})  Display all records that have been changed since
+the last time the database was saved.
+
+@item b
+@cindex Searching the database
+@findex bbdb
+(@code{bbdb})  Begin a new database search.  The results of the new
+search will be displayed in place of the results of the old search.
+
+@item S a, S c, S o, S n
+@cindex Searching the database
+@findex bbdb-net
+@findex bbdb-company
+@findex bbdb-notes
+@findex bbdb-name
+(@code{bbdb-net}, @code{bbdb-company}, @code{bbdb-notes},
+@code{bbdb-name})@*
+Begin a new database search.  This search will be
+limited to the net address, company, notes, or name fields,
+respectively, of database records.  @xref{Basic Searching} for more
+details.
+
 @end table
 
 @subsection Other database manipulation functions
@@ -2174,7 +2218,16 @@ it from showing up in the buffer list.
 @item bbdb-load-hook
 @vindex bbdb-load-hook
 Hook or hooks invoked (with no arguments) when the Insidious Big Brother 
-Database code is first loaded. @refill
+Database code is first loaded.  WARNING:  Slow functions should not be
+put on this hook, as the @b{BBDB} code will, if not loaded before, be
+loaded during the first use of @b{BBDB}-related Customization
+functions.  Slow functions should be put on @code{bbdb-initialize-hook}.
+
+@item bbdb-initialize-hook
+@vindex bbdb-initialize-hook
+@findex bbdb-initialize
+Hook or hooks invoked (with no arguments) when the
+@code{bbdb-initialize} function is called.
 
 @item bbdb-canonicalize-net-hook
 @vindex bbdb-canonicalize-net-hook
@@ -3268,6 +3321,7 @@ The future consists of Bugs and Features.
 @menu
 * Known Bugs::          Known Bugs, and how to submit new ones
 * TODO List::           The TODO List
+* EOL Statements::      EOL (End Of Life) Statements
 @end menu
 
 @node Known Bugs, TODO List, The Future, The Future
@@ -3287,7 +3341,7 @@ names and net addresses, and @kbd{TAB} must be used to expand abbrevs (the
 values in the @code{mail-alias} field).  Unification is planned for a
 future version.
 
-@item @b{The @code{*BBDB*} buffer does not always come when the first
+@item @b{The @code{*BBDB*} buffer does not always come up when the first
 article in a Gnus Summary Buffer is selected.}  Workaround:  Pressing
 @kbd{g} to reload the article.  This will cause the @code{*BBDB*} buffer
 to be displayed.
@@ -3312,7 +3366,7 @@ Mail/News reader (Gnus, VM, etc) used:
 Bug Description:
 @end example
 
-@node TODO List,  , Known Bugs, The Future
+@node TODO List, EOL Statements, Known Bugs, The Future
 @subsection TODO List
 
 @subsubheading The Near Future
@@ -3321,17 +3375,23 @@ Bug Description:
 @item
 Add bbdb/@i{MUA}-delete-sender-record
 
-@item
-More bindings for @code{*BBDB*} buffer (@code{other-window},
-@code{bbdb-create}, @code{bbdb-changed}, @code{bbdb}) courtesy of David
-Bakhash.  (@code{<199801192104.QAA04399@@Bulgaria.MIT.edu>}
-and @code{<yfqyb0b3jor.fsf@@acm.org>} on @code{info-bbdb}.
+@c Implemented 10-Apr-1998
+@c
+@c @item
+@c More bindings for @code{*BBDB*} buffer (@code{other-window},
+@c @code{bbdb-create}, @code{bbdb-changed}, @code{bbdb}) courtesy of David
+@c Bakhash.  (@code{<199801192104.QAA04399@@Bulgaria.MIT.edu>}
+@c and @code{<yfqyb0b3jor.fsf@@acm.org>} on @code{info-bbdb}.
 
 @item
 Make completion more consistent so completing an email address gives both the
 name and the net address, as opposed to just completing the net
 address.  See thread starting with
 @code{<ilulnwci761.fsf@@squid.pdc.kth.se>} in @code{info-bbdb}.
+
+@item
+Configurable completion.  Should allow user to specify "complete on
+names first, then nets", etc.
 
 @item
 More variables for upgrading.  Specifically a variable that lets users
@@ -3526,6 +3586,28 @@ The @code{bbdb-create-internal} function should be more forgiving.@refill
 @item
 More @kbd{*} commands in general, including @kbd{*d}.
 @end itemize
+
+@node EOL Statements,  , TODO List, The Future
+@subsection End of Life (EOL) Statements
+
+The items in the following list describe items for which support will be 
+removed in coming versions of the @b{BBDB}.  The items listed are
+guaranteed to be supported and present only until the EOL date.  They
+may be removed without warning at any time thereafter.
+
+@enumerate
+@item @code{advertized-bbdb-delete-current-field-or-record}@*
+Support for this function will be removed for version 2.2.  It is
+recommended that all code depending on this variable be switched to use
+@code{bbdb-delete-current-field-or-record}.  The two functions have the
+same calling conventions and effects.  This EOL statement was added for
+version 2.1.
+
+@item Support for the GNUS (not Gnus) newsreader@*
+The GNUS-specific parts of the @b{BBDB} will be actively removed for the 
+2.2 release.  No further maintenance and/or bugfixes are planned for
+GNUS code at this time.  This EOL statement was added for version 2.1.
+@end enumerate
 
 @node Thanks,  , , Top
 @section Thanks
