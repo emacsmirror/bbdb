@@ -335,37 +335,39 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
 
 (defun bbdb-redisplay-one-record (record &optional record-cons next-record-cons
                                          delete-p)
-  "Regrind one record.  The *BBDB* buffer must be current when this is called."
+  "Regrind one record. The *BBDB* buffer must be current when this is called."
   (bbdb-debug (if (not (eq (not (not delete-p))
                            (not (not (bbdb-record-deleted-p record)))))
                   (error "splorch.")))
   (if (null record-cons) (setq record-cons (assq record bbdb-records)))
   (if (null next-record-cons)
       (setq next-record-cons (car (cdr (memq record-cons bbdb-records)))))
-  (let ((position (point))
-        (marker (nth 2 record-cons))
-        next-marker
-        (buffer-read-only nil))
-    (bbdb-debug
-     (if (null record-cons) (error "doubleplus ungood: record unexists!"))
-     (if (null marker) (error "doubleplus ungood: marker unexists!")))
-    (beginning-of-line)
-    (goto-char marker)
-    (remove-text-properties marker (or (nth 2 next-record-cons) (point-max))
-                            '(bbdb-field nil))
-    (if delete-p nil
-      (bbdb-format-record (car record-cons) (car (cdr record-cons))))
-    (setq next-marker (or (nth 2 next-record-cons) (point-max)))
-    (delete-region (point) next-marker)
-    (if (< position next-marker)
-        (goto-char position))
+  (if (null record-cons)
+      (bbdb-display-records (list record) nil t)
+    (let ((position (point))
+          (marker (nth 2 record-cons))
+          next-marker
+          (buffer-read-only nil))
+      (bbdb-debug
+       (if (null record-cons) (error "doubleplus ungood: record unexists!"))
+       (if (null marker) (error "doubleplus ungood: marker unexists!")))
+      (beginning-of-line)
+      (goto-char marker)
+      (remove-text-properties marker (or (nth 2 next-record-cons) (point-max))
+                              '(bbdb-field nil))
+      (if delete-p nil
+        (bbdb-format-record (car record-cons) (car (cdr record-cons))))
+      (setq next-marker (or (nth 2 next-record-cons) (point-max)))
+      (delete-region (point) next-marker)
+      (if (< position next-marker)
+          (goto-char position))
 
-    (if (and bbdb-gui (not delete-p))
-        (bbdb-fontify-buffer (list record-cons
-                                   ;; the record ends here
-                                   (list nil nil next-marker))))
-    (save-excursion
-      (run-hooks 'bbdb-list-hook))))
+      (if (and bbdb-gui (not delete-p))
+          (bbdb-fontify-buffer (list record-cons
+                                     ;; the record ends here
+                                     (list nil nil next-marker))))
+      (save-excursion
+        (run-hooks 'bbdb-list-hook)))))
 
 ;;; Parsing phone numbers
 ;;; XXX this needs expansion to handle international prefixes properly
@@ -782,7 +784,7 @@ With any other argument append will be enabled once."
               (t 'once))))
 
 ;;;###autoload
-(defun bbdb-insert-new-field (name contents)
+(defun bbdb-insert-new-field (record name contents)
   "Add a new field to the current record ; the field type and contents
 are prompted for if not supplied.
 
@@ -801,87 +803,90 @@ depending on your environment, (getenv \"DOMAINNAME\")), and
 just a username.  A prefix arg of ^U (or a `bbdb-default-domain'
 value of \"\", the default) means do not alter the address."
 
-  (interactive (let ((name "")
+  (interactive (let ((record (or (bbdb-current-record t)
+                                 (error "current record unexists!")))
+                     (name "")
                      (completion-ignore-case t))
                  (while (string= name "")
                    (setq name
                          (downcase
                           (completing-read "Insert Field: "
-                                           (append '(("phone") ("address") ("net")
-                                                     ("AKA") ("notes"))
+                                           (append '(("phone") ("address")
+                                                     ("net") ("AKA") ("notes"))
                                                    (bbdb-propnames))
                                            nil
                                            nil ; used to be t
                                            nil))))
                  (setq name (intern name))
-                 (list name (bbdb-prompt-for-new-field-value name))))
+                 (list record name (bbdb-prompt-for-new-field-value name))))
   (if (null contents)
       (setq contents (bbdb-prompt-for-new-field-value name)))
-  (let ((record (bbdb-current-record t)))
-    (if (null record) (error "current record unexists!"))
-    (cond ((eq name 'phone)
-           (bbdb-record-set-phones record
-                                   (nconc (bbdb-record-phones record) (list contents))))
-          ((eq name 'address)
-           (bbdb-record-set-addresses record
-                                      (nconc (bbdb-record-addresses record) (list contents))))
-          ((eq name 'net)
-           (if (bbdb-record-net record)
-               (error "There already are net addresses!"))
-           (if (stringp contents)
-               (setq contents (bbdb-split contents ",")))
-           ;; first detect any conflicts....
-           (if bbdb-no-duplicates-p
-               (let ((nets contents))
-                 (while nets
-                   (let ((old (bbdb-gethash (downcase (car nets)))))
-                     (if (and old (not (eq old record)))
-                         (error "net address \"%s\" is used by \"%s\""
-                                (car nets)
-                                (or (bbdb-record-name old)
-                                    (car (bbdb-record-net old))))))
-                   (setq nets (cdr nets)))))
-           ;; then store.
-           (let ((nets contents))
-             (while nets
-               (bbdb-puthash (downcase (car nets)) record)
-               (setq nets (cdr nets))))
-           (bbdb-record-set-net record contents))
-          ((eq name 'aka)
-           (if (bbdb-record-aka record)
-               (error "there already are alternate names!"))
-           (if (stringp contents)
-               (setq contents (bbdb-split contents ";")))
-           ;; first detect any conflicts....
-           (if bbdb-no-duplicates-p
-               (let ((aka contents))
-                 (while aka
-                   (let ((old (bbdb-gethash (downcase (car aka)))))
-                     (if (and old (not (eq old record)))
-                         (error "alternate name \"%s\" is used by \"%s\""
-                                (car aka)
-                                (or (bbdb-record-name old)
-                                    (car (bbdb-record-net old))))))
-                   (setq aka (cdr aka)))))
-           ;; then store.
-           (let ((aka contents))
-             (while aka
-               (bbdb-puthash (downcase (car aka)) record)
-               (setq aka (cdr aka))))
-           (bbdb-record-set-aka record contents))
-          ((eq name 'notes)
-           (if (bbdb-record-notes record) (error "there already are notes!"))
-           (bbdb-record-set-notes record contents))
-          ((assoc (symbol-name name) (bbdb-propnames))
-           (if (and (consp (bbdb-record-raw-notes record))
-                    (assq name (bbdb-record-raw-notes record)))
-               (error "there is already a \"%s\" note!" name))
-           (bbdb-record-putprop record name contents))
-          (t (error "doubleplus ungood: unknow how to set slot %s" name)))
-    (bbdb-change-record record nil)
-                                        ;    (bbdb-offer-save)
-    (let ((bbdb-display-layout nil))
-      (bbdb-redisplay-one-record record))))
+
+  (cond ((eq name 'phone)
+         (bbdb-record-set-phones record
+                                 (nconc (bbdb-record-phones record)
+                                        (list contents))))
+        ((eq name 'address)
+         (bbdb-record-set-addresses record
+                                    (nconc (bbdb-record-addresses record)
+                                           (list contents))))
+        ((eq name 'net)
+         (if (bbdb-record-net record)
+             (error "There already are net addresses!"))
+         (if (stringp contents)
+             (setq contents (bbdb-split contents ",")))
+         ;; first detect any conflicts....
+         (if bbdb-no-duplicates-p
+             (let ((nets contents))
+               (while nets
+                 (let ((old (bbdb-gethash (downcase (car nets)))))
+                   (if (and old (not (eq old record)))
+                       (error "net address \"%s\" is used by \"%s\""
+                              (car nets)
+                              (or (bbdb-record-name old)
+                                  (car (bbdb-record-net old))))))
+                 (setq nets (cdr nets)))))
+         ;; then store.
+         (let ((nets contents))
+           (while nets
+             (bbdb-puthash (downcase (car nets)) record)
+             (setq nets (cdr nets))))
+         (bbdb-record-set-net record contents))
+        ((eq name 'aka)
+        (if (bbdb-record-aka record)
+            (error "there already are alternate names!"))
+        (if (stringp contents)
+            (setq contents (bbdb-split contents ";")))
+        ;; first detect any conflicts....
+        (if bbdb-no-duplicates-p
+            (let ((aka contents))
+              (while aka
+                (let ((old (bbdb-gethash (downcase (car aka)))))
+                  (if (and old (not (eq old record)))
+                      (error "alternate name \"%s\" is used by \"%s\""
+                             (car aka)
+                             (or (bbdb-record-name old)
+                                 (car (bbdb-record-net old))))))
+                (setq aka (cdr aka)))))
+        ;; then store.
+        (let ((aka contents))
+          (while aka
+            (bbdb-puthash (downcase (car aka)) record)
+            (setq aka (cdr aka))))
+        (bbdb-record-set-aka record contents))
+        ((eq name 'notes)
+        (if (bbdb-record-notes record) (error "there already are notes!"))
+        (bbdb-record-set-notes record contents))
+        ((assoc (symbol-name name) (bbdb-propnames))
+        (if (and (consp (bbdb-record-raw-notes record))
+                 (assq name (bbdb-record-raw-notes record)))
+            (error "there is already a \"%s\" note!" name))
+        (bbdb-record-putprop record name contents))
+        (t (error "doubleplus ungood: unknow how to set slot %s" name)))
+  (bbdb-change-record record nil)
+;    (bbdb-offer-save)
+  (let ((bbdb-display-layout nil))
+    (bbdb-redisplay-one-record record)))
 
 (defun bbdb-prompt-for-new-field-value (name)
   (cond ((eq name 'net)
