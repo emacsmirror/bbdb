@@ -39,7 +39,7 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "2.00.04")
+(defconst bbdb-version "2.00.05")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
