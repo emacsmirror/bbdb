@@ -136,7 +136,7 @@ more details."
     (let
 	((buf (get-buffer-create " *BBDB snarf*"))
 	 (text (buffer-substring begin end))
-	 phones nets web city state zip name address-lines 
+	 phones nets web city state zip country name address-lines 
 	 address-vector notes)
       (set-buffer buf)
       (erase-buffer)
