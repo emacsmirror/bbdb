@@ -15,6 +15,7 @@
 ;;
 ;; This stuff doesn't get included in the tarball.
 
+(require 'cl) ;; for flet
 (require 'bbdb)
 (require 'bbdb-snarf) ;; should be autoloaded, I'm sure.
 
