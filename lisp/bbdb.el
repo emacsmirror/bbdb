@@ -55,8 +55,9 @@
  (autoload 'y-or-n-p-with-timeout "timer")
  (autoload 'mail-position-on-field "sendmail")
  ;; autoload doesn't work for these
- (require 'message) ; for message-mode-map
- (require 'sendmail) ; for mail-mode-map
+ (condition-case nil (require 'message)
+   (error (message "Warning: Gnus not found.  If you use Gnus, ensure it is in your `load-path'"))); for message-mode-map
+ (require 'sendmail); for mail-mode-map
  )
 
 (defconst bbdb-version "2.35")
@@ -1167,79 +1168,77 @@ present).  Returns a string containing the date in the new format."
   '((one-line   (order     . (phones mail-alias net notes))
                 (name-end  . 24)
                 (toggle    . t))
-    (multi-line (indention . 14)
+    (multi-line (omit      . (creation-date timestamp))
                 (toggle    . t))
-    (pop-up-multi-line (indention . 14)))
+    (full-multi-line))
   "*An alist describing each display layout.
 The format of an element is (LAYOUT-NAME OPTION-ALIST).
 
-Currently there are three different layout types, which are `one-line',
-`multi-line' and `full-multi-line'.   OPTION-ALIST specifies the options
-for the layout.  Valid options are:
+By default there are three different layout types used by BBDB, which are
+`one-line', `multi-line' and `full-multi-line' (showing all fields of a
+record).  `full-multi-line' has the same options as `multi-line'.
+
+OPTION-ALIST specifies the options for the layout.  Valid options are:
 
                            ------- Availability --------
-    Format                  one-line        multi-line
---------------------------------------------------------
- (toggle . BOOL)                 +               +
- (order . FIELD-LIST)            +               +
- (omit . FIELD-LIST)             +               +
- (name-end . INTEGER)            +               -
- (indention . INTEGER)           -               +
+    Format                  one-line        multi-line        default if unset
+------------------------------------------------------------------------------
+ (toggle . BOOL)                 +               +              nil
+ (order . FIELD-LIST)            +               +              '(phones ...)
+ (omit . FIELD-LIST)             +               +              nil
+ (name-end . INTEGER)            +               -              40
+ (indentation . INTEGER)         -               +              14
 
-- toggle: controls if this layout is included when toggeling the display
-  layout
-- order: defines a user specific order for the fields, while t is a place
+- toggle: controls if this layout is included when toggeling the display layout
+- order: defines a user specific order for the fields, while `t' is a place
   holder for all remaining fields
-- omit: is a list of fields which should not be displayed or t to exclude all
+- omit: is a list of fields which should not be displayed or `t' to exclude all
   fields except those listed in the order option
-- name-end: sets the column where the name should end in one-line layout
-- indention: sets the level of indetion for multi-line display.
-
-Additionally there are two layouts derived from multi-line, which are
-full-multi-line and pop-up-multi-line and supporting the same layout
-options."
+- name-end: sets the column where the name should end in one-line layout.
+- indentation: sets the level of indentation for multi-line display."
   :group 'bbdb
-  :type `(repeat
-      (cons :tag "Layout Definition"
-        (choice :tag "Layout type"
-            (const one-line)
-            (const multi-line)
-            (const full-multi-line)
-            (symbol))
-        (set :tag "Properties"
-             (cons :tag "Order"
-               (const :tag "List of fields to order by" order)
-               (repeat (choice (const phone)
-                       (const address)
-                       (const net)
-                       (const AKA)
-                       (const notes)
-                       (symbol :tag "other")
-                       (const :tag "Remaining fields" t))))
-             (choice :tag "Omit"
-                 :value (omit . nil)
-                 (cons :tag "List of fields to omit"
-                   (const :tag "Fields not to display" omit)
-                   (repeat (choice (const phone)
-                           (const address)
-                           (const net)
-                           (const AKA)
-                           (const notes)
-                           (symbol :tag "other"))))
-                 (const :tag "Exclude all fields except those listed in the order property" t))
-             (cons :tag "Indentation"
-               :value (indention . 14)
-               (const :tag "Level of indentation for multi-line layout"
-                  indention)
-               (number :tag "Column"))
-             (cons :tag "End of name field"
-               :value (name-end . 24)
-               (const :tag "The column where the name should end in a one-line layout"
-                  name-end)
-               (number :tag "Column"))
-             (cons :tag "Toggle"
-               (const :tag "The layout is included when toggling display layout" toggle)
-               boolean)))))
+  :type
+  `(repeat
+    (cons :tag "Layout Definition"
+          (choice :tag "Layout type"
+                  (const one-line)
+                  (const multi-line)
+                  (const full-multi-line)
+                  (symbol))
+          (set :tag "Properties"
+               (cons :tag "Order"
+                     (const :tag "List of fields to order by" order)
+                     (repeat (choice (const phone)
+                                     (const address)
+                                     (const net)
+                                     (const AKA)
+                                     (const notes)
+                                     (symbol :tag "other")
+                                     (const :tag "Remaining fields" t))))
+               (choice :tag "Omit"
+                       :value (omit . nil)
+                       (cons :tag "List of fields to omit"
+                             (const :tag "Fields not to display" omit)
+                             (repeat (choice (const phone)
+                                             (const address)
+                                             (const net)
+                                             (const AKA)
+                                             (const notes)
+                                             (symbol :tag "other"))))
+                       (const :tag "Exclude all fields except those listed in the order property" t))
+               (cons :tag "Indentation"
+                     :value (indentation . 14)
+                     (const :tag "Level of indentation for multi-line layout"
+                            indentation)
+                     (number :tag "Column"))
+               (cons :tag "End of name field"
+                     :value (name-end . 24)
+                     (const :tag "The column where the name should end in one-line layout"
+                            name-end)
+                     (number :tag "Column"))
+               (cons :tag "Toggle"
+                     (const :tag "The layout is included when toggling display layout" toggle)
+                     boolean)))))
 
 (defcustom bbdb-display-layout nil
   "*The default display layout."
@@ -1500,7 +1499,7 @@ formatted and inserted into the current buffer.  This is used by
   (insert "\n")
 
   (let* ((notes (bbdb-record-raw-notes record))
-         (indent (or (bbdb-display-layout-get-option layout 'indention) 14))
+         (indent (or (bbdb-display-layout-get-option layout 'indentation) 14))
          (fmt (format " %%%ds: " indent))
          start field)
 
@@ -1606,10 +1605,10 @@ multi-line layout."
          (omit-list   (bbdb-display-layout-get-option layout-spec 'omit))
          (order-list  (bbdb-display-layout-get-option layout-spec 'order))
          (all-fields  (append '(phones addresses net aka)
-                  (let ((raw-notes (bbdb-record-raw-notes record)))
-                (if (stringp raw-notes)
-                    '(notes)
-                  (mapcar (lambda (r) (car r)) raw-notes)))))
+                              (let ((raw-notes (bbdb-record-raw-notes record)))
+                                (if (stringp raw-notes)
+                                    '(notes)
+                                  (mapcar (lambda (r) (car r)) raw-notes)))))
          format-function field-list)
 
     (if (functionp omit-list)
