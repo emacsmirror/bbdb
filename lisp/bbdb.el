@@ -72,6 +72,10 @@ prompt the users on how to merge records when duplicates are detected.")
 (unless (fboundp 'characterp)
   (defmacro characterp(c) `(char-or-string-p ,c))) ;; XXX close
 
+(unless (fboundp 'display-message)
+  (defmacro display-message (type mess)
+    `(message ,mess)))
+
 (unless (fboundp 'defvaralias)
   (defun defvaralias (&rest args)))
 
@@ -1180,9 +1184,10 @@ formatted and inserted into the current buffer.  This is used by
     (cond ((eq brief t)
            (let ((p (point)))
              (beginning-of-line)
-             (if (<= (- p (point)) 47)
+             (if (<= (- p (point))
+		     (+ 2 bbdb-pop-up-elided-display-name-end))
                  (goto-char p)
-               (goto-char (+ (point) 44))
+               (goto-char (+ (point) bbdb-pop-up-elided-display-name-end))
                (setq p (point))
                (end-of-line)
                (delete-region p (point))
