@@ -113,7 +113,7 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
 ;;;###autoload
 (defun bbdb/vm-update-record (&optional offer-to-create)
   (let* ((bbdb/vm-get-only-first-from-p t)
-	 (records (bbdb/vm-update-records offer-to-create)))
+     (records (bbdb/vm-update-records offer-to-create)))
     (if records (car records) nil)))
 
 ;;;###autoload
@@ -130,11 +130,11 @@ C-g again it will stop scanning."
   (vm-check-for-killed-summary)
   (vm-error-if-folder-empty)
   (let ((msg (car vm-message-pointer))
-	(inhibit-local-variables nil)   ; vm binds this to t...
-	(enable-local-variables t)	; ...or vm bind this to nil.
-	(inhibit-quit nil)		; vm better not bind this to t!
-	(bbdb/vm-offer-to-create offer-to-create)
-	cache records)
+    (inhibit-local-variables nil)   ; vm binds this to t...
+    (enable-local-variables t)  ; ...or vm bind this to nil.
+    (inhibit-quit nil)      ; vm better not bind this to t!
+    (bbdb/vm-offer-to-create offer-to-create)
+    cache records)
 
     ;; ignore cache if we may be creating a record, since the cache
     ;; may otherwise tell us that the user didn't want a record for
@@ -151,65 +151,68 @@ C-g again it will stop scanning."
       (and msg
            (let ((addrs (bbdb/vm-get-from msg bbdb/vm-get-only-first-from-p))
                  (bbdb-records (bbdb-records))
-		 (processed-addresses 0)
-		 (bbdb/vm-update-records-mode
-		  (if offer-to-create 'annotating
-		    (eval bbdb/vm-update-records-mode)))
-		 rec)
+         (processed-addresses 0)
+         (bbdb/vm-update-records-mode
+          (if offer-to-create 'annotating
+            (eval bbdb/vm-update-records-mode)))
+         rec)
              (mapc (lambda (bbdb/vm-address)
-		     (condition-case nil
-			 (progn
-			   (setq rec
-				 (cond ((eq bbdb/vm-update-records-mode
-					    'annotating)
-					(bbdb-annotate-message-sender
-					 bbdb/vm-address t
-					 (or (bbdb-invoke-hook-for-value
-					      bbdb/mail-auto-create-p)
-					     bbdb/vm-offer-to-create);; force create
-					 'bbdb/vm-prompt-for-create))
-				       ((eq bbdb/vm-update-records-mode
-					    'searching)
-					;; search for the first record having
-					;; this net
-					(let ((net (cadr bbdb/vm-address))
-					      ;; there is no case for nets
-					      (bbdb-case-fold-search t)
-					      record)
-					  (setq record (bbdb-search
-							bbdb-records
-							nil nil net))
-					  (if record (car record) nil))))
-				 processed-addresses (+ processed-addresses 1))
-			   (when (and (not bbdb-silent-running)
-				      (not (eq bbdb/vm-offer-to-create 'quit))
-				      (= 0 (% processed-addresses 5)))
-			     (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs))))
-			       (display-message 'progress mess))
-			     (sit-for 0)))
-		       (quit (cond ((eq bbdb/vm-update-records-mode
-					'annotating)
-				    (setq bbdb/vm-update-records-mode
-					  'searching))
-				   ((eq bbdb/vm-update-records-mode 'searching)
-				    nil)
-				   ((eq bbdb/vm-update-records-mode 'next)
-				    (setq bbdb/vm-update-records-mode
-					  'annotating))
-				   (t
-				    (setq bbdb/vm-update-records-mode 'quit)))
-			     nil))
+             (condition-case nil
+             (progn
+               (setq rec
+                 (cond ((eq bbdb/vm-update-records-mode
+                        'annotating)
+                    (bbdb-annotate-message-sender
+                     bbdb/vm-address t
+                     (or (bbdb-invoke-hook-for-value
+                          bbdb/mail-auto-create-p)
+                         bbdb/vm-offer-to-create);; force create
+                     'bbdb/vm-prompt-for-create))
+                       ((eq bbdb/vm-update-records-mode
+                        'searching)
+                    ;; search for the first record having
+                    ;; this net
+                    (let ((net (cadr bbdb/vm-address))
+                          ;; there is no case for nets
+                          (bbdb-case-fold-search t)
+                          record)
+                      (setq record (bbdb-search
+                            bbdb-records
+                            nil nil net))
+                      (if record (car record) nil))))
+                 processed-addresses (+ processed-addresses 1))
+               (when (and (not bbdb-silent-running)
+                      (not (eq bbdb/vm-offer-to-create 'quit))
+                      (= 0 (% processed-addresses 5)))
+                 (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs))))
+                   (display-message 'progress mess))
+                 (sit-for 0)))
+               (quit (cond ((eq bbdb/vm-update-records-mode
+                    'annotating)
+                    (setq bbdb/vm-update-records-mode
+                      'searching))
+                   ((eq bbdb/vm-update-records-mode 'searching)
+                    nil)
+                   ((eq bbdb/vm-update-records-mode 'next)
+                    (setq bbdb/vm-update-records-mode
+                      'annotating))
+                   (t
+                    (setq bbdb/vm-update-records-mode 'quit)))
+                 nil))
 
-		     ;; people should be listed only once so we use
-		     ;; add-to-list
-		     (if rec (add-to-list 'records rec)))
+             ;; people should be listed only once so we use
+             ;; add-to-list
+             (if rec (add-to-list 'records rec)))
 
-		   addrs)
+           addrs)
              (setq records (nreverse records))
-	     (bbdb/vm-encache-message msg records))))
+         (bbdb/vm-encache-message msg records))))
 
-    (if (not bbdb-silent-running)
-	(display-message 'progress "Updating of BBDB records finished"))
+    ;; If there were multiple records to update, let the user know we're done.
+    (and (not bbdb-silent-running)
+         records
+         (> (length records) 1)
+         (display-message 'progress "Updating of BBDB records finished"))
     records))
 
 (defcustom bbdb/vm-update-records-mode
@@ -227,12 +230,12 @@ This variable is also used for inter-function communication between the
 functions `bbdb/vm-update-records' and `bbdb/vm-prompt-for-create'."
   :group 'bbdb-mua-specific-vm
   :type '(choice (const :tag "annotating all messages"
-			'annotating)
-		 (const :tag "annotating no messages"
-			'searching)
-		 (const :tag "annotating only new messages"
-			(if (vm-new-flag msg) 'annotating 'searching))
-		 (sexp   :tag "user defined")))
+            'annotating)
+         (const :tag "annotating no messages"
+            'searching)
+         (const :tag "annotating only new messages"
+            (if (vm-new-flag msg) 'annotating 'searching))
+         (sexp   :tag "user defined")))
 
 (defvar bbdb/vm-offer-to-create nil
   "Used for inter-function communication between the functions
@@ -291,7 +294,7 @@ of the BBDB record corresponding to the sender of this message."
   (let ((record (or (bbdb/vm-update-record t) (error ""))))
     (bbdb-display-records (list record))
     (if arg
-	(bbdb-record-edit-property record nil t)
+    (bbdb-record-edit-property record nil t)
       (bbdb-record-edit-notes record t))))
 
 ;;;###autoload
@@ -302,7 +305,7 @@ This buffer will be in bbdb-mode, with associated keybindings."
   (vm-follow-summary-cursor)
   (let ((record (bbdb/vm-update-record t)))
     (if record
-	(bbdb-display-records (list record))
+    (bbdb-display-records (list record))
       (error "unperson"))))
 
 
@@ -334,14 +337,19 @@ configuration of what is being displayed."
                            (set-buffer (window-buffer w))
                            (prog1 (eq major-mode 'vm-mode)
                              (set-buffer b))))))
-            (sit-for 0) ;; fix for VM windowing problem
             ))
 
-      ;; Always update the records, if there are any.
+      ;; Always update the records; if there are no records, empty the
+      ;; BBDB window. This should be generic, not VM-specific.
       (if records
           (bbdb-display-records records)
-        (bbdb-undisplay-records)))))
+        (bbdb-undisplay-records))
 
+      ;; Without the following, VM's summary buffer tends to get upset
+      ;; and stuck in a loop. This may well be an Emacs bug; it goes
+      ;; away if you try to (debug) it.
+      (sit-for 0)
+      )))
 
 ;; By Alastair Burt <burt@dfki.uni-kl.de>
 ;; vm 5.40 and newer support a new summary format, %U<letter>, to call
