@@ -163,7 +163,8 @@ This buffer will be in bbdb-mode, with associated keybindings."
 (defun bbdb/vm-show-all-recipients ()
   "Show all recipients of this message. Counterpart to `bbdb/vm-show-sender'."
   (interactive)
-  (bbdb/vm-show-records 'recipients))
+  (let ((bbdb-get-only-first-address-p nil))
+    (bbdb/vm-show-records 'recipients)))
 
 ;;;###autoload
 (defun bbdb/vm-show-sender (&optional show-recipients)
@@ -175,7 +176,8 @@ This buffer will be in `bbdb-mode', with associated keybindings."
   (cond ((= 4 show-recipients)
          (bbdb/vm-show-all-recipients))
         ((= 16 show-recipients)
-         (bbdb/vm-show-records))
+         (let ((bbdb-get-only-first-address-p nil))
+           (bbdb/vm-show-records)))
         (t
          (if (null (bbdb/vm-show-records 'authors))
              (bbdb/vm-show-all-recipients)))))
