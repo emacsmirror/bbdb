@@ -1,3 +1,12 @@
+1998-12-31  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 2.00.05 released
+
+1998-12-31  Matt Simmons  <simmonmt@acm.org>
+
+	* INSTALL: Added documentation for those without make
+	* lisp/bbdb-snarf.el: Merge in 1.8.1.x subtree
+
 1998-12-30  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 2.00.04 released
