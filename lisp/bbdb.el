@@ -276,7 +276,8 @@ you should reload `bbdb-file'."
          (unless (primep val)
            (error "`%s' must be prime, not %s" symb val))
          (set symb val)
-         (bbdb-records)
+         (when (fboundp 'bbdb-records)
+           (bbdb-records))
          val))
 
 (defcustom bbdb-default-area-code nil
