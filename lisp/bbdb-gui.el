@@ -247,7 +247,7 @@ as of GNU Emacs 20.7"
                 (set-glyph-face g 'vm-xface))
               (bbdb-set-extent-property extent 'vm-xface t)
               (bbdb-set-extent-begin-glyph extent g))
-          error nil)) ;; looks like you don't have xface support, d00d
+          (error nil))) ;; looks like you don't have xface support, d00d
 
        ;; requires lemacs 19.10 version of highlight-headers.el
        ((fboundp 'highlight-headers-x-face)                     ; the 19.10 way
