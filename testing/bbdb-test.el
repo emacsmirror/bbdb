@@ -22,12 +22,37 @@
   (setq bbdb-file bbdb-test/bbdb-file)
   (bbdb-initialize))
 
+(defvar bbdb-test/log-buffer "*BBDB Test Results*")
+
+(defun bbdb-test/log-buffer ()
+  "Return log buffer.
+When it does not existm, create one an setup the key bindings."
+  (let ((buf (get-buffer bbdb-test/log-buffer)))
+    (when (not buf)
+      (setq buf (get-buffer-create bbdb-test/log-buffer))
+      (set-buffer buf)
+      (local-set-key "r" 'bbdb-test/run-tests)
+      (local-set-key "a" 'bbdb-test/run-all-tests)
+      (local-set-key "o" 'bbdb-test/run-one-test)
+      (local-set-key "s" 'bbdb-test/set-test-vars)
+      (local-set-key "c" 'bbdb-test/log-clear)
+      (local-set-key "q" 'kill-buffer))
+    buf))
+
 (defun bbdb-test/log-result (format &rest rest)
   (save-excursion
-    (set-buffer (get-buffer-create "*Test Results*"))
+    (set-buffer (bbdb-test/log-buffer))
     (goto-char (point-max))
     (insert (apply 'format format rest))))
 
+(defun bbdb-test/log-clear ()
+  (save-excursion
+    (let ((buf (bbdb-test/log-buffer)))
+      (set-buffer buf)
+      (erase-buffer)
+      (pop-to-buffer buf)
+      buf)))
+  
 (defun bbdb-test/switch-to-test-bbdb ()
   "Edit the test BBDB"
   (interactive)
@@ -55,39 +80,60 @@
       (quit
        (message "Returned to BBDB %s"
 		(abbreviate-file-name old-bbdb-file))))))
-          
-;;;###autoload
-(defun bbdb-test/run-all ()
-  "Run all BBDB tests.
-I.e. look for variables matching \"^bbdb-test/.+$\" and with a documentation
+
+(defvar bbdb-test/test-vars nil
+  "User defined list of tests.")
+
+(defun bbdb-test/test-vars (&optional matching)
+  "Return all test variables.
+I.e. those matching \"^bbdb-test/.+$\" which have a documentation
 starting with \"Test\""
+  (or bbdb-test/test-vars
+      (apropos-internal
+       (format "^bbdb-test/%s$" (if matching (concat ".*" matching ".*") ".+"))
+       (lambda (s) (and (symbolp s)
+                        (boundp s)
+                        (documentation-property s 'variable-documentation)
+                        (string-match "^Test"
+                                      (documentation-property
+                                       s
+                                       'variable-documentation)
+                                      ))))))
+
+(defun bbdb-test/set-test-vars (matching)
+  (interactive "sRegexp for BBDB tests: ")
+  (setq matching (or matching (bbdb-string-trim matching)))
+  (if (string= "" matching) (setq matching nil))
+  (setq bbdb-test/test-vars nil)
+  (bbdb-test/log-clear)
+  (if (not matching)
+      (bbdb-test/log-result "All test will be performed!\n")
+    (setq bbdb-test/test-vars (bbdb-test/test-vars matching))
+    (bbdb-test/log-result "Test vars are:\n")
+    (mapcar (lambda (v) (bbdb-test/log-result "\t%s\n" (symbol-name v)))
+            bbdb-test/test-vars)))
+  
+;;;###autoload
+(defun bbdb-test/run-all-tests ()
+  "Run all BBDB tests."
   (interactive)
-  (let ((test-vars
-         (apropos-internal
-          "^bbdb-test/.+$"
-          (lambda (s) (and (symbolp s)
-                           (boundp s)
-                           (documentation-property s 'variable-documentation)
-                           (string-match "^Test"
-                            (documentation-property s 'variable-documentation)
-                            )))))
-        (test-res  (get-buffer-create "*Test Results*")))
+  (let (bbdb-test/test-vars)
+    (bbdb-test/run-tests)))
 
-    (bbdb-initialize)
-
-    (pop-to-buffer test-res)
+;;;###autoload
+(defun bbdb-test/run-tests ()
+  "Run BBDB tests."
+  (interactive)
+  (let ((test-vars (bbdb-test/test-vars)))
     
-    (save-excursion
-      (set-buffer test-res)
-      (erase-buffer)
-      (insert "Testing started at ")
-      (insert (current-time-string))
-      (insert "\n\n"))
+    (bbdb-initialize)
+    (bbdb-test/log-clear)
+    (bbdb-test/log-result "Testing started at %s\n\n"
+                          (current-time-string))
 
     (while test-vars
       (bbdb-test/run-one-test (car test-vars))
-      (setq test-vars (cdr test-vars)))
-    (set-buffer test-res)))
+      (setq test-vars (cdr test-vars)))))
 
 (defmacro bbdb-test/with-var-set (var value &rest body)
   (append (list 'let (list (list (symbol-value var) value)))
@@ -95,7 +141,12 @@ starting with \"Test\""
 
 ;;;###autoload
 (defun bbdb-test/run-one-test (test-var)
-  (interactive "SEnter a variable to test: ")
+  (interactive
+   (list
+    (intern (completing-read "Enter a variable to test: "
+                     (mapcar (lambda (v) (list (symbol-name v)))
+                             (bbdb-test/test-vars))
+                     nil t))))
   (or (string-match "^bbdb-test/" (symbol-name test-var))
       (setq test-var (intern (concat "bbdb-test/" (symbol-name test-var)))))
   (let ((bbdb-var (intern (substring (symbol-name test-var) 10)))
@@ -128,9 +179,6 @@ starting with \"Test\""
       
         (bbdb-test/log-result "\n"))
       
-      (with-current-buffer (get-buffer "*Test Results*")
-        (goto-char (point-max)))
-
       ;; next set of values
       (setq vals (cdr vals)))
 
