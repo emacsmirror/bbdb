@@ -22,6 +22,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.58  2000/08/01 10:51:41  waider
+;; Added Howard Melman's VM labelling code. It's switched off by default;
+;; use (add-hook 'bbdb-notice-hook 'bbdb/vm-auto-add-label) to enable it.
+;;
 ;; Revision 1.57  2000/06/14 14:51:34  waider
 ;; * Trying another way to get the from field, since the Presentation
 ;;   buffer hack seems to be somewhat unusable.
@@ -52,36 +56,36 @@
 (or (boundp 'vm-mode-map)
     (load-library "vm-vars"))
 
-(defun bbdb/vm-get-from (msg) 
+(defun bbdb/vm-get-from (msg)
   "Get the \"From\" address of the specified message. If it's from the current
 user, return the recipient addresses instead."
   (setq msg (vm-real-message-of msg))
   (save-excursion
-	(save-restriction
-	  ;; Select the buffer containing the message.
-	  ;; Needed to handle VM virtual folders.
-	  (set-buffer (vm-buffer-of msg))
-	  ;; If the header is MIME-encoded, mail-extr goes
-	  ;; bananas. Actually, mail-extr can't really handle the decoded
-	  ;; headers either. Foo.
-	  (vm-decode-mime-message-headers msg)
-	  (let ((from (or (vm-get-header-contents msg "From:" ", ")
-					  (vm-grok-From_-author msg))))
-		(if (or (null from)
-				(string-match (bbdb-user-mail-names)
-							  ;; mail-strip-quoted-names is too broken!
-							  ;;(mail-strip-quoted-names from)
-							  (or (car (cdr (mail-extract-address-components
-											 from)))
-								  "")))
-			;; if logged in user sent this, use recipients.
-			(setq from (or (mail-fetch-field "to") from)))
-		from))))
+    (save-restriction
+      ;; Select the buffer containing the message.
+      ;; Needed to handle VM virtual folders.
+      (set-buffer (vm-buffer-of msg))
+      ;; If the header is MIME-encoded, mail-extr goes
+      ;; bananas. Actually, mail-extr can't really handle the decoded
+      ;; headers either. Foo.
+      (vm-decode-mime-message-headers msg)
+      (let ((from (or (vm-get-header-contents msg "From:" ", ")
+                      (vm-grok-From_-author msg))))
+        (if (or (null from)
+                (string-match (bbdb-user-mail-names)
+                              ;; mail-strip-quoted-names is too broken!
+                              ;;(mail-strip-quoted-names from)
+                              (or (car (cdr (mail-extract-address-components
+                                             from)))
+                                  "")))
+            ;; if logged in user sent this, use recipients.
+            (setq from (or (mail-fetch-field "to") from)))
+        from))))
 
 ;;;###autoload
 (defun bbdb/vm-update-record (&optional offer-to-create)
-  "Returns the record corresponding to the current VM message, 
-creating or modifying it as necessary.  A record will be created if 
+  "Returns the record corresponding to the current VM message,
+creating or modifying it as necessary.  A record will be created if
 bbdb/mail-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
 the user confirms the creation."
   (save-excursion
@@ -89,34 +93,34 @@ the user confirms the creation."
     (vm-check-for-killed-summary)
     (vm-error-if-folder-empty)
     (if bbdb-use-pop-up
-		(bbdb/vm-pop-up-bbdb-buffer offer-to-create)
+        (bbdb/vm-pop-up-bbdb-buffer offer-to-create)
       (let ((msg (car vm-message-pointer))
-			(inhibit-local-variables nil) ; vm binds this to t...
-			(enable-local-variables t)    ; ...or vm bind this to nil.
-			(inhibit-quit nil))  ; vm damn well better not bind this to t!
-		;; this doesn't optimize the case of moving thru a folder where
-		;; few messages have associated records.
-		(or (bbdb-message-cache-lookup msg nil)	; nil = current-buffer
-			(and msg
-				 (let ((from (bbdb/vm-get-from msg)))
-				   (if from
-					   (bbdb-encache-message
-						msg
-						(bbdb-annotate-message-sender
-						 from t
-						 (or (bbdb-invoke-hook-for-value
-							  bbdb/mail-auto-create-p)
-							 offer-to-create)
-						 offer-to-create))))))))))
+            (inhibit-local-variables nil) ; vm binds this to t...
+            (enable-local-variables t)    ; ...or vm bind this to nil.
+            (inhibit-quit nil))  ; vm damn well better not bind this to t!
+        ;; this doesn't optimize the case of moving thru a folder where
+        ;; few messages have associated records.
+        (or (bbdb-message-cache-lookup msg nil) ; nil = current-buffer
+            (and msg
+                 (let ((from (bbdb/vm-get-from msg)))
+                   (if from
+                       (bbdb-encache-message
+                        msg
+                        (bbdb-annotate-message-sender
+                         from t
+                         (or (bbdb-invoke-hook-for-value
+                              bbdb/mail-auto-create-p)
+                             offer-to-create)
+                         offer-to-create))))))))))
 
 ;;;###autoload
 (defun bbdb/vm-annotate-sender (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record 
+  "Add a line to the end of the Notes field of the BBDB record
 corresponding to the sender of this message.  If REPLACE is non-nil,
 replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
-			 (error "The Insidious Big Brother Database is read-only.")
-			 (read-string "Comments: "))))
+             (error "The Insidious Big Brother Database is read-only.")
+             (read-string "Comments: "))))
   (vm-follow-summary-cursor)
   (bbdb-annotate-notes (bbdb/vm-update-record t) string 'notes replace))
 
@@ -129,7 +133,7 @@ of the BBDB record corresponding to the sender of this message."
   (let ((record (or (bbdb/vm-update-record t) (error ""))))
     (bbdb-display-records (list record))
     (if arg
-	(bbdb-record-edit-property record nil t)
+    (bbdb-record-edit-property record nil t)
       (bbdb-record-edit-notes record t))))
 
 ;;;###autoload
@@ -140,8 +144,8 @@ This buffer will be in bbdb-mode, with associated keybindings."
   (vm-follow-summary-cursor)
   (let ((record (bbdb/vm-update-record t)))
     (if record
-	(bbdb-display-records (list record))
-	(error "unperson"))))
+    (bbdb-display-records (list record))
+    (error "unperson"))))
 
 
 (defun bbdb/vm-pop-up-bbdb-buffer (&optional offer-to-create)
@@ -150,15 +154,15 @@ displaying the record corresponding to the sender of the current message."
   (bbdb-pop-up-bbdb-buffer
     (function (lambda (w)
       (let ((b (current-buffer)))
-	(set-buffer (window-buffer w))
-	(prog1 (eq major-mode 'vm-mode)
-	  (set-buffer b))))))
+    (set-buffer (window-buffer w))
+    (prog1 (eq major-mode 'vm-mode)
+      (set-buffer b))))))
   (let ((bbdb-gag-messages t)
-	(bbdb-use-pop-up nil)
-	(bbdb-electric-p nil))
+    (bbdb-use-pop-up nil)
+    (bbdb-electric-p nil))
     (let ((record (bbdb/vm-update-record offer-to-create))
-	  (bbdb-elided-display (bbdb-pop-up-elided-display))
-	  (b (current-buffer)))
+      (bbdb-elided-display (bbdb-pop-up-elided-display))
+      (b (current-buffer)))
       (bbdb-display-records (if record (list record) nil))
       (set-buffer b)
       record)))
@@ -179,43 +183,109 @@ displaying the record corresponding to the sender of the current message."
 Respects vm-summary-uninteresting-senders."
   (if (and vm-summary-uninteresting-senders (not to-p))
       (let ((case-fold-search nil))
-	(if (string-match vm-summary-uninteresting-senders (vm-su-from m))
-	    (concat vm-summary-uninteresting-senders-arrow
-		    (vm-summary-function-B m t))
-	  (or (bbdb/vm-alternate-full-name  (vm-su-from m))
-	      (vm-su-full-name m))))
+    (if (string-match vm-summary-uninteresting-senders (vm-su-from m))
+        (concat vm-summary-uninteresting-senders-arrow
+            (vm-summary-function-B m t))
+      (or (bbdb/vm-alternate-full-name  (vm-su-from m))
+          (vm-su-full-name m))))
     (or (bbdb/vm-alternate-full-name (if to-p (vm-su-to m) (vm-su-from m)))
-	(if to-p (vm-su-to-names m) (vm-su-full-name m)))))
+    (if to-p (vm-su-to-names m) (vm-su-full-name m)))))
 
 (defun bbdb/vm-alternate-full-name (address)
-  (if address 
+  (if address
       (let ((entry (bbdb-search-simple nil
-				       (if (and address bbdb-canonicalize-net-hook)
-					   (bbdb-canonicalize-address address)
-					 address))))
-	(if entry
-	    (or (bbdb-record-getprop entry 'mail-name)
-		(bbdb-record-name entry))))))
+                       (if (and address bbdb-canonicalize-net-hook)
+                       (bbdb-canonicalize-address address)
+                     address))))
+    (if entry
+        (or (bbdb-record-getprop entry 'mail-name)
+        (bbdb-record-name entry))))))
+
+
+;;; bbdb/vm-auto-add-label
+;;; Howard Melman, contributed Jun 16 2000
+(defgroup bbdb-mua-specific-vm nil
+  "VM-specific BBDB customizations"
+  :group 'bbdb-mua-specific)
+(put 'bbdb-mua-specific-vm 'custom-loads '("bbdb-vm"))
+
+(defcustom bbdb/vm-auto-add-label-list nil
+  "*List used by `bbdb/vm-auto-add-label' to automatically label messages.
+Each element in the list is either a string or a list of two strings.
+If a single string then it is used as both the field value to check for
+and the label to apply to the message.  If a list of two strings, the first
+is the field value to search for and the second is the label to apply."
+  :group 'bbdb-mua-specific-vm
+  :type 'list)
+
+(defcustom bbdb/vm-auto-add-label-field bbdb-define-all-aliases-field
+  "*Fields used by `bbdb/vm-auto-add-label' to automatically label messages.
+Value is either a single symbol or a list of symbols of bbdb fields that
+`bbdb/vm-auto-add-label' uses to check for labels to apply to messages.
+Defaults to `bbdb-define-all-aliases-field' which is typically `mail-alias'."
+  :group 'bbdb-mua-specific-vm
+  :type '(choice symbol list))
+
+(defun bbdb/vm-auto-add-label (record)
+  "Automatically add labels to messages based on the mail-alias field.
+Add this to `bbdb-notice-hook' and if using VM each message that bbdb
+notices will be checked.  If the sender has a value in the
+bbdb/vm-auto-add-label-field  in their BBDB record that
+matches a value in `bbdb/vm-auto-add-label-list' then a VM
+label will be added to the message.
+
+This works great when `bbdb-user-mail-names' is set.  As a result
+mail that you send to people (and copy yourself on) is labeled as well."
+  (let (field aliases sep)
+    (and (eq major-mode 'vm-mode)
+     (mapcar #'(lambda(x)
+             (and
+              (setq field (bbdb-record-getprop record x))
+              (setq sep (or (get x 'field-separator) ","))
+              (setq aliases (append aliases (bbdb-split field sep)))))
+         (cond ((listp bbdb/vm-auto-add-label-field)
+            bbdb/vm-auto-add-label-field)
+               ((symbolp bbdb/vm-auto-add-label-field)
+            (list bbdb/vm-auto-add-label-field))
+               (t (error "Bad value for bbdb/vm-auto-add-label-field"))))
+     (vm-add-message-labels
+      (mapconcat #'(lambda (l)
+             (cond ((stringp l)
+                (if (member l aliases)
+                    l))
+                   ((and (consp l)
+                     (stringp (car l))
+                     (stringp (cdr l)))
+                (if (member (car l) aliases)
+                    (cdr l)))
+                   (t
+                (error "Malformed bbdb/vm-auto-add-label-list"))))
+             bbdb/vm-auto-add-label-list
+             " ")
+      1))))
+
+;; this is how you hook it in.
+;;(add-hook 'bbdb-notice-hook 'bbdb/vm-auto-add-label)
 
 
 ;;;###autoload
 (defun bbdb-insinuate-vm ()
   "Call this function to hook BBDB into VM."
   (cond ((boundp 'vm-select-message-hook) ; VM 5.36+
-		 (add-hook 'vm-select-message-hook 'bbdb/vm-update-record))
-		((boundp 'vm-show-message-hook)	; VM 5.32.L+
-		 (add-hook 'vm-show-message-hook 'bbdb/vm-update-record))
-		(t
-		 (error "vm versions older than 5.36 no longer supported")
+         (add-hook 'vm-select-message-hook 'bbdb/vm-update-record))
+        ((boundp 'vm-show-message-hook) ; VM 5.32.L+
+         (add-hook 'vm-show-message-hook 'bbdb/vm-update-record))
+        (t
+         (error "vm versions older than 5.36 no longer supported")
 
-		 ;; Hack on to vm-record-and-change-message-pointer, since VM 5.32
-		 ;; doesn't have vm-show-message-hook.
-		 (or (fboundp 'bbdb-orig-vm-record-and-change-message-pointer)
-			 (fset 'bbdb-orig-vm-record-and-change-message-pointer
-				   (symbol-function 'vm-record-and-change-message-pointer)))
-		 (fset 'vm-record-and-change-message-pointer
-			   (symbol-function 'bbdb/vm-record-and-change-message-pointer))
-		 ))
+         ;; Hack on to vm-record-and-change-message-pointer, since VM 5.32
+         ;; doesn't have vm-show-message-hook.
+         (or (fboundp 'bbdb-orig-vm-record-and-change-message-pointer)
+             (fset 'bbdb-orig-vm-record-and-change-message-pointer
+                   (symbol-function 'vm-record-and-change-message-pointer)))
+         (fset 'vm-record-and-change-message-pointer
+               (symbol-function 'bbdb/vm-record-and-change-message-pointer))
+         ))
   (define-key vm-mode-map ":" 'bbdb/vm-show-sender)
   (define-key vm-mode-map ";" 'bbdb/vm-edit-notes)
   ;; VM used to inherit from mail-mode-map, so bbdb-insinuate-sendmail
