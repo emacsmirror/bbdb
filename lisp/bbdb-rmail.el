@@ -21,29 +21,8 @@
 ;;
 ;; $Id$
 ;;
-;; $Log$
-;; Revision 1.56  2001/03/17 17:21:48  fenk
-;; * lisp/bbdb-mhe.el:
-;; * lisp/bbdb-rmail.el: uses the new caching functions + some
-;; 	other minor changes
-;;
-;; Revision 1.55  2000/10/27 18:32:06  fenk
-;; The new variable `bbdb/prompt-for-create-p' can be set to `t' in
-;; order to force VM, Gnus, MHE, RMAIL to ask the user before adding a
-;; new BBBD record, caused by the automatic update of the popup buffer.
-;;
-;; Revision 1.54  1998/04/11 07:18:33  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back
-;;
-;; Revision 1.53  1998/02/23 07:13:01  simmonmt
-;; Use add-hook, not bbdb-add-hook
-;;
-;; Revision 1.52  1997/11/02 07:43:25  simmonmt
-;; bbdb/rmail-annotate-sender now takes REPLACE argument
-;;
-;;
 
-(eval-and-compile 
+(eval-and-compile
   (require 'bbdb)
   (require 'bbdb-com)
   (require 'rmail)
@@ -53,8 +32,13 @@
 
 ;;;###autoload
 (defun bbdb/rmail-update-record (&optional offer-to-create)
-  "returns the record corresponding to the current RMAIL message, creating or
-modifying it as necessary.  A record will be created if 
+  (let ((bbdb-get-only-first-address-p)
+        (records (bbdb/rmail-update-records offer-to-create)))
+    (if records (car records) nil)))
+
+(defun bbdb/rmail-update-records (&optional offer-to-create)
+  "Returns the records corresponding to the current RMAIL message, creating or
+modifying it as necessary.  A record will be created if
 bbdb/mail-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
 the user confirms the creation."
   (if bbdb-use-pop-up
@@ -62,7 +46,9 @@ the user confirms the creation."
     (if (and (boundp 'rmail-buffer) rmail-buffer)
         (set-buffer rmail-buffer))
     (if rmail-current-message
-        (or (bbdb-message-cache-lookup rmail-current-message)
+        (let ((records (bbdb-message-cache-lookup rmail-current-message)))
+          (if records
+              (cdr records) ;; skip over cache key
             (save-excursion
               (let ((from (mail-fetch-field "from")))
                 (if (or (null from)
@@ -71,19 +57,21 @@ the user confirms the creation."
                     ;; if logged-in user sent this, use recipients.
                     (setq from (or (mail-fetch-field "to") from)))
                 (if from
-                    (bbdb-encache-message
-                     rmail-current-message
-                     (bbdb-annotate-message-sender
-                      from t
-                      (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
-                          offer-to-create)
-                      (or (bbdb-invoke-hook-for-value
-                           bbdb/prompt-for-create-p)
-                          offer-to-create))))))))))
+                    (bbdb-encache-message rmail-current-message
+                                          (list ;; must be a list for cache!
+                                           (bbdb-annotate-message-sender
+                                            from t
+                                            (or (bbdb-invoke-hook-for-value
+                                                 bbdb/mail-auto-create-p)
+                                                offer-to-create)
+                                            (or (bbdb-invoke-hook-for-value
+                                                 bbdb/prompt-for-create-p)
+                                                offer-to-create))))))))))))
+
 
 ;;;###autoload
 (defun bbdb/rmail-annotate-sender (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record 
+  "Add a line to the end of the Notes field of the BBDB record
 corresponding to the sender of this message.  If REPLACE is non-nil,
 replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
@@ -129,12 +117,12 @@ displaying the record corresponding to the sender of the current message."
   (let ((bbdb-gag-messages t)
         (bbdb-use-pop-up nil)
         (bbdb-electric-p nil))
-    (let ((record (bbdb/rmail-update-record offer-to-create))
+    (let ((records (bbdb/rmail-update-records offer-to-create))
           (bbdb-elided-display (bbdb-pop-up-elided-display))
           (b (current-buffer)))
-      (bbdb-display-records (if record (list record) nil))
+      (bbdb-display-records records)
       (set-buffer b)
-      record)))
+      records)))
 
 (defun bbdb/rmail-expunge ()
   "Actually erase all deleted messages in the file."
@@ -161,10 +149,10 @@ Leaves original message, deleted, before the undigestified messages."
   (define-key rmail-mode-map ";" 'bbdb/rmail-edit-notes)
   (define-key rmail-summary-mode-map ":" 'bbdb/rmail-show-sender)
   (define-key rmail-summary-mode-map ";" 'bbdb/rmail-edit-notes)
-  
-  (add-hook 'rmail-show-message-hook 'bbdb/rmail-update-record)
-  
-  ;; We must patch into rmail-expunge to clear the cache, since expunging a 
+
+  (add-hook 'rmail-show-message-hook 'bbdb/rmail-update-records)
+
+  ;; We must patch into rmail-expunge to clear the cache, since expunging a
   ;; message invalidates the cache (which is based on message numbers).
   ;; Same for undigestifying.
   (or (fboundp 'bbdb-orig-rmail-expunge)
