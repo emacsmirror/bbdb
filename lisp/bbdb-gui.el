@@ -69,7 +69,7 @@
   (if (fboundp 'find-face)
       (defalias 'bbdb-find-face 'find-face)
     (if (fboundp 'internal-find-face) ;; GRR.
-	;; This should be facep in Emacs 21
+    ;; This should be facep in Emacs 21
         (defalias 'bbdb-find-face 'internal-find-face)
       (defalias 'bbdb-find-face 'ignore)))) ; noop - you probably don't HAVE faces.
 
@@ -449,7 +449,9 @@ as of GNU Emacs 20.7"
 
 (eval-and-compile
   (if (fboundp 'popup-menu)
-      (fset 'bbdb-popup 'popup-menu)
+      (progn
+        (fset 'bbdb-popup 'popup-menu)
+        (fset 'bbdb-desc-to-menu 'identity))
     ;; This is really, REALLY ugly, but it saves me some coding and uses
     ;; the correct keymap API instead of carnal knowledge of keymap
     ;; structure.

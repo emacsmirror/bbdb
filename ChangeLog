@@ -1,3 +1,8 @@
+2003-04-09  Dave Love  <fx@gnu.org>
+
+	* lisp/bbdb.el (bbdb-file-coding-system): Make it defconst, test
+	for utf-8-Emacs and doc fix.
+
 2003-04-01  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb.el (bbdb-multiple-buffers-default): Modified to nicely
