@@ -1,11 +1,30 @@
 $Id$
 
-* Fix gnus scoring so it rebuilds when gnus-score disappears
-* Rewrite bbdb-compare-records with backquote
-* Keyword arguments for bbdb-initialize
-* Trim auto-autoloads (only need bbdb-initialize?)
-* Multiline note fields
-* Rewrite bbdb-ftp
+For 2.00:
+1. Document the time-based functions
+2. The texinfo TODO and this file are now wildly out of sync
+3. Document mark-char special field
+
+After 2.00:
+1. Unify BBDB record expansion and abbrev expansion.  Currently, it's
+   M-TAB to expand from the BBDB, and TAB to expand aliases.  Do this
+   by integrating Kai Grossjohann's message-x code and adding support
+   for abbrevs to `bbdb-complete-name'.
+2. Rewrite bbdb-ftp
+3. Add bbdb/vm-delete-sender-record
+4. Bindings from David Bakhash <199801192104.QAA04399@Bulgaria.MIT.edu>
+   and my response <yfqyb0b3jor.fsf@acm.org>
+5. Expand full names.  See thread with head
+   <ilulnwci761.fsf@squid.pdc.kth.se>
+6. A variable that lists fields to be upgraded.
+7. Change `bbdb-send-mail-internal' to use `compose-mail'.
+8. bbdb/gnus-summary-get-author needs to be documented correctly.
+ 
+Futures:
+1. Fix gnus scoring so it rebuilds when gnus-score disappears
+2. Multiline note fields
+3. Print multivalue (comma-separated) fields with one value per line
+4. Change key to some kind of unique number
 
 Features
 ========
