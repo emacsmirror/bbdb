@@ -1,3 +1,22 @@
+2000-08-01  Waider  <waider@stepstone.ie>
+
+	* lisp/bbdb.el:
+	Add compose-mail as an option for bbdb-send-mail-style (Kai Groﬂjohann)
+
+	* lisp/bbdb-vm.el:
+	Added Howard Melman's VM labelling code. It's switched off by default;
+	use (add-hook 'bbdb-notice-hook 'bbdb/vm-auto-add-label) to enable it.
+
+	* lisp/bbdb.el:
+	Added Thomas DeWeese's May 19 (!) fix for bbdb-build-name.
+
+2000-07-27  Sam Steingold <sds@gnu.org>
+
+	* lisp/bbdb.el: dropped bbdb-add-hook
+
+	* lisp/bbdb.el:
+	limited `bbdb-init-forms' to hooks to protect the innocent
+
 2000-07-27  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el (bbdb-init-forms): hook adding only
@@ -11,7 +30,7 @@
 	do not define autoloads here, load `bbdb-autoloads' instead
 	* lisp/Makefile: removed auto-autoloads, generate bbdb-autoloads
 
-2000-07-21  Ronan Waide  <waider@stepstone.ie>
+2000-07-21  Waider  <waider@stepstone.ie>
 
 	* lisp/bbdb.el: More bbdb-silent-running edits.
 
@@ -30,6 +49,12 @@
 
 	* lisp/bbdb.el (bbdb-write-file-hooks): new variable
 	(bbdb-records): use it
+
+2000-07-11 16:19:29  ShengHuo ZHU  <zsh@cs.rochester.edu>
+
+	* lisp/bbdb-snarf.el (bbdb-snarf-address-lines): Support v5.
+	(bbdb-snarf-make-address): New function.
+	(bbdb-snarf-region): Remove properties. Use bbdb-snarf-make-address.
 
 2000-07-05  Sam Steingold  <sds@gnu.org>
 
