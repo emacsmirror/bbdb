@@ -24,37 +24,6 @@
 ;;
 ;; $Id$
 ;;
-;; $Log$
-;; Revision 1.57  2001/03/25 20:45:57  fenk
-;; * lisp/bbdb.el (bbdb-message-cache-lookup):
-;; 	Removed the faulty single record code for Rmail/MHE
-;;
-;; * lisp/bbdb-mhe.el (bbdb/mh-update-record):
-;; 	Bugfix for new caching functions
-;;
-;; * lisp/bbdb-rmail.el (bbdb/rmail-update-records):
-;; 	Another bugfix: check for nil before caching
-;;
-;; Revision 1.56  2001/03/17 17:21:48  fenk
-;; * lisp/bbdb-mhe.el:
-;; * lisp/bbdb-rmail.el: uses the new caching functions + some
-;; 	other minor changes
-;;
-;; Revision 1.55  2000/10/27 18:32:06  fenk
-;; The new variable `bbdb/prompt-for-create-p' can be set to `t' in
-;; order to force VM, Gnus, MHE, RMAIL to ask the user before adding a
-;; new BBBD record, caused by the automatic update of the popup buffer.
-;;
-;; Revision 1.54  1998/04/11 07:20:03  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back
-;;
-;; Revision 1.53  1998/02/23 07:09:59  simmonmt
-;; Use add-hook
-;;
-;; Revision 1.52  1997/11/02 07:41:52  simmonmt
-;; bbdb/mh-annotate-sender now takes REPLACE argument
-;;
-;;
 
 (eval-and-compile 
   (require 'bbdb)
@@ -113,9 +82,7 @@ the user confirms the creation."
                        from t
                        (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
                            offer-to-create)
-                       (or (bbdb-invoke-hook-for-value
-                            bbdb/prompt-for-create-p)
-                           offer-to-create))))
+                       offer-to-create)))
             (bbdb-encache-message msg (list record))
             ;; return one record
             record))))))

@@ -63,9 +63,7 @@ the user confirms the creation."
                               (or (bbdb-invoke-hook-for-value
                                    bbdb/mail-auto-create-p)
                                   offer-to-create)
-                              (or (bbdb-invoke-hook-for-value
-                                   bbdb/prompt-for-create-p)
-                                  offer-to-create))))
+                              offer-to-create)))
                   ;; return a list of records 
                   (if record
                       (bbdb-encache-message
