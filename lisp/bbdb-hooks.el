@@ -34,54 +34,6 @@
 ;;
 ;; $Id$
 ;;
-;; $Log$
-;; Revision 1.63  2001/01/29 14:43:07  waider
-;; Added autoload cookie for bbdb-ignore-selected-messages-hook
-;;
-;; Revision 1.62  2001/01/08 12:35:14  waider
-;; Added Bill Carpenter-provided function
-;;   'bbdb-ignore-selected-messages-confirmation'
-;;
-;; Revision 1.61  2000/11/16 11:59:40  fenk
-;; (bbdb-extract-field-value): added
-;;  (case-fold-search t) as headers should be checked case insensitive
-;;
-;; Revision 1.60  2000/08/03 18:04:50  sds
-;; * lisp/bbdb.el (bbdb-notes-default-separator): new user option
-;; (bbdb-annotate-notes): use it
-;; (notes, company): put `field-separator' property
-;; * lisp/bbdb-hooks.el (bbdb-auto-notes-hook): search the whole
-;; notes string for the new note before adding
-;;
-;; Revision 1.59  2000/07/13 17:07:00  sds
-;; minor doc fixes to comply with the standards
-;;
-;; Revision 1.58  2000/04/05 17:09:06  bbdb-writer
-;; * Autoload cookie for bbdb-header-start
-;;
-;; Revision 1.57  1998/04/11 07:20:59  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back.
-;; Made `format-time-string' take two arguments for XEmacs 19.15.
-;;
-;; Revision 1.56  1998/03/10 07:37:13  simmonmt
-;; Fixed customization of bbdb-auto-notes-alist
-;;
-;; Revision 1.55  1998/02/23 07:09:37  simmonmt
-;; We use add-hook now
-;;
-;; Revision 1.54  1998/01/06 06:05:31  simmonmt
-;; Added provide of bbdb-hooks.  Fixed custom specs (added cons type
-;; instead of group where appropriate).  Replaced bbdb-time-string
-;; function with bbdb-time-internal-format variable.
-;;
-;; Revision 1.53  1997/12/01 05:00:49  simmonmt
-;; Customized, added sshteingold@cctrading.com's change to time-string
-;; function to use a format string.
-;;
-;; Revision 1.52  1997/09/28 06:01:05  simmonmt
-;; Fix to accomodate nil gnus-single-article-buffer
-;;
-;;
 
 (require 'bbdb)
 
@@ -122,7 +74,7 @@ which is the current time string."
 (defun bbdb-header-start ()
   "Returns a marker at the beginning of the header block of the current
 message.  This will not necessarily be in the current buffer."
-  (cond ((memq major-mode '(vm-mode vm-summary-mode))
+  (cond ((memq major-mode '(vm-presentation-mode vm-mode vm-summary-mode))
      (if vm-mail-buffer (set-buffer vm-mail-buffer))
      (vm-start-of (car vm-message-pointer)))
     ((memq major-mode '(rmail-mode rmail-summary-mode))
