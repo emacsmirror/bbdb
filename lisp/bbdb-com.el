@@ -224,10 +224,15 @@ in either the name(s), company, network address, or notes."
   (interactive
    (list (bbdb-search-prompt "Search records %m regexp: ")
          current-prefix-arg))
-  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
-        (notes (cons '* string)))
-    (bbdb-display-records
-     (bbdb-search (bbdb-records) string string string notes nil))))
+  (let* ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
+         (notes (cons '* string))
+         (records
+          (bbdb-search (bbdb-records) string string string notes
+                       nil)))
+    (if records
+        (bbdb-display-records records)
+      ;; we could use error here, but it's not really an error.
+      (message "No records matching '%s'" string))))
 
 ;;;###autoload
 (defun bbdb-name (string elidep)
