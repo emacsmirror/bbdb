@@ -1,3 +1,10 @@
+2000-07-25  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb.el (bbdb-init-forms): new variable
+	(bbdb-initialize): use it; actually run `bbdb-initialize-hook'
+	do not define autoloads here, load `bbdb-autoloads' instead
+	* lisp/Makefile: removed auto-autoloads, generate bbdb-autoloads
+
 2000-07-21  Ronan Waide  <waider@stepstone.ie>
 
 	* lisp/bbdb.el: More bbdb-silent-running edits.

@@ -2817,6 +2817,31 @@ When called interactively with a prefix argument, insert string at point."
        (kill-all-local-variables)
        (error "the BBDB was mis-sorted: it has been repaired.")))))
 
+(defvar bbdb-init-forms
+  '((Gnus                       ; Gnus 3.14 or older
+     (add-hook 'gnus-Startup-hook 'bbdb-insinuate-gnus))
+    (gnus                       ; Gnus 3.15 or newer
+     (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus))
+    (mh-e                       ; MH-E
+     (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh))
+    (rmail                      ; RMAIL
+     (add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail))
+    (sendmail                   ; the standard mail user agent
+     (add-hook 'mail-setup-hook 'bbdb-insinuate-sendmail))
+    (vm                         ; the alternative mail reader
+     (bbdb-insinuate-vm))
+    (message                    ; the gnus mail user agent
+     (bbdb-insinuate-message))
+    (reportmail                 ; mail notification
+     (bbdb-insinuate-reportmail))
+    (sc                         ; message citation
+     (bbdb-insinuate-sc))
+    (supercite                  ; same
+     (bbdb-insinuate-sc))
+    (w3                         ; WWW browser
+     (bbdb-insinuate-w3)))
+  "The alist which maps features to insinuationn forms.")
+
 (defun bbdb-initialize (&rest to-insinuate)
   "*Initialize the BBDB.  One or more of the following symbols can be
 passed as arguments to initiate the appropriate insinuations.
@@ -2843,76 +2868,30 @@ passed as arguments to initiate the appropriate insinuations.
    message    Initialize BBDB support for Message mode.
    reportmail Initialize BBDB support for the Reportmail mail
               notification package.
-   sc         Initialize BBDB support for the Supercite message
-              citation package.
+   sc or      Initialize BBDB support for the Supercite message
+   supercite  citation package.
    w3         Initialize BBDB support for Web browsers."
 
   (fset 'advertized-bbdb-delete-current-field-or-record
         'bbdb-delete-current-field-or-record)
 
-  ;; Mail/News readers
-  (cond ((member 'Gnus to-insinuate)         ;; Gnus 3.14 or older
-         (add-hook 'gnus-Startup-hook 'bbdb-insinuate-gnus)
-         (setq to-insinuate (delq 'Gnus to-insinuate))))
-  (cond ((member 'gnus to-insinuate)         ;; Gnus 3.15 or newer
-         (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus)
-         (setq to-insinuate (delq 'gnus to-insinuate))))
+  (load "bbdb-autoloads" t)
 
-  (cond ((member 'mh-e to-insinuate)         ;; MH-E
-         (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh)
-         (setq to-insinuate (delq 'mh-e to-insinuate))))
-
-  (cond ((member 'rmail to-insinuate)        ;; RMAIL
-         (add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail)
-         (setq to-insinuate (delq 'rmail to-insinuate))))
-
-  (cond ((member 'sendmail to-insinuate)
-         (add-hook 'mail-setup-hook 'bbdb-insinuate-sendmail)
-         (setq to-insinuate (delq 'sendmail to-insinuate))))
-
-  (cond ((member 'vm to-insinuate)
-         (if (or (featurep 'vm) (locate-library "vm"))
-             (bbdb-insinuate-vm)
-           (bbdb-warn "Could not find VM for initialization/insinuation"))
-         (setq to-insinuate (delq 'vm to-insinuate))))
-
-  ;; Other packages
-  (cond ((member 'message to-insinuate)
-         (if (or (featurep 'message) (locate-library "message"))
-             (bbdb-insinuate-message)
-           (bbdb-warn "Could not find Message for initialization/insinuation"))
-         (setq to-insinuate (delq 'message to-insinuate))))
-
-  (cond ((member 'reportmail to-insinuate)
-         (if (or (featurep 'reportmail) (locate-library "reportmail"))
-             (bbdb-insinuate-reportmail)
-           (bbdb-warn "Could not find Reportmail for initialization/insinuation"))
-         (setq to-insinuate (delq 'reportmail to-insinuate))))
-
-  (cond ((member 'sc to-insinuate)
-         (if (or (featurep 'supercite) (locate-library "supercite"))
-             (bbdb-insinuate-sc)
-           (bbdb-warn "Could not find Supercite for initialization/insinuation"))
-         (setq to-insinuate (delq 'sc to-insinuate))))
-
-  (cond ((member 'w3 to-insinuate)
-         (if (or (featurep 'w3) (locate-library "w3"))
-             (bbdb-insinuate-w3)
-           (bbdb-warn "Could not find W3 for initialization/insinuation"))
-         (setq to-insinuate (delq 'w3 to-insinuate))))
-
-  (if to-insinuate
-      (while to-insinuate
-        (bbdb-warn "Unknown symbol %s in initialization arguments" (car to-insinuate))
-        (setq to-insinuate (cdr to-insinuate))))
+  (while to-insinuate
+    (let* ((feature (car to-insinuate))
+           (init (assq feature bbdb-init-forms)))
+      (setq to-insinuate (cdr to-insinuate))
+      (if init
+          (if (or (featurep feature) (locate-library (symbol-name feature)))
+              (mapc 'eval (cdr init))
+              (bbdb-warn "cannot locate feature `%s'" feature))
+          (bbdb-warn "don't know how to insinuate `%s'" feature))))
 
   ;; RMAIL, MHE, and VM interfaces might need these.
   (autoload 'mail-strip-quoted-names "mail-utils")
   (autoload 'mail-fetch-field "mail-utils")
   ;; All of the interfaces need this.
   (autoload 'mail-extract-address-components "mail-extr")
-
-  (load "bbdb-autoloads.el" t)
 
   (run-hooks 'bbdb-initialize-hook))
 
@@ -2985,7 +2964,6 @@ passed as arguments to initiate the appropriate insinuations.
 
 (defun bbdb-insinuate-sendmail ()
   "Call this function to hook BBDB into sendmail (that is, M-x mail)."
-  (define-key mail-mode-map "\M-\t" 'bbdb-complete-name)
   (define-key mail-mode-map [(meta tab)] 'bbdb-complete-name))
 
 
