@@ -21,6 +21,15 @@
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
+;;
+;; $Id$
+;;
+;; $Log$
+;; Revision 1.52  1997/11/02 07:41:52  simmonmt
+;; bbdb/mh-annotate-sender now takes REPLACE argument
+;;
+;;
+
 (require 'bbdb)
 ;; We advise several mh-e functions
 (require 'mh-e)
@@ -75,9 +84,10 @@ the user confirms the creation."
 		      offer-to-create)))))))))
 
 
-(defun bbdb/mh-annotate-sender (string)
+(defun bbdb/mh-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
-corresponding to the sender of this message."
+corresponding to the sender of this message.  If REPLACE is non-nil,
+replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
 			 (error "The Insidious Big Brother Database is read-only.")
 			 (read-string "Comments: "))))
@@ -85,7 +95,7 @@ corresponding to the sender of this message."
   (let ((b (current-buffer))
 	(p (point)))
     (set-buffer mh-show-buffer)
-    (bbdb-annotate-notes (bbdb/mh-update-record t) string)
+    (bbdb-annotate-notes (bbdb/mh-update-record t) string 'notes replace)
     (set-buffer b)
     (goto-char p)))
 
