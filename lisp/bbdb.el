@@ -1010,10 +1010,8 @@ This is a possible identifying function for
 This may be used by formatting functions listed in
 `bbdb-address-formatting-alist'."
   (mapcar (lambda(str)
-            (if (= 0 (length (bbdb-string-trim str)))
-                ()
-                (indent-to 17)
-                (insert str "\n")))
+            (indent-to 17)
+            (insert str "\n"))
           (bbdb-address-streets addr)))
 
 (defun bbdb-format-address-continental (addr)
