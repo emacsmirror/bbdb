@@ -709,7 +709,7 @@ it is a north american or european phone number by providing a prefix
 argument.  A prefix arg of ^U means it's to be a euronumber, and any
 other prefix arg means it's to be a a structured north american number.
 Otherwise, which style is used is controlled by the variable
-`bbdb-north-american-phone-numbers-p'."
+`bbdb-north-american-phone-numbers-p'.
 
 If you are inserting a new net address, you can have BBDB append a
 default domain to any net address that does not contain one.  Set
