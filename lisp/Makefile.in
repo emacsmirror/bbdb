@@ -92,8 +92,8 @@ uninstall-pkg:
 
 bbdb-autoloads.el: $(DEPSRCS)
 	@rm -f $@;
-	@echo "(provide 'bbdb-autoloads)" > $@;
-	@echo "" >> $@;
+	@echo "" > $@;
+	@echo "(provide 'bbdb-autoloads)" >> $@;
 	$(EMACS) -batch -q -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
 		--eval "(if (featurep 'xemacs) (delete-file generated-autoload-file))" \
