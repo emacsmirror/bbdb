@@ -1461,9 +1461,9 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 
 (defmacro bbdb-build-name (f l)
   (list 'downcase
-        (list 'if (list 'and f l)
-              (list 'concat f " " l)
-              (list 'or f l ""))))
+        (list 'if (list '= (list 'length f) 0) l
+              (list 'if (list '= (list 'length l) 0) f
+                    (list 'concat f " " l)))))
 
 (defun bbdb-remove! (e l)
   (if (null l) l
