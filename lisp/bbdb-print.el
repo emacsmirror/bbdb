@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.59  1998/11/02 07:08:14  simmonmt
+;; Change mailing list address
+;;
 ;; Revision 1.58  1998/10/17 19:43:26  simmonmt
 ;; Patch to convert default area code protection from condition-case to
 ;; integerp.
@@ -93,7 +96,7 @@
 ;;; <boris@cs.rochester.edu> and Dirk Grunwald 
 ;;; <grunwald@cs.colorado.edu> using a TeX format designed by Luigi
 ;;; Semenzato <luigi@paris.cs.berkeley.edu>. 
-;;; We are also grateful to numerous people on the info-bbdb
+;;; We are also grateful to numerous people on the bbdb-info
 ;;; mailing list for suggestions and bug reports. 
 
 ;;; Code:

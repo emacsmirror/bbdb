@@ -8,6 +8,9 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.19  1998/11/02 07:08:41  simmonmt
+@c Change mailing list address
+@c
 @c Revision 1.18  1998/04/11 07:36:10  simmonmt
 @c Added EOL list, EOL'd advertized-bbdb-delete-current-field-or-record
 @c and GNUS support.  Documented new bindings in *BBDB* buffer.
@@ -48,7 +51,7 @@
 @ifinfo
 This file documents the Insidious Big Brother Database
 
-This is edition $Revision$ of the BBDB User Manual for BBDB version 2.00.
+This is edition $Revision$ of the BBDB User Manual for BBDB version 2.00.03.
 
 Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 Copyright (c) 1997-1998 Matt Simmons <simmonmt@@acm.org>
@@ -3220,11 +3223,11 @@ where @var{NAME} is the symbol for the name of the note, and
 @section Mailing Lists
 
 There are two mailing lists for the @b{BBDB}.  The first is
-@code{bbdb-announce}, and is used for new release announcements, and as a
-result has very low traffic.  To subscribe to @code{bbdb-announce}, send mail
-to @code{bbdb-announce-request} with @samp{subscribe} as the subject.
+@code{bbdb-announce@xemacs.org}, and is used for new release announcements, and as a
+result has very low traffic.  To subscribe to @code{bbdb-announce@xemacs.org}, send mail
+to @code{bbdb-announce-request@xemacs.org} with @samp{subscribe} as the subject.
 
-The second mailing list, @code{info-bbdb}, is gets moderate traffic, and is
+The second mailing list, @code{bbdb-info@xemacs.org}, is gets moderate traffic, and is
 intended for the discussion and distribution of development versions of the
 @b{BBDB}.  Users of development versions of the @b{BBDB} should be subscribed
 to this list.  It is to this list that bugs should be reported.  @xref{Known

@@ -19,8 +19,8 @@
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 ;;;
 ;;;  ------------------------------------------------------------------------
-;;; |  There is a mailing list for discussion of BBDB: info-bbdb@xemacs.org  |
-;;; |  To join, send mail to info-bbdb-request@xemacs.org (don't forget the  |
+;;; |  There is a mailing list for discussion of BBDB: bbdb-info@xemacs.org  |
+;;; |  To join, send mail to bbdb-info-request@xemacs.org (don't forget the  |
 ;;; |  -request part or you'll look silly in front of lots of people who     |
 ;;; |  have the ability to remember it indefinitely...)                      |
 ;;; |                                                                        |
@@ -37,6 +37,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.65  1998/11/02 07:07:50  simmonmt
+;; Change mailing list address
+;;
 ;; Revision 1.64  1998/10/10 18:49:27  simmonmt
 ;; From slbaur - Switch from `screen' functions to `frame' functions
 ;;
@@ -105,7 +108,7 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "2.00.02")
+(defconst bbdb-version "2.00.03")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
