@@ -169,6 +169,7 @@ This buffer will be in bbdb-mode, with associated keybindings."
   (vm-follow-summary-cursor)
   (let ((bbdb-get-addresses-headers headers)
         (bbdb/vm-update-records-mode 'annotating)
+        (bbdb/mail-auto-create-p t)
         (bbdb-message-cache nil)
         records)
     (setq records (bbdb/vm-update-records t))
