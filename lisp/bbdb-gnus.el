@@ -22,6 +22,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.56  1997/12/01 04:57:50  simmonmt
+;; Customized variables, changed some comments, changed user format code
+;; error message
+;;
 ;; Revision 1.55  1997/11/02 07:37:44  simmonmt
 ;; Added REPLACE argument to bbdb/gnus-annotate-sender.  Variable to
 ;; catch changes to bbdb/gnus-score-default.  Commented out most of score
@@ -138,55 +142,63 @@ displaying the record corresponding to the sender of the current message."
 ;; Announcing BBDB entries in the summary buffer
 ;;
 
-(defvar bbdb/gnus-lines-and-from-length 18
-  "*The number of characters used to display From: info in GNUS, if you have
-set gnus-optional-headers to 'bbdb/gnus-lines-and-from.")
+(defcustom bbdb/gnus-lines-and-from-length 18
+  "*The number of characters used to display From: info in Gnus, if you have
+set gnus-optional-headers to 'bbdb/gnus-lines-and-from."
+  :group 'bbdb-mua-specific-gnus
+  :type 'integer)
 
-(defvar bbdb/gnus-summary-prefer-real-names nil
-  "*If T, then the GNUS subject list will display real names instead of network
-addresses (gnus-optional-headers is 'bbdb/gnus-lines-and-from.)")
-(defvaralias 'bbdb/gnus-header-prefer-real-names
-  'bbdb/gnus-summary-prefer-real-names)
-
-(defvar bbdb/gnus-summary-mark-known-posters t
+(defcustom bbdb/gnus-summary-mark-known-posters t
   "*If T, then the GNUS subject list will contain an indication of those 
 messages posted by people who have entries in the Insidious Big
 Brother Database (assuming `gnus-optional-headers' is
-'bbdb/gnus-lines-and-from. [for those versions of Gnus that still have
-`gnus-optional-headers'])")
+'bbdb/gnus-lines-and-from).  This is a GNUS-specific feature.  It will
+not work for Gnus."
+  :group 'bbdb-mua-specific-gnus
+  :type '(choice (const :tag "Mark known posters" t)
+		 (const :tag "Do not mark known posters" nil)))
 (defvaralias 'bbdb/gnus-mark-known-posters
   'bbdb/gnus-summary-mark-known-posters)
 
-(defvar bbdb/gnus-summary-known-poster-mark "+"
+(defcustom bbdb/gnus-summary-known-poster-mark "+"
   "This is the default character to prefix author names with if
-gnus-bbdb-summary-mark-known-posters is t.  If the poster's record has
+bbdb/gnus-summary-mark-known-posters is t.  If the poster's record has
 an entry in the field named by bbdb-message-marker-field, then that will
-be used instead.")
+be used instead."
+  :group 'bbdb-mua-specific-gnus
+  :type 'character)
 
-(defvar bbdb/gnus-summary-show-bbdb-names t
-  "*If both this variable and bbdb/gnus-summary-prefer-real-names are true,
+(defcustom bbdb/gnus-summary-show-bbdb-names t
+  "*If both this variable and `bbdb/gnus-summary-prefer-real-names' are true,
 then for messages from authors who are in your database, the name
 displayed will be the primary name in the database, rather than the
 one in the From line of the message.  This doesn't affect the names of
-people who aren't in the database, of course.  (gnus-optional-headers
-must be bbdb/gnus-lines-and-from.)")
+people who aren't in the database, of course.  (`gnus-optional-headers'
+must be `bbdb/gnus-lines-and-from' for GNUS users.)"
+  :group 'bbdb-mua-specific-gnus
+  :type 'boolean)
 (defvaralias 'bbdb/gnus-header-show-bbdb-names
   'bbdb/gnus-summary-show-bbdb-names)
 
-(defvar bbdb/gnus-summary-prefer-bbdb-data t
+(defcustom bbdb/gnus-summary-prefer-bbdb-data t
   "If t, then for posters who are in our BBDB, replace the information
-provided in the From header with data from the BBDB.")
+provided in the From header with data from the BBDB."
+  :group 'bbdb-mua-specific-gnus
+  :type 'boolean)
 
-(defvar bbdb/gnus-summary-prefer-real-names t
+(defcustom bbdb/gnus-summary-prefer-real-names t
   "If t, then display the poster's name from the BBDB if we have one,
 otherwise display his/her primary net address if we have one.  If it is
 set to the symbol bbdb, then real names will be used from the BBDB if
 present, otherwise the net address in the post will be used.  If
-bbdb/gnus-summary-prefer-bbdb-data is nil, then this has no effect.")
+bbdb/gnus-summary-prefer-bbdb-data is nil, then this has no effect.  See `bbdb/gnus-lines-and-from' for GNUS users, or `bbdb/gnus-summary-user-format-letter' for Gnus users."
+  :group 'bbdb-mua-specific-gnus
+  :type '(choice (const :tag "Prefer real names" t)
+		 (const :tag "Prefer network addresses" nil)))
 (defvaralias 'bbdb/gnus-header-prefer-real-names
   'bbdb/gnus-summary-prefer-real-names)
 
-(defvar bbdb/gnus-summary-user-format-letter "B"
+(defcustom bbdb/gnus-summary-user-format-letter "B"
   "This is the gnus-user-format-function- that will be used to insert
 the information from the BBDB in the summary buffer (using
 `bbdb/gnus-summary-get-author').  This format code is meant to replace
@@ -196,19 +208,25 @@ stick with the default.  Additionally, if the value of this variable
 is nil, no format function will be installed for
 `bbdb/gnus-summary-get-author'.  See also
 `bbdb/gnus-summary-in-bbdb-format-letter', which installs a format
-code for `bbdb/gnus-summary-author-in-bbdb'")
+code for `bbdb/gnus-summary-author-in-bbdb'"
+  :group 'bbdb-mua-specific-gnus
+  :type 'character)
 
-(defvar bbdb/gnus-summary-in-bbdb-format-letter "b"
+(defcustom bbdb/gnus-summary-in-bbdb-format-letter "b"
   "This is the gnus-user-format-function- that will be used to insert
 `bbdb/gnus-summary-known-poster-mark' (using
 `bbdb/gnus-summary-author-in-bbdb') if the poster is in the BBDB, and
 \" \" if not.  If the value of this variable is nil, no format code
 will be installed for `bbdb/gnus-summary-author-in-bbdb'.  See also
 `bbdb/gnus-summary-user-format-letter', which installs a format code
-for `bbdb/gnus-summary-get-author'.")
+for `bbdb/gnus-summary-get-author'."
+  :group 'bbdb-mua-specific-gnus
+  :type 'character)
 
-(defvar bbdb-message-marker-field 'mark-char
-  "*The field whose value will be used to mark messages by this user in GNUS.")
+(defcustom bbdb-message-marker-field 'mark-char
+  "*The field whose value will be used to mark messages by this user in GNUS."
+  :group 'bbdb-mua-specific-gnus
+  :type 'symbol)
 
 (defun bbdb/gnus-lines-and-from (header)
   "Useful as the value of gnus-optional-headers in *GNUS* (not Gnus).
@@ -330,14 +348,19 @@ This function is meant to be used with the user function defined in
 ;; Scoring
 ;;
 
-(defvar bbdb/gnus-score-field 'gnus-score
+(defcustom bbdb/gnus-score-field 'gnus-score
   "This variable contains the name of the BBDB field which should be
-checked for a score to add to the net addresses in the same record.")
+checked for a score to add to the net addresses in the same record."
+  :group 'bbdb-mua-specific-gnus-scoring
+  :type 'symbol)
 
-(defvar bbdb/gnus-score-default nil
+(defcustom bbdb/gnus-score-default nil
   "If this is set, then every net address in the BBDB that does not have
 an associated score field will be assigned this score.  A value of nil
-implies a default score of zero.")
+implies a default score of zero."
+  :group 'bbdb-mua-specific-gnus-scoring
+  :type '(choice (const :tag "Do not assign default score")
+		 (integer :tag "Assign this default score" 0)))
 
 (defvar bbdb/gnus-score-default-internal nil
   "Internal variable for detecting changes to
@@ -409,12 +432,12 @@ addresses better than the traditionally static global scorefile."
 (defun bbdb-insinuate-gnus ()
   "Call this function to hook BBDB into GNUS."
   (setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
-  (cond ((boundp 'gnus-Article-prepare-hook) ; 3.14 or worse
+  (cond ((boundp 'gnus-Article-prepare-hook) ; 3.14 or lower
 	 (bbdb-add-hook 'gnus-Article-prepare-hook 'bbdb/gnus-update-record)
 	 (bbdb-add-hook 'gnus-Save-newsrc-hook 'bbdb-offer-save)
 	 (define-key gnus-Subject-mode-map ":" 'bbdb/gnus-show-sender)
 	 (define-key gnus-Subject-mode-map ";" 'bbdb/gnus-edit-notes))
-	(t
+	(t                                   ; 3.15 or higher
 	 (bbdb-add-hook 'gnus-article-prepare-hook 'bbdb/gnus-update-record)
 	 (bbdb-add-hook 'gnus-save-newsrc-hook 'bbdb-offer-save)
 	 (define-key gnus-summary-mode-map ":" 'bbdb/gnus-show-sender)
@@ -432,10 +455,10 @@ addresses better than the traditionally static global scorefile."
       (if (and (fboundp get-author-user-fun)
 	       (not (eq (symbol-function get-author-user-fun)
 			'bbdb/gnus-summary-get-author)))
-	  (bbdb-warn (concat
-		      "Redefine bbdb/gnus-summary-user-format-letter, "
-		      "%%u" bbdb/gnus-summary-user-format-letter " in Gnus, "
-		      "or set bbdb/gnus-define-format-functions to nil."))
+	  (bbdb-warn
+	   (format "`gnus-user-format-function-%s' already seems to be in use.
+Please redefine `bbdb/gnus-summary-user-format-letter' to a different letter."
+		   bbdb/gnus-summary-user-format-letter))
 	(fset get-author-user-fun 'bbdb/gnus-summary-get-author)))
     
     ; One tick.  One tick only, please
@@ -443,10 +466,10 @@ addresses better than the traditionally static global scorefile."
       (if (and (fboundp in-bbdb-user-fun)
 	       (not (eq (symbol-function in-bbdb-user-fun)
 			'bbdb/gnus-summary-author-in-bbdb)))
-	  (bbdb-warn (concat
-		      "Redefine bbdb/gnus-summary-in-bbdb-format-letter, "
-		      "%%u" bbdb/gnus-summary-in-bbdb-format-letter " in Gnus,"
-		      " or set bbdb/gnus-define-format-functions to nil."))
+	  (bbdb-warn
+	   (format "`gnus-user-format-function-%s' already seems to be in use.
+Redefine `bbdb/gnus-summary-in-bbdb-format-letter' to a different letter."
+		   bbdb/gnus-summary-in-bbdb-format-letter))
 	(fset in-bbdb-user-fun 'bbdb/gnus-summary-author-in-bbdb))))
 
   ;; Scoring
