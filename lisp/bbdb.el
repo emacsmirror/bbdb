@@ -1209,6 +1209,8 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
  (omit . FIELD-LIST)             +               +              nil
  (name-end . INTEGER)            +               -              40
  (indentation . INTEGER)         -               +              14
+ (primary . BOOL)                -               +              nil
+ (test . SEXP)                   +               +              nil
 
 - toggle: controls if this layout is included when toggeling the display layout
 - order: defines a user specific order for the fields, where `t' is a place
@@ -1216,7 +1218,13 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
 - omit: is a list of fields which should not be displayed or `t' to exclude all
   fields except those listed in the order option
 - name-end: sets the column where the name should end in one-line layout.
-- indentation: sets the level of indentation for multi-line display."
+- indentation: sets the level of indentation for multi-line display.
+- primary: controls wether only the primary net is shown or all are shown.
+- test: a lisp expression controlling wether the record is to be displayed.
+
+When you add a new layout FOO, you can write a corresponding layout
+function bbdb-format-record-layout-FOO.  If you do not write your own
+layout function, the multi-line layout will be used."
   :group 'bbdb
   :type
   `(repeat
@@ -1224,13 +1232,14 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
           (choice :tag "Layout type"
                   (const one-line)
                   (const multi-line)
+		  (const pop-up-multi-line)
                   (const full-multi-line)
                   (symbol))
           (set :tag "Properties"
                (cons :tag "Order"
                      (const :tag "List of fields to order by" order)
-                     (repeat (choice (const phone)
-                                     (const address)
+                     (repeat (choice (const phones)
+                                     (const addresses)
                                      (const net)
                                      (const AKA)
                                      (const notes)
@@ -1240,8 +1249,8 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
                        :value (omit . nil)
                        (cons :tag "List of fields to omit"
                              (const :tag "Fields not to display" omit)
-                             (repeat (choice (const phone)
-                                             (const address)
+                             (repeat (choice (const phones)
+                                             (const addresses)
                                              (const net)
                                              (const AKA)
                                              (const notes)
@@ -1259,7 +1268,24 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
                      (number :tag "Column"))
                (cons :tag "Toggle"
                      (const :tag "The layout is included when toggling display layout" toggle)
-                     boolean)))))
+                     boolean)
+	       (cons :tag "Primary Net Only"
+		     (const :tag "Only the primary net address is included" primary)
+		     boolean)
+	       (cons :tag "Test"
+		     (const :tag "Show only records passing this test" test) 
+		     (choice (const :tag "No test" nil)
+			     (cons :tag "List of required fields"
+				   (const :tag "Choose from the attributes in the following set:" and)
+				   (set
+				    (const name)
+				    (const company)
+				    (const net)
+				    (const phones)
+				    (const addresses)
+				    (const notes)))
+			     (sexp :tag "Lisp expression")))))))
+
 
 (defcustom bbdb-display-layout 'multi-line
   "*The default display layout."
@@ -1459,6 +1485,8 @@ formatted and inserted into the current buffer.  This is used by
     (put-text-property start (point) 'bbdb-field (list 'net net))))
 
 (defun bbdb-format-record-layout-one-line (layout record field-list)
+  "Record formatting function for the one-line layout.
+See `bbdb-display-layout-alist' for more."
   ;; name and company
   (bbdb-format-record-name-company record)
   (let ((name-end (or (bbdb-display-layout-get-option layout 'name-end)
@@ -1474,7 +1502,6 @@ formatted and inserted into the current buffer.  This is used by
     ;; guarantee one space after name - company
     (insert " ")
     (indent-to name-end))
-
   ;; rest of the fields
   (let (start field contentfun formatfun values value)
     (while field-list
@@ -1484,6 +1511,9 @@ formatted and inserted into the current buffer.  This is used by
       (if (fboundp contentfun)
           (setq values (eval (list contentfun record)))
         (setq values (bbdb-record-getprop record field)))
+      (when (and (eq field 'net)
+		 (bbdb-display-layout-get-option layout 'primary))
+	(setq values (list (car values))))
       (when values
         (if (not (listp values)) (setq values (list values)))
         (setq formatfun (intern (format "bbdb-format-record-%s-%s"
@@ -1515,21 +1545,19 @@ formatted and inserted into the current buffer.  This is used by
   (insert "\n"))
 
 (defun bbdb-format-record-layout-multi-line (layout record field-list)
+  "Record formatting function for the multi-line layout.
+See `bbdb-display-layout-alist' for more."
   (bbdb-format-record-name-company record)
   (insert "\n")
-
   (let* ((notes (bbdb-record-raw-notes record))
          (indent (or (bbdb-display-layout-get-option layout 'indentation) 14))
          (fmt (format " %%%ds: " indent))
          start field)
-
     (if (stringp notes)
         (setq notes (list (cons 'notes notes))))
-
     (while field-list
       (setq field (car field-list)
             start (point))
-
       (cond ((eq field 'phones)
              (let ((phones (bbdb-record-phones record))
                    loc phone)
@@ -1571,7 +1599,9 @@ formatted and inserted into the current buffer.  This is used by
                  (put-text-property start (point) 'bbdb-field
                                     '(net field-name))
                  (setq start (point))
-                 (insert (mapconcat (function identity) net ", ") "\n")
+		 (if (bbdb-display-layout-get-option layout 'primary)
+		     (insert (car net) "\n")
+		   (insert (mapconcat (function identity) net ", ") "\n"))
                  (put-text-property start (point) 'bbdb-field '(net)))))
             ((eq field 'aka)
              (let ((aka (bbdb-record-aka record)))
@@ -1604,8 +1634,7 @@ formatted and inserted into the current buffer.  This is used by
                        (insert (make-string indent ?\ )))))
                  (insert "\n"))
                (put-text-property start (point) 'bbdb-field
-                                  (list 'property note))))
-            )
+                                  (list 'property note)))))
       (setq field-list (cdr field-list)))))
 
 (defalias 'bbdb-format-record-layout-full-multi-line
@@ -1616,23 +1645,23 @@ formatted and inserted into the current buffer.  This is used by
 
 (defun bbdb-format-record (record &optional layout)
   "Insert a formatted version of RECORD into the current buffer.
-LAYOUT can be `one-line' for one-line layout and
-`multi-line' for multi-line layout.
-For compatibility reasons one might alos write t for one-line and nil for
+
+LAYOUT can be a symbol describing a layout in
+`bbdb-display-layout-alist'.  For compatibility reasons, LAYOUT can
+also be nil or t, where t stands for the one-line, and nil for the
 multi-line layout."
   (bbdb-debug (if (bbdb-record-deleted-p record)
                   (error "plus ungood: formatting deleted record")))
-
   (setq layout (cond ((eq nil layout)
                       'multi-line)
-                     ((eq t   layout)
+                     ((eq t layout)
                       'one-line)
                      ((symbolp layout)
                       layout)
                      (t
                       (error "Unknown layout `%s'" layout))))
-
   (let* ((layout-spec (assoc layout bbdb-display-layout-alist))
+	 (test        (bbdb-display-layout-get-option layout-spec 'test))
          (omit-list   (bbdb-display-layout-get-option layout-spec 'omit))
          (order-list  (bbdb-display-layout-get-option layout-spec 'order))
          (all-fields  (append '(phones addresses net aka)
@@ -1641,43 +1670,51 @@ multi-line layout."
                                     '(notes)
                                   (mapcar (lambda (r) (car r)) raw-notes)))))
          format-function field-list)
-
-    (if (functionp omit-list)
-        (setq omit-list (funcall omit-list record layout)))
-    (if (functionp order-list)
-        (setq order-list (funcall order-list record layout)))
-
-    ;; first omit unwanted records
-    (when (and omit-list (or (not order-list) (memq t order-list)))
-      (if (not (listp omit-list))
-          ;; t => show nothing
-          (setq all-fields nil)
-        ;; listp => show all fields except those listed here
-        (while omit-list
-          (setq all-fields (delete (car omit-list) all-fields)
-                omit-list (cdr omit-list)))))
-
-    ;; then order them
-    (if (not order-list)
-        (setq field-list all-fields)
-      (if (not (memq t order-list))
-          (setq field-list order-list)
-        (setq order-list (reverse order-list))
-        (setq all-fields (delete nil (mapcar (lambda (f)
-                                               (if (memq f order-list) nil f))
-                                             all-fields)))
-        (while order-list
-          (if (eq t (car order-list))
-              (setq field-list (append all-fields field-list))
-            (setq field-list (cons (car order-list) field-list)))
-          (setq order-list (cdr order-list)))))
-
-    ;; call the actual format function
-    (setq format-function
-          (intern (format "bbdb-format-record-layout-%s" layout)))
-    (if (functionp format-function)
-        (funcall format-function layout record field-list)
-      (error "No format function for layout `%s'!" layout))))
+    (when (or (not test)
+	      ;; bind some variables for the test
+	      (let ((name (bbdb-record-name record))
+		    (company (bbdb-record-company record))
+		    (net (bbdb-record-net record))
+		    (phones (bbdb-record-phones record))
+		    (addresses (bbdb-record-addresses record))
+		    (notes (bbdb-record-raw-notes record)))
+		;; this must evaluate to non-nil if the record is to be shown
+		(eval test)))
+      (if (functionp omit-list)
+	  (setq omit-list (funcall omit-list record layout)))
+      (if (functionp order-list)
+	  (setq order-list (funcall order-list record layout)))
+      ;; first omit unwanted fields
+      (when (and omit-list (or (not order-list) (memq t order-list)))
+	(if (not (listp omit-list))
+	    ;; t => show nothing
+	    (setq all-fields nil)
+	  ;; listp => show all fields except those listed here
+	  (while omit-list
+	    (setq all-fields (delete (car omit-list) all-fields)
+		  omit-list (cdr omit-list)))))
+      ;; then order them
+      (if (not order-list)
+	  (setq field-list all-fields)
+	(if (not (memq t order-list))
+	    (setq field-list order-list)
+	  (setq order-list (reverse order-list))
+	  (setq all-fields (delete nil (mapcar (lambda (f)
+						 (if (memq f order-list) 
+						     nil
+						   f))
+					       all-fields)))
+	  (while order-list
+	    (if (eq t (car order-list))
+		(setq field-list (append all-fields field-list))
+	      (setq field-list (cons (car order-list) field-list)))
+	    (setq order-list (cdr order-list)))))
+      ;; call the actual format function
+      (setq format-function
+	    (intern (format "bbdb-format-record-layout-%s" layout)))
+      (if (functionp format-function)
+	  (funcall format-function layout record field-list)
+	(bbdb-format-record-layout-multi-line layout record field-list)))))
 
 (defun bbdb-frob-mode-line (n)
   (setq mode-line-buffer-identification
@@ -1763,8 +1800,7 @@ multi-line layout."
           (setq records (cdr records))))
       (and (not bbdb-gag-messages)
            (not bbdb-silent-running)
-           (message "Formatting...done."))
-      )
+           (message "Formatting...done.")))
     (set-buffer bbdb-buffer-name)
     (if (and append first)
         (let ((cons (assq first bbdb-records))
