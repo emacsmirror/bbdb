@@ -29,7 +29,7 @@
 
 (defun infohack-remove-unsupported ()
   (goto-char (point-min))
-  (while (re-search-forward "@\\(end \\)?\\(ifnottex\\|detailmenu\\)" nil t) 
+  (while (re-search-forward "@\\(end \\)?ifnottex" nil t) 
     (replace-match "")))
 
 (defun infohack (file)
