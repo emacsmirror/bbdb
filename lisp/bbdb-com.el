@@ -341,7 +341,9 @@ The format of legal zip codes is determined by the variable
 `bbdb-legal-zip-codes'.")
 
 (defvar bbdb-legal-zip-codes
-  '(;; Matches 1 to 6 digits.
+  '(;; empty string
+    "^$"
+    ;; Matches 1 to 6 digits.
     "^[ \t\n]*[0-9][0-9]?[0-9]?[0-9]?[0-9]?[0-9]?[ \t\n]*$"
     ;; Matches 5 digits and 3 or 4 digits.
     "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]?\\)[ \t\n]*$"
@@ -2006,7 +2008,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
     (when (and bbdb-complete-name-allow-cycling
                ;; no match or an exact match
                ;; GNU Emacs somehow has a different view on completeness
-               ;; causing trouble with the cycling stuff 
+               ;; causing trouble with the cycling stuff
                (or (null completion) (eq completion t)))
       (let* ((sym (intern-soft pattern ht))
              (rec (car (symbol-value sym)))
