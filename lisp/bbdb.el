@@ -246,13 +246,13 @@ prefix argument to the bbdb-insert-new-field command."
   :type 'boolean)
 
 (defcustom bbdb-electric-p t
-  "*Whether bbdb mode should be `electric' like electric-buffer-list."
+  "*Whether bbdb mode should be `electric' like `electric-buffer-list'."
   :group 'bbdb-record-display
   :type 'boolean)
 
 (defcustom bbdb-case-fold-search (default-value 'case-fold-search)
-  "*This is the value of case-fold-search used by Meta-X bbdb and related
-commands.  This variable lets the case-sensitivity of ^S and of the bbdb
+  "*This is the value of `case-fold-search' used by `bbdb' and friends.
+This variable lets the case-sensitivity of ^S and of the bbdb
 commands be different."
   :group 'bbdb
   :type 'boolean)
@@ -341,7 +341,7 @@ RMAIL, or GNUS.  If 'horiz, stack the window horizontally if there is room."
   :type 'integer)
 
 (defcustom bbdb-completion-type nil
-  "*Controls the behaviour of 'bbdb-complete-name'.  If nil, completion is
+  "*Controls the behaviour of `bbdb-complete-name'.  If nil, completion is
 done across the set of all full-names and user-ids in the bbdb-database;
 if the symbol 'name, completion is done on names only; if the symbol 'net,
 completion is done on network addresses only; if it is 'primary, then
@@ -357,7 +357,7 @@ first address in the list of addresses for a given user).  If it is
 			primary-or-name)))
 
 (defcustom bbdb-completion-display-record t
-  "*Whether bbdb-complete-name (\\<mail-mode-map>\\[bbdb-complete-name] \
+  "*Whether `bbdb-complete-name' (\\<mail-mode-map>\\[bbdb-complete-name] \
 in mail-mode) will update the *BBDB* buffer
 to display the record whose email address has just been inserted."
   :group 'bbdb-record-use
@@ -443,22 +443,22 @@ Invoked with no arguments."
   :type 'hook)
 
 (defcustom bbdb-create-hook 'bbdb-creation-date-hook
-  "*Hook or hooks invoked each time a new bbdb-record is created.  Invoked
+  "*Hook or hooks invoked each time a new BBDB record is created.  Invoked
 with one argument, the new record.  This is called *before* the record is
 added to the database.  Note that `bbdb-change-hook' will be called as well."
   :group 'bbdb-hooks
   :type 'hook)
 
 (defcustom bbdb-change-hook 'bbdb-timestamp-hook
-  "*Hook or hooks invoked each time a bbdb-record is altered.  Invoked with
+  "*Hook or hooks invoked each time a BBDB record is altered.  Invoked with
 one argument, the record.  This is called *before* the bbdb-database buffer
 is modified.  Note that if a new bbdb record is created, both this hook and
-bbdb-create-hook will be called."
+`bbdb-create-hook' will be called."
   :group 'bbdb-hooks
   :type 'hook)
 
 (defcustom bbdb-after-change-hook nil
-  "*Hook or hooks invoked each time a bbdb-record is altered.  Invoked with
+  "*Hook or hooks invoked each time a BBDB record is altered.  Invoked with
 one argument, the record.  This is called *after* the bbdb-database buffer
 is modified, so if you want to modify the record each time it is changed,
 you should use the `bbdb-change-hook' instead.  Note that if a new bbdb
@@ -509,7 +509,7 @@ which is performed before any database access.)"
 		 (const :tag "Don't ignore redundant addresses" nil)))
 
 (defcustom bbdb-notice-hook nil
-  "*Hook or hooks invoked each time a bbdb-record is \"noticed\", that is,
+  "*Hook or hooks invoked each time a BBDB record is \"noticed\", that is,
 each time it is displayed by the news or mail interfaces.  Invoked with
 one argument, the new record.  The record need not have been modified for
 this to be called - use `bbdb-change-hook' for that.  You can use this to,
@@ -604,7 +604,7 @@ Database initialization function `bbdb-initialize' is run."
     (message " ")))
 
 (defun bbdb-invoke-hook (hook arg)
-  "Like invoke-hooks, but invokes the given hook with one argument."
+  "Like `invoke-hooks', but invokes the given hook with one argument."
   (if (and (boundp hook) (setq hook (symbol-value hook)))
       (if (and (consp hook) (not (eq (car hook) 'lambda)))
 	  (while hook
@@ -1219,12 +1219,13 @@ present).  Returns a string containing the date in the new format."
 (defconst bbdb-buffer-name "*BBDB*")
 
 (defcustom bbdb-elided-display nil
-  "*Set this to t if to make the bbdb-display commands default to displaying
-one line per record instead of a full listing.  Set this to a list of some
-of the symbols '(address phone net notes) to select those fields to be left
-out of the listing (you can't leave out the name field).
+  "*Display BBDB records in full or in brief.
+Set this to T to make the `bbdb-display-records' commands default to
+displaying one line per record instead of a full listing.  Set this to a
+list of some of the symbols '(address phone net notes) to select those
+fields to be left out of the listing (you can't leave out the name field).
 
-This is the default state for Meta-x bbdb and friends.  You can have a
+This is the default state for `bbdb' and friends.  You can have a
 different default for when the BBDB buffer is automatically updated by the
 mail and news interfaces by setting the variable `bbdb-pop-up-elided-display'.
 If that variable is unbound, this variable will be consulted instead."
@@ -1234,10 +1235,8 @@ If that variable is unbound, this variable will be consulted instead."
 		 (sexp :tag "Display only specific fields"
 		       :value (address phone net notes))))
 
-(defvar bbdb-pop-up-elided-display) ; default unbound.
-(put 'bbdb-pop-up-elided-display
-     'variable-documentation
-     "*Set this to t if to make the pop-up BBDB buffer default to displaying
+(defvar bbdb-pop-up-elided-display nil
+  "*Set this to t if to make the pop-up BBDB buffer default to displaying
 one line per record instead of a full listing.  Set this to a list of some
 of the symbols '(address phone net notes) to select those fields to be left
 out of the listing (you can't leave out the name field).
@@ -1245,9 +1244,9 @@ out of the listing (you can't leave out the name field).
 The default state for Meta-x bbdb and friends is controlled by the variable
 `bbdb-elided-display'; this variable (`bbdb-pop-up-elided-display') is the
 default for when the BBDB buffer is automatically updated by the mail and
-news interfaces.  If bbdb-pop-up-elided-display is unbound, then
-bbdb-elided-display will be consulted instead by mail and news.")
-
+news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
+`bbdb-elided-display' will be consulted instead by mail and news.")
+(makunbound 'bbdb-pop-up-elided-display) ; default unbound.
 
 (defmacro bbdb-pop-up-elided-display ()
   '(if (boundp 'bbdb-pop-up-elided-display)
@@ -1385,7 +1384,7 @@ bbdb-elided-display will be consulted instead by mail and news.")
   nil)
 
 (defun bbdb-electric-throw-to-execute (form-to-execute)
-  "Exit the electric-command-loop, and evaluate the given form once we're out."
+  "Exit the `electric-command-loop' and evaluate the given form."
   ;; Hack alert!  These variables are bound only within the scope of
   ;; bbdb-electric-display-records!
   (if (not (boundp 'bbdb-electric-execute-me))
@@ -1593,6 +1592,9 @@ while the .bbdb buffer is selected."
 (defvar inside-bbdb-records nil
   "Internal variable.  Do not touch.")
 
+(defvar bbdb-write-file-hooks '(bbdb-write-file-hook-fn)
+  "*The list of functions added to `local-write-file-hooks' in `bbdb-file'.")
+
 (defun bbdb-records (&optional dont-check-disk already-in-db-buffer)
   "Return a list of all bbdb records; read in and parse the db if necessary.
 This also notices if the disk file has changed out from under us, unless
@@ -1645,10 +1647,8 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 	  (set (make-local-variable 'bbdb-propnames) nil)
 	  (set (make-local-variable 'revert-buffer-function)
 	       'bbdb-revert-buffer)
-	  (make-local-variable 'write-file-hooks)
-	  (setq write-file-hooks
-		(append write-file-hooks '(bbdb-write-file-hook-fn))
-		bbdb-hashtable (make-vector 1021 0)))
+          (mapc (lambda (ff) (bbdb-add-hook 'local-write-file-hooks (car ff)))
+                bbdb-write-file-hooks))
 	(setq bbdb-modified-p (buffer-modified-p)
 	      buffer-read-only bbdb-readonly-p)
 	(or bbdb-records
@@ -1842,13 +1842,13 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 )
 
 (defmacro bbdb-user-mail-names ()
-  "Returns a regexp matching the address of the logged-in user"
+  "Returns a regexp matching the address of the logged-in user."
   '(or bbdb-user-mail-names
     (setq bbdb-user-mail-names
      (concat "\\b" (regexp-quote (user-login-name)) "\\b"))))
 
 (defun bbdb-write-file-hook-fn ()
-  "Added to write-file-hooks locally to the bbdb-file buffer."
+  "This is just for `bbdb-write-file-hooks'.  Keep it there."
   ;; this is premature as the file isn't actually written yet; but it's just
   ;; for the benefit of the mode-line of the *BBDB* buffer, and there isn't
   ;; an after-write-file-hook, so it'll do.
@@ -2194,7 +2194,7 @@ The keybindings, more precisely:
 ;;; these should be in bbdb-com.el but they're so simple, why load it all.
 
 (defun bbdb-next-record (p)
-  "Move the cursor to the first line of the next bbdb-record."
+  "Move the cursor to the first line of the next BBDB record."
   (interactive "p")
   (if (< p 0)
       (bbdb-prev-record (- p))
@@ -2207,7 +2207,7 @@ The keybindings, more precisely:
     (beginning-of-line)))
 
 (defun bbdb-prev-record (p)
-  "Move the cursor to the first line of the previous bbdb-record."
+  "Move the cursor to the first line of the previous BBDB record."
   (interactive "p")
   (if (< p 0)
       (bbdb-next-record (- p))
@@ -2261,7 +2261,7 @@ The keybindings, more precisely:
       (bbdb-save-db (eq bbdb-offer-save t))))
 
 (defcustom bbdb-save-db-timeout nil
-  "*If non-nil, then when bbdb-save-db is asking you whether to save the db,
+  "*If non-nil, then when `bbdb-save-db' is asking you whether to save the db,
 it will time out to `yes' after this many seconds.  This only works if the
 function `y-or-n-p-with-timeout' is defined."
   :group 'bbdb-save
@@ -2269,7 +2269,7 @@ function `y-or-n-p-with-timeout' is defined."
 		 (integer :tag "Time out after this many seconds" 5)))
 
 (defun bbdb-save-db (&optional prompt-first mention-if-not-saved)
-  "save the db if it is modified."
+  "Save the DB if it is modified."
   (interactive (list nil t))
   (bbdb-with-db-buffer
     (if (and (buffer-modified-p)
@@ -2350,8 +2350,8 @@ function, it is changed to a list of functions."
 ;;; message-caching, to speed up the the mail interfaces
 
 (defvar bbdb-buffers-with-message-caches '()
-  "A list of all the buffers which have stuff on their bbdb-message-cache
-local variable.  When we re-parse the .bbdb file, we need to flush all of
+  "A list of all the buffers which have stuff on their `bbdb-message-cache'
+local variable.  When we re-parse the `bbdb-file', we need to flush all of
 these caches.")
 
 (defun notice-buffer-with-cache (buffer)
