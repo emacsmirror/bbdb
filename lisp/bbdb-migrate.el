@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.19  2002/08/19 22:49:12  waider
+;; Jim Blandy's fix for migrating notes.
+;;
 ;; Revision 1.18  2002/05/12 22:17:03  waider
 ;; Dave Love's big patch. See ChangeLog for full details.
 ;;
@@ -306,11 +309,12 @@ This uses the code that used to be in bbdb-parse-zip-string."
 Formats are changed in timestamp and creation-date fields from
 \"dd mmm yy\" to \"yyyy-mm-dd\".  Assumes the notes are passed in as an
 argument."
-  (bbdb-mapc (lambda (rr)
-	       (when (memq (car rr) '(creation-date timestamp))
-		 (bbdb-migrate-change-dates-change-field rr)))
-	     rec)
-  rec)
+  (unless (stringp rec)
+    (bbdb-mapc (lambda (rr)
+                 (when (memq (car rr) '(creation-date timestamp))
+                   (bbdb-migrate-change-dates-change-field rr)))
+               rec)
+    rec))
 
 (defun bbdb-migrate-change-dates-change-field (field)
   "Migrate the date field (the cdr of FIELD) from \"dd mmm yy\" to
@@ -375,11 +379,12 @@ argument."
 Formats are changed in timestamp and creation-date fields from
 \"yyyy-mm-dd\" to \"dd mmm yy\".  Assumes the notes list is passed in
 as an argument."
-  (bbdb-mapc (lambda (rr)
-	       (when (memq (car rr) '(creation-date timestamp))
-		 (bbdb-unmigrate-change-dates-change-field rr)))
-	     rec)
-  rec)
+  (unless (stringp rec)
+    (bbdb-mapc (lambda (rr)
+                 (when (memq (car rr) '(creation-date timestamp))
+                   (bbdb-unmigrate-change-dates-change-field rr)))
+               rec)
+    rec))
 
 (defun bbdb-unmigrate-change-dates-change-field (field)
   "Unmigrate the date field (the cdr of FIELD) from \"yyyy-mm-dd\" to
