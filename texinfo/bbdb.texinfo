@@ -8,6 +8,10 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.29  2000/08/18 13:34:26  fenk
+@c * texinfo/bbdb.texinfo (VM Features): Documentation of new VM
+@c 	features.
+@c
 @c Revision 1.28  2000/08/10 19:12:03  fenk
 @c Documentation of new features (somehow incomplete by now).
 @c
@@ -1886,13 +1890,17 @@ Default: 18.  The number of characters used to display @samp{From:} info in
 @subsection VM-specific features
 
 The @b{BBDB} can be used to integrate database information into the
-message summary.
+message summary.  
 
 @menu
 * VM Message Summary::                  @b{BBDB} information in message summary
+* VM what records are displayed::
+* VM automatic setup of `vm-set-auto-folder-alist'::
+* VM snarfing all email addresses::
+* VM automatic adding of labels::
 @end menu
 
-@node VM Message Summary,  , VM Features, VM Features
+@node VM Message Summary, VM what records are displayed, VM Features, VM Features
 @subsubsection VM Message Summary Enhancements
 
 @vindex vm-summary-format
@@ -1900,13 +1908,88 @@ message summary.
 @cindex %F
 @cindex %UB
 VM users can cause their summary buffer to display the name of the
-message sender according to BBDB data, instead of according to the
+message sender according to @b{BBDB} data, instead of according to the
 contents of the current message's headers.  In VM 5.40 or later, use
 the summary format control @code{%UB"} instead of @code{"%F"}, and the
 current record name will be shown there if available.  If no entry is
 found it behaves like @code{"%F"}.  See the documentation for
 @code{vm-summary-format} for more details.  Warning, this may
 significantly slow down summary generation for large folders.
+
+@node VM what records are displayed, VM automatic setup of @code{vm-set-auto-folder-alist}, VM Message Summary, VM Features
+@subsubsection VM configuration of what records the @b{BBDB} buffer shows
+
+@vindex bbdb/vm-get-from-headers
+@vindex bbdb/vm-get-only-first-from-p
+@vindex vm-summary-uninteresting-senders
+
+VM users can cause their @b{BBDB} buffer to display not only the sender of a
+message but also all recipients listed in the headers.
+
+The headers which are searched for email addresses can be customized by
+the variable @code{bbdb/vm-get-from-headers}.  Email addresses which
+match @code{vm-summary-uninteresting-senders} are ignored. 
+
+The records in the @b{BBDB} buffer are listed in the same order as found.
+By setting  @code{bbdb/vm-get-only-first-from-p} to @code{t} one will
+get just the first address. If set to @code{nil} one will get records
+for all addresses. 
+
+@node VM automatic setup of @code{vm-set-auto-folder-alist}, VM snarfing all email addresses, VM what records are displayed, VM Features
+@subsubsection VM automatic setup of @code{vm-set-auto-folder-alist}
+
+@vindex bbdb/vm-set-auto-folder-alist-field
+VM users can setup the @code{vm-set-auto-folder-alist} automatically by
+calling @code{bbdb/vm-set-auto-folder-alist}.  This adds for each @b{BBDB}
+record containing a @code{bbdb/vm-set-auto-folder-alist-field} an entry
+to @code{vm-set-auto-folder-alist}.
+
+The record field can contain a string which is used as folder name or
+if it starts with a @code{'} it is treated as lisp expression returning
+a folder name.
+
+@node VM snarfing all email addresses, VM automatic adding of labels, VM automatic setup of @code{vm-set-auto-folder-alist}, VM Features
+@subsubsection VM snarfing all email addresses 
+
+@vindex bbdb/vm-snarf-all-headers
+@findex bbdb/vm-snarf-all
+
+By calling @code{bbdb/vm-snarf-all} all the headers
+listed in @code{bbdb/vm-snarf-all-headers} searched for email addresses
+and the corresponding BBDB records are added resp. updated.
+
+@node VM automatic adding of labels, , VM snarfing all email addresses, VM Features
+@subsubsection VM automatic adding of labels 
+
+@vindex bbdb/vm-auto-add-label-list
+@vindex bbdb/vm-auto-add-label-field
+@findex bbdb/vm-auto-add-label
+
+@code{bbdb/vm-auto-add-label-list} is a 
+List used by @code{bbdb/vm-auto-add-label} to automatically label messages.
+Each element in the list is either a string or a list of two strings.
+If a single string then it is used as both the field value to check for
+and the label to apply to the message.  If a list of two strings, the first
+is the field value to search for and the second is the label to apply.
+
+@code{bbdb/vm-auto-add-label-field bbdb-define-all-aliases-field} is the
+field used by @code{bbdb/vm-auto-add-label} to automatically label messages.
+Value is either a single symbol or a list of symbols of bbdb fields that
+@code{bbdb/vm-auto-add-label} uses to check for labels to apply to messages.
+Defaults to @code{bbdb-define-all-aliases-field} which is typically
+@code{mail-alias}. 
+
+@code{bbdb/vm-auto-add-label} automatically adds labels to messages
+based on the @code{bbdb/vm-auto-add-label-field
+bbdb-define-all-aliases-field} field.  Add this to
+@code{bbdb-notice-hook} and if using VM each message that bbdb notices
+will be checked.  If the sender has a value in the
+@code{bbdb/vm-auto-add-label-field} in their BBDB record that matches a
+value in @code{bbdb/vm-auto-add-label-list} then a VM label will be
+added to the message.
+
+This works great when `bbdb-user-mail-names' is set.  As a result mail
+that you send to people (and copy yourself on) is labeled as well.
 
 @node Other Packages, Options, Reader-specific Features, Top
 @section Using the @b{BBDB} with other packages
