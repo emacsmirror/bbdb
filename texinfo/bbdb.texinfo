@@ -533,54 +533,54 @@ available for you:
 This option sets the root of the XEmacs package directory.  By default,
 @file{/usr/local/lib/xemacs/site-packages} is used.
 @item @code{--with-symlinks}
-If this option is used, the @file{lisp} and @file{info} directories will
-be installed as links to the source ones.  Otherwise, they will be
-copied to the appropriate place.
+If this option is used, the installation will be done by making symbolic
+links to the sources instead of copying the files.
 @item @code{--with-linkpath=PATH}
-Without this variable, the @file{lisp} and @file{info} directories will
-be linked in with the output of @code{pwd} as the source directory.  If
-something else should be used as the source directory, you should pass
-the 'something else' to @code{--with-linkpath}.  If, for example,
-@code{pwd} returns @file{/p/local/elisp/bbdb}, the @file{lisp},
-@file{info} and @file{etc} (which will include the files distributed in
-@file{tex} and @file{utils}) directories will be linked in from
-@file{/p/local/elisp/bbdb/@{lisp,info,etc@}}.  If, however, you prefer
-that they be linked in from @file{/usr/local/elisp/bbdb/...}, say
+Without this option, the installation process uses the output of
+@code{pwd} to determine the current directory.  If something else should
+be used, you should provide an alternate name for the BBDB toplevel
+directory by using @code{--with-linkpath}.  If, for example, @code{pwd}
+returns @file{/p/local/elisp/bbdb}, but you prefer to use
+@file{/usr/local/elisp/bbdb/...} for the links, usr this:
 @code{configure --with-linkpath=/usr/local/elisp/bbdb}.  This option is
 ignored if @code{--with-symlinks} is not used.
 @end table
 
-To perform the installation, use the command @code{make install-pkg}.
+To perform the (un)installation, use the command @code{make (un)install-pkg}.
 This will compile the @file{lisp/auto-autoloads.el} file and will
-install the source and documentation files at the appropriate places.
-The final installation tree will take the following form:
+install the appropriate files to the appropriate places.  The final
+installation tree will take the following form:
 
 @table @code
- @item $PACKAGEROOT/
+ @item $(PACKAGEDIR)/
  @table @code
+  @item lisp/
+  @table @code
+   @item bbdb/
+   @i{@b{BBDB} lisp source files.  This directory contains a copy of all
+@code{.el} and @code{.elc} files from the @file{lisp} source directory,
+or is a symbolic link to it.}
+  @end table
+  @item info/
+  @table @code
+   @item bbdb.info*
+   @i{@b{BBDB} documentation files.  These are either copies of the info
+files from the @file{texinfo} source directory, or are symbolic links to
+them.}
+  @end table
   @item etc/
   @table @code
    @item bbdb/
    @table @code
     @item tex/
-    @i{support files for bbdb-print, copied from the @file{tex} directory
-    in the source distribution}
+    @i{@b{BBDB} support files for bbdb-print.  This directory contains a
+copy of the appropriate files from the @file{tex} source directory, or
+is a symbolic link to it.}
     @item utils/
-    @i{miscellaneous utilities, copied from the @file{utils} directory in
-    the source distribution}
+    @i{@b{BBDB} miscellaneous utilities.  This directory contains a copy
+of the appropriate files from the @file{utils} source directory, or is a
+symbolic link to it.}
    @end table
-  @end table
-  @item info/
-  @table @code
-   @item bbdb/
-   @i{@b{BBDB} documentation files, copied from the @file{info} directory
-   in the source distribution}
-  @end table
-  @item lisp/
-  @table @code
-   @item bbdb/
-   @i{@b{BBDB} lisp source files, copied from the @file{lisp} directory
-   in the source distribution}
   @end table
  @end table
 @end table

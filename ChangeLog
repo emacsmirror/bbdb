@@ -1,3 +1,35 @@
+2001-02-02  Didier Verna  <didier@xemacs.org>
+
+	* Makefile.in (SUBDIRS): new variable.
+	* Makefile.in (install-pkg): split in subdirs.
+	* Makefile.in (uninstall-pkg): new target.
+	* Makefile.in (local-clean): new target.
+	* Makefile.in (clean): depend on it.
+	* Makefile.in (local-distclean): new target.
+	* Makefile.in (distclean): depend on it, split in subdirs.
+	* Makefile.in (local-cvsclean): new target.
+	* Makefile.in (cvsclean): depend on it, split in dubdirs.
+	* configure.in: generate tex/Makefile and utils/Makefile.
+	* lisp/Makefile.in (INSTALL): new autoconf variable.
+	* lisp/Makefile.in (INSTALL_DATA): ditto.
+	* lisp/Makefile.in (LN_S): ditto.
+	* lisp/Makefile.in (PACKAGEDIR): ditto.
+	* lisp/Makefile.in (LINKPATH): ditto.
+	* lisp/Makefile.in (install-pkg): split from ../Makefile.in
+	* lisp/Makefile.in (uninstall-pkg): new target.
+	* texinfo/Makefile.in (INSTALL): new autoconf variable.
+	* texinfo/Makefile.in (INSTALL_DATA): ditto.
+	* texinfo/Makefile.in (LN_S): ditto.
+	* texinfo/Makefile.in (PACKAGEDIR): ditto.
+	* texinfo/Makefile.in (LINKPATH): ditto.
+	* texinfo/Makefile.in (install-pkg): split from ../Makefile.in
+	* texinfo/Makefile.in (uninstall-pkg): new target.
+	* texinfo/bbdb.texinfo (XEmacs Package): update documentation.
+	* tex/Makefile.in: new file.
+	* tex/.cvsignore: new file.
+	* utils/Makefile.in: new file.
+	* utils/.cvsignore: new file.
+
 2001-02-01  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-com.el (bbdb-mail-abbrev-expand-hook): honor the

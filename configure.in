@@ -81,4 +81,4 @@ AC_ARG_WITH([linkpath],
   [  --with-linkpath=PATH     path to symlink from if \`pwd' does not work],
   [ LINKPATH="${withval}" ])
 
-AC_OUTPUT(Makefile lisp/Makefile texinfo/Makefile)
+AC_OUTPUT(Makefile lisp/Makefile texinfo/Makefile tex/Makefile utils/Makefile)

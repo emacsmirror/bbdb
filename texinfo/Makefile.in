@@ -1,8 +1,39 @@
 @SET_MAKE@
 
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_DATA = @INSTALL_DATA@
+
+LN_S = @LN_S@
+
 MAKEINFO = @MAKEINFO@
 
+PACKAGEDIR = @PACKAGEDIR@
+SYMLINKS = @SYMLINKS@
+LINKPATH = @LINKPATH@
+
 all: info bbdb.dvi
+
+install-pkg: uninstall-pkg info
+	@if test "x$(SYMLINKS)" = "xno" ; then                         \
+          for i in `ls bbdb.info* ` ; do                               \
+            $(INSTALL_DATA) $$i $(PACKAGEDIR)/info/ ;                  \
+          done ;                                                       \
+        else                                                           \
+          if test "x$(LINKPATH)" = "x" ; then                          \
+            for i in `ls bbdb.info* ` ; do                             \
+              $(LN_S) `pwd`/$$i $(PACKAGEDIR)/info/$$i ;               \
+            done ;                                                     \
+          else                                                         \
+            for i in `ls bbdb.info* ` ; do                             \
+              $(LN_S) $(LINKPATH)/texinfo/$$i $(PACKAGEDIR)/info/$$i ; \
+            done ;                                                     \
+          fi ;                                                         \
+        fi
+
+uninstall-pkg:
+	-$(RM) $(PACKAGEDIR)/info/bbdb.info*
 
 info: bbdb.info
 
@@ -28,14 +59,14 @@ bbdb.pdf: bbdb.texinfo
          fi
 
 clean:
-	$(RM) -f *.aux *.cp *.cps *.dvi *.pdf *.fn *.fns *.ky *.log *.pg \
+	-$(RM) *.aux *.cp *.cps *.dvi *.pdf *.fn *.fns *.ky *.log *.pg \
 	  *.toc *.tp *.vr *.vrs
 
+# Backward compatibility
 reallyclean: distclean
 
 distclean: clean
-	$(RM) -f bbdb.info*
+	-$(RM) bbdb.info*
 
 cvsclean: distclean
-	$(RM) -f Makefile
-
+	-$(RM) Makefile

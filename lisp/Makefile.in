@@ -1,11 +1,22 @@
 @SET_MAKE@
 
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_DATA = @INSTALL_DATA@
+
+LN_S = @LN_S@
+
 EMACS = @EMACS@ -no-site-file -no-init-file
 
 GNUSDIR = @GNUSDIR@
 MHEDIR = @MHEDIR@
 VMDIR = @VMDIR@
 OTHERDIRS = @OTHERDIRS@
+
+PACKAGEDIR = @PACKAGEDIR@
+SYMLINKS = @SYMLINKS@
+LINKPATH = @LINKPATH@
 
 # this is lovely, isn't it?  Surprisingly enough, it seems to work...
 VM	= -eval '(progn (if (not (string-match "$(VMDIR)" ""))            \
@@ -59,6 +70,25 @@ SRCS=		bbdb.el  $(DEPSRCS)
 BINS=		bbdb.elc $(DEPBINS)
 
 all:	rmail gnus vm mhe bbdb info autoloadsc
+
+install-pkg: uninstall-pkg bbdb autoloadsc
+	@if test "x$(SYMLINKS)" = "xno" ; then                 \
+          mkdir -p -m 0755 $(PACKAGEDIR)/lisp/bbdb;            \
+          for i in `ls *.elc` ; do                             \
+            $(INSTALL_DATA) `echo $$i | sed 's/c$$//g'`        \
+                            $(PACKAGEDIR)/lisp/bbdb ;          \
+            $(INSTALL_DATA) $$i $(PACKAGEDIR)/lisp/bbdb ;      \
+          done ;                                               \
+        else                                                   \
+          if test "x$(LINKPATH)" = "x" ; then                  \
+            $(LN_S) `pwd` $(PACKAGEDIR)/lisp/bbdb ;            \
+          else                                                 \
+            $(LN_S) $(LINKPATH)/lisp $(PACKAGEDIR)/lisp/bbdb ; \
+          fi ;                                                 \
+        fi
+
+uninstall-pkg:
+	-$(RM) -r $(PACKAGEDIR)/lisp/bbdb
 
 bbdb-autoloads.el: $(DEPSRCS)
 	@rm -f $@;
@@ -136,10 +166,13 @@ mh-e:	mhe
 
 # Assorted clean-up targets
 clean:
-	$(RM) -f bbdb*.elc
+	-$(RM) bbdb*.elc
 
 distclean: clean
 
+# Backward compatibility
+reallyclean: distclean
+
 cvsclean: distclean
-	$(RM) -f bbdb-autoloads.el  # Generated file
-	$(RM) -f Makefile
+	-$(RM) bbdb-autoloads.el  # Generated file
+	-$(RM) Makefile
