@@ -3153,8 +3153,10 @@ before the record is created, otherwise it is created without confirmation
         (if (or (null name) (and (stringp name) (string= "" name)))
             (if (string-match "^[^@]+" net)
                 (setq name (bbdb-clean-username (match-string 0 net)))))
-        (setq record (if (or (null
-                              (bbdb-invoke-hook-for-value prompt-to-create-p))
+        (setq record (if (or (if prompt-to-create-p
+                                 (null
+                                  (bbdb-invoke-hook-for-value
+                                   prompt-to-create-p)))
                              (bbdb-y-or-n-p
                               (format "%s is not in the db.  Add? "
                                       (or name net))))
