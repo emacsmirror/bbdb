@@ -22,46 +22,6 @@
 ;;
 ;; $Id$
 ;;
-;; $Log$
-;; Revision 1.60  1998/04/11 07:32:59  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back.
-;; Changed prompts for bbdb-phones, bbdb-net, bbdb-company, bbdb-name and
-;; bbdb to make them more intuitive.  Started to remove support for
-;; advertized-bbdb-delete-current-field-or-record.  Fixed error in
-;; comment.
-;;
-;; Revision 1.59  1998/03/13 09:54:22  simmonmt
-;; Colin's fix for properly counting the size of notes fields
-;;
-;; Revision 1.58  1998/03/10 07:35:09  simmonmt
-;; Colin's new refiling code, protecting default-area-code
-;;
-;; Revision 1.57  1998/01/06 04:51:10  simmonmt
-;; Fixed copyright, moved customized finger variables into
-;; utilities-finger group (from finger).  Removed autoloads.
-;;
-;; Revision 1.56  1997/12/01 04:54:52  simmonmt
-;; Added sshteingold@cctrading.com's date-based database-manipulation
-;; functions.  Customized variables.
-;;
-;; Revision 1.55  1997/10/26 04:47:03  simmonmt
-;; Fix name completion bug (original fix by Marco Walther
-;; <Marco.Walther@mch.sni.de>, mangled beyond recognition by Matt Simmons
-;; <simmonmt@acm.org>
-;; Docs for bbdb-finger by Christoph Wedler  <wedler@fmi.uni-passau.de>
-;;
-;; Revision 1.54  1997/10/11 23:53:42  simmonmt
-;; Message-mode fixes from Kees de Bruin <kees_de_bruin@tasking.nl>
-;;
-;; Revision 1.53  1997/10/06 01:03:34  simmonmt
-;; Jamie Zawinski <jwz@netscape.com>'s comment change about the new area
-;; codes that aren't restricted to [012] in the second digit.
-;;
-;; Revision 1.52  1997/09/28 05:57:13  simmonmt
-;; Fixed area code parsing for new US area codes.  Patches integrated:
-;; use of message-mail for sending mail, finger-host record for fingering
-;;
-;;
 
 (require 'bbdb)
 
@@ -430,9 +390,8 @@ name collisions."
 			      (bbdb-error-retry
 				(bbdb-parse-phone-number
 				  (read-string "Phone: "
-					       (condition-case nil
-						   (format "(%03d) " bbdb-default-area-code)
-						 (t nil))))))
+					       (and (integerp bbdb-default-area-code)
+						    (format "(%03d) " bbdb-default-area-code))))))
 			     (phone (apply 'vector str
 					   (if (= 3 (length phonelist))
 					       (nconc phonelist '(0))
@@ -2245,7 +2204,8 @@ in yyyy-mm-dd format."
   "*Set this to the location of the bbdb info file, if it's not in the
 standard place."
   :group 'bbdb
-  :type 'file)
+  :type '(choice (const :tag "Standard location" nil)
+		 (file :tag "New location")))
 
 (defvar Info-directory) ; v18
 ;;;###autoload
