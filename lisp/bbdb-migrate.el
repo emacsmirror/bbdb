@@ -24,6 +24,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.10  2000/06/30 19:12:36  sds
+;; (bbdb-migrate): re-wrote using `mapcar' instead of `append'
+;; this is linear instead of quadratic and avoids much consing
+;;
 ;; Revision 1.9  2000/05/29 22:47:50  waider
 ;; *** empty log message ***
 ;;
@@ -65,7 +69,7 @@
   '((3 . "* Date format for `creation-date' and `timestamp' has changed,
   from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")
     (4 . "* Country field added.")
-	(5 . "* More flexible street address.")))
+    (5 . "* More flexible street address.")))
 
 ;;;###autoload
 (defun bbdb-migration-query (ondisk)
@@ -117,62 +121,40 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
   (cond
    ;; Version 2 -> 3
    ((= (car bbdb-file-format-migration) 2)
-    (let (newrecs currec)
-      (while records
-	(setq newrecs (append newrecs
-			      (list (bbdb-migrate-record
-				     (car records)
-				     '((bbdb-record-raw-notes
-					bbdb-record-set-raw-notes
-					bbdb-migrate-change-dates)))))
-	      records (cdr records)))
-      newrecs))
+    (mapcar (lambda (rec)
+              (bbdb-migrate-record
+               rec
+               '((bbdb-record-raw-notes
+                  bbdb-record-set-raw-notes
+                  bbdb-migrate-change-dates))))
+            records))
    ;; Version 3 -> 4
    ((= (car bbdb-file-format-migration) 3)
-    (let (newrecs)
-      (while records
-	;; (car records) is the current record.  Take its address-list,
-	;; ie. the 5th field, and add the empty string to each address.
-	;; This is the new country field.
-	(let ((old-addr-list (aref (car records) 5))
-	      (new-addr-list))
-	  (while old-addr-list
-	    (let* ((old-addr (car old-addr-list))
-			   (new-addr))
-	      (setq old-addr-list (cdr old-addr-list))
-	      (setq new-addr (vconcat old-addr [""])) ;; add country field
-	      (setq new-addr-list (append new-addr-list (list new-addr)))))
-	  (aset (car records) 5 new-addr-list))
-	(setq newrecs (append newrecs 
-						  (list (car records)))
-	      records (cdr records)))
-      newrecs))
+    (mapcar (lambda (rec)
+              ;; Take the address-list, ie. the 5th field, and add the empty
+              ;; string to each address.  This is the new country field.
+              (aset rec 5 (mapcar (lambda (addr) (vconcat addr [""]))
+                                  (aref rec 5)))
+              rec)
+            records))
    ;; Version 4 -> 5
    ((= (car bbdb-file-format-migration) 4)
-    (let (newrecs)
-      (while records
-		;;; Do address changes
-		(let ((old-addr-list (aref (car records) 5))
-			  (new-addr-list))
-		  (while old-addr-list
-			(let* ((old-addr (car old-addr-list))
-				   (new-addr))
-			  (setq old-addr-list (cdr old-addr-list))
-			  (setq new-addr (vector (aref old-addr 0) ;; tag
-				 (delete ""       ;; nuke empties
-						 (list (bbdb-string-trim (aref old-addr 1)) ;; street1
-							   (bbdb-string-trim (aref old-addr 2)) ;; street2
-							   (bbdb-string-trim (aref old-addr 3))));;street3
-						 (aref old-addr 4) ;; city
-						 (aref old-addr 5) ;; state
-						 (aref old-addr 6) ;; zip
-						 (aref old-addr 7))) ;; country
-			  (setq new-addr-list (append new-addr-list (list new-addr)))))
-		  (aset (car records) 5 new-addr-list))
-		(setq newrecs (append newrecs 
-							  (list (car records)))
-			  records (cdr records)))
-	  newrecs))
+    (mapcar (lambda (rec)
+              ;; Do address changes
+              (aset rec 5 (mapcar
+                           (lambda (addr)
+                             (vector (aref addr 0) ; tag
+                                     (delete "" ; nuke empties
+                                             (list (aref addr 1) ; street1
+                                                   (aref addr 2) ; street2
+                                                   (aref addr 3)));street3
+                                     (aref addr 4) ; city
+                                     (aref addr 5) ; state
+                                     (aref addr 6) ; zip
+                                     (aref addr 7))) ; country
+                           (aref rec 5)))
+              rec)
+            records))
 
    ;; Unknown Version
    (t (error (format "BBDB Cannot migrate from unknown version %d"
@@ -314,7 +296,7 @@ argument."
 						   timezone-months-assoc))))
 			   (aref parsed 2) (aref parsed 0)))
 	       (t ["0" "0" "0" "0" nil])))
-    
+
     ;; I like numbers
     (and (stringp (aref parsed 0))
 	 (aset parsed 0 (string-to-int (aref parsed 0))))
@@ -322,7 +304,7 @@ argument."
 	 (aset parsed 1 (string-to-int (aref parsed 1))))
     (and (stringp (aref parsed 2))
 	 (aset parsed 2 (string-to-int (aref parsed 2))))
-    
+
     ;; Sanity check
     (cond ((and (< 0 (aref parsed 0))
 		(< 0 (aref parsed 1)) (>= 12 (aref parsed 1))
@@ -358,7 +340,7 @@ as an argument."
 
 ;;;###autoload
 (defun bbdb-migrate-rewrite-all (message-p &optional records)
-  "Rewrite each and every record in the bbdb file; this is necessary if we 
+  "Rewrite each and every record in the bbdb file; this is necessary if we
 are updating an old file format.  MESSAGE-P says whether to sound off
 for each record converted.  If RECORDS is non-nil, its value will be
 used as the list of records to update."
