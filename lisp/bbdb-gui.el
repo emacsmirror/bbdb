@@ -29,17 +29,24 @@
 ;; compiler whinage. Some of this is legacy stuff that would probably
 ;; be better deleted.
 (defvar scrollbar-height nil)
-(eval-when-compile
-  (or (fboundp 'set-specifier)
-      (fset 'set-specifier 'ignore))
-  (or (fboundp 'make-glyph)
-      (fset 'make-glyph 'ignore))
-  (or (fboundp 'set-glyph-face)
-      (fset 'set-glyph-face 'ignore))
-  (or (fboundp 'highlight-headers-x-face)
-      (fset 'highlight-headers-x-face 'ignore))
-  (or (fboundp 'highlight-headers-x-face-to-pixmap)
-      (fset 'highlight-headers-x-face-to-pixmap 'ignore)))
+
+;; MIGRATE XXX
+(eval-and-compile
+  (if (fboundp 'set-specifier)
+      (fset 'bbdb-set-specifier 'set-specifier)
+    (fset 'bbdb-set-specifier 'ignore))
+  (if (fboundp 'make-glyph)
+      (fset 'bbdb-make-glyph 'make-glyph)
+    (fset 'bbdb-make-glyph 'ignore))
+  (if (fboundp 'set-glyph-face)
+      (fset 'bbdb-set-glyph-face 'set-glyph-face)
+    (fset 'bbdb-set-glyph-face 'ignore))
+  (if (fboundp 'highlight-headers-x-face)
+      (fset 'bbdb-highlight-headers-x-face 'highlight-headers-x-face)
+    (fset 'bbdb-highlight-headers-x-face 'ignore))
+  (if (fboundp 'highlight-headers-x-face-to-pixmap)
+      (fset 'bbdb-highlight-headers-x-face-to-pixmap 'highlight-headers-x-face-to-pixmap)
+    (fset 'bbdb-highlight-headers-x-face-to-pixmap 'ignore)))
 
 
 (if (string-match "XEmacs\\|Lucid" emacs-version)
@@ -159,9 +166,8 @@
 (defun bbdb-fontify-buffer ()
   (save-excursion
     (set-buffer bbdb-buffer-name)
-    (if (and (fboundp 'set-specifier)
-             (featurep 'scrollbar))
-        (set-specifier scrollbar-height (cons (current-buffer) 0)))
+    (if (featurep 'scrollbar)
+        (bbdb-set-specifier scrollbar-height (cons (current-buffer) 0)))
     ;; first delete existing extents
     (mapcar (function (lambda(o)
                         (if o  ;; may start with nil
@@ -251,18 +257,18 @@ as of GNU Emacs 20.7"
                 (set-face-foreground 'vm-xface "black"))
               (if (boundp g)
                   (setq g (symbol-value g))
-                (set g (make-glyph
+                (set g (bbdb-make-glyph
                         (list
                          (vector 'xface ':data h)))) ;; XXX use API
                 (setq g (symbol-value g))
-                (set-glyph-face g 'vm-xface))
+                (bbdb-set-glyph-face g 'vm-xface))
               (bbdb-set-extent-property extent 'vm-xface t)
               (bbdb-set-extent-begin-glyph extent g))
           (error nil))) ;; looks like you don't have xface support, d00d
 
        ;; requires lemacs 19.10 version of highlight-headers.el
        ((fboundp 'highlight-headers-x-face)                     ; the 19.10 way
-        (highlight-headers-x-face (car face) extent)
+        (bbdb-highlight-headers-x-face (car face) extent)
         (let ((b (bbdb-extent-property extent 'begin-glyph)))
           (cond (b ; I'd like this to be an end-glyph instead
                  (bbdb-set-extent-property extent 'begin-glyph nil)
@@ -276,7 +282,7 @@ as of GNU Emacs 20.7"
           (insert (car face))
           (bbdb-set-extent-begin-glyph extent nil)
           (bbdb-set-extent-end-glyph extent
-                                (highlight-headers-x-face-to-pixmap
+                                (bbdb-highlight-headers-x-face-to-pixmap
                                  (point-min) (point-max)))
           (erase-buffer))))
 
