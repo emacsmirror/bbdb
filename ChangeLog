@@ -1,3 +1,29 @@
+2000-11-16  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-com.el (bbdb-show-all-recipients): simplified the
+	function and added missing headers
+
+	* lisp/bbdb-hooks.el (bbdb-extract-field-value): added
+	(case-fold-search t) as headers should be checked case insensitive
+
+	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
+	added recognition of true names form addresses like
+	Robert.Fenk@gmx.de, in order to avoid creation of duplicate
+	records.
+
+	* lisp/bbdb-vm.el (bbdb/vm-update-records): Uses display-message
+	for progress report and honor bbdb-silent-running.
+	(bbdb/vm-snarf-all): removed faulty "second" call of
+	bbdb-update-records 
+
+	* lisp/bbdb.el ((fboundp 'display-message)): added macro for
+	display-message (for GNU Emacs) used for progress reports in
+	bbdb-vm.el 
+	(bbdb-format-record): fixed display for elided display 
+
+	* lisp/bbdb-xemacs.el (bbdb-fontify-buffer): Fixed fontification
+	for elided display. 
+
 2000-11-06  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-vm.el: Respect value of bbdb-use-pop-up.
