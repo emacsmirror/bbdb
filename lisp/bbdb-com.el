@@ -968,10 +968,10 @@ the current line (this is only meaningful in the \"*BBDB*\" buffer.)   If the
 cursor is in the middle of a multi-line field, such as an address or comments
 section, then the entire field is edited, not just the current line."
   (interactive)
-  ;; when at the end of the line take care of it 
+  ;; when at the end of the line take care of it
   (if (and (eolp) (not (bobp)) (not (bbdb-current-field t)))
       (backward-char 1))
-  
+
   (let* ((record (bbdb-current-record t))
          (field (bbdb-current-field t))
          need-to-sort)
@@ -981,7 +981,9 @@ section, then the entire field is edited, not just the current line."
     (bbdb-change-record record need-to-sort)
     (bbdb-redisplay-one-record record)
     ;; (bbdb-offer-save)
-    (if (and (eq 'property (car field)) (eq 'mail-alias (caadr field)))
+    (if (and (eq 'property (car field))
+             (or (eq 'mail-alias (caadr field))
+                 (eq 'net (caadr field))))
         (setq bbdb-define-all-aliases-needs-rebuilt 'edit))
     ))
 
@@ -1206,10 +1208,11 @@ function in `bbdb-address-editing-function'."
       (if bbdb-no-duplicates-p
           (let ((rest newnets))
             (while rest
-              (let ((old (bbdb-gethash (downcase (car rest)))))
-                (if (and old (not (eq old bbdb-record)))
+              (let ((old (delete bbdb-record (bbdb-gethash (downcase (car rest))))))
+                (if old
                     (error "net address \"%s\" is used by \"%s\""
-                           (car rest) (bbdb-record-name old))))
+                           (car rest) (mapconcat (lambda (r) (bbdb-record-name r))
+                                                 old ", "))))
               (setq rest (cdr rest)))))
       ;; then update.
       (let ((rest oldnets))
@@ -2594,11 +2597,11 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
   "*The type of alias which are created.
 first: Default is to generate an abbrev which is \"alias\" and expands to the
        primary net.
-star:  Generate an extra alias \"<alias>*\" whic expands to all nets of an
+star:  Generate an extra alias \"<alias>*\" which expands to all nets of an
        record.
-all:   Generate an alias as for all nets ('star) and an alias for each net
-        as \"<alias>n\" where n is the position of the net in the nets of the
-        record."
+all:   Generate an alias all nets (as for 'star) and an alias for each net
+       as \"<alias>n\" where n is the position of the net in the nets of the
+       record."
   :group 'bbdb
   :type '(choice (symbol :tag "Only first" first)
                  (symbol :tag "<alias>* for all nets" star)
@@ -2718,6 +2721,7 @@ of all of those people."
           ;; these to records, which is plenty fast.
           (fset alias (list 'lambda '()
                             (list 'bbdb-mail-abbrev-expand-hook
+                                  alias
                                   (list 'quote
                                         (mapcar (lambda (x)
                                                   (car (bbdb-record-net x)))
@@ -2739,7 +2743,14 @@ of all of those people."
       (setq bbdb-define-all-aliases-needs-rebuilt nil)
       (bbdb-define-all-aliases))))
 
-(defun bbdb-mail-abbrev-expand-hook (records)
+(defcustom bbdb-mail-abbrev-expand-hook nil
+  "*Hook or hooks invoked each time an alias is expanded.
+The hook is called with two arguments the alias and the list of records."
+  :group 'bbdb-hooks
+  :type 'hook)
+
+(defun bbdb-mail-abbrev-expand-hook (alias records)
+  (run-hook-with-args 'bbdb-mail-abbrev-expand-hook alias records)
   (mail-abbrev-expand-hook)
   (when bbdb-completion-display-record
     (if bbdb-use-pop-up
