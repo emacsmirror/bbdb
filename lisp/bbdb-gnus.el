@@ -22,6 +22,12 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.58  1998/02/23 07:07:13  simmonmt
+;; Changed comments for Gnus/GNUS-specific stuff and for stuff that
+;; thought it was specific but is really not.
+;; bbdb/gnus-summary-author-in-bbdb now uses `bbdb-message-marker-field'
+;; as it said it did.  Using add-hook instead of bbdb-add-hook.
+;;
 ;; Revision 1.57  1998/01/06 05:42:11  simmonmt
 ;; Removed autoloads and when statements
 ;;
@@ -39,7 +45,7 @@
 ;; scoring and summary buffer stuff.  Need to do splitting
 ;;
 ;; Revision 1.53  1997/10/11 23:57:24  simmonmt
-;; Created bbdb-insinuate-message to set M-t binding in message-mode so I
+;; Created bbdb-insinuate-message to set M-TAB binding in message-mode so I
 ;; don't have to load gnus first.
 ;;
 ;; Revision 1.52  1997/09/28 06:00:17  simmonmt
@@ -152,11 +158,13 @@ set gnus-optional-headers to 'bbdb/gnus-lines-and-from."
   :type 'integer)
 
 (defcustom bbdb/gnus-summary-mark-known-posters t
-  "*If T, then the GNUS subject list will contain an indication of those 
-messages posted by people who have entries in the Insidious Big
-Brother Database (assuming `gnus-optional-headers' is
-'bbdb/gnus-lines-and-from).  This is a GNUS-specific feature.  It will
-not work for Gnus."
+  "*If t, mark messages created by people with records in the BBDB.
+In GNUS, this marking will take place in the subject list (assuming
+`gnus-optional-headers' contains `bbdb/gnus-lines-and-from').  In Gnus, the
+marking will take place in the Summary buffer if the format code defined by
+`bbdb/gnus-summary-user-format-letter' is used in `gnus-summary-line-format'.
+This variable has no effect on the marking controlled by
+`bbdb/gnus-summary-in-bbdb-format-letter'."
   :group 'bbdb-mua-specific-gnus
   :type '(choice (const :tag "Mark known posters" t)
 		 (const :tag "Do not mark known posters" nil)))
@@ -229,7 +237,7 @@ for `bbdb/gnus-summary-get-author'."
   :type 'character)
 
 (defcustom bbdb-message-marker-field 'mark-char
-  "*The field whose value will be used to mark messages by this user in GNUS."
+  "*The field whose value will be used to mark messages by this user in Gnus."
   :group 'bbdb-mua-specific-gnus
   :type 'symbol)
 
@@ -288,8 +296,8 @@ strings.  In the future this should change."
 	    (t string))))
 
 (defun bbdb/gnus-summary-get-author (header)
-  "Given a GNUS message header, returns the appropriate piece of
-information to identify the author in a GNUS summary line, depending on
+  "Given a Gnus message header, returns the appropriate piece of
+information to identify the author in a Gnus summary line, depending on
 the settings of the various configuration variables.  See the
 documentation for the following variables for more details:
   `bbdb/gnus-summary-mark-known-posters'
@@ -299,8 +307,7 @@ documentation for the following variables for more details:
 This function is meant to be used with the user function defined in
   `bbdb/gnus-summary-user-format-letter'"
   (let* ((from (mail-header-from header))
-	 (data (and (or bbdb/gnus-summary-mark-known-posters
-			bbdb/gnus-summary-show-bbdb-names)
+	 (data (and bbdb/gnus-summary-show-bbdb-names
 		    (condition-case ()
 			(mail-extract-address-components from)
 		      (error nil))))
@@ -333,21 +340,25 @@ This function is meant to be used with the user function defined in
 		" ")
 	    name)))
 
+;; DEBUG: (bbdb/gnus-summary-author-in-bbdb "From: simmonmt@acm.org")
 (defun bbdb/gnus-summary-author-in-bbdb (header)
-  "Given a Gnus message header, returns
-  `bbdb/gnus-summary-known-poster-mark' if the poster is in the BBDB,
-  \" \" otherwise."
+  "Given a Gnus message header, returns a mark if the poster is in the BBDB, \" \" otherwise.  The mark itself is the value of the field indicated by `bbdb-message-marker-field' (`mark-char' by default) if the indicated field is in the poster's record, and `bbdb/gnus-summary-known-poster-mark' otherwise."
   (let* ((from (mail-header-from header))
 	 (data (condition-case ()
 		   (mail-extract-address-components from)
 		 (error nil)))
 	 (name (car data))
-	 (net (cadr data)))
-    (if (and data (bbdb-search-simple name
-		   (if (and net bbdb-canonicalize-net-hook)
-		       (bbdb-canonicalize-address net)
-		     net)))
-	bbdb/gnus-summary-known-poster-mark " ")))
+	 (net (cadr data))
+	 record)
+    (if (and data
+	     (setq record
+		   (bbdb-search-simple
+		    name (if (and net bbdb-canonicalize-net-hook)
+			     (bbdb-canonicalize-address net)
+			   net))))
+	(or (bbdb-record-getprop
+	     record bbdb-message-marker-field)
+	    bbdb/gnus-summary-known-poster-mark) " ")))
 
 ;;
 ;; Scoring
@@ -437,13 +448,13 @@ addresses better than the traditionally static global scorefile."
   "Call this function to hook BBDB into GNUS."
   (setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
   (cond ((boundp 'gnus-Article-prepare-hook) ; 3.14 or lower
-	 (bbdb-add-hook 'gnus-Article-prepare-hook 'bbdb/gnus-update-record)
-	 (bbdb-add-hook 'gnus-Save-newsrc-hook 'bbdb-offer-save)
+	 (add-hook 'gnus-Article-prepare-hook 'bbdb/gnus-update-record)
+	 (add-hook 'gnus-Save-newsrc-hook 'bbdb-offer-save)
 	 (define-key gnus-Subject-mode-map ":" 'bbdb/gnus-show-sender)
 	 (define-key gnus-Subject-mode-map ";" 'bbdb/gnus-edit-notes))
 	(t                                   ; 3.15 or higher
-	 (bbdb-add-hook 'gnus-article-prepare-hook 'bbdb/gnus-update-record)
-	 (bbdb-add-hook 'gnus-save-newsrc-hook 'bbdb-offer-save)
+	 (add-hook 'gnus-article-prepare-hook 'bbdb/gnus-update-record)
+	 (add-hook 'gnus-save-newsrc-hook 'bbdb-offer-save)
 	 (define-key gnus-summary-mode-map ":" 'bbdb/gnus-show-sender)
 	 (define-key gnus-summary-mode-map ";" 'bbdb/gnus-edit-notes)))
 
