@@ -3,7 +3,6 @@
 ;;; This file is part of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1991, 1992 Jamie Zawinski <jwz@netscape.com>.
 ;;; Interface to RMAIL.  See bbdb.texinfo.
-;;; last change  8-sep-92.
 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -18,6 +17,15 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+
+;;
+;; $Id$
+;;
+;; $Log$
+;; Revision 1.52  1997/11/02 07:43:25  simmonmt
+;; bbdb/rmail-annotate-sender now takes REPLACE argument
+;;
+;;
 
 (require 'bbdb)
 (require 'rmail)
@@ -49,15 +57,16 @@ the user confirms the creation."
 	          (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
 		      offer-to-create))))))))))
 
-(defun bbdb/rmail-annotate-sender (string)
+(defun bbdb/rmail-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
-corresponding to the sender of this message."
+corresponding to the sender of this message.  If REPLACE is non-nil,
+replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
 			 (error "The Insidious Big Brother Database is read-only.")
 			 (read-string "Comments: "))))
   (if (and (boundp 'rmail-buffer) rmail-buffer)
       (set-buffer rmail-buffer))
-  (bbdb-annotate-notes (bbdb/rmail-update-record t) string))
+  (bbdb-annotate-notes (bbdb/rmail-update-record t) string 'notes replace))
 
 (defun bbdb/rmail-edit-notes (&optional arg)
   "Edit the notes field or (with a prefix arg) a user-defined field
