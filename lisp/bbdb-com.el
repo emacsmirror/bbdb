@@ -2399,11 +2399,14 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                           (if primary (cons (car recs) match-recs)
                             (append match-recs (list (car recs))))))
                 (setq lst     (cdr lst)
-                      primary nil)))
+                      primary nil))))
 
-            ;; loop to next rec
-            (setq recs    (cdr recs)
-                  matched nil)))
+	  ;; loop to next rec
+	  (setq recs    (cdr recs)
+		matched nil))
+
+	(unless match-recs
+	  (error "only exact matching record unhas net field"))
 
         ;; now replace the text with the expansion
         (delete-region beg end)
