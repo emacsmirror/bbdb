@@ -2015,7 +2015,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
 		 (setq rec (bbdb-search-simple name the-net))
 		 (setq nets (bbdb-record-net rec))
 		 (setq the-net (member the-net nets)))
-	(setq the-net (if (cdr the-net) (cadr nets) (car nets)))
+	(setq the-net (if (cdr the-net) (cadr the-net) (car nets)))
 	(delete-region beg end)
 	(insert (bbdb-dwim-net-address rec the-net))
 	(setq completion 'done)))
