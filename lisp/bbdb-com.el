@@ -1945,6 +1945,7 @@ be a marker for the start of the region being completed."
   "Find the record for a name clicked in a completion buffer.
 Currently only used by XEmacs."
   (let ((buffer (nth 0 user-data))
+        (bbdb-complete-name-allow-cycling nil)
         (beg (nth 1 user-data))
         (end (nth 2 user-data)))
     (bbdb-complete-name-cleanup)
@@ -2875,9 +2876,9 @@ This variable is also used for inter-function communication between the
 functions `bbdb-update-records' and `bbdb-prompt-for-create'."
   :group 'bbdb-mua-specific
   :type '(choice (const :tag "annotating all messages"
-                        'annotating)
+                        annotating)
                  (const :tag "annotating no messages"
-                        'searching)
+                        searching)
                  (sexp   :tag "user defined")))
 
 (defvar bbdb-offer-to-create nil
@@ -2889,18 +2890,23 @@ functions `bbdb-update-records' and `bbdb-prompt-for-create'."
 
 ;;;###autoload
 (defun bbdb-update-records (addrs auto-create-p offer-to-create)
-  "Returns the records corresponding to the current VM message,
+  "Returns the records corresponding to the lis of addresses ADDRS,
 creating or modifying them as necessary.  A record will be created if
-bbdb/mail-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
-the user confirms the creation.
+AUOT-CREATE-P is non-nil or if OFFER-TO-CREATE is true and the user
+confirms the creation.
+
+The variable `bbdb/gnus-update-records-mode' controls what actions 
+are performed and it might override `bbdb-update-records-mode'.
 
 When hitting C-g once you will not be asked anymore for new people listed
 in this message, but it will search only for existing records.  When hitting
 C-g again it will stop scanning."
+  (setq auto-create-p (bbdb-invoke-hook-for-value auto-create-p))
+  
   (let ((bbdb-records (bbdb-records))
         (processed-addresses 0)
-        (bbdb-offer-to-create nil)
-        (bbdb-update-records-mode
+        (bbdb-offer-to-create (or offer-to-create (eq 'promt auto-create-p)))
+        (bbdb-update-records-mode 
          (if offer-to-create 'annotating
            (if (listp bbdb-update-records-mode)
                (eval bbdb-update-records-mode)
@@ -2918,12 +2924,15 @@ C-g again it will stop scanning."
                          (list ;; search might return a list
                           (bbdb-annotate-message-sender
                            bbdb-address t
-                           (or (bbdb-invoke-hook-for-value auto-create-p)
-                               offer-to-create);; force create
+                           (or offer-to-create ;; force create
+                               auto-create-p)
                            'bbdb-prompt-for-create)))
-                        ((eq bbdb-update-records-mode 'searching)
+                         ((eq bbdb-update-records-mode 'searching)
                          ;; search for records having this net
-                         (let ((net (cadr bbdb-address))
+                         (let ((net (concat "^"
+                                            (regexp-quote
+                                             (cadr bbdb-address))
+                                            "$"))
                                ;; there is no case for nets
                                (bbdb-case-fold-search t))
                            (bbdb-search bbdb-records nil nil net))))
@@ -2935,7 +2944,7 @@ C-g again it will stop scanning."
                        (= 0 (% processed-addresses 5)))
                (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed."
                                    bbdb-update-records-mode processed-addresses addrslen)))
-                 (if nil;(featurep 'xemacs)
+                 (if (featurep 'xemacs)
                      (display-message 'progress mess)
                    (message mess)))
                (sit-for 0)))
@@ -3013,8 +3022,7 @@ C-g again it will stop scanning."
 proceed the processing of records."
   (let ((old-offer-to-create bbdb-offer-to-create)
         event prompt)
-    (when (or (bbdb-invoke-hook-for-value bbdb/prompt-for-create-p)
-              bbdb-offer-to-create)
+    (when bbdb-offer-to-create
       (when (not (integerp bbdb-offer-to-create))
         (setq prompt (format "%s is not in the db; add? (y,!,n,s,q,?) "
                              (or (car bbdb-address) (cadr bbdb-address))))
