@@ -33,6 +33,7 @@
 ;;;
 
 (require 'bbdb)
+(require 'bbdb-com) ;; for bbdb-parse-phone-number (and other things?)
 
 (defconst digit "[0-9]")
 (defvar bbdb-snarf-phone-regexp
@@ -50,10 +51,7 @@
    "\\>$")
   "regexp matching zip.")
 
-(defcustom bbdb-snarf-web-prop
-  (if (member (list "www") (bbdb-propnames))
-      'www
-    nil)
+(defcustom bbdb-snarf-web-prop 'www
   "What property bbdb should use for the web, or nil to not detect web URLs."
   :group 'bbdb
   :type 'symbol)
