@@ -354,6 +354,8 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
      (if (null marker) (error "doubleplus ungood: marker unexists!")))
     (beginning-of-line)
     (goto-char marker)
+    (remove-text-properties marker (or (nth 2 next-record-cons) (point-max))
+                            '(bbdb-field nil))
     (if delete-p nil
       (bbdb-format-record (car record-cons) (car (cdr record-cons))))
     (setq next-marker (or (nth 2 next-record-cons) (point-max)))
@@ -712,7 +714,7 @@ NOTES is a string, or an alist associating symbols with strings."
 (defun bbdb-current-field (&optional planning-on-modifying)
   (or (bbdb-current-record planning-on-modifying)
       (error "unperson"))
-  (get-text-property (point) 'bbdb-field))
+  (delete 'field-name (get-text-property (point) 'bbdb-field)))
 
 ;;;###autoload
 (defun bbdb-apply-next-command-to-all-records ()
@@ -1072,6 +1074,45 @@ Country:         country"
       (bbdb-address-set-country addr country))
     nil))
 
+(defun bbdb-address-edit-continental (addr)
+  "Function to use for address editing.
+The sub-fields are queried using the default order and using the
+default names.  Set `bbdb-address-editing-function' to an alternate
+address editing function if you don't like this function.  It is
+mostly used for US style addresses.
+
+The sub-fields and the prompts used are:
+Street, line n:  (nth n street)
+City:            city
+State:           state
+Zip Code:        zip
+Country:         country"
+  (let* ((str (let ((l) (s) (n 0))
+                (while (not (string= "" (setq s (bbdb-read-string
+                                                 (format "Street, line %d: " (+ 1 n))
+                                                 (nth n (bbdb-address-streets addr))))))
+                  (setq l (append l (list s)))
+                  (setq n (1+ n)))
+                l))
+         (zip (bbdb-error-retry
+               (bbdb-parse-zip-string
+                (bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
+         (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
+         (ste "")
+         (country (bbdb-read-string "Country: " (or (bbdb-address-country addr)
+                                                    bbdb-default-country))))
+    (bbdb-address-set-streets addr str)
+    (bbdb-address-set-city addr cty)
+    (bbdb-address-set-state addr ste)
+    (bbdb-address-set-zip addr zip)
+    (if (string= "" (concat cty ste zip country (mapconcat 'identity str "")))
+        ;; user didn't enter anything. this causes a display bug. this
+        ;; is a temporary fix. Ideally, we'd simply discard the entire
+        ;; address entry, but that's going to require bigger hacking.
+        (bbdb-address-set-country addr "Emacs")
+      (bbdb-address-set-country addr country))
+    nil))
+
 (defcustom bbdb-address-editing-function 'bbdb-address-edit-default
   "Function to use for address editing.
 The function must accept a BBDB address as parameter and allow the
@@ -1100,7 +1141,8 @@ function in `bbdb-address-editing-function'."
   (let ((newl (or location
                   (bbdb-read-string "Location: "
                                     (or (bbdb-phone-location phone-number)
-                                        (bbdb-label-completion-default "phones"))
+                                        (bbdb-label-completion-default
+                                         "phones"))
                                     (mapcar (function (lambda(x) (list x)))
                                             (bbdb-label-completion-list
                                              "phones")))))
