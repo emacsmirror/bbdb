@@ -22,13 +22,16 @@
 ;; $Id$
 ;;
 
-(eval-and-compile
+(eval-when-compile
   (require 'bbdb)
   (require 'bbdb-com)
   (require 'rmail)
   ;(require 'rmailsum)   ; not provided, dammit!
-  (defvar rmail-buffer nil)
-  (if (not (fboundp 'rmail-make-summary-line)) (load-library "rmailsum")))
+  (if (not (fboundp 'rmail-make-summary-line))
+      (load-library "rmailsum"))
+  ;; just to avoid a warning 
+  (if (not (boundp 'rmail-buffer))
+      (defvar rmail-buffer nil)))
 
 ;;;###autoload
 (defun bbdb/rmail-update-record (&optional offer-to-create)
