@@ -1,108 +1,145 @@
 # Makefile for the Insidious Big Brother Database.
-# last change 21-may-96. jwz.
+# Original Author: Jamie Zawinski (jwz@netscape.com)
+#
+# $Id$
+#
+# $Log$
+# Revision 1.53  1997/10/06 01:15:13  simmonmt
+# Fixed for new grand reorg.  Rewrote XEmacs package installation code.
+#
+#
+
+# ************************
+# MUA-specific definitions
+# ************************
 
 # If the VM, GNUS, or MH-E source is not in the standard emacs library 
 # (that is, it's not on the load-path by default in a -q emacs) then
 # set these variables to point at them.  You need to do this because
 # otherwise "require" won't work in the batch emacs.
 #
-# If you don't have VM, the "VM=" line *must* be commented out.
-
-VMDIR   	= /p/local/xemacs-20.3/lib/xemacs-20.3-b24/lisp/vm
+# Set the ones you've got, and comment out the rest.
+VMDIR   	= /p/local/xemacs-20.3/lib/xemacs-20.3-b27/lisp/vm
 GNUSDIR 	= /home/simmonmt/gnus/lisp
-MHEDIR 		= /p/local/xemacs-20.3/lib/xemacs-20.3-b24/lisp/mh-e
+MHEDIR 		= /p/local/xemacs-20.3/lib/xemacs-20.3-b27/lisp/mh-e
 
-# use this line for VM versions 5.31 and earlier
-#VM	= -l $(VMDIR)/vm-version.elc -l $(VMDIR)/vm-vars.elc -l $(VMDIR)/vm.elc
+# **************************
+# XEmacs Packagization (sp?)
+# **************************
 
-# use this line for VM versions 5.32 and later
-VM	= -l $(VMDIR)/vm.elc
+# If you're installing this as an XEmacs package, either set the following
+# variable to point to the root of the package directory, or set it on the
+# command line ( 'make PACKAGEROOT=foo' )
+#PACKAGEROOT=
 
-GNUS	= -eval '(setq load-path (cons "$(GNUSDIR)" load-path))' \
-	  -l $(GNUSDIR)/nntp.elc -l $(GNUSDIR)/gnus.elc
-MHE	= -l $(MHEDIR)/mh-e.elc
+# Uncomment this definition if you want the lisp and info files to be linked
+# in (as opposed to being copied)
+#LINKTOPACKAGE=yes
 
-        EMACS = xemacs
+# If you uncommented the above, the lisp and info directories will be linked
+# from this directory to PACKAGEROOT.  For example, lisp will be linked with:
+#
+#   ln -s `pwd`/lisp $(PACKAGEROOT)/bbdb/lisp
+#
+# If `pwd` will not return the correct path, set LINKPATH below to the correct
+# path.
+#LINKPATH=
+
+# *******************************
+# Other important things to check
+# *******************************
+
+        EMACS = xemacs -no-site-file -no-init-file
      MAKEINFO = makeinfo
+
+# Uncomment one of the below
+  SYSVINSTALL = /usr/sbin/install
+#  BSDINSTALL = /usr/ucb/install
+
           TAR = tar
      COMPRESS = gzip --verbose --best
  COMPRESS_EXT = gz
+
+   BUILDFLAGS = $(MAKEFLAGS) "EMACS=$(EMACS)" "MAKEINFO=$(MAKEINFO)" \
+		"VMDIR=$(VMDIR)" "GNUSDIR=$(GNUSDIR)" "MHEDIR=$(MHEDIR)"
+
 #    COMPRESS = compress
 #COMPRESS_EXT = Z
 
 # You shouldn't need to change anything after this point.
-
-.SUFFIXES: .elc .el .tar .Z .gz .uu
-
-DEPSRCS=	bbdb-com.el  bbdb-hooks.el  bbdb-gnus.el  bbdb-mhe.el \
-		bbdb-rmail.el bbdb-vm.el bbdb-ftp.el bbdb-whois.el \
-		bbdb-xemacs.el bbdb-print.el bbdb-srv.el bbdb-reportmail.el
-
-DEPBINS=	${DEPSRCS:.el=.elc}
-SRCS=		bbdb.el  $(DEPSRCS)
-BINS=		bbdb.elc $(DEPBINS)
 
 syntax:
 	@echo "" ;\
 	echo "*** make one or more of: rmail vm mhe gnus all bbdb" ;\
 	echo "" ;\
 
-all:	rmail gnus vm mhe info
+all: bbdb rmail vm mhe gnus info
 
-info:	bbdb.info
+bbdb:
+	cd lisp; $(MAKE) $(BUILDFLAGS) bbdb
 
-bbdb.info: bbdb.texinfo
-	$(MAKEINFO) bbdb.texinfo
+rmail:
+	cd lisp; $(MAKE) $(BUILDFLAGS) rmail
 
-auto-autoloads.elc: auto-autoloads.el
-	$(EMACS) -batch -q -f batch-byte-compile ./auto-autoloads.el
+vm:
+	cd lisp; $(MAKE) $(BUILDFLAGS) vm
 
-install-pkg: all auto-autoloads.elc bbdb.info
-	mkdir -p ../etc/bbdb
+mhe:
+	cd lisp; $(MAKE) $(BUILDFLAGS) mhe
 
-bbdb.elc:            bbdb.el
-bbdb-com.elc:        bbdb.elc bbdb-com.el
-bbdb-ftp.elc:        bbdb.elc bbdb-ftp.el
-bbdb-print.elc:      bbdb.elc bbdb-print.el
-bbdb-reportmail.elc: bbdb.elc bbdb-reportmail.el
-bbdb-srv.elc:        bbdb.elc bbdb-srv.el
-bbdb-whois.elc:      bbdb.elc bbdb-whois.el
-bbdb-xemacs.elc:     bbdb.elc bbdb-xemacs.el
+gnus:
+	cd lisp; $(MAKE) $(BUILDFLAGS) gnus
 
-.el.elc:
-	$(EMACS) -batch -q -l ./bbdb.elc -f batch-byte-compile $<
+autoloads:
+	cd lisp; $(MAKE) $(BUILDFLAGS) autoloads
 
-bbdb.elc:	bbdb.el
-	$(EMACS) -batch -q -f batch-byte-compile ./bbdb.el
+install-pkg: bbdb autoloads info
+	if [ -z "$(PACKAGEROOT)" ] ; then \
+	   echo "You must specify PACKAGEROOT (see Makefile)"; \
+	   exit 1 ; \
+	else \
+	   rm -fr $(PACKAGEROOT)/lisp/bbdb $(PACKAGEROOT)/info/bbdb; \
+           if [ -z "$(LINKTOPACKAGE)" ] ; then \
+	      mkdir $(PACKAGEROOT)/lisp/bbdb; \
+	      for i in `ls lisp/*.elc` ; do \
+		if [ -z "$(SYSVINSTALL)" ] ; then \
+		   $(BSDINSTALL) -c -m 0644 $$i `echo $$i | sed 's/c$$//g` \
+			$(PACKAGEROOT)/lisp/bbdb ; \
+		else \
+		   $(SYSVINSTALL) -c $(PACKAGEROOT)/lisp/bbdb -s -m 0644 $$i ; \
+		   $(SYSVINSTALL) -c $(PACKAGEROOT)/lisp/bbdb -s -m 0644 \
+			`echo $$i | sed 's/c$$//g` $(PACKAGEROOT)/lisp/bbdb ; \
+		fi ; \
+	      done ; \
+	      mkdir $(PACKAGEROOT)/info/bbdb ; \
+	      for i in `ls texinfo/*.info* ` ; do \
+		if [ -z "$(SYSVINSTALL)" ] ; then \
+		   $(BSDINSTALL) -c -m 0644 $$i $(PACKAGEROOT)/info/bbdb ; \
+		else \
+		   $(SYSVINSTALL) -c $(PACKAGEROOT)/info/bbdb -s -m 0644 $$i ; \
+		fi ; \
+	      done ; \
+	   else \
+	      if [ -z "$(LINKPATH)" ] ; then \
+		 ln -s `pwd`/lisp $(PACKAGEROOT)/lisp/bbdb ; \
+		 ln -s `pwd`/info $(PACKAGEROOT)/info/bbdb ; \
+	      else \
+		 ln -s $(LINKPATH)/lisp $(PACKAGEROOT)/lisp/bbdb ; \
+		 ln -s $(LINKPATH)/info $(PACKAGEROOT)/info/bbdb ; \
+	      fi ; \
+	   fi ; \
+	fi
 
-bbdb-gnus.elc:	bbdb.elc bbdb-gnus.el
-	$(EMACS) -batch -q -l ./bbdb.elc $(GNUS) -f batch-byte-compile $(@:.elc=.el)
-bbdb-mhe.elc:	bbdb.elc bbdb-mhe.el
-	$(EMACS) -batch -q -l ./bbdb.elc $(MHE) -f batch-byte-compile $(@:.elc=.el)
-bbdb-rmail.elc:	bbdb.elc bbdb-rmail.el
-	$(EMACS) -batch -q -l ./bbdb.elc $(RMAIL) -f batch-byte-compile $(@:.elc=.el)
-bbdb-vm.elc:	bbdb.elc bbdb-vm.el
-	$(EMACS) -batch -q -l ./bbdb.elc $(VM) -f batch-byte-compile $(@:.elc=.el)
-
-# bbdb-hooks uses VM macros if it can find VM.  If you don't have VM,
-# then the $(VM) makefile variable should be undefined or empty.
-bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
-	$(EMACS) -batch -q -l ./bbdb.elc $(VM) -f batch-byte-compile $(@:.elc=.el)
-
-
-extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc bbdb-srv.elc \
-	bbdb-reportmail.elc
-bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc extras
-rmail:	bbdb bbdb-rmail.elc
-vm:	bbdb bbdb-vm.elc
-mhe:	bbdb bbdb-mhe.elc
-gnus:	bbdb bbdb-gnus.elc
-# aliases
-mh:	mhe
-mh-e:	mhe
+info:
+	cd texinfo; $(MAKE)
 
 clean:
-	$(RM) bbdb.elc bbdb-*.elc bbdb.info auto-autoloads.elc
+	cd lisp; $(MAKE) clean
+	cd texinfo; $(MAKE) clean
+
+#
+# Hmmmm.
+#
 
 TARFILES=	bbdb-Makefile bbdb.texinfo bbdb.el $(DEPSRCS) \
 		bbdb-print.tex multicol.tex
