@@ -2495,6 +2495,7 @@ If CREATE-P is true, then a record may be created, otherwise it won't.
 If PROMPT-TO-CREATE-P is true, then the user will be asked for confirmation
 before the record is created, otherwise it is created without confirmation
 \(assuming that CREATE-P is true\).  "
+  (message "bbdb-annotate-message-sender")
   (let* ((data (if (consp from)
                    from ; if from is a cons, it's pre-parsed (hack hack)
                  (mail-extract-address-components from)))
@@ -2578,19 +2579,20 @@ before the record is created, otherwise it is created without confirmation
                                        (downcase tmp)))))))
           ;; have a message-name, not the same as old name.
           (cond (bbdb-readonly-p nil)
-                ;;(created-p nil)
-                ((and (not bbdb-quiet-about-name-mismatches) old-name)
+                ((and (not bbdb-quiet-about-name-mismatches)
+                      (not bbdb-silent-running)
+                      old-name)
                  (message "name mismatch: \"%s\" changed to \"%s\""
                           (bbdb-record-name record) name)
                  (sit-for 1))
-                (created-p
-                 (if (not bbdb-silent-running)
-                     (if (null old-name)
-                         (bbdb-y-or-n-p
-                          (format "Assign name \"%s\" to address \"%s\"? "
-                                  name (car (bbdb-record-net record))))
-                       (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
-                                              old-name name))))
+                ((or created-p
+                     (if bbdb-silent-running t
+                       (if (null old-name)
+                           (bbdb-y-or-n-p
+                            (format "Assign name \"%s\" to address \"%s\"? "
+                                    name (car (bbdb-record-net record))))
+                         (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
+                                                old-name name)))))
                  (setq change-p 'sort)
                  (and old-name bbdb-use-alternate-names
                       (if bbdb-silent-running
@@ -2687,7 +2689,7 @@ before the record is created, otherwise it is created without confirmation
         (if (and change-p bbdb-readonly-p)
             (error
               "doubleplus ungood: how did we change anything in readonly mode?")))
-      (if (and loudly change-p)
+      (if (and loudly change-p (not bbdb-silent-running))
           (if (eq change-p 'sort)
               (message "noticed \"%s\"" (bbdb-record-name record))
               (if (bbdb-record-name record)
