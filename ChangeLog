@@ -1,3 +1,9 @@
+2000-12-31  Ronan Waide  <waider@waider.ie>
+
+	* lisp/bbdb.el (bbdb-undisplay-records):
+	  Don't mess with *BBDB* if it doesn't exist!
+	  Some compile noise hushed.
+
 2000-12-18  Ronan Waide  <waider@waider.ie>
 
 	* bbdb/lisp/bbdb.el: 
