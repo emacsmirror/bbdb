@@ -122,7 +122,7 @@ We assume things are line-broken and paragraph-bounded.
 The name comes first and other fields (address,
 phone, email, web pages) are recognized by context.
 
-Requred context:
+Required context:
     addresses end with \"City, State ZIP\" or \"City, State\"
     phones match bbdb-snarf-phone-regexp
         (currently US-style phones)
@@ -548,7 +548,7 @@ If extracting fails one probably has to adjust the variable
 
       ;; Now handle problems
       (if (and nomatch (not ignore-errors))
-	  (cond ((equal bbdb-extract-address-component-handler nil))
+      (cond ((equal bbdb-extract-address-component-handler nil))
                 ((equal bbdb-extract-address-component-handler 'warn)
                  (bbdb-warn "Cannot extract an address component at \"%s\".
 See `bbdb-extract-address-component-handler' for more information."
