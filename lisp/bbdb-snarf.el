@@ -62,9 +62,9 @@
   (let ((lines (bbdb-split (buffer-string) "\n")))
     (if (>= bbdb-file-format 5) nil
       (while (< (length lines) 3)
- 	(setq lines (append lines (list nil))))
+    (setq lines (append lines (list nil))))
       (if (> (length lines) 3)
-	  (error "bbdb-snarf-address-lines: too many lines in address.")))
+      (error "bbdb-snarf-address-lines: too many lines in address.")))
     (delete-region (point-min) (point-max))
     lines))
 
@@ -73,12 +73,12 @@
   (if (>= bbdb-file-format 4)
       (vector label address-lines city state zip country)
     (if (>= bbdb-file-format 3)
-	(vector label address-lines city state zip)
+    (vector label address-lines city state zip)
       (vector label
-	      (nth 0 address-lines)
-	      (nth 1 address-lines)
-	      (nth 2 address-lines)
-	      city state zip))))
+          (nth 0 address-lines)
+          (nth 1 address-lines)
+          (nth 2 address-lines)
+          city state zip))))
 
 (defun bbdb-snarf-prune-empty-lines ()
   (goto-char (point-min))
@@ -98,12 +98,12 @@ If CONSUME-P is set, delete the text, if found."
     (skip-chars-backward " \t")
     (forward-char -1)
     (if (looking-at ":")
-	(let* ((label-end (point))
-	       (label (delete-and-return-region
-		       (progn (skip-chars-backward "^\n,;") (point))
-		       label-end)))
-	  (delete-region (point) end)
-	  label)
+    (let* ((label-end (point))
+           (label (delete-and-return-region
+               (progn (skip-chars-backward "^\n,;") (point))
+               label-end)))
+      (delete-region (point) end)
+      label)
       default)))
 
 (defun bbdb-snarf-parse-phone-number (phone)
@@ -112,7 +112,7 @@ It doesn't always return a normalized phone number.
 For (800) 555-1212 it returns a three element list."
   (let ((try (bbdb-parse-phone-number phone)))
     (if (= 3 (length try))
-	(nconc try '(0)))
+    (nconc try '(0)))
     try))
 
 ;;;###autoload
@@ -123,11 +123,11 @@ The name comes first and other fields (address,
 phone, email, web pages) are recognized by context.
 
 Requred context:
-	addresses end with \"City, State ZIP\" or \"City, State\"
-	phones match bbdb-snarf-phone-regexp
-		(currently US-style phones)
-	e-mail addresses have @'s in them
-	web sites are recognized by http:// or www.
+    addresses end with \"City, State ZIP\" or \"City, State\"
+    phones match bbdb-snarf-phone-regexp
+        (currently US-style phones)
+    e-mail addresses have @'s in them
+    web sites are recognized by http:// or www.
 
 Address and phone context are currently US-specific;
 patches to internationalize these assumptions are welcome.
@@ -146,10 +146,10 @@ more details."
 
   (save-excursion
     (let
-	((buf (get-buffer-create " *BBDB snarf*"))
-	 (text (buffer-substring begin end))
-	 phones nets web city state zip country name address-lines
-	 address-vector notes)
+    ((buf (get-buffer-create " *BBDB snarf*"))
+     (text (buffer-substring begin end))
+     phones nets web city state zip country name address-lines
+     address-vector notes)
       (set-buffer buf)
       (erase-buffer)
       (insert text)
@@ -158,133 +158,133 @@ more details."
       ;; toss beginning and trailing space
       (goto-char (point-min))
       (while (re-search-forward "^[ \t]+" (point-max) t)
-	(replace-match ""))
+    (replace-match ""))
       (goto-char (point-min))
       (while (re-search-forward "\\s +$" (point-max) t)
-	(replace-match ""))
+    (replace-match ""))
 
       ;; first, pick out phone numbers
       (goto-char (point-min))
       (while (re-search-forward bbdb-snarf-phone-regexp (point-max) t)
-	(let (phone
-	      (begin (match-beginning 0))
-	      (end (match-end 0)))
-	  (goto-char begin)
-	  (forward-char -1)
-	  (if (looking-at "[0-9A-Za-z]")
-	      (goto-char end) ;; not really phone
-	    (setq phone (bbdb-snarf-parse-phone-number (delete-and-return-region begin end))
-		  phones (append phones (list (vconcat
-					       (list (bbdb-snarf-extract-label
-						      "phone" t))
-					       phone)))))))
+    (let (phone
+          (begin (match-beginning 0))
+          (end (match-end 0)))
+      (goto-char begin)
+      (forward-char -1)
+      (if (looking-at "[0-9A-Za-z]")
+          (goto-char end) ;; not really phone
+        (setq phone (bbdb-snarf-parse-phone-number (delete-and-return-region begin end))
+          phones (append phones (list (vconcat
+                           (list (bbdb-snarf-extract-label
+                              "phone" t))
+                           phone)))))))
 
       ;; next, web pages
       (goto-char (point-min))
       (if (and bbdb-snarf-web-prop
-	       (re-search-forward "\\(http://\\|www\.\\)[^ \t\n]+"
-				  (point-max) t))
-	  (progn
-	    (setq web (match-string 0)
-		  notes (append notes (list (cons bbdb-snarf-web-prop web))))
-	    (replace-match "")))
+           (re-search-forward "\\(http://\\|www\.\\)[^ \t\n]+"
+                  (point-max) t))
+      (progn
+        (setq web (match-string 0)
+          notes (append notes (list (cons bbdb-snarf-web-prop web))))
+        (replace-match "")))
 
       ;; next e-mail
       (goto-char (point-min))
       (while (re-search-forward "[^ \t\n<]+@[^ \t\n>]+" (point-max) t)
-	(setq nets (append nets (list (match-string 0))))
-	(replace-match ""))
+    (setq nets (append nets (list (match-string 0))))
+    (replace-match ""))
 
       (bbdb-snarf-prune-empty-lines)
 
       ;; name
       (goto-char (point-min))
       (let (namebegin)
-	;; This check is horribly english-centric (I think)
-	(while (/= (char-syntax (char-after (point))) ?w)
-	  (forward-line 1))
-	(setq namebegin (point))
-	(re-search-forward "\\(\\sw\\|[ -\.,]\\)*\\sw" nil t)
-	(setq name (match-string 0))
-	(delete-region (match-beginning 0) (match-end 0)))
+    ;; This check is horribly english-centric (I think)
+    (while (/= (char-syntax (char-after (point))) ?w)
+      (forward-line 1))
+    (setq namebegin (point))
+    (re-search-forward "\\(\\sw\\|[ -\.,]\\)*\\sw" nil t)
+    (setq name (match-string 0))
+    (delete-region (match-beginning 0) (match-end 0)))
 
       ;; address
       (goto-char (point-min))
       (cond
        ;; city, state zip
        ((re-search-forward bbdb-snarf-zip-regexp (point-max) t)
-	(save-excursion
-	  (save-restriction
-	    (let (mk)
-	      (narrow-to-region (point-min) (match-end 0))
-	      (goto-char (point-max))
-	      ;; zip
-	      (re-search-backward bbdb-snarf-zip-regexp (point-min) t)
-	      (setq zip (bbdb-parse-zip-string (match-string 0)))
-	      ;; state
-	      (skip-chars-backward " \t")
-	      (setq mk (point))
-	      (skip-chars-backward "^ \t,")
-	      (setq state (buffer-substring (point) mk))
-	      ;; city
-	      (skip-chars-backward " \t,")
-	      (setq mk (point))
-	      (beginning-of-line)
-	      (setq city (buffer-substring (point) mk))
-	      ;; toss it
-	      (forward-char -1)
-	      (delete-region (point) (point-max))
-	      ;; address lines
-	      (goto-char (point-min))
-	      (setq address-lines (bbdb-snarf-address-lines)
-		    address-vector (list (bbdb-snarf-make-address
-					  "address"
-					  address-lines
-					  city
-					  state
-					  zip
-					  "" ;; FIXME: snarf country
-					  )))))))
+    (save-excursion
+      (save-restriction
+        (let (mk)
+          (narrow-to-region (point-min) (match-end 0))
+          (goto-char (point-max))
+          ;; zip
+          (re-search-backward bbdb-snarf-zip-regexp (point-min) t)
+          (setq zip (bbdb-parse-zip-string (match-string 0)))
+          ;; state
+          (skip-chars-backward " \t")
+          (setq mk (point))
+          (skip-chars-backward "^ \t,")
+          (setq state (buffer-substring (point) mk))
+          ;; city
+          (skip-chars-backward " \t,")
+          (setq mk (point))
+          (beginning-of-line)
+          (setq city (buffer-substring (point) mk))
+          ;; toss it
+          (forward-char -1)
+          (delete-region (point) (point-max))
+          ;; address lines
+          (goto-char (point-min))
+          (setq address-lines (bbdb-snarf-address-lines)
+            address-vector (list (bbdb-snarf-make-address
+                      "address"
+                      address-lines
+                      city
+                      state
+                      zip
+                      "" ;; FIXME: snarf country
+                      )))))))
        ;; try for just city, state
        ((re-search-forward "^\\(.*\\), \\([A-Z][A-Za-z]\\)$"
-			   (point-max) t)
-	(save-excursion
-	  (save-restriction
-	    (setq city (match-string 1)
-		  state (match-string 2))
-	    (narrow-to-region (point-min) (match-end 0))
-	    (goto-char (point-min))
-	    (setq address-lines (bbdb-snarf-address-lines)
-		  address-vector (list (bbdb-snarf-make-address
-					"address"
-					address-lines
-					city
-					state
-					0
-					"" ;; FIXME: snarf country
-					))))))
+               (point-max) t)
+    (save-excursion
+      (save-restriction
+        (setq city (match-string 1)
+          state (match-string 2))
+        (narrow-to-region (point-min) (match-end 0))
+        (goto-char (point-min))
+        (setq address-lines (bbdb-snarf-address-lines)
+          address-vector (list (bbdb-snarf-make-address
+                    "address"
+                    address-lines
+                    city
+                    state
+                    0
+                    "" ;; FIXME: snarf country
+                    ))))))
        (t
-	(setq address-lines '(nil nil nil)
-	      address-vector nil)))
+    (setq address-lines '(nil nil nil)
+          address-vector nil)))
 
       ;; anything else -> notes
       (bbdb-snarf-prune-empty-lines)
       (if (/= (point-min) (point-max))
-	  (setq notes (append notes (list (cons 'notes (buffer-string))))))
+      (setq notes (append notes (list (cons 'notes (buffer-string))))))
 
       ;; debug
 ;      (goto-char (point-max))
 ;      (insert "\n\n"
-;	      "name: " name "\n"
-;	      "city: " city "\n"
-;	      "state: " state "\n"
-;	      "zip: " zip "\n")
+;         "name: " name "\n"
+;         "city: " city "\n"
+;         "state: " state "\n"
+;         "zip: " zip "\n")
       (bbdb-merge-interactively name
-				nil
-				nets
-				address-vector
-				phones
-				notes))))
+                nil
+                nets
+                address-vector
+                phones
+                notes))))
 
 
 ; (setq bbdb-snarf-test-cases "
@@ -325,13 +325,13 @@ more details."
        (lastname (nth 1 f-l-name))
        (aka nil)
        (new-record
-	(vector firstname lastname aka company phones addrs nets notes
-		   (make-vector bbdb-cache-length nil)))
+    (vector firstname lastname aka company phones addrs nets notes
+           (make-vector bbdb-cache-length nil)))
        (old-record (bbdb-search-simple name nets)))
     (if old-record
-	(progn
-	  (setq new-record (bbdb-merge-internally old-record new-record))
-	  (bbdb-delete-record-internal old-record)))
+    (progn
+      (setq new-record (bbdb-merge-internally old-record new-record))
+      (bbdb-delete-record-internal old-record)))
     ;; create  new record
     (bbdb-invoke-hook 'bbdb-create-hook new-record)
     (bbdb-change-record new-record t)
@@ -341,44 +341,44 @@ more details."
 (defun bbdb-merge-internally (old-record new-record)
   "Merge two records.  NEW-RECORDS wins over OLD in cases of ties."
   (if (and (null (bbdb-record-firstname new-record))
-	   (bbdb-record-firstname old-record))
+       (bbdb-record-firstname old-record))
       (bbdb-record-set-firstname new-record (bbdb-record-firstname old-record)))
   (if (and (null (bbdb-record-lastname new-record))
-	   (bbdb-record-lastname old-record))
+       (bbdb-record-lastname old-record))
       (bbdb-record-set-lastname new-record (bbdb-record-lastname old-record)))
   (if (and (null (bbdb-record-company new-record))
-	   (bbdb-record-company old-record))
+       (bbdb-record-company old-record))
       (bbdb-record-set-company new-record (bbdb-record-company old-record)))
   ;; nets
   (let ((old-nets (bbdb-record-net old-record))
-	(new-nets (bbdb-record-net new-record)))
+    (new-nets (bbdb-record-net new-record)))
     (while old-nets
       (if (not (member (car old-nets) new-nets))
-	  (setq new-nets (append new-nets (list (car old-nets)))))
+      (setq new-nets (append new-nets (list (car old-nets)))))
       (setq old-nets (cdr old-nets)))
     (bbdb-record-set-net new-record new-nets))
   ;; addrs
   (let ((old-addresses (bbdb-record-addresses old-record))
-	(new-addresses (bbdb-record-addresses new-record)))
+    (new-addresses (bbdb-record-addresses new-record)))
     (while old-addresses
       (if (not (member (car old-addresses) new-addresses))
-	  (setq new-addresses (append new-addresses (list (car old-addresses)))))
+      (setq new-addresses (append new-addresses (list (car old-addresses)))))
       (setq old-addresses (cdr old-addresses)))
     (bbdb-record-set-addresses new-record new-addresses))
   ;; phones
   (let ((old-phones (bbdb-record-phones old-record))
-	(new-phones (bbdb-record-phones new-record)))
+    (new-phones (bbdb-record-phones new-record)))
     (while old-phones
       (if (not (member (car old-phones) new-phones))
-	  (setq new-phones (append new-phones (list (car old-phones)))))
+      (setq new-phones (append new-phones (list (car old-phones)))))
       (setq old-phones (cdr old-phones)))
     (bbdb-record-set-phones new-record new-phones))
   ;; notes
   (let ((old-notes (bbdb-record-raw-notes old-record))
-	(new-notes (bbdb-record-raw-notes new-record)))
+    (new-notes (bbdb-record-raw-notes new-record)))
     (while old-notes
       (if (not (member (car old-notes) new-notes))
-	  (setq new-notes (append new-notes (list (car old-notes)))))
+      (setq new-notes (append new-notes (list (car old-notes)))))
       (setq old-notes (cdr old-notes)))
     (bbdb-record-set-raw-notes new-record new-notes))
   ;; return
@@ -416,28 +416,28 @@ capitalize words and change order of names when separated by a comma."
                  str bbdb-snarf-nice-real-name-regexp " "))))
 
 (defcustom bbdb-extract-address-component-regexps
-	'(;; "'surname, firstname'" <address>  from Outlookers
-	  ("\"'\\([^\"]*\\)'\"\\s-*<\\([^>]+\\)>"
-	   (bbdb-snarf-nice-real-name (match-string 1 adstring)) 2)
-	  ;; "name" <address>
-	  ("\"\\([^\"]*\\)\"\\s-*<\\([^>]+\\)>"
-	   1 2)
-	  ;; name <address>
-	  ("\\(\\b[^<\",]*\\b\\)\\s-*<\\([^>]+\\)>"
-	   1 2)
-	  ;; name <address>
-	  ("<\\([^>]+\\)>" nil 2)
-	  ;; address (name)
-	  ("\\(\\b[^<\",()]+\\b\\)\\s-*(\\([^)]+\\))"
-	   2 1)
-	  ;; user@host
-	  ("\\b\\(\\([0-9a-z._-]+\\)@[0-9a-z._-]+\\)\\b"
-	   nil 1)
-	  ;; local address
-	  ("\\b\\([0-9a-z._-]+\\)\\b"
-	   nil 1)
-	  )
-	"*List of regexps matching headers.
+    '(;; "'surname, firstname'" <address>  from Outlookers
+      ("\"'\\([^\"]*\\)'\"\\s-*<\\([^>]+\\)>"
+       (bbdb-snarf-nice-real-name (match-string 1 adstring)) 2)
+      ;; "name" <address>
+      ("\"\\([^\"]*\\)\"\\s-*<\\([^>]+\\)>"
+       1 2)
+      ;; name <address>
+      ("\\(\\b[^<\",]*\\b\\)\\s-*<\\([^>]+\\)>"
+       1 2)
+      ;; name <address>
+      ("<\\([^>]+\\)>" nil 2)
+      ;; address (name)
+      ("\\(\\b[^<\",()]+\\b\\)\\s-*(\\([^)]+\\))"
+       2 1)
+      ;; user@host
+      ("\\b\\(\\([0-9a-z._-]+\\)@[0-9a-z._-]+\\)\\b"
+       nil 1)
+      ;; local address
+      ("\\b\\([0-9a-z._-]+\\)\\b"
+       nil 1)
+      )
+    "*List of regexps matching headers.
 Each list element should have the form (REGEXP FULLNAME ADDRESS), where
 REGEXP matches the address while the actual address components should
 be a parenthesized expression.
@@ -450,8 +450,8 @@ address.
 If FULLNAME or ADDRESS is a list it will be evaluated to return a
 string or nil.  If its a function it will be called with the remaining
 address-string as argument."
-	:group 'bbdb-noticing-records
-	:type 'list)
+    :group 'bbdb-noticing-records
+    :type 'list)
 
 (defcustom bbdb-extract-address-component-ignore-regexp
   "\\(\\(undisclosed\\|unlisted\\)[^,]*recipients\\)\\|no To-header on input"
@@ -482,9 +482,9 @@ this handler."
 If extracting fails one probably has to adjust the variable
 `bbdb-extract-address-component-regexps'."
   (let ((case-fold-search t)
-	(fnadlist nil)
-	adcom-regexp
-	nomatch)
+    (fnadlist nil)
+    adcom-regexp
+    nomatch)
 
     ;; Do some string cleanup and trimming
     (setq adstring (replace-in-string adstring "[\n\t]" " "))
@@ -493,74 +493,82 @@ If extracting fails one probably has to adjust the variable
     ;; scan the string
     (while (not (string= "" adstring))
       (setq adcom-regexp bbdb-extract-address-component-regexps
-	    nomatch t)
+            nomatch t)
       (while adcom-regexp
-	(let ((regexp (caar adcom-regexp))
-	      (fn (cadar adcom-regexp))
-	      (ad (caddar adcom-regexp)))
-	  (cond ((string-match
-		  (concat "^[^,]*\\("
-			  bbdb-extract-address-component-ignore-regexp
-			  "\\)[^,]*\\(,\\|$\\)")
-		  adstring)
-		 (setq adstring (substring adstring (match-end 0))
-		       adcom-regexp nil
-		       nomatch nil))
-		((string-match (concat "^\\s-*" regexp "\\s-*\\(,\\|$\\)")
-			       adstring)
+        (let ((regexp (caar adcom-regexp))
+              (fn (cadar adcom-regexp))
+              (ad (caddar adcom-regexp)))
+          (cond ((string-match
+                  (concat "^[^,]*\\("
+                          bbdb-extract-address-component-ignore-regexp
+                          "\\)[^,]*\\(,\\|$\\)")
+                  adstring)
+                 (setq adstring (substring adstring (match-end 0))
+                       adcom-regexp nil
+                       nomatch nil))
+                ((string-match (concat "^\\s-*" regexp "\\s-*\\(,\\|$\\)")
+                               adstring)
 
-		 (add-to-list 'fnadlist
-			      (list (cond ((numberp fn)
-					   (match-string fn adstring))
-					  ((listp fn)
-					   (save-match-data (eval fn)))
-					  ((functionp fn)
-					   (save-match-data
-					     (funcall fn adstring)))
-					  (t fn))
-				    (cond ((numberp ad)
-					   (match-string ad adstring))
-					  ((listp ad)
-					   (save-match-data (eval ad)))
-					  ((functionp ad)
-					   (save-match-data
-					     (funcall ad adstring)))
-					  (t ad))))
-		 (setq adstring (substring adstring (match-end 0))
-		       adcom-regexp nil
-		       nomatch nil)))
-	  (setq adcom-regexp (cdr adcom-regexp))))
+                 (add-to-list 'fnadlist
+                              (list (let ((n
+                                           (cond ((numberp fn)
+                                                  (match-string fn adstring))
+                                                 ((listp fn)
+                                                  (save-match-data (eval fn)))
+                                                 ((functionp fn)
+                                                  (save-match-data
+                                                    (funcall fn adstring)))
+                                                 (t fn))))
+                                      (if (string= n "")
+                                          nil
+                                        n))
+                                    (let ((a
+                                           (cond ((numberp ad)
+                                                  (match-string ad adstring))
+                                                 ((listp ad)
+                                                  (save-match-data (eval ad)))
+                                                 ((functionp ad)
+                                                  (save-match-data
+                                                    (funcall ad adstring)))
+                                                 (t ad))))
+                                      (if (string= a "")
+                                          nil
+                                        a))))
+                 (setq adstring (substring adstring (match-end 0))
+                       adcom-regexp nil
+                       nomatch nil)))
+          (setq adcom-regexp (cdr adcom-regexp))))
 
       ;; Now handle problems
       (if nomatch
-	  (cond ((equal bbdb-extract-address-component-handler nil))
-		((equal bbdb-extract-address-component-handler 'warn)
-		 (bbdb-warn "Cannot extract an address component at \"%s\".
+          (cond ((equal bbdb-extract-address-component-handler nil))
+                ((equal bbdb-extract-address-component-handler 'warn)
+                 (bbdb-warn "Cannot extract an address component at \"%s\".
 See `bbdb-extract-address-component-handler' for more information."
-		       adstring))
-		((equal bbdb-extract-address-component-handler 'message)
-		 (message "Cannot extract an address component at \"%s\"."
-			  adstring))
-		((functionp bbdb-extract-address-component-handler)
-		 (let ((result
-			(funcall bbdb-extract-address-component-handler
-				 adstring)))
-		   (if (and (listp result) (= 3 (length result))
-			    (stringp (car result))
-			    (stringp (cadr result))
-			    (stringp (caddr result)))
-		       (progn (add-to-list 'fnadlist (cdr result))
-			      (setq adstring (car result)
-				    nomatch nil)))))
-		(t
-		 (error "Cannot extract an address component at \"%30s\""
-			adstring))))
+                            adstring))
+                ((equal bbdb-extract-address-component-handler 'message)
+                 (message "Cannot extract an address component at \"%s\"."
+                          adstring))
+                ((functionp bbdb-extract-address-component-handler)
+                 (let ((result
+                        (funcall bbdb-extract-address-component-handler
+                                 adstring)))
+                   (if (and (listp result) (= 3 (length result))
+                            (stringp (car result))
+                            (stringp (cadr result))
+                            (stringp (caddr result)))
+                       (progn (add-to-list 'fnadlist (cdr result))
+                              (setq adstring (car result)
+                                    nomatch nil)))))
+                (t
+                 (error "Cannot extract an address component at \"%30s\""
+                        adstring))))
 
       ;; ignore the bad junk
       (if nomatch
-	  (if (string-match "^[^,]*," adstring)
-	      (setq adstring (substring adstring (match-end 0)))
-	    (setq adstring ""))))
+          (if (string-match "^[^,]*," adstring)
+              (setq adstring (substring adstring (match-end 0)))
+            (setq adstring ""))))
 
     (delete '(nil nil) (nreverse fnadlist))))
 
