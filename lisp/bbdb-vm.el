@@ -76,9 +76,10 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
     (while adlist
       (setq fn (caar adlist)
         ad (cadar adlist))
-      (if (not ;; ignore uninteresting addresses
-           (or (and fn (string-match vm-summary-uninteresting-senders fn))
-           (string-match vm-summary-uninteresting-senders ad)))
+      (if (and (stringp vm-summary-uninteresting-senders)
+               (not ;; ignore uninteresting addresses
+                (or (and fn (string-match vm-summary-uninteresting-senders fn))
+                    (string-match vm-summary-uninteresting-senders ad))))
           (add-to-list 'fromlist (car adlist)))
       (if (and only-first-from fromlist)
           (setq adlist nil headers nil)
