@@ -2356,9 +2356,8 @@ If non-nil, expand mail aliases in `bbdb-complete-name'.
 @cindex Name completion
 @cindex Mail address completion
 @cindex Address completion
-Wheater to allow cycling of email addresses when calling
+Whether to allow cycling of email addresses when calling
 `bbdb-complete-name' on a completed address in a composition buffer."
-THIS CURRENTLY DOES NOT WORK FOR GNU EMACS!
 @refill
 
 @item bbdb-complete-name-full-completion
