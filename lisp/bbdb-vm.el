@@ -131,7 +131,7 @@ C-g again it will stop scanning."
         (setq records (bbdb-update-records
                        (bbdb/vm-get-addresses
                         msg bbdb-get-only-first-address-p)
-                       bbdb/mail-auto-create-p
+                       (or bbdb/mail-auto-create-p offer-to-create)
                        offer-to-create))
         
         (bbdb-encache-message msg records)))
@@ -169,7 +169,6 @@ This buffer will be in bbdb-mode, with associated keybindings."
   (vm-follow-summary-cursor)
   (let ((bbdb-get-addresses-headers headers)
         (bbdb/vm-update-records-mode 'annotating)
-        (bbdb/mail-auto-create-p t)
         (bbdb-message-cache nil)
         records)
     (setq records (bbdb/vm-update-records t))

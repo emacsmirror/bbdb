@@ -193,7 +193,6 @@ This buffer will be in `bbdb-mode', with associated keybindings."
   (gnus-summary-select-article)
   (let ((bbdb-get-addresses-headers (or headers bbdb-get-addresses-headers))
         (bbdb/gnus-update-records-mode 'annotating)
-        (bbdb/news-auto-create-p t)
         (bbdb-message-cache nil)
         records)
     (setq records (bbdb/gnus-update-records t))

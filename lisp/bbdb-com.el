@@ -2862,7 +2862,7 @@ functions `bbdb-update-records' and `bbdb-prompt-for-create'."
 `bbdb-update-records' and `bbdb-prompt-for-create'.")
 
 ;;;###autoload
-(defun bbdb-update-records (addrs auto-create-p offer-to-create )
+(defun bbdb-update-records (addrs auto-create-p offer-to-create)
   "Returns the records corresponding to the current VM message,
 creating or modifying them as necessary.  A record will be created if
 bbdb/mail-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
@@ -2893,7 +2893,7 @@ C-g again it will stop scanning."
                           (bbdb-annotate-message-sender
                            bbdb-address t
                            (or (bbdb-invoke-hook-for-value auto-create-p)
-                               bbdb-offer-to-create);; force create
+                               offer-to-create);; force create
                            'bbdb-prompt-for-create)))
                         ((eq bbdb-update-records-mode 'searching)
                          ;; search for records having this net
@@ -2990,15 +2990,16 @@ proceed the processing of records."
     (when (or (bbdb-invoke-hook-for-value bbdb/prompt-for-create-p)
               bbdb-offer-to-create)
       (when (not (integerp bbdb-offer-to-create))
-        (setq prompt (format "%s is not in the db; add? (y,!,n,s,q,?)"
+        (setq prompt (format "%s is not in the db; add? (y,!,n,s,q,?) "
                              (or (car bbdb-address) (cadr bbdb-address))))
         (while (not event)
           (setq event (read-key-sequence prompt))
           (if (featurep 'xemacs)
-              (setq event (char-int (event-to-character (aref event 0))))
+              (setq event (event-to-character (aref event 0)))
             (setq event (if (stringp event) (aref event 0)))))
-          
-        (setq bbdb-offer-to-create event))
+        
+        (setq bbdb-offer-to-create (char-int event)))
+      (message "") ;; clear the message buffer
       
       (cond ((eq bbdb-offer-to-create (char-int ?y))
              (setq bbdb-offer-to-create old-offer-to-create)
