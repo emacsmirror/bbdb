@@ -1,80 +1,143 @@
 $Id$
 
 Patches
--------
+=======
 
-New area code patch (change bbdb-phone-area-regexp to accept [0-9][0-9][0-9])
----
-John Heidemann's bbdb-snarf.el -- convert free-form text to BBDB records
-   John Heidemann <johnh@ISI.EDU>
-   http://www.isi.edu/~johnh/
-   <199708050543.WAA16969@dash.isi.edu> Mon, 04 Aug 1997 22:43:06 -0700
- with patch from 
-   <199708062026.NAA29354@dash.isi.edu> Wed, 06 Aug 1997 13:26:45 -0700
-AND/OR
-One or more of Simon Rowe, Graham Clark and Adrian Aichner's body-snarfing code
-   Simon Rowe <Simon.Rowe@cre.canon.co.uk>
-    <u6lo4azj58.fsf@cre.canon.co.uk> 16 Jun 1997 16:01:39 +0100
-   Graham Clark <gcla@dcs.ed.ac.uk>
-    <6282.199706161624@havra.dcs.ed.ac.uk> Mon, 16 Jun 1997 17:24:49 +0100
-   Adrian Aichner <aichner@ecf.teradyne.com>
-    <rxsiuzebpgp.fsf@midnight.ecf.teradyne.com>
----
-Colin Rafferty's XEmacs packagization
-   Colin Rafferty <craffert@ml.com>
-   <ocrrac656up.fsf@ml.com> 07 Aug 1997 11:51:42 -0400
-   and <ocrbu31yd0m.fsf@ml.com> 13 Aug 1997 17:43:53 -0400
----
-Colin Rafferty's nil name -> net address patch
-   Colin Rafferty <craffert@ml.com>
-   <ocrafhul421.fsf@ml.com> 03 Sep 1997 13:07:02 -0400
----
-Jens-Ulrik Hoger Petersen's Gnus 5 patches
-   Jens-Ulrik Holger Petersen <petersen@kurims.kyoto-u.ac.jp>
-   <lbd8mkfvb4.fsf@orion.kurims.kyoto-u.ac.jp> 08 Sep 1997 10:28:31 +0900
----
-Soren Dayton's bbdb-send-mail => message-mode patch
-   Soren Dayton <csdayton+bbdb@cs.uchicago.edu>
-   <xcdu3j2snzw.fsf@ra.cs.uchicago.edu> 13 Jun 1997 07:09:38 -0500
----
-Christoph Wedler's finger-host patch
-   Christoph Wedler <wedler@fmi.uni-passau.de>
-   <hwhiuvqycrn.fsf@vivaldi.fmi.uni-passau.de> 24 Sep 1997 17:03:56 +0200
+---------------------------------------------------------------------------------
+PURPOSE: convert free-form text to BBDB records
+
+CANDIDATE: bbdb-snarf.el
+   AUTHOR: John Heidemann <johnh@ISI.EDU>
+           http://www.isi.edu/~johnh/
+    WHERE: <199708050543.WAA16969@dash.isi.edu> Mon, 04 Aug 1997 22:43:06 -0700
+           <199708062026.NAA29354@dash.isi.edu> Wed, 06 Aug 1997 13:26:45 -0700
+CANDIDATE: bbdb-extract-field-value
+   AUTHOR: Graham Clark <gcla@dcs.ed.ac.uk>
+    WHERE: <6282.199706161624@havra.dcs.ed.ac.uk> Mon, 16 Jun 1997 17:24:49 +0100
+CANDIDATE: bbdb-update-from-body
+   AUTHOR: Adrian Aichner <aichner@ecf.teradyne.com>
+    WHERE: <rxsiuzebpgp.fsf@midnight.ecf.teradyne.com>
+
+STATUS: Investigatory
+  WHEN: 27-Sep-1997
+REASON: Waiting to determine which is better, or if they're similar
+        enough that they should be merged, or if they're different
+        enough that they should all be included
+---------------------------------------------------------------------------------
+PURPOSE: a whole bunch of patches from the BBDB addons page
+
+CANDIDATE: lots
+   AUTHOR: various
+    WHERE: http://www.forwiss.uni-erlangen.de/~jws/bbdb/index.html
+
+STATUS: Pending
+  WHEN: 28-Sep-1997
+REASON: Need sleep
+---------------------------------------------------------------------------------
+PURPOSE: three patches from Boris Goldowsky
+
+CANDIDATE: bbdb-print
+CANDIDATE: bbdb-bng.el
+CANDIDATE: bbdb-ext.el
+   AUTHOR: Boris Goldowsky <boris@gnu.ai.mit.edu>
+    WHERE: on my laptop
+
+STATUS: Pending
+  WHEN: 28-Sep-1997
+REASON: Need sleep
+---------------------------------------------------------------------------------
+PURPOSE: diffs from jwz's source tree
+
+CANDIDATE: various
+   AUTHOR: Jamie Jawinski <jwz@netscape.com>
+    WHERE: <342C1B44.CA7A8D7D@netscape.com>
+
+STATUS: Pending
+  WHEN: 28-Sep-1997
+REASON: Need sleep
+---------------------------------------------------------------------------------
+PURPOSE: button3 menus
+
+CANDIDATE: build-bbdb-url-menu
+   AUTHOR: Mark Moll <mmoll@cs.cmu.edu>
+    WHERE: <uttu3f8urpq.fsf_-_@gs236.sp.cs.cmu.edu>
+CANDIDATE: <unnamed>
+   AUTHOR: Soren Dayton
+    WHERE: <unknown>
+
+STATUS: Pending
+  WHEN: 28-Sep-1997
+REASON: Need sleep
+---------------------------------------------------------------------------------
 
 MAYBE?
+======
 
-Raymond Toy's international name mail-extract-address-components patch
-   Raymond Toy <toy@rtp.ericsson.se>
-   <27077.864998003@rtp.ericsson.se> Fri, 30 May 1997 09:13:23 -0400
- I can't tell from the discussion whether or not the patch was judged to be
- a Good Thing.
----
-Oscar Figueiredo's CSO interface
-   Oscar Figueiredo <Oscar.Figueiredo@di.epfl.ch>
-   <o97d8px2h60.fsf@lspsun16.epfl.ch> 08 Jun 1997 18:28:07 +0200
- If he's got it done
----
-Christopher Kline's bbdb-reportmail.el
-   Christopher Kline <ckline@mitre.org>
-   <gj9wwnhaxkq.fsf@mitre.org> 26 Jun 1997 17:00:53 -0400
- What is reportmail?  Should this (bbdb-reportmail.el) come with bbdb, or
- with reportmail?
+--------------------------------------------------------------------------------
+PURPOSE: international character extraction from mail names/addresses
+
+CANDIDATE: mail-extract-address-components
+   AUTHOR: Raymond Toy <toy@rtp.ericsson.se>
+    WHERE: <27077.864998003@rtp.ericsson.se> Fri, 30 May 1997 09:13:23 -0400
+
+STATUS: Preliminary Denial
+  WHEN: 27-Sep-1997
+REASON: I've removed mail-extr from the distribution since it's distributed with
+        Emacs.  Should this patch be submitted to the maintainers of Emacs, or
+        should I find a way to sneak it into BBDB?
+--------------------------------------------------------------------------------
+PURPOSE: interface with CSO
+
+CANDIDATE: ph.el
+   AUTHOR: Oscar Figueiredo <Oscar.Figueiredo@di.epfl.ch>
+    WHERE: http://diwww.epfl.ch/~figueire/  (not up until 9/29)
+
+STATUS: Investigatory
+  WHEN: 27-Sep-1997
+REASON: ph.el is distributed with GNU 20.1 and XEmacs 20.3.  The BBDB bits are
+        disabled in GNU.  Trying to figure out how to integrate it so it'll
+        work with GNU 19.34 and 20 and XEmacs 19.14-19.16 and 20.
+--------------------------------------------------------------------------------
+
+Documentation
+=============
+
+Add autoload stuff (currently in README)
+Fix(?) description of files
+Add documentation of bbdb-reportmail.el
+Add documentation of Soren Dayton's message for bbdb-send-mail-internal
+Add documentation of Christoph Wedler's finger-host
+           ...    of Christopher Kline's bbdb-reportmail.el
 
 In a util directory
--------------------
+===================
 
-Seth Golub's BBDB area code changer
-   Seth Golub <seth@cs.wustl.edu>
-   http://www.cs.wustl.edu/~seth/projects/bbdb/
-   <199708071942.MAA23880@pegleg.thehouse.org> Thu, 7 Aug 1997 12:42:45 -0700
+--------------------------------------------------------------------------------
+PURPOSE: given a list of exchanges, change phone numbers containing them to
+         a new area code
 
-Christopher Kline's .bbdb lazy-lock unmungifier
-   Christopher Kline <ckline@tc.cornell.edu>
-   <pzrd8r1u3yo.fsf@theory.tc.cornell.edu> 08 May 1997 16:02:55 -0400
+CANDIDATE: bbdb-area-code-split
+   AUTHOR: Seth Golub <seth@cs.wustl.edu>
+    WHERE: http://www.cs.wustl.edu/~seth/projects/bbdb/
 
-Patches I'd like somebody else to do. =)
-----------------------------------------
+STATUS: Pending Inclusion Approval
+  WHEN: 28-Sep-1997
+REASON: Waiting for approval from Seth Golub before I include it.
+--------------------------------------------------------------------------------
+PURPOSE: remove lazy-lock mung from a .bbdb file
+
+CANDIDATE: <unnamed>
+   AUTHOR: Christopher Kline <ckline@tc.cornell.edu>
+    WHERE: <pzrd8r1u3yo.fsf@theory.tc.cornell.edu> 08 May 1997 16:02:55 -0400
+
+STATUS: Pending Inclusion Approval
+  WHEN: 28-Sep-1997
+REASON: Waiting for approval from Christopher Kline before I include it.
+--------------------------------------------------------------------------------
+
+TTNTBDBIDHAPFYAHGATWOF
+======================
+(Things that need to be done but I don't have a patch for yet and haven't gotten
+around to writing one for)
 
 * Selectable ampersand processing in names
-* An elisp (or perl) function/program that, given a set of prefixes in
-  a defined format, will properly split area codes

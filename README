@@ -1,0 +1,14 @@
+[ This will eventually make it into the info file ]
+
+*Directions For Converting (Installing) BBDB as a Package*
+
+1. Move (unpack) the BBDB distribution into "`package-path'/lisp/bbdb".
+
+2. Add `auto-autoload.el' (included here) into that directory.
+
+3. Patch `bbdb-Makefile' with the patch included here.
+
+4. Run `make install-pkg -f bbdb-Makefile'.
+
+5. Re-dump XEmacs.
+
