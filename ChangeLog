@@ -1,3 +1,15 @@
+2001-02-05  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb.el (bbdb-frob-mode-line): Removed faulty
+	replace-in-string.
+
+2001-02-03  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
+	removed bbdb-snarf-nice-real-name-* variables and function and
+	replaced it by a call to bbdb-clean-username which is more
+	sophisticated.
+
 2001-02-03  Robert.Fenk@gmx.de
 
 	* lisp/bbdb.el (bbdb-message-cache-lookup), (bbdb-encache-message): 
