@@ -3389,6 +3389,20 @@ You can also set this to a function returning a buffer name."
         ((memq major-mode '(mail-mode vm-mail-mode message-mode))
          "message composition")))
 
+(defun bbdb-multiple-buffers-set-name (&optional buffer-list new-name)
+  (setq new-name (or new-name
+                     (concat " *BBDB " (funcall bbdb-multiple-buffers) "*"))
+        buffer-list (append (list (current-buffer)
+                                  (get-buffer-create new-name))
+                            buffer-list))
+  
+  (save-excursion
+    (while buffer-list
+      (set-buffer (car buffer-list))
+      (make-local-variable 'bbdb-buffer-name)
+      (setq bbdb-buffer-name new-name)
+      (setq buffer-list (cdr buffer-list)))))
+      
 (defun bbdb-pop-up-bbdb-buffer (&optional horiz-predicate)
   "Find the largest window on the screen, and split it, displaying the
 *BBDB* buffer in the bottom 'bbdb-pop-up-target-lines' lines (unless
@@ -3403,22 +3417,15 @@ already within one.  The new buffer-name starts with a space, i.e. it does
 not clutter the buffer-list."
 
   (let ((b (current-buffer))
-        (new-bbdb-buffer-name bbdb-buffer-name))
+        new-bbdb-buffer-name)
 
     ;; create new BBDB buffer if multiple buffers are desired.
     (when (and bbdb-multiple-buffers (not (eq major-mode 'bbdb-mode)))
-      (when (setq new-bbdb-buffer-name
-                  (concat " *BBDB " (funcall bbdb-multiple-buffers) "*"))
-        (make-local-variable 'bbdb-buffer-name)
-        (setq bbdb-buffer-name new-bbdb-buffer-name)
-        ;; make sure the new BBDB buffer also has its name as local var
-        (save-excursion
-          (set-buffer (get-buffer-create bbdb-buffer-name))
-          (make-local-variable 'bbdb-buffer-name)
-          (setq bbdb-buffer-name new-bbdb-buffer-name))))
-
+      (bbdb-multiple-buffers-set-name (list b)))
+    (setq new-bbdb-buffer-name bbdb-buffer-name)
+    
     ;; now get the pop-up
-    (if (get-buffer-window bbdb-buffer-name)
+    (if (get-buffer-window new-bbdb-buffer-name)
         nil
       (if (and (eq bbdb-use-pop-up 'horiz)
                horiz-predicate
