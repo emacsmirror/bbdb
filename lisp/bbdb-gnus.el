@@ -22,6 +22,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.57  1998/01/06 05:42:11  simmonmt
+;; Removed autoloads and when statements
+;;
 ;; Revision 1.56  1997/12/01 04:57:50  simmonmt
 ;; Customized variables, changed some comments, changed user format code
 ;; error message
@@ -188,10 +191,12 @@ provided in the From header with data from the BBDB."
 
 (defcustom bbdb/gnus-summary-prefer-real-names t
   "If t, then display the poster's name from the BBDB if we have one,
-otherwise display his/her primary net address if we have one.  If it is
-set to the symbol bbdb, then real names will be used from the BBDB if
-present, otherwise the net address in the post will be used.  If
-bbdb/gnus-summary-prefer-bbdb-data is nil, then this has no effect.  See `bbdb/gnus-lines-and-from' for GNUS users, or `bbdb/gnus-summary-user-format-letter' for Gnus users."
+otherwise display his/her primary net address if we have one.  If it
+is set to the symbol bbdb, then real names will be used from the BBDB
+if present, otherwise the net address in the post will be used.  If
+bbdb/gnus-summary-prefer-bbdb-data is nil, then this has no effect.
+See `bbdb/gnus-lines-and-from' for GNUS users, or
+`bbdb/gnus-summary-user-format-letter' for Gnus users."
   :group 'bbdb-mua-specific-gnus
   :type '(choice (const :tag "Prefer real names" t)
 		 (const :tag "Prefer network addresses" nil)))
@@ -383,7 +388,6 @@ gnus-score field."
   (if (bbdb-record-getprop rec bbdb/gnus-score-field)
       (setq bbdb/gnus-score-rebuild-alist t)))
 
-;;;###autoload
 (defun bbdb/gnus-score (group)
   "This returns a score alist for GNUS.  A score pair will be made for
 every member of the net field in records which also have a gnus-score
@@ -400,11 +404,11 @@ addresses better than the traditionally static global scorefile."
 
 (defun bbdb/gnus-score-as-text (group)
   "Returns a SCORE file format string built from the BBDB."
-  (when (or (when (/= (or bbdb/gnus-score-default 0)
-		      (or bbdb/gnus-score-default-internal 0))
-	      (setq bbdb/gnus-score-default-internal
-		    bbdb/gnus-score-default)
-	      t)
+  (cond ((or (cond ((/= (or bbdb/gnus-score-default 0)
+			(or bbdb/gnus-score-default-internal 0))
+		    (setq bbdb/gnus-score-default-internal
+			  bbdb/gnus-score-default)
+		    t))
 	    (not bbdb/gnus-score-alist)
 	    bbdb/gnus-score-rebuild-alist)
     (setq bbdb/gnus-score-rebuild-alist nil)
@@ -422,7 +426,7 @@ addresses better than the traditionally static global scorefile."
 			    (concat "(\"" addr "\" " score ")\n"))
 			  net ""))))
 		   (bbdb-records) "")
-		  "))")))
+		  "))"))))
   bbdb/gnus-score-alist)
 
 ;;
@@ -451,27 +455,27 @@ addresses better than the traditionally static global scorefile."
 			   (concat "gnus-user-format-function-"
 				   bbdb/gnus-summary-in-bbdb-format-letter))))
 					; The big one - whole name
-    (when bbdb/gnus-summary-user-format-letter
-      (if (and (fboundp get-author-user-fun)
-	       (not (eq (symbol-function get-author-user-fun)
-			'bbdb/gnus-summary-get-author)))
-	  (bbdb-warn
-	   (format "`gnus-user-format-function-%s' already seems to be in use.
+    (cond (bbdb/gnus-summary-user-format-letter
+	   (if (and (fboundp get-author-user-fun)
+		    (not (eq (symbol-function get-author-user-fun)
+			     'bbdb/gnus-summary-get-author)))
+	       (bbdb-warn
+		(format "`gnus-user-format-function-%s' already seems to be in use.
 Please redefine `bbdb/gnus-summary-user-format-letter' to a different letter."
-		   bbdb/gnus-summary-user-format-letter))
-	(fset get-author-user-fun 'bbdb/gnus-summary-get-author)))
+			bbdb/gnus-summary-user-format-letter))
+	     (fset get-author-user-fun 'bbdb/gnus-summary-get-author))))
     
     ; One tick.  One tick only, please
-    (when bbdb/gnus-summary-in-bbdb-format-letter
-      (if (and (fboundp in-bbdb-user-fun)
-	       (not (eq (symbol-function in-bbdb-user-fun)
-			'bbdb/gnus-summary-author-in-bbdb)))
-	  (bbdb-warn
-	   (format "`gnus-user-format-function-%s' already seems to be in use.
+    (cond (bbdb/gnus-summary-in-bbdb-format-letter
+	   (if (and (fboundp in-bbdb-user-fun)
+		    (not (eq (symbol-function in-bbdb-user-fun)
+			     'bbdb/gnus-summary-author-in-bbdb)))
+	       (bbdb-warn
+		(format "`gnus-user-format-function-%s' already seems to be in use.
 Redefine `bbdb/gnus-summary-in-bbdb-format-letter' to a different letter."
-		   bbdb/gnus-summary-in-bbdb-format-letter))
-	(fset in-bbdb-user-fun 'bbdb/gnus-summary-author-in-bbdb))))
-
+			bbdb/gnus-summary-in-bbdb-format-letter))
+	     (fset in-bbdb-user-fun 'bbdb/gnus-summary-author-in-bbdb)))))
+  
   ;; Scoring
   (add-hook 'bbdb-after-change-hook 'bbdb/gnus-score-invalidate-alist)
 ;  (setq gnus-score-find-score-files-function
