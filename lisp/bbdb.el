@@ -1188,13 +1188,14 @@ present).  Returns a string containing the date in the new format."
                 (toggle    . t))
     (multi-line (omit      . (creation-date timestamp))
                 (toggle    . t))
+    (pop-up-multi-line)
     (full-multi-line))
   "*An alist describing each display layout.
 The format of an element is (LAYOUT-NAME OPTION-ALIST).
 
-By default there are three different layout types used by BBDB, which are
-`one-line', `multi-line' and `full-multi-line' (showing all fields of a
-record).  `full-multi-line' has the same options as `multi-line'.
+By default there are four different layout types used by BBDB, which are
+`one-line', `multi-line', `pop-up-multi-line' (used for pop-ups) and
+`full-multi-line' (showing all fields of a record).
 
 OPTION-ALIST specifies the options for the layout.  Valid options are:
 
@@ -1258,7 +1259,7 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
                      (const :tag "The layout is included when toggling display layout" toggle)
                      boolean)))))
 
-(defcustom bbdb-display-layout nil
+(defcustom bbdb-display-layout 'multi-line
   "*The default display layout."
   :group 'bbdb
   :type '(choice (const one-line)
@@ -1266,7 +1267,7 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
                  (const full-multi-line)
                  (symbol)))
 
-(defcustom bbdb-pop-up-display-layout nil
+(defcustom bbdb-pop-up-display-layout 'pop-up-multi-line
   "*The default display layout pop-up BBDB buffers, i.e. mail, news."
   :group 'bbdb
   :type '(choice (const one-line)
