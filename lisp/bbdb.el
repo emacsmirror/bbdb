@@ -1009,7 +1009,7 @@ This is a possible identifying function for
   "Insert street subfields of address ADDR in current buffer.
 This may be used by formatting functions listed in
 `bbdb-address-formatting-alist'."
-  (mapc (lambda(str)
+  (mapcar (lambda(str)
           (indent-to 17)
           (insert str "\n"))
         (bbdb-address-streets addr)))

@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.12  2000/07/09 09:20:11  waider
+;; GNUmacs doesn't have "mapc".
+;;
 ;; Revision 1.11  2000/07/05 21:43:35  sds
 ;; rewrote migration in a modular way
 ;;
@@ -120,7 +123,7 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
   "Migrate the BBDB from the version on disk (the car of
 `bbdb-file-format-migration') to the current version (in
 `bbdb-file-format')."
-  (mapc (bbdb-migrate-versions-lambda (car bbdb-file-format-migration))
+  (mapcar (bbdb-migrate-versions-lambda (car bbdb-file-format-migration))
         records)
   records)
 
@@ -186,7 +189,7 @@ V1 defaults to `bbdb-file-format'."
   "Change date formats in timestamp and creation-date fields from
 \"dd mmm yy\" to \"yyyy-mm-dd\".  Assumes the notes are passed in as an
 argument."
-  (mapc (lambda (rr)
+  (mapcar (lambda (rr)
           (when (memq (car rr) '(creation-date timestamp))
             (bbdb-migrate-change-dates-change-field rr)))
         rec)
@@ -254,7 +257,7 @@ argument."
   "Change date formats is timestamp and creation-date fields from
 \"yyyy-mm-dd\" to \"dd mmm yy\".  Assumes the notes list is passed in
 as an argument."
-  (mapc (lambda (rr)
+  (mapcar (lambda (rr)
           (when (memq (car rr) '(creation-date timestamp))
             (bbdb-unmigrate-change-dates-change-field rr)))
         rec)
