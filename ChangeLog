@@ -1,6 +1,41 @@
+2003-03-07  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-display-records-1): Do not use the function
+	with-output-to-temp-buffer since on recent GNU Emacses the local
+	variables get killed.
+	(bbdb-encache-message): Fix from Dan Debertin to avoid caching of
+	nil, i.e. empty record list, causing problems later.
+
+	* lisp/bbdb-vm.el (bbdb/vm-set-auto-folder-alist): added missing
+	local vars to avoid cluttering global namespace.
+
+2003-03-04  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-delete-current-record): fixed docs and
+	bbdb-apply-next-command-to-all-records handling.
+
 2003-01-31  Alex Schroeder  <alex@emacswiki.org>
 
 	* lisp/bbdb.el (bbdb-resort-database): Make interactive.
+
+2003-01-30  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-snarf.el (bbdb-snarf-extract-label): added safety check
+	for backward movement.
+	(bbdb-snarf-region): Added label completion for phones and addresses.
+
+	* lisp/bbdb-mhe.el (bbdb/mh-update-record): Do a sanity check
+	to avoid adding a nil record to the cache causing trouble
+	afterwards.
+
+	* lisp/bbdb-com.el: Removed ".el" from VM loads to allow Emacs
+	also loading .elc files if they are present.
+	(bbdb-edit-current-field): mark mail-aliases for rebuilt when we are
+	editing the aliases field of a record.
+	(bbdb-add-or-remove-mail-alias): mark mail-aliases for rebuilt
+	when creating new records or deleting a record.
+	(bbdb-prompt-for-create): delete help window when it is not needed
+	anymore.
 
 2003-01-30  Greg Troxel <gdt@ir.bbn.com>
 

@@ -196,31 +196,31 @@ the bbdb-ignore-most-messages-alist (which see) and *no* others."
   (let ((rest (if invert-sense
           bbdb-ignore-some-messages-alist
           bbdb-ignore-most-messages-alist))
-    (case-fold-search t)
-    (done nil)
-    (b (current-buffer))
-    (marker (bbdb-header-start))
-    field regexp fieldval)
+        (case-fold-search t)
+        (done nil)
+        (b (current-buffer))
+        (marker (bbdb-header-start))
+        field regexp fieldval)
     (set-buffer (marker-buffer marker))
     (save-restriction
       (widen)
       (while (and rest (not done))
-    (goto-char marker)
-    (setq field (car (car rest))
-          regexp (cdr (car rest))
-          fieldval (bbdb-extract-field-value field))
-    (if (and fieldval (string-match regexp fieldval))
-        (setq done t))
-    (setq rest (cdr rest))))
+        (goto-char marker)
+        (setq field (car (car rest))
+              regexp (cdr (car rest))
+              fieldval (bbdb-extract-field-value field))
+        (if (and fieldval (string-match regexp fieldval))
+            (setq done t))
+        (setq rest (cdr rest))))
     (set-buffer b)
     (if invert-sense
-    (not done)
-    done)))
+        (not done)
+      done)))
 
 ;;; Provided by Bill Carpenter.
 (defvar bbdb-ignore-selected-messages-confirmation nil
   "*If bbdb-ignore-selected-messages-hook is used as an auto-create-hook, this
-  variable governs whether you are prompted for creation of BBDB entries.")
+variable governs whether you are prompted for creation of BBDB entries.")
 
 ;;;###autoload
 (defun bbdb-ignore-selected-messages-hook ()
