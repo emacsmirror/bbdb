@@ -25,6 +25,9 @@
 ;; $Revision$
 ;;
 ;; $Log$
+;; Revision 1.56  2000/04/13 00:12:02  waider
+;; * Thomas's duplicates patch
+;;
 ;; Revision 1.55  1998/04/11 07:21:39  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back
 ;;
@@ -172,7 +175,8 @@ collisions."
      (progn
        (setq site (bbdb-read-string "Ftp Site: "))
        (setq site (concat bbdb-ftp-site-name-designator-prefix site))
-       (if (bbdb-gethash (downcase site))
+       (if (and bbdb-no-duplicates-p
+		(bbdb-gethash (downcase site)))
 	    (error "%s is already in the database" site))))
     (let* ((dir  (bbdb-read-string "Ftp Directory: "
 				   bbdb-default-ftp-dir))
