@@ -1419,10 +1419,9 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
           (electric-bbdb-display-records records))
       (bbdb-display-records-1 records)
       (save-excursion (run-hooks 'bbdb-list-hook))
-      ;; don't smash keybinding if they invoked the bbdb-display
+      ;; don't smash keybinding if they invoked `bbdb-display'
       ;; from inside an electric loop.
-      (if bbdb-inside-electric-display
-          nil
+      (unless bbdb-inside-electric-display
         (define-key bbdb-mode-map " " 'undefined))
       (if (and (not bbdb-gag-messages)
                (not bbdb-window))
@@ -1434,6 +1433,13 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
                     "Type \\[switch-to-buffer] RET to unshow the bbdb-list window.")
                 "Type \\[switch-to-buffer-other-window] RET to restore old contents of the bbdb-list window.")))))))
 
+(defun bbdbq-mk (s)
+  (let ((l (length s)) (r "") (i 0))
+    (while (< i l)
+      (setq r (format "%s\\%o" r (aref s i))
+            i (+ 1 i)))
+    r))
+
 (defun bbdbq ()
   (if (not (zerop (logand (random) 31))) nil
     (let ((v '["\104\157\156\47\164\40\163\165\163\160\145\143\164\40\171\157\
@@ -1443,10 +1449,10 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 \145\40\102\151\147\40\102\162\157\164\150\145\162" "\114\145\145\40\110\141\
 \162\166\145\171\40\117\163\167\141\154\144\40\141\143\164\145\144\40\141\154\
 \157\156\145" "\111\40\153\156\157\167\40\145\166\145\162\171\164\150\151\156\
-\147\40\141\142\157\165\164\40\171\157\165"]))
+\147\40\141\142\157\165\164\40\171\157\165" "\111\40\163\141\167\40\171\157\
+\165\40\144\151\144\40\151\164"]))
       (message (aref v (% (logand 255 (random)) (length v))))
       (message " "))))
-
 
 (defmacro bbdb-hashtable ()
   '(bbdb-with-db-buffer (bbdb-records nil t) bbdb-hashtable))
