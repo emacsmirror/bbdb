@@ -160,7 +160,8 @@
               face (and (not elided-p) (bbdb-record-getprop record 'face))
               start (marker-position (nth 2 (car rest)))
               end (1- (or (nth 2 (car (cdr rest))) (point-max))))
-        (bbdb-set-extent-property (setq e (bbdb-make-extent start end)) 'highlight t)
+        (bbdb-set-extent-property (setq e (bbdb-make-extent start end))
+                                  'highlight t)
         (bbdb-set-extent-property e 'data 'bbdb)
         ;; note that on GNU Emacs, once you hit the main overlay, you
         ;; have to move off the record and back on again before it'll
@@ -171,7 +172,7 @@
         (if (bbdb-record-company record)
             (setq p (+ p 3 (length (bbdb-record-company record)))))
         (if (and elided-p (> p (+ start bbdb-elided-display-name-end)))
-            (setq p (+ start 3 bbdb-elided-display-name-end)))
+            (setq p (+ start 2 bbdb-elided-display-name-end)))
         (goto-char start)
         (if (search-forward " - " p t)
             (progn
@@ -273,13 +274,8 @@ as of GNU Emacs 20.7"
              (bbdb-set-extent-property extent 'data 'bbdb))))))
 
 
-(defvar global-bbdb-menu-commands
-  '(["Save BBDB" bbdb-save-db t]
-    ["Elide All Records" bbdb-elide-record t]
-    ["Finger All Records" (bbdb-finger (mapcar 'car bbdb-records)) t]
-    ["BBDB Manual" bbdb-info t]
-    ["BBDB Quit" bbdb-bury-buffer t]
-    ))
+(defvar bbdb-user-menu-commands nil
+  "User defined menu entries which should be appended to the BBDB menu." )
 
 (defun build-bbdb-finger-menu (record)
   (let ((addrs (bbdb-record-finger-host record)))
@@ -366,7 +362,15 @@ as of GNU Emacs 20.7"
 (defun build-bbdb-menu (record field)
   (append
    '("bbdb-menu" "Global BBDB Commands" "-----")
-   global-bbdb-menu-commands
+   (list
+    ["Save BBDB" bbdb-save-db t]
+    (if (nth 1 (assq record bbdb-records))
+        ["Unelide All Records" bbdb-elide-all-records t]
+      ["Elide All Records" bbdb-elide-all-records t])
+    ["Finger All Records" (bbdb-finger (mapcar 'car bbdb-records)) t]
+    ["BBDB Manual" bbdb-info t]
+    ["BBDB Quit" bbdb-bury-buffer t]
+    )
    (if record
        (list
         "-----"
@@ -378,6 +382,8 @@ as of GNU Emacs 20.7"
         (if (nth 1 (assq record bbdb-records))
             ["Unelide Record" bbdb-elide-record t]
           ["Elide Record" bbdb-elide-record t])
+        (if bbdb-display-omit-fields
+            ["Complete Unelide Record" bbdb-unelide-record t])
         ["Omit Record" bbdb-omit-record t]
         ["Refile (Merge) Record" bbdb-refile-record t]
         ))
@@ -389,7 +395,7 @@ as of GNU Emacs 20.7"
        (list (build-bbdb-insert-field-menu record)))
    (if field
        (cons "-----" (build-bbdb-field-menu record field)))
-   ))
+   bbdb-user-menu-commands))
 
 
 (eval-and-compile
@@ -439,28 +445,17 @@ as of GNU Emacs 20.7"
 (defun bbdb-menu (e)
   (interactive "e")
   (mouse-set-point e)
-  (beginning-of-line)
   (bbdb-popup
    (save-window-excursion
      (save-excursion
-       (mouse-set-point e)
        (let ((extent (or (bbdb-extent-at (point) (current-buffer) 'highlight)
                          (error "")))
              record field face)
          (or (eq (bbdb-extent-property extent 'data) 'bbdb)
              (error "not a bbdb extent"))
          (bbdb-highlight-extent extent t)
-         (goto-char (bbdb-extent-start-position extent))
-         (beginning-of-line)
          (setq record (bbdb-current-record)
-               face (bbdb-extent-face extent)
-               field (cond ((memq face
-                                  '(bbdb-name bbdb-field-value
-                                              bbdb-field-name))
-                            (bbdb-current-field))
-                           ((eq face 'bbdb-company)
-                            (cons 'company (cdr (bbdb-current-field))))
-                           (t nil)))
+               field  (get-text-property (point) 'bbdb-field))
          (build-bbdb-menu record field))))))
 
 ;; tell everyone else we're here.
