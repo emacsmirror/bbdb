@@ -1,3 +1,15 @@
+2000-08-11  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb-snarf.el (bbdb-extract-address-components): use
+	`bbdb-warn' instead of `warn'
+	(replace-in-string): check for `boundp', not `functionp'
+	(bbdb-snarf-nice-real-name-regexp, bbdb-snarf-nice-real-name): doc fix
+
+	* lisp/bbdb.el: removed the `defsubst' kludge - we do not support
+	emaxen without `defsubst' anyway;
+	also pacify the compiler a little bit
+
+
 2000-08-10  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el (bbdb-join): dropped an unused variable

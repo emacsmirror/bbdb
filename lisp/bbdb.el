@@ -54,6 +54,9 @@ version.")
 This may lead to confusion when doing completion.  If non-nil, it will
 prompt the users on how to merge records when duplicates are detected.")
 
+;; Definitions for things that aren't in all Emacsen and that I really
+;; would prefer not to live without.
+
 (eval-and-compile
   (if (fboundp 'unless) nil
     (defmacro unless (bool &rest forms) `(if ,bool nil ,@forms))
@@ -66,27 +69,7 @@ prompt the users on how to merge records when duplicates are detected.")
   (defmacro with-current-buffer (buf &rest body)
     `(save-current-buffer (set-buffer ,buf) ,@body)))
 
-;; This nonsense is to get the definition of defsubst loaded in when this file
-;; is loaded,without necessarily forcing the compiler to be loaded if we're
-;; running in an emacs with bytecomp-runtime.el predumped.  We are using
-;; `require' as a way to get compile-time evaluation of this form so that this
-;; works in the old compiler as well as the new one.
-;;
-(require (progn
-           (provide 't) ; eeeewwww, gross!
-           (condition-case ()
-               (if (fboundp 'defsubst)
-                   't
-                 ;; If byte-optimize can be loaded, use that.
-                 (require 'byte-optimize)
-                 'byte-optimize)
-             ;; otherwise, use the boneheaded version of defsubst.
-             (error 'defsubst))))
-
-;; Definitions for things that aren't in all Emacsen and that I really
-;; would prefer not to live without.
-
-(if (fboundp 'defvaralias) nil
+(unless (fboundp 'defvaralias)
   (defun defvaralias (&rest args)))
 
 (defmacro string> (a b) (list 'not (list 'or (list 'string= a b)
@@ -98,21 +81,29 @@ prompt the users on how to merge records when duplicates are detected.")
 (if (fboundp 'cadr) nil (defun cadr (foo) (car (cdr foo))))
 (if (fboundp 'caddr) nil (defun caddr (foo) (car (cdr (cdr foo)))))
 
+(eval-when-compile              ; pacify the compiler
+ (defvar bbdb-address-print-formatting-alist) ; "bbdb-print"
+ (defvar mail-mode-map)         ; "sendmail"
+ (autoload 'widget-group-match "wid-edit")
+ (autoload 'Electric-pop-up-window "electric")
+ (autoload 'Electric-command-loop "electric")
+ (autoload 'bbdb-snarf-nice-real-name "bbdb-snarf")
+ )
+
 ;; Make custom stuff work even without customize
 ;;   Courtesy of Hrvoje Niksic <hniksic@srce.hr>
 (eval-and-compile
   (condition-case ()
       (require 'custom)
     (error nil))
-  (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
-      nil ;; We've got what we needed
+  (unless (and (featurep 'custom) (fboundp 'custom-declare-variable))
     ;; We have the old custom-library, hack around it!
     (defmacro defgroup (&rest args)
       nil)
     (defmacro defcustom (var value doc &rest args)
-      (` (defvar (, var) (, value) (, doc))))
+      `(defvar ,var ,value ,doc))
     (defmacro defface (var value doc &rest args)
-      (` (make-face (, var))))
+      `(make-face ,var))
     (defmacro define-widget (&rest args)
       nil)))
 
@@ -932,7 +923,8 @@ If the note is absent, returns a zero length string."
 (defun bbdb-buffer ()
   (if (and bbdb-buffer (buffer-live-p bbdb-buffer))
       bbdb-buffer
-    (if (and bbdb-file-remote (file-newer-than-file-p bbdb-file-remote bbdb-file))
+    (when (and bbdb-file-remote
+               (file-newer-than-file-p bbdb-file-remote bbdb-file))
       (copy-file bbdb-file-remote bbdb-file t t))
     (setq bbdb-buffer
           (find-file-noselect bbdb-file 'nowarn))))

@@ -74,7 +74,7 @@
       (vector label address-lines city state zip country)
     (if (>= bbdb-file-format 3)
 	(vector label address-lines city state zip)
-      (vector label 
+      (vector label
 	      (nth 0 address-lines)
 	      (nth 1 address-lines)
 	      (nth 2 address-lines)
@@ -386,38 +386,34 @@ more details."
 
 ;;----------------------------------------------------------------------------
 ;; Emacs 20.3 seems to miss the function replace-in-string?
-(if (not (functionp 'replace-in-string))
-    ;; actually this is dired-replace-in-string slightly modified 
-    (defun replace-in-string (string regexp newtext &optional literal)
-      ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.
-      ;; NEWTEXT is taken literally---no \\DIGIT escapes will be recognized.
-      (let ((result "") (start 0) mb me)
-	(while (string-match regexp string start)
-	  (setq mb (match-beginning 0)
-		me (match-end 0)
-		result (concat result (substring string start mb) newtext)
-		start me))
-	(concat result (substring string start)))))
+(unless (boundp 'replace-in-string)
+  ;; actually this is `dired-replace-in-string' slightly modified
+  (defun replace-in-string (string regexp newtext &optional literal)
+    ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.
+    ;; NEWTEXT is taken literally---no \\DIGIT escapes will be recognized.
+    (let ((result "") (start 0) mb me)
+      (while (string-match regexp string start)
+        (setq mb (match-beginning 0)
+              me (match-end 0)
+              result (concat result (substring string start mb) newtext)
+              start me))
+      (concat result (substring string start)))))
 
 (defcustom bbdb-snarf-nice-real-name-regexp "[._,\t\n ]+"
-  "*Regexp matching string which `bbdb-wash-address' will replaced by
+  "*Regexp matching string which `bbdb-snarf-nice-real-name' will replace by
 a space."
   :group 'bbdb-noticing-records
   :type 'string)
-  
+
 (defun bbdb-snarf-nice-real-name (str)
   "Removes unwanted characters form STR in order to get a nice full name.
-Remove any unwanted characters specifyed by `bbdb-wash-address-regexp',
-capitalize words and change order of names when separated by comma." 
-  (if str
-      (progn
-	(if (string-match "^\\([^,]+\\)\\s-*,\\s-*\\([^,]+\\)$" str)
-	    (setq str (concat (match-string 2 str) " "
-			      (match-string 1 str))))
-	(capitalize (replace-in-string str
-				       bbdb-snarf-nice-real-name-regexp
-				       " ")))
-    nil))
+Remove any unwanted characters specifyed by `bbdb-snarf-nice-real-name-regexp',
+capitalize words and change order of names when separated by a comma."
+  (when str
+    (when (string-match "^\\([^,]+\\)\\s-*,\\s-*\\([^,]+\\)$" str)
+      (setq str (concat (match-string 2 str) " " (match-string 1 str))))
+    (capitalize (replace-in-string
+                 str bbdb-snarf-nice-real-name-regexp " "))))
 
 (defcustom bbdb-extract-address-component-regexps
 	'(;; "'surname, firstname'" <address>  from Outlookers
@@ -442,7 +438,7 @@ capitalize words and change order of names when separated by comma."
 	   nil 1)
 	  )
 	"*List of regexps matching headers.
-Each list element should have the form (REGEXP FULLNAME ADDRESS), where 
+Each list element should have the form (REGEXP FULLNAME ADDRESS), where
 REGEXP matches the address while the actual address components should
 be a parenthesized expression.
 
@@ -473,7 +469,7 @@ other value will fire a error.
 When set to a function it will be called with the remaining string in
 order to extract the address components and return the rest and the
 components as list or to do what ever it wants, e.g. send a complain
-to the author ... 
+to the author ...
 
 To skip known unpareable stuff you rather should set the variable
 `bbdb-extract-address-component-ignore-regexp' instead of disabling
@@ -539,7 +535,7 @@ If extracting fails one probably has to adjust the variable
       (if nomatch
 	  (cond ((equal bbdb-extract-address-component-handler nil))
 		((equal bbdb-extract-address-component-handler 'warn)
-		 (warn "Cannot extract an address component at \"%s\".
+		 (bbdb-warn "Cannot extract an address component at \"%s\".
 See `bbdb-extract-address-component-handler' for more information."
 		       adstring))
 		((equal bbdb-extract-address-component-handler 'message)
@@ -560,7 +556,7 @@ See `bbdb-extract-address-component-handler' for more information."
 		 (error "Cannot extract an address component at \"%30s\""
 			adstring))))
 
-      ;; ignore the bad junk 
+      ;; ignore the bad junk
       (if nomatch
 	  (if (string-match "^[^,]*," adstring)
 	      (setq adstring (substring adstring (match-end 0)))
