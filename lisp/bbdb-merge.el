@@ -195,7 +195,6 @@ If s1 doesn't contain s2, return s1+sep+s2."
          (bbdb-buffer nil) ;; hack hack
          (bbdb-file bbdb-live-file)
          (bbdb-buffer-name bbdb-live-buffer-name)
-         (live-records (bbdb-records))
          (bbdb-refile-notes-default-merge-function 'bbdb-merge-strings))
 
     ;; merge everything
