@@ -23,6 +23,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.58  1998/03/10 07:35:09  simmonmt
+;; Colin's new refiling code, protecting default-area-code
+;;
 ;; Revision 1.57  1998/01/06 04:51:10  simmonmt
 ;; Fixed copyright, moved customized finger variables into
 ;; utilities-finger group (from finger).  Removed autoloads.
@@ -410,7 +413,9 @@ name collisions."
 			      (bbdb-error-retry
 				(bbdb-parse-phone-number
 				  (read-string "Phone: "
-					       (and bbdb-default-area-code (format "(%03d) " bbdb-default-area-code))))))
+					       (condition-case nil
+						   (format "(%03d) " bbdb-default-area-code)
+						 (t nil))))))
 			     (phone (apply 'vector str
 					   (if (= 3 (length phonelist))
 					       (nconc phonelist '(0))
@@ -780,7 +785,9 @@ bbdb-north-american-phone-numbers-p."
 	   (aset p 0 nil)
 	   (aset p 1
 		 (if (= bbdb-phone-length (length p))
-		     (or bbdb-default-area-code 0)
+		     (if (integerp bbdb-default-area-code)
+			 bbdb-default-area-code
+		       0)
 		     nil))
 	   (bbdb-record-edit-phone p)
 	   p))
@@ -1241,6 +1248,42 @@ omit backwards."
 
 ;;; Fixing up bogus entries
 
+(defcustom bbdb-refile-notes-generate-alist '((creation-date . bbdb-refile-notes-string-least))
+  "*An alist defining specific merging function, based on notes field."
+  :group 'bbdb-noticing-records
+  :type '(repeat (cons
+		  (symbol :tag "Notes filed")
+		  (hook :tag "Generating function"))))
+
+(defcustom bbdb-refile-notes-default-merge-function 'bbdb-refile-notes-default-merge-function
+  "*Default function to use for merging BBDB notes records.
+
+If the note field has an entry in `bbdb-refile-notes-generate-alist',
+that function will be used instead."
+  :group 'bbdb-noticing-records
+  :type 'function)
+
+
+(defun bbdb-refile-notes-default-merge-function (string1 string2)
+  "Returns the concatenation of STRING1 and STRING2"
+  (concat string1 "\n" string2))
+
+(defun bbdb-refile-notes-remove-duplicates (string1 string2)
+  "Concatenate STRING1 and STRING2, but remove duplicate lines."
+  (let ((note1 (split-string string1 "\n"))
+	(note2 (split-string string2 "\n")))
+    (while note2
+      (if (not (member (car note2) note1))
+	  (setq note1 (cons (car note2) note1)))
+      (setq note2 (cdr note2)))
+    (mapconcat 'identity note1 "\n")))
+
+(defun bbdb-refile-notes-string-least (string1 string2)
+  "Returns the string that is lessp."
+  (if (string-lessp string1 string2)
+      string1
+    string2))
+
 (defun bbdb-refile-record (old-record new-record)
   "Merge the current record into some other record; that is, delete the
 record under point after copying all of the data within it into some other
@@ -1320,7 +1363,11 @@ Completion behaviour is as dictated by the variable `bbdb-completion-type'."
 	    (or (listp n2) (setq n2 (list (cons 'notes n2))))
 	    (while n2
 	      (if (setq tmp (assq (car (car n2)) n1))
-		  (setcdr tmp (concat (cdr tmp) "\n" (cdr (car n2))))
+		  (setcdr tmp
+			  (funcall (or (cdr (assq (car (car n2))
+						  bbdb-refile-notes-generate-alist))
+				       bbdb-refile-notes-default-merge-function)
+				   (cdr tmp) (cdr (car n2))))
 		(setq n1 (nconc n1 (list (car n2)))))
 	      (setq n2 (cdr n2)))
 	    (bbdb-record-set-raw-notes new-record n1))))
@@ -1922,7 +1969,7 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
       (error "no sound player program"))
   (let* ((str (bbdb-phone-string phone))
 	 L (i 0))
-    (or force-area-code
+    (or force-area-code (not (integerp bbdb-default-area-code))
 	(if (string-match (format "^(%03d)" bbdb-default-area-code) str)
 	    (setq str (substring str (match-end 0)))))
     (if (string-match "x[0-9]+$" str)
