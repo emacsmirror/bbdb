@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.9  2000/07/25 17:47:19  sds
+# use auto-generated autoloads consistently
+#
 # Revision 1.8  2000/06/30 21:58:11  kuepper
 # Build bbdb-merge.elc
 #
@@ -49,7 +52,7 @@ VM	= -eval '(progn (if (not (string-match "$(VMDIR)" ""))            \
                                   (t (load "vm-vars") (load "vm")))))'
 
 GNUS	= -eval '(if (not (string-match "$(GNUSDIR)" ""))             \
-		     (setq load-path (cons "$(GNUSDIR)" load-path)))' 
+		     (setq load-path (cons "$(GNUSDIR)" load-path)))'
 
 MHE	= -eval '(progn (if (not (string-match "$(MHEDIR)" ""))            \
 			    (setq load-path (cons "$(MHEDIR)" load-path))) \
@@ -98,10 +101,18 @@ syntax:
 	echo "*** Make should be run from the `cd ..;pwd` directory" ;\
 	echo "" ;\
 
-all:	rmail gnus vm mhe bbdb info
+all:	rmail gnus vm mhe bbdb info autoloads
 
-auto-autoloads.elc: auto-autoloads.el
-	$(EMACS) -batch -q -f batch-byte-compile ./auto-autoloads.el
+bbdb-autoloads.el: $(DEPSRCS)
+	@rm -f $@;
+	@echo "" > $@;
+	$(EMACS) -batch -q -l autoload \
+		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
+		--eval '(setq make-backup-files nil)' \
+		-f batch-update-autoloads `pwd`
+
+bbdb-autoloads.elc: bbdb-autoloads.el
+	$(EMACS) -batch -q -f batch-byte-compile ./$^
 
 bbdb.elc:            bbdb.el
 bbdb-com.elc:        bbdb.elc bbdb-com.el
@@ -148,12 +159,12 @@ bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
 	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc $(VM) \
 	-f batch-byte-compile $(@:.elc=.el)
 
-autoloads: auto-autoloads.elc
+autoloads: bbdb-autoloads.elc
 
 extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc  \
 	bbdb-srv.elc bbdb-reportmail.elc bbdb-snarf.elc bbdb-w3.elc \
 	bbdb-sc.elc bbdb-merge.elc bbdb-migrate.elc
-bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc extras
+bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc autoloads extras
 rmail:	bbdb bbdb-rmail.elc
 vm:	bbdb bbdb-vm.elc
 mhe:	bbdb bbdb-mhe.elc
@@ -178,5 +189,5 @@ deploy:
 
 
 clean:
-	$(RM) bbdb.elc bbdb-*.elc bbdb.info auto-autoloads.elc
+	$(RM) bbdb.elc bbdb-*.elc bbdb.info bbdb-autoloads.elc
 
