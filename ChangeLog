@@ -1,3 +1,40 @@
+2001-07-31  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-gui.el (build-bbdb-menu): Added an "(Un)Elide All
+	Records entry" and content of variable `global-bbdb-menu-commands'
+	moved into the defun.
+	(bbdb-user-menu-commands): New variable with user menu commands
+	appended to default menu.
+	(build-bbdb-menu): Add extra menu entry for displaying all fields
+	when `bbdb-display-omit-fields' is set.
+	(bbdb-menu): Added detection of fields for menu commands.
+
+	* lisp/bbdb.el (bbdb-field-shown-p): Changed the defsubst to a defun.
+	(bbdb-format-record-elided), (bbdb-format-record-full):  Replace
+	bbdb-format-record.  They add text-properties to the fields in
+	order to know fields for editing.
+	(bbdb-display-omit-fields): New variable which is a list fields 
+	omitted during full display of a record.
+	(bbdb-display-fields-order): New variable specifying to order of
+	fields for during full display of a record.
+	(bbdb-format-elided-phones), (bbdb-format-elided-net): Formating
+	functions for elided display.
+
+	* lisp/bbdb-com.el
+	(bbdb-elide-all-records): New function for the BBDB menu
+	(bbdb-unelide-record):  New function for showing fileds hidden by
+	`bbdb-display-omit-fields'
+	(bbdb-record-edit-field-internal): Added location arg and company
+	field. 
+	(bbdb-current-field): Simpified it ti use text-properties for
+	field recognition 
+	(bbdb-record-edit-company): New function for editing the records
+	company
+	(bbdb-record-edit-address): Fixed the docs
+	(bbdb-record-edit-phone): Added optional location arg 
+	(bbdb-prompt-for-create): Use characters instead of integers for
+	the key-presses and avoid calling char-int.
+
 2001-07-08  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-com.el, lisp/bbdb.el:
@@ -65,7 +102,7 @@
 2001-06-23  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-mhe.el (bbdb/mh-update-record): 
-	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail):
+	* lisp/bbdb-rmail.el (bbd/rmail-update-records):
 	  Fixed the faulty use of bbdb/prompt-for-create-p.
 
 2001-06-12  Waider  <waider@waider.ie>
