@@ -220,7 +220,7 @@ be returned."
   "Regrinds the contents of the *BBDB* buffer, without scrolling.
 If possible, you should call bbdb-redisplay-one-record instead."
   (let ((p (point))
-	(m (mark)))
+	(m (condition-case condition (mark) (error nil))))
     (goto-char (window-start))
     (let ((p2 (point)))
       (bbdb-display-records-1 bbdb-records)
