@@ -1,5 +1,7 @@
 2001-02-05  Robert Fenk  <fenk@forwiss.de>
 
+	* lisp/Makefile.in (bbdb-hooks.elc): removed need to load VM.
+
 	* lisp/bbdb.el (bbdb-frob-mode-line): Removed faulty
 	replace-in-string.
 
