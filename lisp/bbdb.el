@@ -1643,7 +1643,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
           (set (make-local-variable 'bbdb-propnames) nil)
           (set (make-local-variable 'revert-buffer-function)
                'bbdb-revert-buffer)
-          (mapc (lambda (ff) (bbdb-add-hook 'local-write-file-hooks ff))
+          (mapc (lambda (ff) (add-hook 'local-write-file-hooks ff))
                 bbdb-write-file-hooks)
           (setq bbdb-hashtable (make-vector 1021 0)))
         (setq bbdb-modified-p (buffer-modified-p)
@@ -2277,26 +2277,6 @@ function `y-or-n-p-with-timeout' is defined."
         (save-buffer)
       (if mention-if-not-saved (message "BBDB not saved")))))
 
-(defun bbdb-add-hook (hook function &optional append)
-  "Add to the value of HOOK the function FUNCTION.
-FUNCTION is not added if already present.
-FUNCTION is added (if necessary) at the beginning of the hook list
-unless the optional argument APPEND is non-nil, in which case
-FUNCTION is added at the end.
-
-HOOK should be a symbol, and FUNCTION may be any valid function.  If
-HOOK is void, it is first set to nil.  If HOOK's value is a single
-function, it is changed to a list of functions."
-  (if (not (boundp hook)) (set hook nil))
-  ;; If the hook value is a single function, turn it into a list.
-  (let ((old (symbol-value hook)))
-    (if (or (not (listp old)) (eq (car old) 'lambda))
-        (setq old (list old)))
-    (if (member function old)
-        nil
-      (set hook (if append
-                    (append old (list function)) ; don't nconc
-                  (cons function old))))))
 
 ;;; mail and news interface
 
@@ -2951,17 +2931,15 @@ passed as arguments to initiate the appropriate insinuations.
 ;;; BBDB adds to itself for different Emacsen.  For definitions of
 ;;; functions that aren't present in various Emacsen (for example,
 ;;; cadr for Emacs 19.34), see below
-(cond ((string-match "XEmacs\\|Lucid" emacs-version)
-       (bbdb-add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
-       (define-key bbdb-mode-map 'button3 'bbdb-menu)
+(when (string-match "XEmacs\\|Lucid" emacs-version)
+  (add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
+  (define-key bbdb-mode-map 'button3 'bbdb-menu)
 
-       ;; Above
-       (fset 'bbdb-warn 'warn)
+  ;; Above
+  (fset 'bbdb-warn 'warn)
 
-       ;; bbdb-com.el
-       (fset 'bbdb-display-completion-list 'bbdb-xemacs-display-completion-list)))
-(if (not (fboundp 'add-hook))
-    (fset 'add-hook 'bbdb-add-hook))
+  ;; bbdb-com.el
+  (fset 'bbdb-display-completion-list 'bbdb-xemacs-display-completion-list))
 
 (defun bbdb-insinuate-sendmail ()
   "Call this function to hook BBDB into sendmail (that is, M-x mail)."

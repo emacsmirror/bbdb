@@ -2,6 +2,7 @@
 
 	* lisp/bbdb.el (bbdb-init-forms): hook adding only
 	(bbdb-initialize): ditto
+	(bbdb-add-hook): dropped
 
 2000-07-25  Sam Steingold  <sds@gnu.org>
 
