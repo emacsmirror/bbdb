@@ -182,12 +182,17 @@
         (bbdb-set-specifier scrollbar-height (cons (current-buffer) 0)))
 
     (let ((rest (or records bbdb-records))
-          record face start end elided-p p e)
+          record face
+          start end  s e 
+          elided-p
+          property
+          extent)
       
       (while rest
         (setq record (car (car rest))
-              elided-p (eq (nth 1 (car rest)) t)
-              face (and (not elided-p) (bbdb-record-getprop record 'face))
+              multi-line-p (string-match "multi-line"
+                                        (symbol-name (nth 1 (car rest))))
+              face (and multi-line-p (bbdb-record-getprop record 'face))
               start (marker-position (nth 2 (car rest)))
               end (1- (or (nth 2 (car (cdr rest))) (point-max))))
 
@@ -201,54 +206,47 @@
                                 (bbdb-delete-extent o))))
                 (bbdb-extents-in start end))
 
-        
-        (bbdb-set-extent-property (setq e (bbdb-make-extent start end))
-                                  'highlight t)
-        (bbdb-set-extent-property e 'data 'bbdb)
+        (setq extent (bbdb-make-extent start end))
+        (bbdb-set-extent-property extent 'highlight t)
+        (bbdb-set-extent-property extent 'data 'bbdb)
         ;; note that on GNU Emacs, once you hit the main overlay, you
         ;; have to move off the record and back on again before it'll
         ;; notice that you're on a more specific overlay. This is
         ;; bogus, like most GNU Emacs GUI stuff.
-        (bbdb-set-extent-property e 'priority 3)
-        ;; workaround to make company highlighting work properly on
-        ;; records that have no name field.  Need to account for the
-        ;; "???" string that is dumped in the name field at display time.
-        (setq p (+ start (if (bbdb-record-name record)
-                             (length (bbdb-record-name record))
-                           3)))
-        (if (bbdb-record-company record)
-          (setq p (next-single-property-change (+ p 3) 'bbdb-field)))
+        (bbdb-set-extent-property extent 'priority 3)
+        (if face (bbdb-hack-x-face face extent))
         (goto-char start)
-        (if (search-forward " - " p t)
-            (progn
-              (setq e (bbdb-make-extent (point) p))
-              (bbdb-set-extent-property e 'data 'bbdb)
-              (bbdb-set-extent-face e 'bbdb-company)
-              (bbdb-set-extent-property e 'highlight t)
-              (bbdb-set-extent-property e 'priority 2)
-              (forward-char -3))
-          (goto-char p))
-        (setq e (bbdb-make-extent start (point)))
-        (bbdb-set-extent-property e 'data 'bbdb)
-        (bbdb-set-extent-face e 'bbdb-name)
-        (bbdb-set-extent-property e 'priority 2)
-        (bbdb-set-extent-property e 'highlight t)
-        (if face (bbdb-hack-x-face face e))
-        (goto-char start)
-        (while (and p (< (point) end))
-          (setq p (next-single-property-change (point) 'bbdb-field))
-          (when p 
-            (goto-char p)
-            (when (looking-at "[^:\n]+:")
-              (setq e (bbdb-make-extent p (match-end 0)))
-              (bbdb-set-extent-face e 'bbdb-field-name)
-              (bbdb-set-extent-property e 'priority 2)
-              (bbdb-set-extent-property e 'data 'bbdb))
-            (setq e (bbdb-make-extent p (1- (point))))
-            (bbdb-set-extent-property e 'data 'bbdb)
-            (bbdb-set-extent-face e 'bbdb-field-value)
-            (bbdb-set-extent-property e 'priority 2)
-            (bbdb-set-extent-property e 'highlight t)))
+        (setq s start)
+        (setq property (cadr (member 'bbdb-field (text-properties-at s))))
+        (while (and s (< s end))
+          (setq e (or (next-single-property-change (1+ s) 'bbdb-field)
+                      (point-max)))
+          (cond ((equal property '(name))
+                 (setq extent (bbdb-make-extent s e))
+                 (bbdb-set-extent-property extent 'priority 2)
+                 (bbdb-set-extent-property extent 'data 'bbdb)
+                 (bbdb-set-extent-face extent 'bbdb-name))
+                ((equal property '(company))
+                 (setq extent (bbdb-make-extent s e))
+                 (bbdb-set-extent-property extent 'priority 2)
+                 (bbdb-set-extent-property extent 'data 'bbdb)
+                 (bbdb-set-extent-face extent 'bbdb-company))
+                ((member 'field-name property)
+                 (goto-char s)
+                 (setq extent (bbdb-make-extent s e))
+                 (bbdb-set-extent-property extent 'priority 2)
+                 (bbdb-set-extent-property extent 'data 'bbdb)
+                 (bbdb-set-extent-face extent 'bbdb-field-name))
+                (t
+                 (setq extent (bbdb-make-extent start e))
+                 (bbdb-set-extent-property extent 'priority 2)
+                 (bbdb-set-extent-property extent 'data 'bbdb)
+                 (bbdb-set-extent-face extent 'bbdb-field-value)))
+          (setq s e)
+          (while (and s (null (setq property
+                                    (cadr (member 'bbdb-field
+                                                  (text-properties-at s))))))
+            (setq s (next-single-property-change s 'bbdb-field))))
           
         (setq rest (cdr rest))
         (if (null (caar rest))
@@ -491,9 +489,9 @@ as of GNU Emacs 20.7"
                     (funcall 'eval command)))))))))
 
 ;;;###autoload
-(defun bbdb-menu (e)
+(defun bbdb-menu (event)
   (interactive "e")
-  (mouse-set-point e)
+  (mouse-set-point event)
   (bbdb-popup
    (save-window-excursion
      (save-excursion
