@@ -1,3 +1,60 @@
+Sun Oct 26 00:14:36 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 1.55unoff released
+	* texinfo/bbdb.texinfo: Partial rewrite
+	* lisp/bbdb.el: new autoloads.  Override bbdb-display-completion-list
+	  for XEmacs users.
+	* lisp/bbdb-w3.el (bbdb-www): Uses browse-url-browser-function
+	  instead of a manual funcall 
+	* lisp/bbdb-snarf.el (bbdb-snarf-region): Toss trailing space too
+
+Sat Oct 25 23:47:40 1997  Brian Edmonds  <edmonds@cs.ubc.ca>
+Sat Oct 25 23:47:40 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb-gnus.el: Changed *everything* beginning with
+          `gnus-bbdb' to `bbdb/gnus'
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-get-author): Integrated (along
+	  with associated variables and functions)
+	* lisp/bbdb-gnus.el (bbdb/gnus-score): Integrated (along with
+	  associated variables and functions)
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus): Activate above new
+	  features
+
+Sat Oct 25 17:54:26 1997  Marco Walther  <Marco.Walther@mch.sni.de>
+Sat Oct 25 17:54:26 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb-com.el (bbdb-complete-name): Clicking on name in
+	  completion buffer now restores configuration (uses callback below)
+	* lisp/bbdb-com.el (bbdb-complete-clicked-name): Created.  See above
+	* lisp/bbdb-com.el (bbdb-display-completion-list): Wrapper 
+	* lisp/bbdb-xemacs.el (bbdb-xemacs-display-completion-list):
+	  XEmacs version of bbdb-display-completion-list, allows callbacks
+	* lisp/auto-autoloads.el: autoload for XEmacs version of
+	  bbdb-display-completion-list
+
+Mon Oct 20 18:38:28 1997  Colin Rafferty  <craffert@ml.com>
+
+	* Makefile (install-pkg): Made it install the el before the .elc.
+
+Mon Oct 20 12:15:15 1997  Christoph Wedler  <wedler@fmi.uni-passau.de>
+
+	* lisp/bbdb-xemacs.el (global-bbdb-menu-commands): Bug fix "Finger
+ 	  All Records".
+	* lisp/bbdb-xemacs.el (build-bbdb-finger-menu): Use
+	  `bbdb-record-finger-host'.
+	* lisp/bbdb-com.el (bbdb-finger): Doc string extension.
+	* texinfo/bbdb.texinfo (BBDB Mode): Add documentation for
+	  `bbdb-finger'.
+
+Tue Oct 14 20:06:38 1997  david carlton <carlton@math.mit.edu>
+
+	* Makefile (install-pkg): Fix info linking - use texinfo, not info
+
+Mon Oct 13 16:41:27 1997  Soren Dayton <csdayton@cs.uchicago.edu>
+
+	* lisp/bbdb-w3.el (bbdb-www): Use browse-url instead of funcalling
+	  contents of browse-url-browser-function.
+
 Sat Oct 11 19:19:27 1997  Matt Simmons  <simmonmt@acm.org>
 
 	* bbdb.el: BBDB 1.54unoff released
@@ -99,6 +156,10 @@ Sun Sep 28 00:50:07 1997  Matt Simmons  <simmonmt@acm.org>
 	* Makefile: renamed it, removed mail-extr and mail-abbrev, did
 		  some reformatting
 
+Sun Sep 28 00:49:00 1997  Colin Rafferty <craffert@ml.com>
+
+        * auto-autoloads.el, Makefile: Use BBDB as an XEmacs package
+
 Sun Sep 28 00:03:31 1997  Jens-Ulrik Hoger Petersen <petersen@kurims.kyoto-u.ac.jp>
 
 	* bbdb-gnus.el (bbdb/gnus-update-record): Changed method for
@@ -113,7 +174,7 @@ Sat Sep 27 23:56:35 1997  Christopher Kline <ckline@mitre.org>
 Sat Sep 27 23:47:01 1997  Soren Dayton <csdayton+bbdb@cs.uchicago.edu>
 
 	* bbdb-com.el (bbdb-send-mail-internal): Allow use of message-mail
-	* bbdb.el (bbdb-send-mail-styly): Documentation change.  See above.
+	* bbdb.el (bbdb-send-mail-style): Documentation change.  See above.
 
 Sat Sep 27 23:44:43 1997  Colin Rafferty <craffert@ml.com>
 

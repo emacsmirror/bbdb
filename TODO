@@ -1,5 +1,22 @@
 $Id$
 
+Features
+========
+
+---------------------------------------------------------------------------------
+PURPOSE: Y2K
+
+CANDIDATE: <unwritten>
+   AUTHOR: <unknown>
+    WHERE: <my head>
+
+STATUS: Investigatory
+ SINCE: 12-Oct-1997
+ ADDED: 12-Oct-1997
+REASON: Looking to see where patches will be required.  Currently (w/o 
+        looking at the code at all) creation-date and timestamp
+---------------------------------------------------------------------------------
+
 Patches
 =======
 
@@ -80,6 +97,32 @@ STATUS: Pending
  ADDED: 28-Sep-1997
 REASON: Need sleep
 ---------------------------------------------------------------------------------
+PURPOSE: let the BBDB take control mail splitting in Gnus
+
+CANDIDATE: bbdb/gnus-split-method from gnus-bbdb
+   AUTHOR: Brian-Edmonds <edmonds@cs.ubc.ca>
+    WHERE: http://www.forwiss.uni-erlangen.de/~jws/bbdb/index.html
+
+STATUS: Pending
+ SINCE: 25-Oct-1997
+ ADDED: 25-Oct-1997
+REASON: Want to look at it more (for comprehension, not to determine
+        whether or not it's going in)
+---------------------------------------------------------------------------------
+PURPOSE: several other files from
+              http://www.forwiss.uni-erlangen.de/~jws/bbdb/index.html
+
+STATUS: Investigatory
+ SINCE: 25-Oct-1997
+ ADDED: 5-Oct-1997
+REASON: I integrated the ones that looked most important at first
+        glance.  Will glance at the rest later.  "The rest" is:
+           bbdb-filters-0.2.sh.gz   bbdb-query.el
+           bbdb-frame.el            bbdb-sc.el 
+           bbdb-letter-1.0.tar.gz   country.el
+           bbdb-plz.el              country-info.el
+---------------------------------------------------------------------------------
+
 
 MAYBE?
 ======
@@ -101,15 +144,15 @@ REASON: I've removed mail-extr from the distribution since it's distributed with
 Documentation
 =============
 
-Add autoload stuff (currently in README)
 Fix(?) description of files
 Add documentation of bbdb-reportmail.el
 Add documentation of Soren Dayton's message for bbdb-send-mail-internal
-Add documentation of Christoph Wedler's finger-host
            ...    of Christopher Kline's bbdb-reportmail.el
            ...    of Christopher Kline's bbdb-unlazy-lock.pl
+           ...    of the heap of code from gnus-bbdb
 Changes to bbdb-print.el
 bbdb-snarf, bbbd-w3, message-mode stuff
+Add documentation bbdb-srv
 
 In a util directory
 ===================
@@ -122,3 +165,4 @@ TTNTBDBIDHAPFYAHGATWOF
 around to writing one for)
 
 * Selectable ampersand processing in names
+* BBDB-print HTML output
