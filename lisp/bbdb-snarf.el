@@ -426,11 +426,14 @@ capitalize words and change order of names when separated by a comma."
       ;; name <address>
       ("\\(\\b[^<\",]*\\b\\)\\s-*<\\([^>]+\\)>"
        1 2)
-      ;; name <address>
+      ;; <address>
       ("<\\([^>]+\\)>" nil 2)
       ;; address (name)
       ("\\(\\b[^<\",()]+\\b\\)\\s-*(\\([^)]+\\))"
        2 1)
+      ;; firstname.lastname@host
+      ("\\b\\(\\([^@]+\\.[^@]+\\)@[0-9a-z._-]+\\)\\b"
+       (bbdb-snarf-nice-real-name (match-string 2 adstring)) 1)
       ;; user@host
       ("\\b\\(\\([0-9a-z._-]+\\)@[0-9a-z._-]+\\)\\b"
        nil 1)
