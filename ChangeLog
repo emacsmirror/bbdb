@@ -1,3 +1,13 @@
+2000-11-06  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-vm.el: Respect value of bbdb-use-pop-up.
+	* html/index.html: Corrected mirror link.
+
+2000-11-02  Waider  <waider@waider.ie>
+
+	* bbdb/lisp/bbdb.el:
+	Define characterp if it's not already bound. Used in bbdb-vm.
+
 2000-11-02  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el (bbdb-hashtable-size): call `bbdb-records' only
