@@ -2032,7 +2032,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
      ((null completion)
       (bbdb-complete-name-cleanup)
       (if bbdb-expand-mail-aliases ;; maybe check for mail alias
-          (expand-abbrev)
+          (or (expand-abbrev) (ding))
         (ding)))
 
       ;; Perfect match...
