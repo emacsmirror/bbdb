@@ -3254,7 +3254,7 @@ treat updates in the right way.")
 (defun bbdb-update-records (addrs auto-create-p offer-to-create)
   "Returns the records corresponding to the list of addresses ADDRS,
 creating or modifying them as necessary.  A record will be created if
-AUOT-CREATE-P is non-nil or if OFFER-TO-CREATE is true and the user
+AUTO-CREATE-P is non-nil or if OFFER-TO-CREATE is true and the user
 confirms the creation.
 
 The variable `bbdb/gnus-update-records-mode' controls what actions
