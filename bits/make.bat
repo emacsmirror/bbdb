@@ -25,14 +25,14 @@ rem parameters.
 
 rem For the meaning of these look at the Makefile.
 rem Notice that you have to double any backslashes in the path.
-set GNUSDIR=D:\\Yair\\emacs\\gnus
+set GNUSDIR=E:\\emacs-20.7\\lisp\\gnus
 set MHEDIR=
 set VMDIR=
-set OTHERDIRS=
+set OTHERDIR=
 rem give it any value if you want to use rmail with bbdb
 set RMAIL=
 rem This is where you bbdb lisp is going
-set BBDBDIR=D:\\Yair\\emacs\\bbdb\\lisp
+set BBDBDIR=D:\\emacs-20.7\\site-lisp\\bbdb-2.2\\lisp
 
 rem Clear PWD so emacs doesn't get confused
 set BBDB_PWD_SAVE=%PWD%
@@ -48,39 +48,43 @@ if exist %1\bin\emacs.bat set emacs=emacs.bat
 set VM=-eval "(progn (if (not (string-match \"%VMDIR%\" \"\")) (setq load-path (cons \"%VMDIR%\" load-path))) (if (load \"vm-version\" t) (cond ((> (string-to-number vm-version) 5.31) (load \"vm\")) (t (load \"vm-vars\") (load \"vm\")))))"
 set GNUS=-eval "(if (not (string-match \"%GNUSDIR%\" \"\")) (setq load-path (cons \"%GNUSDIR%\" load-path)))"
 set MHE=-eval "(progn (if (not (string-match \"%MHEDIR%\" \"\")) (setq load-path (cons \"%MHEDIR%\" load-path))) (load \"mh-e\"))"
-set PUSHPATH=-eval "(setq load-path (delete \"\" (append (list \".\" \"%OTHERDIRS%\") load-path)))"
+set PUSHPATH=-eval "(setq load-path (delete \"\" (append (list \".\" \"%OTHERDIR%\") load-path)))"
 
 cd lisp
 
 call %1\bin\%emacs% -batch -q -no-site-file -f batch-byte-compile ./bbdb.el
-call %1\bin\%emacs% -batch -q -no-site-file %PUSHPATH% -l ./bbdb.elc -f batch-byte-compile bbdb-com.el bbdb-hooks.el bbdb-print.el bbdb-ftp.el bbdb-whois.el bbdb-srv.el bbdb-reportmail.el bbdb-snarf.el bbdb-w3.el bbdb-sc.el bbdb-merge.el bbdb-migrate.el bbdb-gui.el
+call %1\bin\%emacs% -batch -q -no-site-file %PUSHPATH% -l ./bbdb.elc -f batch-byte-compile bbdb-com.el bbdb-hooks.el bbdb-print.el bbdb-ftp.el bbdb-whois.el bbdb-srv.el bbdb-reportmail.el bbdb-snarf.el bbdb-w3.el bbdb-sc.el bbdb-merge.el bbdb-migrate.el
 
-if "%RMAIL%" == "" goto afterrmail
+IF "%RMAIL%" == "" goto afterrmail
 call %1\bin\%emacs% -batch -q -no-site-file %PUSHPATH% -l ./bbdb.elc -f batch-byte-compile bbdb-rmail.el
 :afterrmail
-if "%GNUSDIR%" == "" goto aftergnus
+
+IF "%GNUSDIR%" == "" goto aftergnus
 call %1\bin\%emacs% -batch -q -no-site-file %PUSHPATH% -l ./bbdb.elc %GNUS% -f batch-byte-compile bbdb-gnus.el
 :aftergnus
-if "%VMDIR%" == "" goto aftervm
+
+IF "%VMDIR%"=="" goto aftervm
 call %1\bin\%emacs% -batch -q -no-site-file %PUSHPATH% -l ./bbdb.elc %VM% -f batch-byte-compile bbdb-vm.el
 :aftervm
-if "%MHEDIR%" == "" goto aftermhe
+
+IF "%MHEDIR%"=="" goto aftermhe
 call %1\bin\%emacs% -batch -q -no-site-file %PUSHPATH% -l ./bbdb.elc %MHE% -f batch-byte-compile bbdb-mhe.el
 :aftermhe
 
-echo (provide 'bbdb-autoloads)>bbdb-autoloads.el
-echo >>bbdb-autoloads.el
-call %1\bin\%emacs% -batch -q -no-site-file -l autoload -eval "(setq generated-autoload-file \"%BBDBDIR%\\bbdb-autoloads.el\")" -eval "(setq make-backup-files nil)" -eval "(setq autoload-package-name \"bbdb\")" -f batch-update-autoloads %BBDBDIR%
+echo home is where the heart is.
+
+rem echo >bbdb-autoloads.el
+rem call %1\bin\%emacs% -batch -q -no-site-file -l autoload -eval "(setq generated-autoload-file \"%BBDBDIR%\\bbdb-autoloads.el\")" -eval "(setq make-backup-files nil)" -eval "(setq autoload-package-name \"bbdb\")" -f batch-update-autoloads %BBDBDIR%
 call %1\bin\%emacs% -batch -q -no-site-file -f batch-byte-compile bbdb-autoloads.el
 
-if not "%2" == "copy" goto info
+if not "%2%"=="copy" goto info
 attrib -r %1\lisp\bbdb\*
 copy *.el* %1\lisp\bbdb
 
 :info
-set EMACSINFO=call %1\bin\%emacs% -no-site-file -no-init-file -batch -q -l infohack.el -f batch-makeinfo
+set EMACSINFOHACK="(while (re-search-forward \"@\\(end \\)?ifnottex\" nil t) (replace-match \"\"))"
 cd ..\texinfo
-%EMACSINFO% bbdb.texinfo 
+call %1\bin\%emacs% -batch -q -no-site-file bbdb.texinfo -eval %EMACSINFOHACK% -eval "(setq max-lisp-eval-depth 600)" -f texinfo-every-node-update -f texinfo-format-buffer -f save-buffer
 if not "%2" == "copy" goto done
 copy bbdb.info %1\info
 
