@@ -230,6 +230,25 @@ prompt the users on how to merge records when duplicates are detected.")
   :group 'bbdb-database
   :type 'file)
 
+(defcustom bbdb-file-remote nil
+  "*The remote file to save the database to.
+When this is non-nil, it should be a file name.
+When BBDB reads `bbdb-file', it checks this file,
+ and if it is newer, downloads it.
+When BBDB writes `bbdb-file', it also writes this file.
+
+This feature allows one to keep the database in one place while using
+different computers, thus reducing the need for merging different files."
+  :group 'bbdb-database
+  :type '(choice (const :tag "none" nil)
+                 (file :tag "remote file name")))
+
+(defcustom bbdb-file-remote-save-always t
+  "*Should the `bbdb-file-remote' file be saved whenever the database is saved?
+When nil, you will be asked."
+  :group 'bbdb-database
+  :type 'boolean)
+
 (defcustom bbdb-default-area-code nil
   "*The default area code to use when prompting for a new phone number.
 This must be a number, not a string."
@@ -910,10 +929,13 @@ If the note is absent, returns a zero length string."
                         (sit-for 2)))))))
 
 (defvar bbdb-buffer nil)
-(defmacro bbdb-buffer ()
-  '(if (and bbdb-buffer (buffer-name bbdb-buffer))
-       bbdb-buffer
-     (setq bbdb-buffer (find-file-noselect bbdb-file 'nowarn))))
+(defun bbdb-buffer ()
+  (if (and bbdb-buffer (buffer-live-p bbdb-buffer))
+      bbdb-buffer
+    (when (file-newer-than-file-p bbdb-file-remote bbdb-file)
+      (copy-file bbdb-file-remote bbdb-file t t))
+    (setq bbdb-buffer
+          (find-file-noselect bbdb-file 'nowarn))))
 
 (defmacro bbdb-with-db-buffer (&rest body)
   (cons 'with-current-buffer
@@ -934,7 +956,6 @@ If the note is absent, returns a zero length string."
                                         body)))))
                   body))))
 
-
 (defsubst bbdb-string-trim (string)
   "Lose leading and trailing whitespace.  Also remove all properties
 from string."
@@ -948,31 +969,9 @@ from string."
   (set-text-properties 0 (length string) nil string)
   string)
 
-
 (defun bbdb-read-string (prompt &optional default)
-  "Reads a string, trimming trailing whitespace.  If DEFAULT is multiple
-lines, then the minibuffer is enlarged to fit it while editing."
-  (let ((n 0)
-        (start 0)
-        (L (length default)))
-    (while (< start L)
-      (setq start (1+ (or (string-match "\n" default start) L))
-            n (1+ n)))
-    (save-excursion
-     (save-window-excursion
-      (if (and (boundp 'epoch::version) epoch::version)
-          nil  ; this breaks epoch...
-        (let ((w (selected-window))
-              (mini (minibuffer-window)))
-          (if (eq mini (next-window mini 't (window-frame mini)))
-              nil ;; Can't enlarge if only window in frame...
-            (select-window mini)
-            (enlarge-window (max 0 (- n (window-height))))
-            (sit-for 0) ; avoid redisplay glitch
-            (select-window w))))
-      (bbdb-string-trim
-        (read-string prompt default))))))
-
+  "Reads a string, trimming whitespace and text properties."
+  (bbdb-string-trim (read-string prompt default)))
 
 (defsubst bbdb-field-shown-p (field)
   (or (null bbdb-elided-display)
@@ -1621,7 +1620,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
             ((bbdb-yes-or-no-p
               (if (buffer-modified-p buf)
                   "BBDB has changed on disk; flush your changes and revert? "
-                "BBDB has changed on disk; revert? "))
+                  "BBDB has changed on disk; revert? "))
              (or (file-exists-p bbdb-file)
                  (error "bbdb: file %s no longer exists!!" bbdb-file))
              (revert-buffer t t))
@@ -1650,7 +1649,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
               bbdb-write-file-hooks)
         (setq bbdb-hashtable (make-vector 1021 0)))
       (setq bbdb-modified-p (buffer-modified-p)
-      buffer-read-only bbdb-readonly-p)
+            buffer-read-only bbdb-readonly-p)
       (or bbdb-records
       (cond ((= (point-min) (point-max)) ; special-case empty db
              ;; this doesn't need to be insert-before-markers because
@@ -1849,12 +1848,18 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
   ;; an after-write-file-hook, so it'll do.
   (setq bbdb-modified-p nil
         bbdb-changed-records nil)
-  (let ((b (get-buffer bbdb-buffer-name)))
-    (when b
-      (with-current-buffer b
+  (let ((buf (get-buffer bbdb-buffer-name)))
+    (when buf
+      (with-current-buffer buf
         (setq bbdb-showing-changed-ones nil)
-        (set-buffer-modified-p nil)))))
-
+        (set-buffer-modified-p nil))))
+  (when (and bbdb-file-remote
+             (or bbdb-file-remote-save-always
+                 (y-or-n-p (format "Save the remote BBDB file %s too? "
+                                   bbdb-file-remote))))
+    ;; write the current buffer, which is `bbdb-file' (since this is called
+    ;; from its `local-write-file-hooks'), into the `bbdb-file-remote'.
+    (write-region (point-min) (point-max) bbdb-file-remote)))
 
 (defun bbdb-delete-record-internal (record)
   (if (null (bbdb-record-marker record)) (error "bbdb: marker unpresent"))
@@ -2087,9 +2092,6 @@ doesn't know how to deal with."
            (current-buffer))
     bbdb-propnames))
 
-(defun bbdb-modified-p ()
-  (setq bbdb-modified-p (buffer-modified-p (bbdb-buffer))))
-
 
 ;;; BBDB mode
 
@@ -2260,7 +2262,6 @@ Called by `bbdb-auto-notes-hook'."
                                            bbdb-notes-default-separator)
                                        annotation)))
       (bbdb-maybe-update-display bbdb-record))))
-
 
 (defun bbdb-offer-save ()
   "Offer to save the Insidious Big Brother Database if it is modified."
@@ -2879,7 +2880,7 @@ passed as arguments to initiate the appropriate insinuations.
   (fset 'advertized-bbdb-delete-current-field-or-record
         'bbdb-delete-current-field-or-record)
 
-  (require 'bbdb-autoloads)
+  (load "bbdb-autoloads")
 
   (while to-insinuate
     (let* ((feature (car to-insinuate))

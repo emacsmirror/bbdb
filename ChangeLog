@@ -1,6 +1,21 @@
 2000-08-10  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el (bbdb-join): dropped an unused variable
+	(save-current-buffer): fset to `save-excursion' if not present
+	(with-current-buffer): defmacro if not present
+	(bbdb-save-buffer-excursion): dumped
+	(bbdb-with-db-buffer, bbdb-records, bbdb-write-file-hook-fn): use
+	`with-current-buffer' instead of `bbdb-save-buffer-excursion'
+	(bbdb-initialize): `load', not `require' "bbdb-autoloads"
+	(bbdb-modified-p): dumped
+	(bbdb-read-string): removed minibuffer-resizing code: all
+	supported emaxen can resize minibuffers themselves
+
+	Remote DB synchronization:
+	(bbdb-file-remote, bbdb-file-remote-save-always): new user variables
+	(bbdb-buffer): a function now; copy `bbdb-file-remote' to
+	`bbdb-file' when it is newer
+	(bbdb-write-file-hook-fn): maybe write `bbdb-file-remote'
 
 2000-08-10  Robert Fenk  <fenk@forwiss.de>
 
