@@ -8,6 +8,11 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.31  2000/09/12 10:43:00  waider
+@c Added "BBDB Development Team" to the list at the start.
+@c Fixed 'missing node' problem with older versions of makeinfo.
+@c Added Kai's example of working around the ispell key-mapping conflict.
+@c
 @c Revision 1.30  2000/08/21 08:35:15  waider
 @c Fix an error in VM doco that prevented file from building
 @c
@@ -71,6 +76,8 @@ version 2.2.
 Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
+
+Copyright (c) 2000 The BBDB Development Team
 @end ifinfo
 
 @titlepage
@@ -83,6 +90,8 @@ Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
 Copyright @copyright{} 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright @copyright{} 1997-1999 Matt Simmons <simmonmt@@acm.org>
+
+Copyright @copyright{} 2000 The BBDB Development Team
 
 @sp 2
 This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
@@ -1898,7 +1907,7 @@ message summary.
 @menu
 * VM Message Summary::                  @b{BBDB} information in message summary
 * VM what records are displayed::
-* VM automatic setup of @code{vm-set-auto-folder-alist}::
+* VM automatic setup of vm-set-auto-folder-alist::
 * VM snarfing all email addresses::
 * VM automatic adding of labels::
 @end menu
@@ -1919,7 +1928,7 @@ found it behaves like @code{"%F"}.  See the documentation for
 @code{vm-summary-format} for more details.  Warning, this may
 significantly slow down summary generation for large folders.
 
-@node VM what records are displayed, VM automatic setup of @code{vm-set-auto-folder-alist}, VM Message Summary, VM Features
+@node VM what records are displayed, VM automatic setup of vm-set-auto-folder-alist, VM Message Summary, VM Features
 @subsubsection VM configuration of what records the @b{BBDB} buffer shows
 
 @vindex bbdb/vm-get-from-headers
@@ -1938,7 +1947,7 @@ By setting  @code{bbdb/vm-get-only-first-from-p} to @code{t} one will
 get just the first address. If set to @code{nil} one will get records
 for all addresses. 
 
-@node VM automatic setup of @code{vm-set-auto-folder-alist}, VM snarfing all email addresses, VM what records are displayed, VM Features
+@node VM automatic setup of vm-set-auto-folder-alist, VM snarfing all email addresses, VM what records are displayed, VM Features
 @subsubsection VM automatic setup of @code{vm-set-auto-folder-alist}
 
 @vindex bbdb/vm-set-auto-folder-alist-field
@@ -1951,7 +1960,7 @@ The record field can contain a string which is used as folder name or
 if it starts with a @code{'} it is treated as lisp expression returning
 a folder name.
 
-@node VM snarfing all email addresses, VM automatic adding of labels, VM automatic setup of @code{vm-set-auto-folder-alist}, VM Features
+@node VM snarfing all email addresses, VM automatic adding of labels, VM automatic setup of vm-set-auto-folder-alist, VM Features
 @subsubsection VM snarfing all email addresses 
 
 @vindex bbdb/vm-snarf-all-headers
@@ -3538,7 +3547,14 @@ installed by the @b{BBDB} for address completion/expansion conflicts with
 that used by ispell.  The suggested workarounds are to rebind the ispell
 key (the @b{BBDB} binding is not configurable at this time), to manually
 invoke ispell via @kbd{M-x}, or to not use ispell completion functionality
-in @b{BBDB}-enabled message composition buffers.
+in @b{BBDB}-enabled message composition buffers. The following is an
+example of such a rebinding, supplied by Kai Groﬂjohan:
+
+@lisp
+(defun my-message-mode-keys ()
+  (define-key message-mode-map (kbd "M-TAB") 'bbdb-complete-name))
+  (add-hook 'message-mode-hook 'my-message-mode-keys)
+@end lisp
 
 @item @b{@b{BBDB} and abbrev expansion is inconsistent.}  Workaround:
 Currently, @kbd{M-TAB} must be used to expand/complete against @b{BBDB}
