@@ -513,9 +513,4 @@ Redefine `bbdb/gnus-summary-in-bbdb-format-letter' to a different letter."
 ;     'bbdb/gnus-score))
   )
 
-;;;###autoload
-(defun bbdb-insinuate-message ()
-  "Call this function to hook BBDB into `message-mode'."
-  (define-key message-mode-map "\M-\t" 'bbdb-complete-name))
-
 (provide 'bbdb-gnus)
