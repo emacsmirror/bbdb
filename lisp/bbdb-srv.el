@@ -23,6 +23,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.56  1998/10/10 18:47:55  simmonmt
+;; From slbaur - Use new name for set-window-buffer-dedicated.
+;;
 ;; Revision 1.55  1998/04/11 07:07:01  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back
 ;;
@@ -156,8 +159,8 @@ the various hooks (like `bbdb-notice-hook' and `bbdb/news-auto-create-p')."
 	      (bbdb-pop-up-bbdb-buffer))
 	  (select-window w))
 	(setq w (get-buffer-window bbdb-buffer-name))
-	(if (fboundp 'set-window-buffer-dedicated)
-	    (set-window-buffer-dedicated w bbdb-buffer-name))))
+	(if (fboundp 'set-window-dedicated-p)
+	    (set-window-dedicated-p w bbdb-buffer-name))))
     (cond (record
 	   (let ((bbdb-gag-messages t)
 		 (bbdb-use-pop-up nil)
