@@ -209,6 +209,7 @@ we cons less."
        (prog1 bbdb/srv-itimer-arg
      (setq bbdb/srv-itimer-arg nil)))))
 
+;;;###autoload
 (defun bbdb/srv-handle-headers-with-delay (headers)
   "Just like bbdb/srv-handle-headers, but only updates every few seconds.
 This is so that trying to display many records in succession won't queue them
