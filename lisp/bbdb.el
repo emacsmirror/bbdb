@@ -3028,14 +3028,14 @@ return them."
         (setq gubbish (substring str gubbish)
               str (substring string 0 (match-beginning 0))))
     (if (string-match
-	 (concat " +\\("
-		 ;; start recognize some prefixes to lastnames
-		 (if bbdb-lastname-prefixes
-		     (concat "\\("
-			     (regexp-opt bbdb-lastname-prefixes t)
-			     "[ ]+\\)?"))
-		 ;; end recognize some prefixes to lastnames
-		 "\\([^ ]+ *- *\\)?[^ ]+\\)\\'") str)
+     (concat " +\\("
+         ;; start recognize some prefixes to lastnames
+         (if bbdb-lastname-prefixes
+             (concat "\\("
+                 (regexp-opt bbdb-lastname-prefixes t)
+                 "[ ]+\\)?"))
+         ;; end recognize some prefixes to lastnames
+         "\\([^ ]+ *- *\\)?[^ ]+\\)\\'") str)
         (list (substring str 0 (match-beginning 0))
               (concat
                (substring str (match-beginning 1))
@@ -3172,6 +3172,7 @@ before the record is created, otherwise it is created without confirmation
             (if (string-match "^[^@]+" net)
                 (setq name (bbdb-clean-username (match-string 0 net)))))
         (setq record (if (or (null prompt-to-create-p)
+                             create-p
                              (if (functionp prompt-to-create-p)
                                  (bbdb-invoke-hook-for-value
                                   prompt-to-create-p)
