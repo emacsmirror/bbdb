@@ -619,14 +619,22 @@ NOTES is a string, or an alist associating symbols with strings."
                      (bbdb-record-phones record)))
            (and (bbdb-field-shown-p 'address)
              (apply 'nconc
-               (mapcar (lambda (addr)
+               (mapcar (lambda (addr) ;; foreach address...
                 (let ((L (list 'address addr)))
                   (nconc
-                   (car
-                    (mapcar (lambda(street)
-                              (unless (string= "" street) (list L)))
-                            (bbdb-address-streets addr)))
-                   (list L)
+				   ;; count street lines
+				   (apply 'nconc (mapcar (lambda(street)
+										   (unless (string= "" street) 
+											 (list L)))
+										 (bbdb-address-streets addr)))
+
+				   ;; these are all on the same line
+				   (if (or (string= "" (bbdb-address-city addr))
+						   (string= "" (bbdb-address-state addr))
+						   (string= "" (bbdb-address-zip-string addr)))
+					   nil (list L))
+
+				   ;; separate line for country
                    (if (string= "" (bbdb-address-country addr))
                        nil (list L)))))
                    (bbdb-record-addresses record))))
