@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.7  2000/04/16 04:00:54  waider
+;; * Added 5->4 unmigration
+;;
 ;; Revision 1.6  2000/04/15 14:57:38  waider
 ;; * Fixed misplaced bracket in street migration code.
 ;;
@@ -92,7 +95,7 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
       (setq win (display-buffer buf))
       (shrink-window-if-larger-than-buffer win)
       (setq update
-	    (y-or-n-p (concat "Upgrade to version "
+	    (y-or-n-p (concat "Upgrade BBDB to version "
 			      (format "%d" bbdb-file-format)
 			      "? ")))
       (delete-window win)
@@ -177,7 +180,30 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
   (cond
    ;; Version 5 -> 4
    ((= (cdr bbdb-file-format-migration 4))
-	(message "Need to implement 5 -> 4"))
+    ;; Take all the old addresses, ie. the 5th field, and for each
+    ;; address, render the third element (a list of streets) as three
+    ;; vector elements (v4-style address). If there's more than 3
+    ;; lines, everything remaining gets crammed into the third, using
+    ;; commas to separate the bits. If there's less, fill out with nil.
+    (let ((old-addr-list (aref record 5))
+		  (new-addr-list))
+      (while old-addr-list
+		(let* ((old-addr (car old-addr-list))
+			   new-addr
+			   streets (aref old-addr 1))
+		  (setq new-addr (vector (aref old-addr 0) ;; tag
+								 (nth 0 streets)
+								 (nth 1 streets)
+								 (if (> (length streets) 3)
+									 (mapconcat func streets ", ")
+								   (nth 3 streets))
+								 (aref old-addr 2) ;; city
+								 (aref old-addr 3) ;; state
+								 (aref old-addr 4) ;; zip
+								 (aref old-addr 5))) ;; country
+		  (setq old-addr-list (cdr old-addr-list))
+		  (setq new-addr-list (append new-addr-list (list new-addr)))))
+	  (aset record 5 new-addr-list))
 
    ;; Version 4 -> 3
    ((= (cdr bbdb-file-format-migration) 3)
@@ -193,12 +219,12 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 			   (len (1- (length old-addr)))
 			   (new-addr (make-vector len nil))
 			   (i 0))
-	  (setq old-addr-list (cdr old-addr-list))
-	  (while (< i len)
-	    (aset new-addr i (aref old-addr i))
-	    (setq i (1+ i)))
-	  (setq new-addr-list (append new-addr-list (list new-addr)))
-	  (aset record 5 new-addr-list)))))
+		  (setq old-addr-list (cdr old-addr-list))
+		  (while (< i len)
+			(aset new-addr i (aref old-addr i))
+			(setq i (1+ i)))
+		  (setq new-addr-list (append new-addr-list (list new-addr)))))
+	  (aset record 5 new-addr-list)))
    ;; Version 3 -> 2
    ((= (cdr bbdb-file-format-migration) 2)
     (bbdb-migrate-record record '((bbdb-record-raw-notes
