@@ -56,7 +56,7 @@
 	(set-specifier scrollbar-height (cons (current-buffer) 0)))
     ;; first delete existing extents
     (map-extents (function (lambda (x y)
-			     (if (eq (extent-data x) 'bbdb)
+			     (if (eq (extent-property x 'data) 'bbdb)
 				 (delete-extent x))))
 		 (current-buffer) (point-min) (point-max) nil)
     (let ((rest bbdb-records)
@@ -273,7 +273,7 @@
        (let ((extent (or (extent-at (point) (current-buffer) 'highlight)
 			 (error "")))
 	     record field face)
-	 (or (eq (extent-data extent) 'bbdb)
+	 (or (eq (extent-property extent 'data) 'bbdb)
 	     (error "not a bbdb extent"))
 	 (highlight-extent extent t)	; shouldn't be necessary...
 	 (goto-char (extent-start-position extent))
