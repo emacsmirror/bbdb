@@ -92,6 +92,7 @@ uninstall-pkg:
 
 bbdb-autoloads.el: $(DEPSRCS)
 	@$(RM) $@;
+	@echo "(provide 'bbdb-autoloads)" >> $@;
 	@echo "" > $@;
 	$(EMACS) -batch -q -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
@@ -99,7 +100,6 @@ bbdb-autoloads.el: $(DEPSRCS)
 		--eval '(setq make-backup-files nil)' \
 		--eval '(setq autoload-package-name "bbdb")' \
 		-f batch-update-autoloads `pwd`
-	@echo "(provide 'bbdb-autoloads)" >> $@;
 
 bbdb-autoloads.elc: bbdb-autoloads.el
 	$(EMACS) -batch -q -f batch-byte-compile ./$^
