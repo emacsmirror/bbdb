@@ -1,7 +1,7 @@
 2000-04-16  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
 
-	* tex/bbdb-print.tex: Define \bigbf relative to the given
-	base-size.
+	* tex/bbdb-print.tex, tex/bbdb-print-brief.tex: Define \bigbf
+	relative to the given base-size.
 
 2000-04-15  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
 
