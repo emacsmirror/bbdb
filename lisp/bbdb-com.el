@@ -35,10 +35,11 @@
      (quote mail-abbrevs))))
 
 ;; compiler placating.
-;; not sure this is necessary, but best not to break things
+;; not sure BBDB runs on anything old enough to use auto-fill-hook, mind.
 (eval-and-compile
-  (or (boundp 'auto-fill-function)
-      (fset 'auto-fill-function 'auto-fill-hook)))
+  (if (boundp 'auto-fill-function)
+      (fset 'bbdb-auto-fill-function 'auto-fill-function)
+    (fset 'bbdb-auto-fill-function 'auto-fill-hook)))
 
 (eval-when-compile
   (autoload 'mh-send "mh-e")
@@ -53,13 +54,17 @@
   ;; NB if emacs 21 or older emacsen or even things you bolt on have
   ;; any of these functions, bad things will happen. Again, FITNR.
   (if (featurep 'xemacs)
-      ()
-    (fset 'extent-string 'ignore)
-    (fset 'play-sound 'ignore)
-    (fset 'next-event 'ignore)
-    (fset 'display-message 'ignore)
-    (fset 'event-to-character 'ignore))
-  )
+      (progn
+        (fset 'bbdb-extent-string 'extent-string)
+        (fset 'bbdb-play-sound 'play-sound)
+        (fset 'bbdb-next-event 'next-event)
+        (fset 'bbdb-display-message 'display-message)
+        (fset 'bbdb-event-to-character 'event-to-character))
+    (fset 'bbdb-extent-string 'ignore)
+    (fset 'bbdb-play-sound 'ignore)
+    (fset 'bbdb-next-event 'ignore)
+    (fset 'bbdb-display-message 'ignore)
+    (fset 'bbdb-event-to-character 'ignore)))
 
 (defcustom bbdb-default-country
   '"Emacs";; what do you mean, it's not a country?
@@ -2001,7 +2006,7 @@ Currently only used by XEmacs."
     (set-buffer buffer)
     (goto-char beg)
     (delete-region beg end)
-    (insert (extent-string extent))
+    (insert (bbdb-extent-string extent))
     (bbdb-complete-name beg)))
 
 
@@ -2180,8 +2185,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
               (ding)))));; no matches, sorry!
 
      ;; Perfect match for a single record
-     ((and only-one-p (string= completion pattern))
-      (let* ((sym (intern-soft completion ht))
+     ((and only-one-p (string= (downcase completion) pattern))
+      (let* ((sym (intern-soft pattern ht))
              (recs (symbol-value sym))
              the-net match-recs lst primary matched)
 
@@ -2228,9 +2233,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
 
         ;; if we're past fill-column, wrap at the previous comma.
         (if (and
-             (if (boundp 'auto-fill-function) ; the GNU Emacs name.
-                 auto-fill-function
-               auto-fill-hook)
+             (bbdb-auto-fill-function)
              (>= (current-column) fill-column))
             (let ((p (point))
                   bol)
@@ -2530,6 +2533,8 @@ modem or the like."
   :group 'bbdb-phone-dialing
   :type 'string)
 
+(defvar bbdb-sound-volume) ;; XXX
+
 (defun bbdb-dial-number (phone-string)
   "Play the touchtone corresponding to the numbers in string."
   (interactive "sTelephonenumber: ")
@@ -2551,7 +2556,7 @@ modem or the like."
                  (if (= 1 (length number))
                      (setq modem-command (concat modem-command number))))
                 ((and (boundp 'xemacsp) (featurep 'native-sound))
-                 (play-sound (intern (concat "touchtone" number))
+                 (bbdb-play-sound (intern (concat "touchtone" number))
                              bbdb-sound-volume))
                 (t
                  (or (file-exists-p bbdb-sound-player)
@@ -2572,7 +2577,7 @@ modem or the like."
           (write-region (point-min) (point-max) bbdb-modem-device t)
           (message "%s dialed. Pick up the phone now and hit any key ..."
                    phone-string)
-          (next-event)
+          (bbdb-next-event)
           (erase-buffer)
           (insert "ATH\r\n")
           (write-region (point-min) (point-max) bbdb-modem-device t)
@@ -3041,7 +3046,7 @@ C-g again it will stop scanning."
               (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed."
                                   bbdb-update-records-mode processed-addresses addrslen)))
                 (if (featurep 'xemacs)
-                    (display-message 'progress mess)
+                    (bbdb-display-message 'progress mess)
                   (message mess)))
               (sit-for 0)))
 
@@ -3121,7 +3126,7 @@ proceed the processing of records."
         (while (not event)
           (setq event (read-key-sequence prompt))
           (if (featurep 'xemacs)
-              (setq event (event-to-character (aref event 0)))
+              (setq event (bbdb-event-to-character (aref event 0)))
             (setq event (if (stringp event) (aref event 0)))))
 
         (setq bbdb-offer-to-create event))
