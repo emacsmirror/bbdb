@@ -1,5 +1,9 @@
 2003-07-24  Robert Fenk  <Robert Fenk>
 
+	* lisp/bbdb-com.el (bbdb-send-mail-internal): 
+	* lisp/bbdb.el (bbdb-send-mail-style): Patch to support sending
+	mail via gnus (Scott Lawrence)
+
 	* lisp/bbdb-com.el (bbdb-update-records): Ignore empty/broken
 	addresses, e.g. extraction on "foo@bar.baz<>" results in (nil nil)
 	which should be ignored.  (reported by "Neil W. Van Dyke)
