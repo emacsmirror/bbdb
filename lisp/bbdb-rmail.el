@@ -128,11 +128,11 @@ displaying the record corresponding to the sender of the current message."
       (set-buffer b)
       records)))
 
-(defun bbdb/rmail-expunge ()
+(defun bbdb/rmail-only-expunge ()
   "Actually erase all deleted messages in the file."
   (interactive)
   (setq bbdb-message-cache nil)
-  (bbdb-orig-rmail-expunge))
+  (bbdb-orig-rmail-only-expunge))
 
 (defun bbdb/undigestify-rmail-message ()
   "Break up a digest message into its constituent messages.
@@ -156,12 +156,12 @@ Leaves original message, deleted, before the undigestified messages."
 
   (add-hook 'rmail-show-message-hook 'bbdb/rmail-update-records)
 
-  ;; We must patch into rmail-expunge to clear the cache, since expunging a
+  ;; We must patch into rmail-only-expunge to clear the cache, since expunging a
   ;; message invalidates the cache (which is based on message numbers).
   ;; Same for undigestifying.
-  (or (fboundp 'bbdb-orig-rmail-expunge)
-      (defalias 'bbdb-orig-rmail-expunge (symbol-function 'rmail-expunge)))
-  (defalias 'rmail-expunge 'bbdb/rmail-expunge)
+  (or (fboundp 'bbdb-orig-rmail-only-expunge)
+      (defalias 'bbdb-orig-rmail-only-expunge (symbol-function 'rmail-only-expunge)))
+  (defalias 'rmail-only-expunge 'bbdb/rmail-only-expunge)
 
   (or (fboundp 'undigestify-rmail-message)
       (autoload 'undigestify-rmail-message "undigest" nil t))
