@@ -46,28 +46,31 @@ the user confirms the creation."
     (if (and (boundp 'rmail-buffer) rmail-buffer)
         (set-buffer rmail-buffer))
     (if rmail-current-message
-        (let ((records (bbdb-message-cache-lookup rmail-current-message)))
-          (if records
-              (cdr records) ;; skip over cache key
-            (save-excursion
-              (let ((from (mail-fetch-field "from")))
-                (if (or (null from)
-                        (string-match (bbdb-user-mail-names)
-                                      (mail-strip-quoted-names from)))
-                    ;; if logged-in user sent this, use recipients.
-                    (setq from (or (mail-fetch-field "to") from)))
-                (if from
-                    (bbdb-encache-message rmail-current-message
-                                          (list ;; must be a list for cache!
-                                           (bbdb-annotate-message-sender
-                                            from t
-                                            (or (bbdb-invoke-hook-for-value
-                                                 bbdb/mail-auto-create-p)
-                                                offer-to-create)
-                                            (or (bbdb-invoke-hook-for-value
-                                                 bbdb/prompt-for-create-p)
-                                                offer-to-create))))))))))))
-
+        (let ((records (bbdb-message-cache-lookup rmail-current-message))
+              record)
+          (or records
+              (save-excursion
+                (let ((from (mail-fetch-field "from")))
+                  (if (or (null from)
+                          (string-match (bbdb-user-mail-names)
+                                        (mail-strip-quoted-names from)))
+                      ;; if logged-in user sent this, use recipients.
+                      (setq from (or (mail-fetch-field "to") from)))
+                  (if from
+                      (setq record
+                             (bbdb-annotate-message-sender
+                              from t
+                              (or (bbdb-invoke-hook-for-value
+                                   bbdb/mail-auto-create-p)
+                                  offer-to-create)
+                              (or (bbdb-invoke-hook-for-value
+                                   bbdb/prompt-for-create-p)
+                                  offer-to-create))))
+                  ;; return a list of records 
+                  (if record
+                      (bbdb-encache-message
+                       rmail-current-message
+                       (list record))))))))))
 
 ;;;###autoload
 (defun bbdb/rmail-annotate-sender (string &optional replace)
@@ -120,7 +123,9 @@ displaying the record corresponding to the sender of the current message."
     (let ((records (bbdb/rmail-update-records offer-to-create))
           (bbdb-elided-display (bbdb-pop-up-elided-display))
           (b (current-buffer)))
-      (bbdb-display-records records)
+      (if records
+          (bbdb-display-records records)
+        (bbdb-undisplay-records))
       (set-buffer b)
       records)))
 

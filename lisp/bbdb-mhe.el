@@ -25,6 +25,16 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.57  2001/03/25 20:45:57  fenk
+;; * lisp/bbdb.el (bbdb-message-cache-lookup):
+;; 	Removed the faulty single record code for Rmail/MHE
+;;
+;; * lisp/bbdb-mhe.el (bbdb/mh-update-record):
+;; 	Bugfix for new caching functions
+;;
+;; * lisp/bbdb-rmail.el (bbdb/rmail-update-records):
+;; 	Another bugfix: check for nil before caching
+;;
 ;; Revision 1.56  2001/03/17 17:21:48  fenk
 ;; * lisp/bbdb-mhe.el:
 ;; * lisp/bbdb-rmail.el: uses the new caching functions + some
@@ -80,30 +90,36 @@ the user confirms the creation."
     (and mh-show-buffer (set-buffer mh-show-buffer))
     (if bbdb-use-pop-up
         (bbdb/mh-pop-up-bbdb-buffer offer-to-create)
-      (let ((msg (bbdb/mh-cache-key buffer-file-name)))
+      (let ((msg (bbdb/mh-cache-key buffer-file-name))
+            records record)
         (if (eq msg 0) (setq msg nil))  ; 0 could mean trouble; be safe.
-        (or (bbdb-message-cache-lookup msg)
-            (let ((from (bbdb/mh-get-field "^From[ \t]*:")))
-              (if (or (string= "" from)
-                      (string-match (bbdb-user-mail-names)
-                                    (mail-strip-quoted-names from)))
-                  ;; if logged-in user sent this, use recipients.
-                  (progn
-                    (setq from (bbdb/mh-get-field "^To[ \t]*:"))
-                    (if (or (string= "" from)
-                            (string-match (bbdb-user-mail-names)
-                                          (mail-strip-quoted-names from)))
-                        (setq from nil))))
-              (if from
-                  (bbdb-encache-message msg
-                    (bbdb-annotate-message-sender from t
-                      (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
-                          offer-to-create)
-                      (or (bbdb-invoke-hook-for-value
-                           bbdb/prompt-for-create-p)
-                          offer-to-create))))))))))
-
-
+        (setq records (bbdb-message-cache-lookup msg))
+        (if records
+            (car records)
+          (let ((from (bbdb/mh-get-field "^From[ \t]*:")))
+            (if (or (string= "" from)
+                    (string-match (bbdb-user-mail-names)
+                                  (mail-strip-quoted-names from)))
+                ;; if logged-in user sent this, use recipients.
+                (progn
+                  (setq from (bbdb/mh-get-field "^To[ \t]*:"))
+                  (if (or (string= "" from)
+                          (string-match (bbdb-user-mail-names)
+                                        (mail-strip-quoted-names from)))
+                      (setq from nil))))
+            (if from
+                (setq record
+                      (bbdb-annotate-message-sender
+                       from t
+                       (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
+                           offer-to-create)
+                       (or (bbdb-invoke-hook-for-value
+                            bbdb/prompt-for-create-p)
+                           offer-to-create))))
+            (bbdb-encache-message msg (list record))
+            ;; return one record
+            record))))))
+    
 ;;;###autoload
 (defun bbdb/mh-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
