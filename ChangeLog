@@ -1,3 +1,12 @@
+2001-03-23 Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el (bbdb-search-simple):
+	  Fix silly bug with list-walking (Daniel Pittman)
+
+	* lisp/bbdb-gui.el
+	  Fix priorities thing so that you can access per-field menus on
+	  GNU Emacs.
+
 2001-03-23  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-vm.el (bbdb/vm-update-records): 
@@ -22,6 +31,12 @@
 	* lisp/bbdb-com.el (bbdb-update-records): honors now
 	bbdb-gag-messages; fixed the overall number in the progress
 	message. 
+
+2001-03-18  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): 
+	  gnus-ignored-from-addresses is not defined in the Gnus that
+	  comes with Emacs 20.7. Check for boundness before using.
 
 2001-03-17  Robert Fenk  <fenk@forwiss.de>
 
