@@ -1,3 +1,13 @@
+2001-02-25 08:00:00  ShengHuo ZHU  <zsh@cs.rochester.edu>
+
+	* texinfo/bbdb.texinfo: Format it so that texinfo-format-buffer
+	can parse it.
+
+	* texinfo/infohack.el: New.
+	
+	* texinfo/Makefile.in (Makefile): Add.
+	(bbdb.info): Use batch-makeinfo if there is no makeinfo.
+
 2001-02-19 09:00:00  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
 	* lisp/Makefile.in (bbdb-autoloads.el): Insert (provide
