@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.60  2000/04/13 00:22:23  waider
+;; * Address layout patch, including Euro addresses and the streets->list thing
+;;
 ;; Revision 1.59  1998/11/02 07:08:14  simmonmt
 ;; Change mailing list address
 ;;
@@ -321,7 +324,11 @@ There are various variables for customizing the content & format of
 the printout, notably the variables `bbdb-print-alist' and
 `bbdb-print-require'.  See the file bbdb-print.el for more information." 
   (interactive (list (bbdb-do-all-records-p)
-		     (read-file-name "Print To File: " bbdb-print-file-name)
+ 		     (read-file-name "Print To File: "
+ 				     (file-name-directory bbdb-print-file-name)
+ 				     bbdb-print-file-name
+ 				     nil 
+ 				     (file-name-nondirectory bbdb-print-file-name))
 		     current-prefix-arg))
   (setq bbdb-print-file-name (expand-file-name to-file))
   (let* ((alist (append (if brief bbdb-print-brief-alist bbdb-print-full-alist)
@@ -372,6 +379,94 @@ the printout, notably the variables `bbdb-print-alist' and
       (setq records (cdr records)))
     (insert bbdb-print-epilog)
     (goto-char (point-min))))
+
+(defvar bbdb-address-print-formatting-alist
+  '((bbdb-address-is-continental . bbdb-print-format-address-continental)
+    (nil . bbdb-print-format-address-default))
+  "Alist of address identifying and address formatting functions for printing.
+The key is an identifying function which accepts an address.  The
+associated value is a formatting function which inserts the formatted
+address in the current buffer.  If the identifying function returns
+non-nil, the formatting function is called.  The nil key is a default
+value will allways calls the associated formatting function.  Therefore
+you should always have (nil . bbdb-print-format-address-default) as the
+last element in the alist.
+
+See also `bbdb-address-formatting-alist'.")
+
+(defun bbdb-print-format-address-continental (addr)
+  "Insert formated continental address ADDR in current buffer for printing.
+This format is used in western Europe, for example.
+
+This function is a possible formatting function for
+`bbdb-address-print-formatting-alist'.
+
+The result looks like this:
+ street
+ street
+ ...
+ zip city, state
+ country"
+  (insert
+   (format 
+    "\\address{%s}\n"
+    (bbdb-print-tex-quote 
+     (if addr
+	 (concat
+	  (mapcar (function (lambda(street) 
+						  (bbdb-print-if-not-blank street "\\\\\n"))) 
+			  (bbdb-address-streets addr))
+	  (let ((c (bbdb-address-city addr))
+		(s (bbdb-address-state addr))
+		(z (bbdb-address-zip-string addr)))
+	    (if (or (> (length c) 0)
+		    (> (length z) 0)
+		    (> (length s) 0))
+		(concat z (if (and (> (length z) 0) 
+				   (> (length c) 0)) " " "")
+			c (if (and (or (> (length z) 0)
+				       (> (length c) 0))
+				   (> (length s) 0)) ", " "")
+			s "\\\\\n") ""))
+	  (bbdb-print-if-not-blank (bbdb-address-country addr) "\\\\\n"))
+       "")))))
+
+(defun bbdb-print-format-address-default (addr)
+  "Insert formated address ADDR in current buffer for printing.
+This is the default format; it is used in the US, for example.
+
+This function is a possible formatting function for
+`bbdb-address-print-formatting-alist'.
+
+The result looks like this:
+ street
+ street
+ ...
+ city, state  zip
+ country"
+  (insert
+   (format 
+    "\\address{%s}\n"
+    (bbdb-print-tex-quote 
+     (if addr
+	 (concat 
+	  (mapcar (function (lambda(street)
+						  (bbdb-print-if-not-blank street "\\\\\n")))
+			  bbdb-address-streets addr)
+	  (let ((c (bbdb-address-city addr))
+		(s (bbdb-address-state addr))
+		(z (bbdb-address-zip-string addr)))
+	    (if (or (> (length c) 0)
+		    (> (length z) 0)
+		    (> (length s) 0))
+		(concat c (if (and (> (length c) 0) 
+				   (> (length s) 0)) ", " "")
+			s (if (and (or (> (length c) 0)
+				       (> (length s) 0))
+				   (> (length z) 0)) "  " "")
+			z "\\\\\n") ""))
+	  (bbdb-print-if-not-blank (bbdb-address-country addr) "\\\\\n"))
+       "")))))
 
 (defun bbdb-print-format-record (record current-letter
 					brief pofl n-phones n-addresses)
@@ -479,24 +574,7 @@ The return value is the new CURRENT-LETTER."
 	  (setq address 
 		(bbdb-print-firstn n-addresses address brief)))
       (while address
-	(let ((addr (car address)))
-	  (insert
-	   (format 
-	    "\\address{%s}\n"
-	    (bbdb-print-tex-quote 
-	     (if addr
-		 (concat 
-		  (bbdb-print-if-not-blank(bbdb-address-street1 addr) "\\\\\n")
-		  (bbdb-print-if-not-blank(bbdb-address-street2 addr) "\\\\\n")
-		  (bbdb-print-if-not-blank(bbdb-address-street3 addr) "\\\\\n")
-		  (bbdb-address-city addr)
-		  (if (and (not (equal "" (bbdb-address-city addr)))
-			   (not (equal "" (bbdb-address-state addr))))
-		      ", ")
-		  (bbdb-print-if-not-blank (bbdb-address-state addr) " ")
-		  (bbdb-address-zip-string addr)
-		  "\\\\")
-	       "")))))
+	(bbdb-format-address (car address) 'printing)
 	(setq address (cdr address)))
 
       ;; Notes
