@@ -39,11 +39,12 @@
                                         (mouse-set-point e)
                                         (bbdb-elide-record nil))))
 
-(if (fboundp 'find-face)
-    (fset 'bbdb-find-face 'find-face)
-  (if (fboundp 'internal-find-face) ;; GRR.
-      (fset 'bbdb-find-face 'internal-find-face)
-    (fset bbdb-find-face 'ignore))) ; XXX noop - you probably don't HAVE faces.
+(eval-when-compile
+  (if (fboundp 'find-face)
+      (fset 'bbdb-find-face 'find-face)
+    (if (fboundp 'internal-find-face) ;; GRR.
+        (fset 'bbdb-find-face 'internal-find-face)
+      (fset bbdb-find-face 'ignore)))) ; noop - you probably don't HAVE faces.
 
 (or (bbdb-find-face 'bbdb-name)
     (face-differs-from-default-p (make-face 'bbdb-name))
@@ -65,76 +66,77 @@
 ;;; Extents vs. Overlays unhappiness
 ;;; FIXME: see if VM is around, and call its extents code instead;
 ;;; change bbdb-foo-extents below to vm-foo-extents, etc.
-(if (fboundp 'make-extent)
-    (fset 'bbdb-make-extent 'make-extent)
-  (fset 'bbdb-make-extent 'make-overlay))
+(eval-when-compile
+  (if (fboundp 'make-extent)
+      (fset 'bbdb-make-extent 'make-extent)
+    (fset 'bbdb-make-extent 'make-overlay))
 
-(if (fboundp 'delete-extent)
-    (fset 'bbdb-delete-extent 'delete-extent)
-  (fset 'bbdb-delete-extent 'delete-overlay))
+  (if (fboundp 'delete-extent)
+      (fset 'bbdb-delete-extent 'delete-extent)
+    (fset 'bbdb-delete-extent 'delete-overlay))
 
-(if (fboundp 'mapcar-extents)
-    (defun bbdb-list-extents() (mapcar-extents 'identity))
-  (defun bbdb-list-extents()
-    (let ((o (overlay-lists))) (nconc (car o) (cdr o)))))
+  (if (fboundp 'mapcar-extents)
+      (defun bbdb-list-extents() (mapcar-extents 'identity))
+    (defun bbdb-list-extents()
+      (let ((o (overlay-lists))) (nconc (car o) (cdr o)))))
 
-(if (fboundp 'set-extent-property)
-    (fset 'bbdb-set-extent-property 'set-extent-property)
-  (defun bbdb-set-extent-property( e p v )
-    (if (eq 'highlight p)
-        (if v
-            (overlay-put e 'mouse-face 'highlight)
-          (overlay-put e 'mouse-face nil)))
-    (overlay-put e p v)))
+  (if (fboundp 'set-extent-property)
+      (fset 'bbdb-set-extent-property 'set-extent-property)
+    (defun bbdb-set-extent-property( e p v )
+      (if (eq 'highlight p)
+          (if v
+              (overlay-put e 'mouse-face 'highlight)
+            (overlay-put e 'mouse-face nil)))
+      (overlay-put e p v)))
 
-(if (fboundp 'extent-property)
-    (fset 'bbdb-extent-property 'extent-property)
-  (fset 'bbdb-extent-property 'overlay-get))
+  (if (fboundp 'extent-property)
+      (fset 'bbdb-extent-property 'extent-property)
+    (fset 'bbdb-extent-property 'overlay-get))
 
-(if (fboundp 'extent-at)
-    (fset 'bbdb-extent-at 'extent-at)
-  (defun bbdb-extent-at (pos buf tag) "NOT FULL XEMACS IMPLEMENTATION"
-    (let ((o (overlays-at pos))
-          minpri retval)
-      (while (car o)
-        (let ((x (car o)))
-          (and (overlayp x)
-               (overlay-get x tag)
-               (if (or (null minpri) (> minpri (overlay-get x 'priority)))
-                   (setq retval x
-                         minpri (overlay-get x 'priority))))
-          (setq o (cdr o))))
-      retval)))
+  (if (fboundp 'extent-at)
+      (fset 'bbdb-extent-at 'extent-at)
+    (defun bbdb-extent-at (pos buf tag) "NOT FULL XEMACS IMPLEMENTATION"
+      (let ((o (overlays-at pos))
+            minpri retval)
+        (while (car o)
+          (let ((x (car o)))
+            (and (overlayp x)
+                 (overlay-get x tag)
+                 (if (or (null minpri) (> minpri (overlay-get x 'priority)))
+                     (setq retval x
+                           minpri (overlay-get x 'priority))))
+            (setq o (cdr o))))
+        retval)))
 
-(if (fboundp 'highlight-extent)
-    (fset 'bbdb-highlight-extent 'highlight-extent)
-  (fset 'bbdb-highlight-extent 'ignore)) ; XXX noop
+  (if (fboundp 'highlight-extent)
+      (fset 'bbdb-highlight-extent 'highlight-extent)
+    (fset 'bbdb-highlight-extent 'ignore)) ; XXX noop
 
-(if (fboundp 'extent-start-position)
-    (fset 'bbdb-extent-start-position 'extent-start-position)
-  (fset 'bbdb-extent-start-position 'overlay-start))
+  (if (fboundp 'extent-start-position)
+      (fset 'bbdb-extent-start-position 'extent-start-position)
+    (fset 'bbdb-extent-start-position 'overlay-start))
 
-(if (fboundp 'extent-end-position)
-    (fset 'bbdb-extent-end-position 'extent-end-position)
-  (fset 'bbdb-extent-end-position 'overlay-end))
+  (if (fboundp 'extent-end-position)
+      (fset 'bbdb-extent-end-position 'extent-end-position)
+    (fset 'bbdb-extent-end-position 'overlay-end))
 
-(if (fboundp 'extent-face)
-    (fset 'bbdb-extent-face 'extent-face)
-  (defun bbdb-extent-face (extent)
-    (overlay-get extent 'face)))
+  (if (fboundp 'extent-face)
+      (fset 'bbdb-extent-face 'extent-face)
+    (defun bbdb-extent-face (extent)
+      (overlay-get extent 'face)))
 
-(if (fboundp 'set-extent-face)
-    (fset 'bbdb-set-extent-face 'set-extent-face)
-  (defun bbdb-set-extent-face (extent face) "set the face for an overlay"
-    (overlay-put extent 'face face)))
+  (if (fboundp 'set-extent-face)
+      (fset 'bbdb-set-extent-face 'set-extent-face)
+    (defun bbdb-set-extent-face (extent face) "set the face for an overlay"
+      (overlay-put extent 'face face)))
 
-(if (fboundp 'set-extent-begin-glyph)
-    (fset 'bbdb-set-extent-begin-glyph 'set-extent-begin-glyph)
-  (fset 'bbdb-set-extent-begin-glyph 'ignore)) ; XXX noop
+  (if (fboundp 'set-extent-begin-glyph)
+      (fset 'bbdb-set-extent-begin-glyph 'set-extent-begin-glyph)
+    (fset 'bbdb-set-extent-begin-glyph 'ignore)) ; XXX noop
 
-(if (fboundp 'set-extent-end-glyph)
-    (fset 'bbdb-set-extent-end-glyph 'set-extent-end-glyph)
-  (fset 'bbdb-set-extent-end-glyph 'ignore)) ; XXX noop
+  (if (fboundp 'set-extent-end-glyph)
+      (fset 'bbdb-set-extent-end-glyph 'set-extent-end-glyph)
+    (fset 'bbdb-set-extent-end-glyph 'ignore))) ; XXX noop
 
 
 ;;;###autoload
@@ -390,47 +392,48 @@ as of GNU Emacs 20.7"
    ))
 
 
-(if (fboundp 'popup-menu)
-    (fset 'bbdb-popup 'popup-menu)
-  ;; This is really, REALLY ugly, but it saves me some coding and uses
-  ;; the correct keymap API instead of carnal knowledge of keymap
-  ;; structure.
-  (defun bbdb-desc-to-menu(desc)
-    (let ((map (make-sparse-keymap (car desc)))
-          (desc (reverse (cdr desc))) ;; throw away header, reorient list
-          (txtcount 0) elt elt-name)
-      (while (setq elt (car desc))
-        ;; fake a key binding name
-        (setq elt-name (intern (format "fake%d" txtcount))
-              txtcount (+ 1 txtcount))
-        (cond
-         ;; non-active entries in the menu
-         ((stringp elt)
-          (define-key map (vector elt-name) (list elt)))
+(eval-and-compile
+  (if (fboundp 'popup-menu)
+      (fset 'bbdb-popup 'popup-menu)
+    ;; This is really, REALLY ugly, but it saves me some coding and uses
+    ;; the correct keymap API instead of carnal knowledge of keymap
+    ;; structure.
+    (defun bbdb-desc-to-menu(desc)
+      (let ((map (make-sparse-keymap (car desc)))
+            (desc (reverse (cdr desc))) ;; throw away header, reorient list
+            (txtcount 0) elt elt-name)
+        (while (setq elt (car desc))
+          ;; fake a key binding name
+          (setq elt-name (intern (format "fake%d" txtcount))
+                txtcount (+ 1 txtcount))
+          (cond
+           ;; non-active entries in the menu
+           ((stringp elt)
+            (define-key map (vector elt-name) (list elt)))
 
-         ;; active entries in the menu
-         ((vectorp elt)
-          (define-key map (vector elt-name) (cons (aref elt 0) (aref elt 1))))
+           ;; active entries in the menu
+           ((vectorp elt)
+            (define-key map (vector elt-name) (cons (aref elt 0) (aref elt 1))))
 
-         ;; submenus
-         ((listp elt)
-          (define-key map (vector elt-name)
-            (cons (car elt) (bbdb-desc-to-menu elt))))
-         )
-        (setq desc (cdr desc)))
-      map))
-  ;; this does the actual popping up & parsing nonsense
-  (defun bbdb-popup( desc &optional event )
-    (let ((map (bbdb-desc-to-menu desc)) result)
-      (setq result (x-popup-menu t map))
-      (if result
-          (let ((command (lookup-key map (vconcat result))))
-            ;; Clear out echoing, which perhaps shows a prefix arg.
-            (message "")
-            (if command
-                (if (commandp command)
-                    (command-execute command)
-                  (funcall 'eval command))))))))
+           ;; submenus
+           ((listp elt)
+            (define-key map (vector elt-name)
+              (cons (car elt) (bbdb-desc-to-menu elt))))
+           )
+          (setq desc (cdr desc)))
+        map))
+    ;; this does the actual popping up & parsing nonsense
+    (defun bbdb-popup( desc &optional event )
+      (let ((map (bbdb-desc-to-menu desc)) result)
+        (setq result (x-popup-menu t map))
+        (if result
+            (let ((command (lookup-key map (vconcat result))))
+              ;; Clear out echoing, which perhaps shows a prefix arg.
+              (message "")
+              (if command
+                  (if (commandp command)
+                      (command-execute command)
+                    (funcall 'eval command)))))))))
 
 ;;;###autoload
 (defun bbdb-menu (e)
