@@ -3466,6 +3466,7 @@ passed as arguments to initiate the appropriate insinuations.
 
   (define-key bbdb-mode-map [(*)]          'bbdb-apply-next-command-to-all-records)
   (define-key bbdb-mode-map [(+)]          'bbdb-append-records)
+  (define-key bbdb-mode-map [(!)]          'bbdb-search-invert-set)
   (define-key bbdb-mode-map [(a)]          'bbdb-add-or-remove-mail-alias)
   (define-key bbdb-mode-map [(e)]          'bbdb-edit-current-field)
   (define-key bbdb-mode-map [(n)]          'bbdb-next-record)
