@@ -21,8 +21,14 @@
 
 ;;; This file was written by Ivan Vazquez <ivan@haldane.bu.edu> 
 
-;;; $Date$ by $Author$
-;;; $Revision$
+;; $Date$ by $Author$
+;; $Revision$
+;;
+;; $Log$
+;; Revision 1.52  1997/09/28 05:59:18  simmonmt
+;; Added check for EFS (there must be a better way that what I did, but I
+;; really don't want to be reduced to checking version strings.
+;;
 
 ;;; This file adds the ability to define ftp-sites in a BBDB, much the
 ;;; same way one adds a regular person's name to the BBDB.  It also
@@ -60,7 +66,11 @@
 ;;; (autoload 'bbdb-create-ftp-site     "bbdb-ftp"  "Ftp BBDB Package" t)
 
 (require 'bbdb)
-(require 'ange-ftp)
+
+;; There must be a better way
+(if (featurep 'efs-cu)
+    (require 'efs)
+    (require 'ange-ftp))
 
 (defvar bbdb-default-ftp-user "anonymous"
   "*The default login to use when ftp-ing.")
