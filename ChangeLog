@@ -1,3 +1,16 @@
+2002-12-22  Alex Schroeder  <alex@emacswiki.org>
+
+	* lisp/bbdb-com.el (bbdb-display-record-with-layout): New.
+	(bbdb-toggle-all-records-display-layout): Print layout used.
+
+	* lisp/bbdb.el (bbdb-display-layout-alist): Extended custom type
+	to include primary and test, and fixed phone to phones, and
+	address to addresses.
+	(bbdb-format-record-layout-one-line): Take primary into account.
+	(bbdb-format-record-layout-multi-line): Take primary into account.
+	(bbdb-format-record): Take test into account, use multi-line
+	layout function if none was found.
+
 2002-11-02  Dave Love  <fx@gnu.org>
 
 	* lisp/bbdb.el (bbdb-have-re-char-classes): New constant.
