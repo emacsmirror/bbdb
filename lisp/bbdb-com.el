@@ -333,7 +333,7 @@ is nil...\)"
 ;;; Parsing other things
 
 (defvar bbdb-check-zip-codes-p t
-  "If non-nil, require legal zip codes when entering an address.  
+  "If non-nil, require legal zip codes when entering an address.
 The format of legal zip codes is determined by the variable
 `bbdb-legal-zip-codes'.")
 
@@ -360,10 +360,10 @@ Wether this is used at all depends on the variable `bbdb-check-zip-codes-p'.")
   "Check wether STRING is a legal zip code.
 Do this only if `bbdb-check-zip-codes-p' is non-nil."
   (if (and bbdb-check-zip-codes-p
-	   (not (memq t (mapcar (lambda (regexp)
-				  ;; if it matches, (not (not index-of-match)) returns t
-				  (not (not (string-match regexp string))))
-				bbdb-legal-zip-codes))))
+       (not (memq t (mapcar (lambda (regexp)
+                  ;; if it matches, (not (not index-of-match)) returns t
+                  (not (not (string-match regexp string))))
+                bbdb-legal-zip-codes))))
       (error "not a valid zip code.")
     string))
 
@@ -495,19 +495,19 @@ NOTES is a string, or an alist associating symbols with strings."
                                             (car rest))))))
             (setq rest (cdr rest)))))
     (setq addrs
-	  (mapcar
-	   (lambda (addr)
-	     (while (or (not (vectorp addr))
-			(/= (length addr) bbdb-address-length))
-	       (setq addr (signal 'wrong-type-argument (list 'vectorp addr))))
-	     (bbdb-check-type (aref addr 0) stringp) ;;; XXX use bbdb-addresses
-	     (bbdb-check-type (aref addr 1) listp)
-	     (bbdb-check-type (aref addr 2) stringp)
-	     (bbdb-check-type (aref addr 3) stringp)
-	     (bbdb-check-type (aref addr 4) stringp)
-	     (bbdb-check-type (aref addr 5) stringp)
-	     addr)
-	   addrs))
+      (mapcar
+       (lambda (addr)
+         (while (or (not (vectorp addr))
+            (/= (length addr) bbdb-address-length))
+           (setq addr (signal 'wrong-type-argument (list 'vectorp addr))))
+         (bbdb-check-type (aref addr 0) stringp) ;;; XXX use bbdb-addresses
+         (bbdb-check-type (aref addr 1) listp)
+         (bbdb-check-type (aref addr 2) stringp)
+         (bbdb-check-type (aref addr 3) stringp)
+         (bbdb-check-type (aref addr 4) stringp)
+         (bbdb-check-type (aref addr 5) stringp)
+         addr)
+       addrs))
     (setq phones
           (mapcar
            (lambda (phone)
@@ -913,18 +913,18 @@ State:           state
 Zip Code:        zip
 Country:         country"
   (let* ((str (let ((l) (s) (n 0))
-		(while (not (string= "" (setq s (bbdb-read-string
-						 (format "Street, line %d: " (+ 1 n))
-						 (nth n (bbdb-address-streets addr))))))
-		  (setq l (append l (list s)))
-		  (setq n (1+ n)))
-		l))
-	 (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
-	 (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
+        (while (not (string= "" (setq s (bbdb-read-string
+                         (format "Street, line %d: " (+ 1 n))
+                         (nth n (bbdb-address-streets addr))))))
+          (setq l (append l (list s)))
+          (setq n (1+ n)))
+        l))
+     (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
+     (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
          (zip (bbdb-error-retry
                (bbdb-parse-zip-string
                 (bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
-	 (country (bbdb-read-string "Country: " (bbdb-address-country addr))))
+     (country (bbdb-read-string "Country: " (bbdb-address-country addr))))
     (bbdb-address-set-streets addr str)
     (bbdb-address-set-city addr cty)
     (bbdb-address-set-state addr ste)
@@ -1751,20 +1751,20 @@ composition buffer.)"
   "*Display BBDB records for all recipients of the message in this buffer."
   (interactive)
   (let ((marker (bbdb-header-start))
-	(fields '("from" "sender" "to" "cc" "bcc"
-		  "resent-from" "resent-to" "resent-cc" "resent-bcc"))
+    (fields '("from" "sender" "to" "cc" "bcc"
+          "resent-from" "resent-to" "resent-cc" "resent-bcc"))
         addrs)
     (message "Searching...")
     (save-excursion
       (set-buffer (marker-buffer marker))
       (while fields
-	(goto-char marker)
-	(setq addrs (append (bbdb-split (or (bbdb-extract-field-value
-					     (car fields))
-					    "")
-					",")
-			    addrs)
-	      fields (cdr fields))))
+    (goto-char marker)
+    (setq addrs (append (bbdb-split (or (bbdb-extract-field-value
+                         (car fields))
+                        "")
+                    ",")
+                addrs)
+          fields (cdr fields))))
     (let ((rest addrs)
           (records '())
           record)
@@ -1985,30 +1985,30 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                  (setq rest (cdr rest))))))
     (setq yeah-yeah-this-one nil
           all-the-completions nil)
-    
+
     ;; If there is no completion or the address is already a completed one,
     ;; then cycle though the list of addresses.
     (let ((addr (bbdb-extract-address-components (buffer-substring beg end) t))
-	  name the-net rec nets)
+      name the-net rec nets)
       (when (and (or (null completion) (eq completion t)) ; no or exact match
-		 (not (boundp 'bbdb-complete-name-recursion)) ; avoid recursion
-		 addr
-		 (setq addr (car addr))
-		 (setq name (car addr)
-		       the-net (cadr addr))
-		 (setq rec (bbdb-search-simple name the-net))
-		 (setq nets (bbdb-record-net rec))
-		 (setq the-net (member the-net nets)))
-	(setq the-net (if (cdr the-net) (cadr the-net) (car nets)))
-	(delete-region beg end)
-	(insert (bbdb-dwim-net-address rec the-net))
-	(setq completion 'done)))
-    
+         (not (boundp 'bbdb-complete-name-recursion)) ; avoid recursion
+         addr
+         (setq addr (car addr))
+         (setq name (car addr)
+               the-net (cadr addr))
+         (setq rec (bbdb-search-simple name the-net))
+         (setq nets (bbdb-record-net rec))
+         (setq the-net (member the-net nets)))
+    (setq the-net (if (cdr the-net) (cadr the-net) (car nets)))
+    (delete-region beg end)
+    (insert (bbdb-dwim-net-address rec the-net))
+    (setq completion 'done)))
+
     (cond
      ;; We have switched to another net
      ((equal completion 'done)
       (bbdb-complete-name-cleanup))
-     
+
      ;; No match
      ((null completion)
       (bbdb-complete-name-cleanup)
@@ -2100,7 +2100,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
        (insert completion)
        (setq end (point))
        (let ((last "")
-	     (bbdb-complete-name-recursion t))
+         (bbdb-complete-name-recursion t))
          (while (and (stringp completion)
                      (not (string= completion last))
                      (setq last completion
@@ -2116,7 +2116,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
        (or (eq (selected-window) (minibuffer-window))
            (message "Making completion list..."))
        (let ((list (all-completions pattern ht pred))
-	     (bbdb-complete-name-recursion t))
+         (bbdb-complete-name-recursion t))
          ;;       (recs (delq nil (mapcar (lambda (x)
          ;;                     (symbol-value (intern-soft x ht)))
          ;;                   list)))
@@ -2315,11 +2315,13 @@ correspond to the 0, 1, 2, ... 9 digits, respectively."
 
 ;;;###autoload
 (defun bbdb-dial (phone force-area-code)
-  "On a Sun SparcStation, play the appropriate tones on the builtin
-speaker to dial the phone number corresponding to the current line.
-If the point is at the beginning of a record, dial the first phone
-number.  Does not dial the extension.  Does not dial the area code if
-it is the same as `bbdb-default-area-code' unless a prefix arg is given."
+  "On an audio-equipped workstation, play the appropriate tones on the
+builtin speaker to dial the phone number corresponding to the current
+line.  If the point is at the beginning of a record, dial the first
+phone number.  Does not dial the extension.  Does not dial the area
+code if it is the same as `bbdb-default-area-code' unless a prefix arg
+is given."
+
   (interactive (list (bbdb-current-field)
                      current-prefix-arg))
   (if (eq (car-safe phone) 'name)
@@ -2327,7 +2329,7 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
   (if (eq (car-safe phone) 'phone)
       (setq phone (car (cdr phone))))
   (or (vectorp phone) (error "not on a phone field"))
-  (or window-system (error "You're not under window system."))
+;;  (or window-system (error "You're not under window system."))
   (or (file-exists-p bbdb-sound-player)
       (error "no sound player program"))
   (let* ((str (bbdb-phone-string phone))
