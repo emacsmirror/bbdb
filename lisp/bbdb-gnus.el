@@ -430,7 +430,7 @@ addresses better than the traditionally static global scorefile."
 		       (if (not (and score net)) nil
 			 (mapconcat
 			  (lambda (addr)
-			    (concat "(\"" addr "\" " score ")\n"))
+			    (format "(\"%s\" %s)\n" addr score))
 			  net ""))))
 		   (bbdb-records) "")
 		  "))"))))
