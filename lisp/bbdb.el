@@ -69,9 +69,6 @@ prompt the users on how to merge records when duplicates are detected.")
   (defmacro with-current-buffer (buf &rest body)
     `(save-current-buffer (set-buffer ,buf) ,@body)))
 
-(unless (fboundp 'characterp)
-  (defmacro characterp(c) `(char-or-string-p ,c))) ;; XXX close
-
 (unless (fboundp 'display-message)
   (defmacro display-message (type mess)
     `(message ,mess)))

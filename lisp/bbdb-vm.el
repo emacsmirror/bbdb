@@ -244,6 +244,10 @@ functions `bbdb/vm-update-records' and `bbdb/vm-prompt-for-create'."
   "Used for inter-function communication between the functions
 `bbdb/vm-update-records' and `bbdb/vm-prompt-for-create'.")
 
+(if (fboundp 'characterp)
+    (defalias 'bbdb/vm-characterp 'characterp)
+  (defalias 'bbdb/vm-characterp 'char-or-string-p))
+
 ;; This is a hack.  The function is called by bbdb-annotate-message-sender and
 ;; uses the above variable in order to manipulate bbdb/vm-update-records.
 ;; Some cases are handled with signals in order to keep the changes in
@@ -252,7 +256,7 @@ functions `bbdb/vm-update-records' and `bbdb/vm-prompt-for-create'."
   (let ((old-offer-to-create bbdb/vm-offer-to-create))
     (when (or (bbdb-invoke-hook-for-value bbdb/prompt-for-create-p)
           bbdb/vm-offer-to-create)
-      (when (not (characterp bbdb/vm-offer-to-create))
+      (when (not (bbdb/vm-characterp bbdb/vm-offer-to-create))
     (message (format "%s is not in the db; add? (y,!,n,s,q)"
              (or (car bbdb/vm-address) (cadr bbdb/vm-address))))
     (setq bbdb/vm-offer-to-create (read-char)))
