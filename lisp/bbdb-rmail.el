@@ -125,7 +125,9 @@ displaying the record corresponding to the sender of the current message."
           (b (current-buffer)))
       (if records
           (bbdb-display-records records)
-        (bbdb-undisplay-records))
+        (bbdb-undisplay-records)
+        (if (get-buffer-window bbdb-buffer-name)
+            (delete-window (get-buffer-window bbdb-buffer-name))))
       (set-buffer b)
       records)))
 
