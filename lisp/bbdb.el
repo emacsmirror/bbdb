@@ -486,7 +486,7 @@ first address in the list of addresses for a given user).  If it is
                         primary-or-name)))
 
 (defcustom bbdb-completion-display-record t
-  "*Whether `bbdb-complete-name' (\\<mail-mode-map>\\[bbdb-complete-name] \
+  "*Whether `bbdb-complete-name' (\\<mail-mode-map>\\[bbdb-complete-name]
 in mail-mode) will update the *BBDB* buffer
 to display the record whose email address has just been inserted."
   :group 'bbdb-record-use
@@ -709,7 +709,6 @@ Database initialization function `bbdb-initialize' is run."
 (defvar bbdb-message-cache nil)
 (defvar bbdb-showing-changed-ones nil)
 (defvar bbdb-modified-p nil)
-(defvar bbdb-elided-display nil)
 
 (defvar bbdb-debug t)
 (defmacro bbdb-debug (&rest body)
@@ -1100,13 +1099,100 @@ from string."
        (completing-read prompt completions nil nil (cons default 0))
      (bbdb-string-trim (read-string prompt default)))))
 
-(defsubst bbdb-field-shown-p (field)
-  (or (null bbdb-elided-display)
-      (eq field 'name)
-      (not (or (eq bbdb-elided-display t)
-               (memq field bbdb-elided-display)))))
-
 ;;; Address formatting.
+
+(defcustom bbdb-time-display-format "%d %b %Y"
+  "The format for the timestamp to be used in the creation-date and
+timestamp fields.  See the documentation for `format-time-string'."
+  :group 'bbdb :type 'string)
+
+(defun bbdb-time-convert (date &optional format)
+  "Convert a date from the BBDB internal format to the format
+determined by FORMAT (or `bbdb-time-display-format' if FORMAT not
+present).  Returns a string containing the date in the new format."
+  (let ((parts (bbdb-split date "-")))
+    (format-time-string (or format bbdb-time-display-format)
+                        (encode-time 0 0 0 (string-to-int (caddr parts))
+                                     (string-to-int (cadr parts))
+                                     (string-to-int (car parts))))))
+
+(defalias 'bbdb-format-record-timestamp 'bbdb-time-convert)
+(defalias 'bbdb-format-record-creation-date 'bbdb-time-convert)
+
+(defconst bbdb-gag-messages nil
+  "Bind this to t to quiet things down - do not set it!")
+
+(defconst bbdb-buffer-name "*BBDB*")
+
+(defcustom bbdb-display-omit-fields nil
+  "*Omit the fields listed here in full display.
+Set this to a list of some of the symbols '(address phone net notes) to select
+those fields to be left out of the listing (you can't leave out the name
+field)."
+  :group 'bbdb-record-display
+  :type '(choice (const :tag "Omit no fields" nil)
+                 (sexp :tag "Omit specific fields"
+                       :value (creation-date timestamp))))
+
+(defcustom bbdb-display-fields-order nil
+  "*The order in which the the fields are displayed.
+Fields not listed here are displayed in the default order."
+  :group 'bbdb-record-display)
+
+(defcustom bbdb-elided-display nil
+  "*Display BBDB records in full or in brief.
+Set this to t to make the `bbdb-display-records' commands default to
+displaying one line per record instead of a full listing.  Set this to a
+list of some of the symbols '(address phone net notes) to select those
+fields to be left out of the listing (you can't leave out the name field).
+
+This is the default state for `bbdb' and friends.  You can have a
+different default for when the BBDB buffer is automatically updated by the
+mail and news interfaces by setting the variable `bbdb-pop-up-elided-display'.
+If that variable is unbound, this variable will be consulted instead."
+  :group 'bbdb-record-display
+  :type '(choice (const :tag "Display one line per record" t)
+                 (const :tag "Display records in their entirety" nil)
+                 (sexp :tag "Display only specific fields"
+                       :value (address phone net notes))))
+
+(defun bbdb-field-shown-p (field)
+  (if bbdb-display-omit-fields
+      (not (memq field bbdb-display-omit-fields))
+    (or (null bbdb-elided-display)
+        (eq field 'name)
+        (not (or (eq bbdb-elided-display t)
+                 (memq field bbdb-elided-display))))))
+
+(defvar bbdb-pop-up-elided-display nil
+  "*Set this to t if to make the pop-up BBDB buffer default to displaying
+one line per record instead of a full listing.  Set this to a list of some
+of the symbols '(address phone net notes) to select those fields to be left
+out of the listing (you can't leave out the name field).
+
+The default state for Meta-x bbdb and friends is controlled by the variable
+`bbdb-elided-display'; this variable (`bbdb-pop-up-elided-display') is the
+default for when the BBDB buffer is automatically updated by the mail and
+news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
+`bbdb-elided-display' will be consulted instead by mail and news.")
+
+(defcustom bbdb-elided-display-name-end 48
+  "*Set this to the column where name and company should end in elided
+display."
+  :group 'bbdb
+  :type 'integer)
+
+(defcustom bbdb-elided-display-fields nil
+  "*A the list of fields which should be displayed in elided display.
+E.g. set this to '(phones net addresses) in order to get the list of
+phone numbers, net addresses and addresses listed.
+
+You may use any valid BBDB field and write your own functions for formating
+them.  The formating functions should be named according to the following
+pattern bbdb-format-elided-<field>.  They should take one argument which is
+the raw field content and return a string."
+  :group 'bbdb
+  :type 'sexp)
 
 (defcustom bbdb-address-formatting-alist
   '((bbdb-address-is-continental . bbdb-format-address-continental)
@@ -1236,185 +1322,190 @@ formatted and inserted into the current buffer.  This is used by
     (if alist
         (funcall (cdar alist) addr))))
 
-(defun bbdb-format-record (record &optional brief)
+(defun bbdb-format-elided-phones (phone)
+  "Return a formated phone number for elided display.
+Users might want to override this function." 
+  (format "%s (%s)" (aref phone 1) (aref phone 0)))
+
+(defun bbdb-format-elided-net (net)
+  "Return a formated list of nets for elided display.
+Users might want to override this function." 
+  net)
+
+(defun bbdb-format-record-elided (record)
+  (let ((start (point)))
+    (beginning-of-line)
+    (if (<= (- start (point))
+            (+ 2 bbdb-elided-display-name-end))
+        (goto-char start)
+      (goto-char (+ (point) bbdb-elided-display-name-end))
+      (setq start (point))
+      (end-of-line)
+      (delete-region start (point))
+      (insert "...")))
+  
+  (let ((field-list bbdb-elided-display-fields)
+        start field contentfun formatfun values value)
+    (indent-to bbdb-elided-display-name-end)
+    (insert " ")                  ; guarantee one space after name
+    
+    (while field-list
+      (setq field (car field-list)
+            contentfun (intern (concat "bbdb-record-"
+                                       (symbol-name field))))
+      (if (fboundp contentfun)
+          (setq values (eval (list contentfun record)))
+        (setq values (bbdb-record-getprop record field)))
+      (when values
+        (if (not (listp values)) (setq values (list values)))
+        (setq formatfun (intern (concat "bbdb-format-elided-"
+                                        (symbol-name field))))
+        (while values
+          (setq start (point)
+                value (car values))
+          (if (fboundp formatfun)
+              (insert (funcall formatfun value))
+            (insert (format "%s" values)))
+          (cond ((eq field 'addresses)
+                 (put-text-property start (point) 'bbdb-field
+                                    (list 'address value)))
+                ((eq field 'phones)
+                 (put-text-property start (point) 'bbdb-field
+                                    (list 'phone value)))
+                ((memq field '(name net aka))
+                 (put-text-property start (point) 'bbdb-field
+                                    (list field value)))
+                (t 
+                 (put-text-property start (point) 'bbdb-field
+                                    (list 'property (list field value)))))
+          (setq values (cdr values))
+          (if values (insert ", ")))
+        (insert "; "))
+      (setq field-list (cdr field-list))))
+  ;; delete the trailing "; "
+  (backward-delete-char 2)
+  (insert "\n"))
+
+(defun bbdb-format-record-full (record)
+  (insert "\n")
+  (let ((bbdb-elided-display nil)
+        (fields-order (reverse bbdb-display-fields-order))
+        (fields '(phones addresses net aka))
+        (notes (bbdb-record-raw-notes record))
+        start field)
+
+    (if (stringp notes)
+        (setq notes (list (cons 'notes notes))))
+
+    (setq fields (append fields
+                         (mapcar (lambda (r) (car r)) notes)))
+    
+    (while fields-order
+      (setq field (car fields-order)
+            fields (cons field (delete field fields))
+            fields-order (cdr fields-order)))
+
+    (while fields
+      (setq field (car fields)
+            start (point))
+      
+      (cond ((eq field 'phones)
+             (let ((phones (and (bbdb-field-shown-p 'phone)
+                                (bbdb-record-phones record)))
+                   loc phone)
+               (while phones
+                 (setq phone (car phones)
+                       start (point))
+                 (setq loc (format " %14s: " (bbdb-phone-location phone)))
+                 (insert loc (bbdb-phone-string phone) "\n")
+                 (put-text-property start (point) 'bbdb-field
+                                    (list 'phone phone
+                                          (bbdb-phone-location phone)))
+                 (put-text-property start (+ start (length loc)) 'bbdb-field
+                                    (list 'phone phone nil))
+                 (setq phones (cdr phones))))
+             (setq start nil))
+            ((eq field 'addresses)
+             ;; check bbdb-address-format to see the available
+             ;; formats of addresses.
+             (let ((addrs (and (bbdb-field-shown-p 'address)
+                               (bbdb-record-addresses record)))
+                   loc addr)
+               (while addrs
+                 (setq addr (car addrs)
+                       start (point))
+                 (setq loc (format " %14s: " (bbdb-address-location addr)))
+                 (bbdb-format-address addr)
+                 (put-text-property start (point) 'bbdb-field
+                                    (list 'address addr
+                                          (bbdb-address-location addr)))
+                 (put-text-property start (+ start (length loc)) 'bbdb-field
+                                    (list 'address addr nil))
+                 (setq addrs (cdr addrs))))
+             (setq start nil))
+            ((eq field 'net)
+             (let ((net (and (bbdb-field-shown-p 'net)
+                             (bbdb-record-net record))))
+               (if net
+                   (insert (format " %14s: %s\n" "net"
+                                   (mapconcat (function identity)
+                                              net
+                                              ", ")))))
+             (put-text-property start (point) 'bbdb-field '(net)))
+            ((eq field 'aka)
+             (let ((aka (and (bbdb-field-shown-p 'aka)
+                             (bbdb-record-aka record))))
+               (if aka
+                   (insert (format " %14s: %s\n" "AKA"
+                                   (mapconcat (function identity)
+                                              aka ", ")))))
+             (put-text-property start (point) 'bbdb-field '(aka)))
+            (t 
+             (let ((note (and (bbdb-field-shown-p field)
+                              (assoc field notes)))
+                   p notefun)
+               (when note
+                 (insert (format " %14s: " field))
+                 (setq p (point)
+                       notefun (intern (concat
+                                        "bbdb-format-record-"
+                                        (symbol-name field))))
+
+                 (if (fboundp notefun)
+                     (insert (funcall notefun (cdr note)))
+                   (insert (cdr note)))
+                 (save-excursion
+                   (save-restriction
+                     (narrow-to-region p (1- (point)))
+                     (goto-char (1+ p))
+                     (while (search-forward "\n" nil t)
+                       (insert (make-string 17 ?\ )))))
+                 (insert "\n"))
+               (put-text-property start (point) 'bbdb-field
+                                  (list 'property note))))
+            )
+      (setq fields (cdr fields)))))
+
+(defun bbdb-format-record (record &optional elided)
   (bbdb-debug (if (bbdb-record-deleted-p record)
                   (error "plus ungood: formatting deleted record")))
-  (let ((name (bbdb-record-name record))
-        (comp (bbdb-record-company record)))
-    (cond ((and name comp) (insert name " - " comp))
-          ((or name comp) (insert (or name comp)))
-          (t (insert "???")))
-    (cond ((eq brief t)
-           (let ((p (point)))
-             (beginning-of-line)
-             (if (<= (- p (point))
-             (+ 2 bbdb-elided-display-name-end))
-                 (goto-char p)
-               (goto-char (+ (point) bbdb-elided-display-name-end))
-               (setq p (point))
-               (end-of-line)
-               (delete-region p (point))
-               (insert "...")))
-           (let ((phone (car (bbdb-record-phones record)))
-                 (net (car (bbdb-record-net record)))
-                 (notes (bbdb-record-raw-notes record)))
-         (if bbdb-elided-display-fields
-         (let ((field-list bbdb-elided-display-fields)
-               field contentfun formatfun value)
-           (indent-to bbdb-elided-display-name-end)
-           (insert " ") ; guarantee one space after name
-           (while field-list
-             (setq field (car field-list))
-             (setq contentfun (intern (concat "bbdb-record-"
-                              (symbol-name field))))
-             (if (fboundp contentfun)
-             (setq value (eval (list contentfun record)))
-               (setq value (bbdb-record-getprop record field)))
-             (when value
-               (setq formatfun (intern (concat "bbdb-format-popup"
-                               (symbol-name field))))
-               (if (fboundp formatfun)
-               (insert (funcall formatfun value))
-             (insert (format "%s" value)))
-               (insert "; "))
-             (setq field-list (cdr field-list))))
-           (if (or phone net notes)
-           (progn (indent-to bbdb-elided-display-name-end)
-              (insert (if notes ". " "  "))))
-           (cond (phone (insert (bbdb-phone-string phone))
-                (indent-to 70)
-                (insert " ("); don't ask, it compiles better
-                (insert (bbdb-phone-location phone))
-                (insert ")"))
-             (net   (insert net)))))
-       (insert "\n")
-       )
-          (t
-           (insert "\n")
-           (let* ((bbdb-elided-display brief) ;pfeh.
-                  (aka (bbdb-record-aka record))
-                  (phones (and (bbdb-field-shown-p 'phone)
-                               (bbdb-record-phones record)))
-                  (addrs (and (bbdb-field-shown-p 'address)
-                              (bbdb-record-addresses record)))
-                  phone)
-           (while phones
-             (setq phone (car phones))
-             (insert (format " %14s: " (bbdb-phone-location phone)))
-             (insert (bbdb-phone-string phone) "\n")
-             (setq phones (cdr phones)))
-           (let (addr)
-             ;; check bbdb-address-format to see the available formats
-             ;; of addresses.
-             (while addrs
-               (setq addr (car addrs))
-               (bbdb-format-address addr)
-               (setq addrs (cdr addrs))))
-           (if (and (bbdb-record-net record)
-                    (bbdb-field-shown-p 'net))
-               (insert (format " %14s: %s\n" "net"
-                               (mapconcat (function identity)
-                                            (bbdb-record-net record)
-                                            ", "))))
-             (if (and aka
-                      (bbdb-field-shown-p 'aka))
-                 (insert (format " %14s: %s\n" "AKA"
-                               (mapconcat (function identity)
-                                          aka ", "))))
-             (let ((notes (bbdb-record-raw-notes record))
-                   thisnote)
-               (if (stringp notes)
-                   (setq notes (list (cons 'notes notes))))
-               (while (setq thisnote (car notes))
-                 (if (bbdb-field-shown-p (car thisnote))
-                     (progn
-                       (insert (format " %14s: " (car thisnote)))
-                       (let ((p (point))
-                             notefun)
-                         (if (fboundp (setq notefun
-                                            (intern (concat "bbdb-format-record-"
-                                                            (symbol-name (car thisnote))))))
-                             (insert (funcall notefun (cdr thisnote)))
-                           (insert (cdr thisnote)))
-                         (save-excursion
-                           (save-restriction
-                             (narrow-to-region p (1- (point)))
-                             (goto-char (1+ p))
-                             (while (search-forward "\n" nil t)
-                               (insert (make-string 17 ?\ )))))
-                         (insert "\n"))))
-                 (setq notes (cdr notes)))))
-           (insert "\n")))))
+  (let ((name (or (bbdb-record-name record) "???"))
+        (company (bbdb-record-company record))
+        (start (point)))
+    
+    (insert name)
+    (put-text-property start (point) 'bbdb-field '(name))
 
-(defcustom bbdb-time-display-format "%d %b %Y"
-  "The format for the timestamp to be used in the creation-date and
-timestamp fields.  See the documentation for `format-time-string'."
-  :group 'bbdb :type 'string)
+    (when company
+      (insert " - ")
+      (setq start (point))
+      (insert company)
+      (put-text-property start (point) 'bbdb-field '(company))))
 
-(defun bbdb-time-convert (date &optional format)
-  "Convert a date from the BBDB internal format to the format
-determined by FORMAT (or `bbdb-time-display-format' if FORMAT not
-present).  Returns a string containing the date in the new format."
-  (let ((parts (bbdb-split date "-")))
-    (format-time-string (or format bbdb-time-display-format)
-                        (encode-time 0 0 0 (string-to-int (caddr parts))
-                                     (string-to-int (cadr parts))
-                                     (string-to-int (car parts))))))
-
-(defalias 'bbdb-format-record-timestamp 'bbdb-time-convert)
-(defalias 'bbdb-format-record-creation-date 'bbdb-time-convert)
-
-(defconst bbdb-gag-messages nil
-  "Bind this to t to quiet things down - do not set it!")
-
-(defconst bbdb-buffer-name "*BBDB*")
-
-(defcustom bbdb-elided-display nil
-  "*Display BBDB records in full or in brief.
-Set this to t to make the `bbdb-display-records' commands default to
-displaying one line per record instead of a full listing.  Set this to a
-list of some of the symbols '(address phone net notes) to select those
-fields to be left out of the listing (you can't leave out the name field).
-
-This is the default state for `bbdb' and friends.  You can have a
-different default for when the BBDB buffer is automatically updated by the
-mail and news interfaces by setting the variable `bbdb-pop-up-elided-display'.
-If that variable is unbound, this variable will be consulted instead."
-  :group 'bbdb-record-display
-  :type '(choice (const :tag "Display one line per record" t)
-                 (const :tag "Display records in their entirety" nil)
-                 (sexp :tag "Display only specific fields"
-                       :value (address phone net notes))))
-
-(defvar bbdb-pop-up-elided-display nil
-  "*Set this to t if to make the pop-up BBDB buffer default to displaying
-one line per record instead of a full listing.  Set this to a list of some
-of the symbols '(address phone net notes) to select those fields to be left
-out of the listing (you can't leave out the name field).
-
-The default state for Meta-x bbdb and friends is controlled by the variable
-`bbdb-elided-display'; this variable (`bbdb-pop-up-elided-display') is the
-default for when the BBDB buffer is automatically updated by the mail and
-news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
-`bbdb-elided-display' will be consulted instead by mail and news.")
-
-(defcustom bbdb-elided-display-name-end 48
-  "*Set this to the column where name and company should end in elided
-display."
-  :group 'bbdb
-  :type 'integer)
-
-(defcustom bbdb-elided-display-fields nil
-  "*A the list of fields which should be displayed in elided display.
-E.g. set this to '(phones net addresses) in order to get the list of
-phone numbers, net addresses and addresses listed.
-
-You may use any valid BBDB field and write your own functions for formating
-them.  The formating functions should be named according to the following
-pattern bbdb-format-popup-<field>.  They should take one argument which is
-the raw field content and return a string."
-  :group 'bbdb
-  :type 'sexp)
+    ;; brief or full display
+    (if elided
+        (bbdb-format-record-elided record)
+      (bbdb-format-record-full record)))
 
 (defmacro bbdb-pop-up-elided-display ()
   '(if bbdb-pop-up-elided-display
@@ -2719,7 +2810,8 @@ before the record is created, otherwise it is created without confirmation
         (setq net (bbdb-canonicalize-address net)))
 
     (let ((change-p nil)
-          (record (bbdb-search-simple name net))
+          (record (or (bbdb-search-simple nil net)
+                      (bbdb-search-simple name nil)))
           (created-p nil)
           (fname name)
           (lname nil)
@@ -3195,6 +3287,7 @@ passed as arguments to initiate the appropriate insinuations.
                                            'bbdb-save-db)
   (define-key bbdb-mode-map [(r)]          'bbdb-refile-record)
   (define-key bbdb-mode-map [(t)]          'bbdb-elide-record)
+  (define-key bbdb-mode-map [(T)]          'bbdb-unelide-record)
   (define-key bbdb-mode-map [(o)]          'bbdb-omit-record)
   (define-key bbdb-mode-map [(?\;)]        'bbdb-record-edit-notes)
   (define-key bbdb-mode-map [(m)]          'bbdb-send-mail)
