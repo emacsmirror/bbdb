@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.67  2001/11/19 21:35:08  waider
+;; Patch from Alex Schroeder
+;;
 ;; Revision 1.66  2001/09/11 10:55:31  fenk
 ;; Appliend fixed according to change log
 ;;
@@ -323,6 +326,14 @@ of possible contents there."
   :group 'bbdb-utilities-print
   :type '(text :format "%t:\n%v"))
 
+(defcustom bbdb-print-net 'primary
+  "*Indicates whether only the primary or all email addresses are printed.
+Symbol `primary' means print the primary email address only.
+Symbol `all' means print all email addresses."
+  :group 'bbdb-utilities-print
+  :type '(choice (const primary)
+         (const all)))
+
 ;;; Functions:
 
 (defsubst bbdb-print-if-not-blank (string &rest more)
@@ -421,6 +432,8 @@ non-nil, the formatting function is called.  The nil key is a default
 value will allways calls the associated formatting function.  Therefore
 you should always have (nil . bbdb-print-format-address-default) as the
 last element in the alist.
+
+The functions must take one argument, the address.
 
 See also `bbdb-address-formatting-alist'.")
 
@@ -588,19 +601,31 @@ The return value is the new CURRENT-LETTER."
           (insert (format "\\phone{}\n")))
         (setq phone (cdr phone)))
 
-      ;; Email address -- just list their first address.
+      ;; Email address
       ;;  Make all dots legal line-breaks.
 
-      (if net
-          (let ((net-addr (bbdb-print-tex-quote (car net)))
-                (start 0))
-            (while (string-match "\\." net-addr start)
-              (setq net-addr
-                    (concat (substring net-addr 0 (match-beginning 0))
-                            ".\\-"
-                            (substring net-addr (match-end 0))))
-              (setq start (+ 2 (match-end 0))))
-            (insert (format "\\email{%s}\n" net-addr))))
+      (when net
+    (let ((net-addrs
+           (cond ((eq bbdb-print-net 'primary)
+              (list (car net)))
+             ((eq bbdb-print-net 'all)
+              net)
+             (t nil))))
+      (insert
+       (format
+        "\\email{%s}\n"
+        (mapconcat
+         (lambda (net-addr)
+           (setq net-addr (bbdb-print-tex-quote net-addr))
+           (let ((start 0))
+         (while (string-match "\\." net-addr start)
+           (setq net-addr
+             (concat (substring net-addr 0 (match-beginning 0))
+                 ".\\-"
+                 (substring net-addr (match-end 0))))
+           (setq start (+ 2 (match-end 0)))))
+           net-addr)
+         net-addrs ", ")))))
 
       ;; Addresses.  FUTURE: If none left, should use phones instead.
 
