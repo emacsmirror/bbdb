@@ -1,3 +1,33 @@
+1998-12-30  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 2.00.04 released
+
+1998-12-29  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb-com.el (bbdb-current-field): Made it handle the
+	  blank user.
+	
+1998-12-24  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb.el (bbdb-version): Made it take an option to output in 
+	  current buffer.
+	
+1998-12-10  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb.el (bbdb-load-hook): Moved after the provide.
+	* lisp/bbdb.el (bbdb-display-records-1): Fix bug so that it
+	  doesn't blow out on null records parameter.
+	
+1998-12-07  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb-snarf.el (bbdb-snarf-web-prop): Fix it to be a symbol.
+	* lisp/bbdb-snarf.el (bbdb-merge-internally): Use
+	  bbdb-record-set-raw-notes.
+
+1998-12-05  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 2.00.03 released
+
 1998-12-03  Adam C. Finnefrock <adam@bigbro.biophys.cornell.edu>
 
 	* lisp/bbdb-gnus.el (bbdb/gnus-update-record): Honor
