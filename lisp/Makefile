@@ -107,7 +107,7 @@ bbdb-vm.elc:	bbdb.elc bbdb-vm.el
 		-f batch-byte-compile $(@:.elc=.el)
 
 bbdb-srv.elc:   bbdb.elc bbdb-srv.el
-	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (and (locate-library "gnuserv") (locate-library "itimer")) (byte-compile-file "bbdb-srv.el") (message "Optional package bbdb-srv skipped - gnuserv not found"))'
+	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(or (fboundp (quote define-obsolete-variable-alias)) (if (locate-library "gnuserv-compat") (load-library "gnuserv-compat"))) (if (and (locate-library "gnuserv") (locate-library "itimer")) (byte-compile-file "bbdb-srv.el") (message "Optional package bbdb-srv skipped - gnuserv not found"))'
 
 bbdb-reportmail.elc: bbdb.elc bbdb-reportmail.el
 	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "reportmail") (byte-compile-file "bbdb-reportmail.el") (message "Optional package bbdb-reportmail skipped - reportmail not found"))'
