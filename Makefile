@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.63  2000/07/09 09:13:19  waider
+# Get install-pkg to ignore CVS directories as well as SCCS and RCS.
+#
 # Revision 1.62  2000/06/14 14:34:57  waider
 # * Added CVS revision discards to tarball exclude list.
 #
@@ -181,14 +184,14 @@ install-pkg: bbdb autoloads info
 		for i in `ls tex/*.tex` ; do \
 		   $(BSDINSTALL) -c -m 0644 $$i $(PACKAGEROOT)/etc/bbdb/tex ; \
 		done ; \
-		for i in `ls -d utils/* |egrep -v '(RCS|SCCS)'` ; do \
+		for i in `ls -d utils/* |egrep -v '(RCS|SCCS|CVS)'` ; do \
 		   $(BSDINSTALL) -c -m 0644 $$i $(PACKAGEROOT)/etc/bbdb/utils ; \
 		done ; \
 	      else \
 		for i in `ls tex/*.tex` ; do \
 		   $(SYSVINSTALL) -c $(PACKAGEROOT)/etc/bbdb/tex -s -m 0644 $$i; \
 		done ; \
-		for i in `ls -d utils/* |egrep -v '(RCS|SCCS)'` ; do \
+		for i in `ls -d utils/* |egrep -v '(RCS|SCCS|CVS)'` ; do \
 		   $(SYSVINSTALL) -c $(PACKAGEROOT)/etc/bbdb/utils -s -m 0644 $$i; \
 		done ; \
 	      fi ; \
