@@ -147,12 +147,12 @@ the user confirms the creation."
       (set-buffer (get-buffer gnus-article-buffer))
       (if (and msg-id (not bbdb/gnus-offer-to-create))
           (setq cache (bbdb-message-cache-lookup msg-id)))
-      
+
       (if cache
           (setq records (if bbdb-get-only-first-address-p
                             (car cache)
                           cache))
-        
+
         (let ((bbdb-update-records-mode (or bbdb/gnus-update-records-mode
                                             bbdb-update-records-mode)))
           (setq records (bbdb-update-records
@@ -180,9 +180,10 @@ replace the existing notes entry (if any)."
 of the BBDB record corresponding to the sender of this message."
   (interactive "P")
   (gnus-summary-select-article)
-  (let ((record (or (bbdb/gnus-pop-up-bbdb-buffer t) (error "unperson"))))
+  (let ((record (or (bbdb/gnus-update-record t) (error "unperson"))))
+    (bbdb-display-records (list record))
     (if arg
-    (bbdb-record-edit-property record nil t)
+        (bbdb-record-edit-property record nil t)
       (bbdb-record-edit-notes record t))))
 
 ;;;###autoload
@@ -219,7 +220,7 @@ This buffer will be in `bbdb-mode', with associated keybindings."
          (bbdb/gnus-show-all-recipients))
         ((= 16 show-recipients)
          (bbdb/gnus-show-records))
-        (t 
+        (t
          (if (null (bbdb/gnus-show-records bbdb-get-addresses-from-headers))
              (bbdb/gnus-show-all-recipients)))))
 
