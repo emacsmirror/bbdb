@@ -42,7 +42,8 @@ AC_CONFIG_FILES([Makefile
                  lisp/Makefile
                  texinfo/Makefile
                  tex/Makefile
-                 utils/Makefile])
+                 utils/Makefile
+                 testing/Makefile])
 
 dnl Common system utilities checking:
 AC_PROG_MAKE_SET
