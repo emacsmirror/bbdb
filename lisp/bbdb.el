@@ -1859,55 +1859,82 @@ doesn't know how to deal with."
 Letters no longer insert themselves.  Numbers are prefix arguments.
 You can move around using the usual cursor motion commands.
 \\<bbdb-mode-map>
-\\[bbdb-edit-current-field]\t edit the field on the current line.
-\\[bbdb-record-edit-notes]\t shortcut for editing the 'notes' field.
-\\[bbdb-delete-current-field-or-record]\t delete the field on the \
+\\[bbdb-edit-current-field]\t Edit the field on the current line.
+\\[bbdb-record-edit-notes]\t Edit the `notes' field for the current record.
+\\[bbdb-delete-current-field-or-record]\t Delete the field on the \
 current line.  If the current line is the\n\t first line of a record, then \
-this deletes the entire record from\n\t the database.
-\\[bbdb-insert-new-field]\t inserts a new field into the current record, as \
-opposed to editing\n\t an existing one.  Note that this will let you add \
-new fields of your\n\t own as well.
-\\[bbdb-next-record], \\[bbdb-prev-record]\t move to the next and previous \
+delete the entire record.
+\\[bbdb-insert-new-field]\t Insert a new field into the current record.  \
+Note that this\n\t will let you add new fields of your own as well.
+\\[bbdb-transpose-fields]\t Swap the field on the current line with the \
+previous field.
+\\[bbdb-dial]\t Play dial tones for the phone number on the current line.
+\\[bbdb-next-record], \\[bbdb-prev-record]\t Move to the next or the previous \
 displayed record, respectively.
-\\[bbdb-elide-record]\t toggles whether the current record is displayed in a \
+\\[bbdb-create]\t Create a new record.
+\\[bbdb-elide-record]\t Toggle whether the current record is displayed in a \
 one-line\n\t listing, or a full multi-line listing.
-\\[bbdb-apply-next-command-to-all-records]\\[bbdb-elide-record]\t does that \
-for all records.
-\\[bbdb-send-mail]\t lets you compose mail to the person represented by the \
+\\[bbdb-apply-next-command-to-all-records]\\[bbdb-elide-record]\t Do that \
+for all displayed records.
+\\[bbdb-refile-record]\t Merge the contents of the current record with \
+some other, and then\n\t delete the current record.  See this command's \
+documentation.
+\\[bbdb-omit-record]\t Remove the current record from the display without \
+deleting it from\n\t the database.  This is often a useful thing to do \
+before using one\n\t of the `*' commands.
+\\[bbdb]\t Search for records in the database (on all fields).
+\\[bbdb-net]\t Search for records by net address.
+\\[bbdb-company]\t Search for records by company.
+\\[bbdb-notes]\t Search for records by note.
+\\[bbdb-name]\t Search for records by name.
+\\[bbdb-changed]\t Display records that have changed since the database \
+was saved.
+\\[bbdb-send-mail]\t Compose mail to the person represented by the \
 current record.
-\\[bbdb-apply-next-command-to-all-records]\\[bbdb-send-mail]\t sends a mail \
-message to everyone listed in the BBDB \
-buffer.
-\\[bbdb-save-db]\t saves the BBDB file to disk.
-\\[bbdb-refile-record]\t merges the contents of this record with some other, \
-and then deletes\n\t this one.  See this command's documentation.
-\\[bbdb-finger]\t fingers the network address of the current record.
-\\[bbdb-apply-next-command-to-all-records]\\[bbdb-finger]\t fingers the \
-network address of all displayed records.
-\\[bbdb-omit-record]\t removes the current record from the display without \
-deleting it\n\t from the database.  This is often a useful thing to do before \
-using\n\t one of the `*' commands.
-\\[bbdb-info]\t enters the Info node (online documentation) for BBDB.
-\\[bbdb-help]\t displays a one-line command-summary in the echo-area.
-\\[bbdb-www]\t visits Web sites listed in the `www' field(s) of the current \
+\\[bbdb-apply-next-command-to-all-records]\\[bbdb-send-mail]\t Compose mail \
+to everyone whose record is displayed.
+\\[bbdb-finger]\t Finger the net address of the current record.
+\\[bbdb-apply-next-command-to-all-records]\\[bbdb-finger]\t Finger the \
+net address of all displayed records.
+\\[bbdb-save-db]\t Save the BBDB file to disk.
+\\[bbdb-print]\t Create a TeX file containing a pretty-printed version \
+of all the\n\t records in the database.
+\\[bbdb-apply-next-command-to-all-records]\\[bbdb-print]\t Do that for the \
+displayed records only.
+\\[other-window]\t Move to another window.
+\\[bbdb-info]\t Read the Info documentation for BBDB.
+\\[bbdb-help]\t Display a one line command summary in the echo area.
+\\[bbdb-www]\t Visit Web sites listed in the `www' field(s) of the current \
 record.
 
-In send-mail mode, \\<mail-mode-map>\\[bbdb-complete-name] does completion \
-across the set of names and network \naddresses in the database.
+For address completion using the names and net addresses in the database:
+\t in Sendmail mode, type \\<mail-mode-map>\\[bbdb-complete-name].
+\t in Message mode, type \\<message-mode-map>\\[bbdb-complete-name].
 
 Variables of note:
-	bbdb-file
-	bbdb-electric-p
-	bbdb-use-pop-up
-	bbdb-pop-up-target-lines
-	bbdb-readonly-p
-	bbdb-notice-auto-save-file
-	bbdb/mail-auto-create-p
-	bbdb/news-auto-create-p
-	bbdb-quiet-about-name-mismatches
-	bbdb-completion-type
-	bbdb-default-area-code
-	bbdb-north-american-phone-numbers-p
+\t bbdb-always-add-addresses
+\t bbdb-auto-revert-p
+\t bbdb-canonicalize-redundant-nets-p
+\t bbdb-case-fold-search
+\t bbdb-completion-type
+\t bbdb-default-area-code
+\t bbdb-electric-p
+\t bbdb-elided-display
+\t bbdb-file
+\t bbdb-message-caching-enabled
+\t bbdb-new-nets-always-primary
+\t bbdb-north-american-phone-numbers-p
+\t bbdb-notice-auto-save-file
+\t bbdb-offer-save
+\t bbdb-pop-up-elided-display
+\t bbdb-pop-up-target-lines
+\t bbdb-quiet-about-name-mismatches
+\t bbdb-readonly-p
+\t bbdb-use-alternate-names
+\t bbdb-use-pop-up
+\t bbdb-user-mail-names
+\t bbdb/mail-auto-create-p
+\t bbdb/news-auto-create-p
 
 There are numerous hooks.  M-x apropos ^bbdb.*hook RET
 
