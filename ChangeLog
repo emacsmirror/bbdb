@@ -1,0 +1,37 @@
+Sun Sep 28 00:50:07 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* bbdb.el: BBDB 1.52unoff released
+	* bbdb.el (bbdb-y-or-n-p): Fix obsolete functions
+	* bbdb-ftp.el: Added check for efs
+	* Makefile: renamed it, removed mail-extr and mail-abbrev, did
+		  some reformatting
+
+Sun Sep 28 00:03:31 1997  Jens-Ulrik Hoger Petersen <petersen@kurims.kyoto-u.ac.jp>
+
+	* bbdb-gnus.el (bbdb/gnus-update-record): Changed method for
+		  referencing article buffer.  Needed when
+		  gnus-single-article-buffer is nil.
+	* bbdb-hooks.el (bbdb-header-start): See above.
+
+Sat Sep 27 23:56:35 1997  Christopher Kline <ckline@mitre.org>
+
+	* bbdb-reportmail.el: Created
+
+Sat Sep 27 23:47:01 1997  Soren Dayton <csdayton+bbdb@cs.uchicago.edu>
+
+	* bbdb-com.el (bbdb-send-mail-internal): Allow use of message-mail
+	* bbdb.el (bbdb-send-mail-styly): Documentation change.  See above.
+
+Sat Sep 27 23:44:43 1997  Colin Rafferty <craffert@ml.com>
+
+	* bbdb.el (bbdb-annotate-message-sender): Use address for name if no name
+
+Sat Sep 27 23:39:09 1997  Christoph Wedler <wedler@fmi.uni-passau.de>
+
+	* bbdb-com.el (bbdb-finger-host-field): Added code to check for
+		  finger-host field.  Finger is done on finger-host if it
+		  exists, on net address otherwise.
+
+Sat Sep 27 20:06:05 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* bbdb-com.el (bbdb-phone-area-regexp): Fix US area code pattern
