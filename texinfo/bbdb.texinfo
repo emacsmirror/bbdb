@@ -8,6 +8,11 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.26  2000/07/03 08:28:21  kuepper
+@c Fixed ftp address.
+@c Added thanks.
+@c Synced ml info to Web.
+@c
 @c Revision 1.25  2000/07/03 08:19:01  kuepper
 @c Various little info changes, including ml info, TeX output changes, thanks.
 @c Added info-directory information. Added detailed node list.
@@ -3315,14 +3320,18 @@ where @var{NAME} is the symbol for the name of the note, and
 @node Mailing Lists, Changes, Internals, Top
 @section Mailing Lists
 
-There are two mailing lists for the @b{BBDB}.
+There are three mailing lists for the @b{BBDB}.
 @code{bbdb-info@@lists.sourceforge.net} gets moderate traffic, and is
 intended for the discussion and distribution of development versions of
 the @b{BBDB}. Users of development versions of the @b{BBDB} should be
 subscribed to this list. It is also to this list that bugs should be
 reported. @xref{Known Bugs}. for instructions on submitting bug reports.
 
-A second mailing list, @code{bbdb-cvs@@lists.sourceforge.net}, is
+The second mailing list @code{bbdb-announce@@lists.sourceforge.net} has
+very low volume. Any user of the @b{BBDB} should consider subscribing to
+lhis list, as new releases and security issues will be posted here.
+
+A third mailing list, @code{bbdb-cvs@@lists.sourceforge.net}, is
 intended for developers to follow the changes made to the @b{BBDB}
 development version. Developers of the @b{BBDB} should consider to
 subscribe to this list.
@@ -3382,6 +3391,8 @@ following site:
 @itemize @bullet
 @item
 WWW: @code{http://bbdb.sourceforge.net}
+@item
+FTP: @code{ftp://ftp.sourceforge.net/pub/bbdb}
 @end itemize
 
 @noindent Development versions of the @b{BBDB} can be obtained in the
@@ -3390,8 +3401,6 @@ following ways:
 @itemize @bullet
 @item
 WWW: @code{http://bbdb.sourceforge.net}
-@item
-FTP: @code{ftp://ftp.sourceforge.net/pub/bbdb}
 @item
 Anonymous CVS: See @code{http://bbdb.sourceforge.net} for instructions.
 @end itemize
@@ -3690,7 +3699,7 @@ suggestions. This hack would be far less insidious without their input !
 
 @subheading Thanks list for versions after 2.00.06.
 
-Thanks to Ronan Waide.
+Thanks to Alex Schroeder, Ronan Waide, Thomas DeWeese.
 
 Last, but not least, thanks to Jamie Zawinski for writing @b{BBDB} in the
 first place.
