@@ -20,6 +20,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.8  2001/01/17 19:55:07  fenk
+;; (bbdb-www-grab-homepage):
+;; 	Fix to read just one record not a list of records
+;;
 ;; Revision 1.7  2000/05/02 18:19:17  sds
 ;; * lisp/bbdb.el, lisp/bbdb-com.el: define `unless' and `when' if
 ;; necessary, do not quote `lambda' in code, do quote (`') functions
@@ -72,7 +76,8 @@ Non-interactively, do all records if arg is nonnil."
 ;;;###autoload
 (defun bbdb-www-grab-homepage (record)
   "Grab the current URL and store it in the bbdb database"
-  (interactive (list (bbdb-completing-read-record "Add WWW homepage for: ")))
+  (interactive (list (bbdb-completing-read-one-record
+                      "Add WWW homepage for: ")))
   ;; if there is no database record for this person, create one
   (unless record
     (setq record (bbdb-read-new-record))
