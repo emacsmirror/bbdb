@@ -1,3 +1,8 @@
+2001-03-03  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el:
+	bbdb-search-simple: check that the name actually matches (not company)
+
 2001-03-01  Robert Fenk  <fenk@forwiss.de>
 
 	* bbdb.el (bbdb-submit-bug-report): A function for submitting bug
