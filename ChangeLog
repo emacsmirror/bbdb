@@ -1,3 +1,35 @@
+2000-07-22  Alex Schroeder  <alex@gnu.org>
+
+	* lisp/bbdb-com.el (bbdb-check-zip-codes-p): New variable.
+	(bbdb-legal-zip-codes): New variable.
+	(bbdb-parse-zip-string): Use the two new variables instead of
+	hard-coding valid zip string regepxs.
+	(bbdb-create-internal): Doc change.  Check wether zip code is
+	stringp.
+
+	* lisp/bbdb-migrate.el (bbdb-migration-features): Added
+	description for version 6.
+	(bbdb-migration-spec): Added version 5->6 stuff.
+	(bbdb-unmigration-spec): Added version 6->5 stuff.
+	(bbdb-migrate-zip-codes-to-strings): New function with code from
+	bbdb-address-zip-string.
+	(bbdb-unmigrate-zip-codes-to-strings): New function with code from
+	bbdb-parse-zip-string.
+	(bbdb-migrate-add-country-field): Doc typo.
+	(bbdb-unmigrate-add-country-field): Doc typo.
+
+	* lisp/bbdb-print.el (bbdb-print-format-address-continental): Use
+	bbdb-address-zip instead of bbdb-address-zip-string.
+	(bbdb-print-format-address-default): Ditto.
+
+	* lisp/bbdb.el (bbdb-file-format): Set to 6.
+	(bbdb-address-zip-string): defalised to bbdb-address-zip.
+	(bbdb-continental-zip-regexp): New option.
+	(bbdb-address-is-continental): Use bbdb-continental-zip-regexp.
+	(bbdb-format-address-continental): Use bbdb-address-zip instead of
+	bbdb-address-zip-string.
+	(bbdb-format-address-default): Ditto.
+
 2000-11-16  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-com.el (bbdb-show-all-recipients): simplified the
