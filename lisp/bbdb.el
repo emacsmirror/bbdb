@@ -384,7 +384,7 @@ particular mailing list, or to only create records automatically if
 the mail has a particular subject."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
-                 (const :tag "Prompt before creating" pompt) 
+                 (const :tag "Prompt before creating" prompt) 
                  (const :tag "Do not automatically create" nil)
                  (function :tag "Create with function" bbdb-)))
 
@@ -400,7 +400,7 @@ nil from your `gnus-select-group-hook' (for Gnus - use
 gnus-Select-group-hook for GNUS) instead."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
-                 (const :tag "Prompt before creating" pompt) 
+                 (const :tag "Prompt before creating" prompt) 
                  (const :tag "Do not automatically create" nil)
                  (function :tag "Create with function" bbdb-)))
 
