@@ -86,8 +86,8 @@ prompt the users on how to merge records when duplicates are detected.")
 
 (eval-when-compile              ; pacify the compiler
  (defvar bbdb-address-print-formatting-alist) ; "bbdb-print"
- (defvar bbdb-pop-up-elided-display-name-end) ; "bbdb-com"
- (defvar bbdb-pop-up-elided-display-fields)   ; "bbdb-com"
+ (defvar bbdb-elided-display-name-end) ; "bbdb-com"
+ (defvar bbdb-elided-display-fields)   ; "bbdb-com"
  (defvar mail-mode-map)         ; "sendmail"
  (defvar message-mode-map)      ; "message"
  (autoload 'widget-group-match "wid-edit")
@@ -1202,9 +1202,9 @@ formatted and inserted into the current buffer.  This is used by
            (let ((p (point)))
              (beginning-of-line)
              (if (<= (- p (point))
-             (+ 2 bbdb-pop-up-elided-display-name-end))
+             (+ 2 bbdb-elided-display-name-end))
                  (goto-char p)
-               (goto-char (+ (point) bbdb-pop-up-elided-display-name-end))
+               (goto-char (+ (point) bbdb-elided-display-name-end))
                (setq p (point))
                (end-of-line)
                (delete-region p (point))
@@ -1212,10 +1212,10 @@ formatted and inserted into the current buffer.  This is used by
            (let ((phone (car (bbdb-record-phones record)))
                  (net (car (bbdb-record-net record)))
                  (notes (bbdb-record-raw-notes record)))
-         (if bbdb-pop-up-elided-display-fields
-         (let ((field-list bbdb-pop-up-elided-display-fields)
+         (if bbdb-elided-display-fields
+         (let ((field-list bbdb-elided-display-fields)
                field contentfun formatfun value)
-           (indent-to bbdb-pop-up-elided-display-name-end)
+           (indent-to bbdb-elided-display-name-end)
            (insert " ") ; guarantee one space after name
            (while field-list
              (setq field (car field-list))
@@ -1233,7 +1233,7 @@ formatted and inserted into the current buffer.  This is used by
                (insert "; "))
              (setq field-list (cdr field-list))))
            (if (or phone net notes)
-           (progn (indent-to bbdb-pop-up-elided-display-name-end)
+           (progn (indent-to bbdb-elided-display-name-end)
               (insert (if notes ". " "  "))))
            (cond (phone (insert (bbdb-phone-string phone))
                 (indent-to 70)
@@ -1352,13 +1352,13 @@ default for when the BBDB buffer is automatically updated by the mail and
 news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 `bbdb-elided-display' will be consulted instead by mail and news.")
 
-(defcustom bbdb-pop-up-elided-display-name-end 48
+(defcustom bbdb-elided-display-name-end 48
   "*Set this to the column where name and company should end in elided
 display."
   :group 'bbdb
   :type 'integer)
 
-(defcustom bbdb-pop-up-elided-display-fields nil
+(defcustom bbdb-elided-display-fields nil
   "*A the list of fields which should be displayed in elided display.
 E.g. set this to '(phones net addresses) in order to get the list of
 phone numbers, net addresses and addresses listed.
