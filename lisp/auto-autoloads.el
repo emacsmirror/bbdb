@@ -2,19 +2,7 @@
 (if (not (featurep 'bbdb-autoloads))
     (progn
 
-;;;### (autoloads (bbdb/gnus-score bbdb/gnus-summary-get-author) "bbdb-gnus" "lisp/bbdb-gnus.el")
-
-(autoload 'bbdb/gnus-summary-get-author "bbdb-gnus" "\
-Given a GNUS message header, returns the appropriate piece of
-information to identify the author in a GNUS summary line, depending on
-the settings of the various configuration variables.  See the
-documentation for the following variables for more details:
-  `bbdb/gnus-summary-mark-known-posters'
-  `bbdb/gnus-summary-known-poster-mark'
-  `bbdb/gnus-summary-prefer-bbdb-data'
-  `bbdb/gnus-summary-prefer-real-names'
-This function is meant to be used with the user function defined in
-  `bbdb/gnus-summary-user-format-letter'" nil nil)
+;;;### (autoloads (bbdb/gnus-score) "bbdb-gnus" "lisp/bbdb-gnus.el")
 
 (autoload 'bbdb/gnus-score "bbdb-gnus" "\
 This returns a score alist for GNUS.  A score pair will be made for
@@ -25,9 +13,16 @@ addresses better than the traditionally static global scorefile." nil nil)
 
 ;;;***
 
-;;;### (autoloads (bbdb-whois) "bbdb-whois" "bbdb/bbdb-whois.el")
+;;;### (autoloads (bbdb-whois) "bbdb-whois" "lisp/bbdb-whois.el")
 
 (autoload 'bbdb-whois "bbdb-whois" nil t nil)
+
+;;;***
+
+;;;### (autoloads (bbdb-insinuate-sc) "bbdb-sc" "lisp/bbdb-sc.el")
+
+(autoload 'bbdb-insinuate-sc "bbdb-sc" "\
+Call this function to hook BBDB into Supercite." nil nil)
 
 ;;;***
 
@@ -45,7 +40,7 @@ the printout, notably the variables `bbdb-print-alist' and
 
 ;;;***
 
-;;;### (autoloads (bbdb-snarf) "bbdb-snarf" "lisp/bbdb-snarf.el")
+;;;### (autoloads (bbdb-snarf-region bbdb-snarf) "bbdb-snarf" "lisp/bbdb-snarf.el")
 
 (autoload 'bbdb-snarf "bbdb-snarf" "\
 snarf up a bbdb record WHERE the point is.
@@ -64,6 +59,10 @@ Address and phone context are currently US-specific;
 patches to internationalize these assumptions are welcome.
 
 \\[bbdb-snarf] is similar to \\[bbdb-whois-sentinel], but less specialized." t nil)
+
+(autoload 'bbdb-snarf-region "bbdb-snarf" "\
+snarf up a bbdb record in the current region.  See `bbdb-snarf' for
+more details." t nil)
 
 ;;;***
 
