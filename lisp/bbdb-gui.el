@@ -170,9 +170,7 @@
         (bbdb-set-extent-property e 'priority 3)
         (setq p (+ start (length (bbdb-record-name record))))
         (if (bbdb-record-company record)
-            (setq p (+ p 3 (length (bbdb-record-company record)))))
-        (if (and elided-p (> p (+ start bbdb-elided-display-name-end)))
-            (setq p (+ start 2 bbdb-elided-display-name-end)))
+          (setq p (next-single-property-change (+ p 3) 'bbdb-field)))
         (goto-char start)
         (if (search-forward " - " p t)
             (progn
@@ -360,42 +358,42 @@ as of GNU Emacs 20.7"
 
 
 (defun build-bbdb-menu (record field)
-  (append
-   '("bbdb-menu" "Global BBDB Commands" "-----")
-   (list
-    ["Save BBDB" bbdb-save-db t]
-    (if (nth 1 (assq record bbdb-records))
-        ["Unelide All Records" bbdb-elide-all-records t]
-      ["Elide All Records" bbdb-elide-all-records t])
+  (delete
+   nil
+   (append
+    '("bbdb-menu" "Global BBDB Commands" "-----")
+    (list
+     ["Save BBDB" bbdb-save-db t]
+     ["Toggle All Records Display Layout"
+      bbdb-toggle-all-records-display-layout t]
     ["Finger All Records" (bbdb-finger (mapcar 'car bbdb-records)) t]
     ["BBDB Manual" bbdb-info t]
-    ["BBDB Quit" bbdb-bury-buffer t]
-    )
-   (if record
-       (list
-        "-----"
-        (concat "Commands for record \""
-                (bbdb-record-name record) "\":")
-        "-----"
-        (vector "Delete Record"
-                (list 'bbdb-delete-current-record record) t)
-        (if (nth 1 (assq record bbdb-records))
-            ["Unelide Record" bbdb-elide-record t]
-          ["Elide Record" bbdb-elide-record t])
-        (if bbdb-display-omit-fields
-            ["Complete Unelide Record" bbdb-unelide-record t])
-        ["Omit Record" bbdb-omit-record t]
-        ["Refile (Merge) Record" bbdb-refile-record t]
-        ))
-   (if record
-       (list (build-bbdb-finger-menu record)))
-   (if (bbdb-record-net record)
-       (list (build-bbdb-sendmail-menu record)))
-   (if record
-       (list (build-bbdb-insert-field-menu record)))
-   (if field
-       (cons "-----" (build-bbdb-field-menu record field)))
-   bbdb-user-menu-commands))
+    ["BBDB Quit" bbdb-bury-buffer t])
+    (if record
+        (list
+         "-----"
+         (concat "Commands for record \""
+                 (bbdb-record-name record) "\":")
+         "-----"
+         (vector "Delete Record"
+                 (list 'bbdb-delete-current-record record) t)
+         ["Toggle Records Display Layout" bbdb-toggle-records-display-layout t]
+         (if (and (not (eq 'full-multi-line
+                           (nth 1 (assq record bbdb-records))))
+                  (bbdb-display-layout-get-option 'multi-line 'omit))
+             ["Fully Display Record" bbdb-display-record-completely t])
+         ["Omit Record" bbdb-omit-record t]
+         ["Refile (Merge) Record" bbdb-refile-record t]
+         ))
+    (if record
+        (list (build-bbdb-finger-menu record)))
+    (if (bbdb-record-net record)
+        (list (build-bbdb-sendmail-menu record)))
+    (if record
+        (list (build-bbdb-insert-field-menu record)))
+    (if field
+        (cons "-----" (build-bbdb-field-menu record field)))
+    bbdb-user-menu-commands)))
 
 
 (eval-and-compile
