@@ -2066,7 +2066,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
     ;; for "Ronan Waide"? Possibly yet another tuning parameter. Oop.
     (and (stringp completion)
          yeah-yeah-this-one
-         (not only-one-p)
+         only-one-p
          (let ((rest all-the-completions) addrs)
            (while yeah-yeah-this-one
              (setq addrs (append addrs
@@ -2251,9 +2251,6 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
               (setq clist (cdr clist)))
           (setq list clist))
 
-        ;;       (recs (delq nil (mapcar (lambda (x)
-        ;;                     (symbol-value (intern-soft x ht)))
-        ;;                   list)))
         (if (and (not (eq bbdb-completion-type 'net))
                  (= 2 (length list))
                  (boundp (intern (car list) ht))
