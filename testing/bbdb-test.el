@@ -58,12 +58,14 @@ When it does not existm, create one an setup the key bindings."
       (pop-to-buffer buf)
       buf)))
 
-(defun bbdb-test/kill-current-bbdb ()
+(defun bbdb-test/kill-bbdb-buffers (bbdb-file)
   (bbdb-save-db)
   (if bbdb-buffer
       (kill-buffer bbdb-buffer))
-  (if (get-file-buffer old-bbdb-file)
-      (kill-buffer (get-file-buffer old-bbdb-file))))
+  (if (get-file-buffer bbdb-buffer-name)
+      (kill-buffer (get-file-buffer bbdb-buffer-name)))
+  (if (get-file-buffer bbdb-file)
+      (kill-buffer (get-file-buffer bbdb-file))))
 
 (defun bbdb-test/switch-to-test-bbdb ()
   "Edit the test BBDB"
@@ -72,7 +74,7 @@ When it does not existm, create one an setup the key bindings."
         (bbdb-file (expand-file-name bbdb-test/bbdb-file)))
 
     ;; cleanup for normal BBDB
-    (bbdb-test/kill-current-bbdb)
+    (bbdb-test/kill-bbdb-buffers old-bbdb-file)
 
     ;; now care for test BBDB
     (condition-case err
@@ -80,14 +82,17 @@ When it does not existm, create one an setup the key bindings."
           (bbdb-initialize)
           (message "recursive-edit of BBDB %s"
                    (abbreviate-file-name bbdb-file))
-          (recursive-edit))
+          (recursive-edit)
+          (bbdb-test/kill-bbdb-buffers bbdb-file)
+          (message "Returned to BBDB %s"
+                   (abbreviate-file-name old-bbdb-file)))
       (error
-       (bbdb-test/kill-current-bbdb)
+       (bbdb-test/kill-bbdb-buffers bbdb-file)
        (message "Returned to BBDB %s due to %s"
 		(abbreviate-file-name old-bbdb-file)
                 err))
       (quit
-       (bbdb-test/kill-current-bbdb)
+       (bbdb-test/kill-bbdb-buffers bbdb-file)
        (message "Returned to BBDB %s due to %s"
 		(abbreviate-file-name old-bbdb-file)
                 err)))))
