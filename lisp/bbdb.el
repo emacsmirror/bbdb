@@ -3258,10 +3258,15 @@ before the record is created, otherwise it is created without confirmation
 
         (if created-p
             (bbdb-invoke-hook 'bbdb-create-hook record))
+
         (if change-p
             (bbdb-change-record record (eq change-p 'sort)))
-        (let ((inside-bbdb-notice-hook t))
-          (bbdb-invoke-hook 'bbdb-notice-hook record))
+
+        ;; only invoke bbdb-notice-hook if we actually noticed something
+        (if record
+            (let ((inside-bbdb-notice-hook t))
+              (bbdb-invoke-hook 'bbdb-notice-hook record)))
+
         record))))
 
 
