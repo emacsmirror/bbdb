@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.61  2000/04/13 17:19:58  kuepper
+;; Improved TeX output (fonts, breaks).
+;;
 ;; Revision 1.60  2000/04/13 00:22:23  waider
 ;; * Address layout patch, including Euro addresses and the streets->list thing
 ;;
@@ -371,6 +374,15 @@ the printout, notably the variables `bbdb-print-alist' and
 		  ((= 3 columns) "\\threecol")
 		  ((= 2 columns) "\\twocol")
 		  ((= 1 columns) "\\onecol"))
+            ;; catcodes are font-encoding specific !
+            ;; Add more if you know them
+            (if (equal psstring "ps")
+                (concat "\n\n"
+                        ;; Adobe Times and Courier
+                        )
+              (concat "\n\n"
+                      ;; ec fonts
+                      "\\catcode`ﬂ=\\active\\chardefﬂ=\"FF"))
 	    "\n\n\\beginaddresses\n")
     (while records
       (setq current-letter 
@@ -508,8 +520,8 @@ The return value is the new CURRENT-LETTER."
 
       (if (and current-letter
 	       (not (string-equal first-letter current-letter)))
-	  (insert (format "\\separator{%s}\n%%\n" (bbdb-print-tex-quote
-						   (upcase first-letter)))))
+	  (insert (format "\\goodbreak\n\\separator{%s}\n%%\n"
+                          (bbdb-print-tex-quote (upcase first-letter)))))
 
       (insert "\\beginrecord\n")
 

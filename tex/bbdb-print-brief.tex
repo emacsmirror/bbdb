@@ -59,10 +59,11 @@
 %%%
 
 \def\setsize#1{
-  \font\rm=cmr#1
-  \font\bf=cmbx#1
-  \font\it=\ifnum #1=6 cmti7 \else cmti#1\fi
-  \font\bigbf=cmbx10 scaled \magstep3
+  \font\rm=ecrm#1
+  \font\bf=ecbx#1
+  \font\it=\ifnum #1=6 ecti7 \else ecti#1 \fi
+  \font\tt=ectt#1
+  \font\bigbf=ecbx10 scaled \magstep3
   \rm
   \baselineskip=#1pt
   \ifnum #1>9 \advance\baselineskip by 1pt \fi
@@ -72,6 +73,7 @@
   \font\rm=ptmr at #1pt
   \font\bf=ptmb at #1pt
   \font\it=ptmri at #1pt
+  \font\tt=pcrr at #1pt
   {\dimen0=#1pt\global\font\bigbf=ptmb at 1.8\dimen0}
   \rm
   \baselineskip=#1pt
@@ -86,7 +88,7 @@
     \def\sep##1{\line{\hrulefill}\smallskip\mark{##1}}
   \else \ifnum #1=2
     \def\sep##1{\hbox{\vrule\hskip -0.4pt\vbox{\hrule\smallskip
-	    \centerline{\bf{##1}}\smallskip\hrule}\hskip -0.4pt\vrule
+            \centerline{\bf{##1}}\smallskip\hrule}\hskip -0.4pt\vrule
             \mark{##1}}}
   \else \ifnum #1=3
     \def\sep##1{\hbox{\vrule\hskip -0.4pt\vbox{\hrule\smallskip
@@ -96,7 +98,7 @@
     \def\sep##1{\smallskip\centerline{\bigbf{##1}}\medskip\mark{##1}}
   \else \ifnum #1=5
     \def\sep##1{\hrule\smallskip
-	    \centerline{\bigbf{##1}}\smallskip\hrule\medskip\mark{##1}}
+            \centerline{\bigbf{##1}}\smallskip\hrule\medskip\mark{##1}}
   \else \ifnum #1=6
     \def\cute{$\sya\syb\syc\syd$}
     \def\revcute{$\syd\syc\syb\sya$}

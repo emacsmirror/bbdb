@@ -1,3 +1,17 @@
+2000-04-13  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
+
+	* tex/bbdb-print-brief.tex, tex/bbdb-print.tex: Use ec fonts
+	instead of cm. Set tt-fonts, before these weren't specified at all
+	( ectt for ec, pcrr ( = Courier ) for Postscript ).
+
+	* lisp/bbdb-print.el (bbdb-print-format-record): Put a
+	"\goodbreak" in front of every "\separator" to avoid breaks right
+	after the separator and to get a better overall formatting of
+	tex-output.
+	(bbdb-print): Insert catcodes (I need) for ec-fonts. This needs to
+	be done for Postscript as well. Also more catcodes need to be
+	inserted.
+
 2000-04-13  Waider  <waider@waider.ie>
 
 	* Makefile:

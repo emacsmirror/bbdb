@@ -60,11 +60,11 @@
 %%%
 
 \def\setsize#1{
-  \font\rm=cmr#1
-  \font\bf=cmbx#1
-  \font\it=\ifnum #1=6 cmti7 \else cmti#1\fi
-  \font\bigbf=cmbx10 scaled \magstep3
-  \font\tt=cmtt#1
+  \font\rm=ecrm#1
+  \font\bf=ecbx#1
+  \font\it=\ifnum #1=6 ecti7 \else ecti#1 \fi
+  \font\tt=ectt#1
+  \font\bigbf=ecbx10 scaled \magstep3
   \rm
   \baselineskip=#1pt
   \ifnum #1>9 \advance\baselineskip by 1pt \fi
@@ -74,6 +74,7 @@
   \font\rm=ptmr at #1pt
   \font\bf=ptmb at #1pt
   \font\it=ptmri at #1pt
+  \font\tt=pcrr at #1pt
   {\dimen0=#1pt\global\font\bigbf=ptmb at 1.8\dimen0}
   \rm
   \baselineskip=#1pt
