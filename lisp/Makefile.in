@@ -91,15 +91,15 @@ uninstall-pkg:
 	-$(RM) -r $(PACKAGEDIR)/lisp/bbdb
 
 bbdb-autoloads.el: $(DEPSRCS)
-	@rm -f $@;
+	@$(RM) $@;
 	@echo "" > $@;
-	@echo "(provide 'bbdb-autoloads)" >> $@;
 	$(EMACS) -batch -q -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
 		--eval "(if (featurep 'xemacs) (delete-file generated-autoload-file))" \
 		--eval '(setq make-backup-files nil)' \
 		--eval '(setq autoload-package-name "bbdb")' \
 		-f batch-update-autoloads `pwd`
+	@echo "(provide 'bbdb-autoloads)" >> $@;
 
 bbdb-autoloads.elc: bbdb-autoloads.el
 	$(EMACS) -batch -q -f batch-byte-compile ./$^
