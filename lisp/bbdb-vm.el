@@ -21,62 +21,6 @@
 ;;
 ;; $Id$
 ;;
-;; $Log$
-;; Revision 1.62  2000/08/21 06:38:16  fenk
-;; Removed the faulty autoload.
-;;
-;; Revision 1.61  2000/08/18 14:04:39  fenk
-;; `bbdb/vm-get-only-first-from-p' was renamed to `bbdb/vm-get-first-from-p'
-;; which is more self explanatory.
-;;
-;; The default value of `bbdb/vm-get-only-first-from-p' is `t' in order to keep
-;;  the old BBDB behavior.
-;;
-;; `bbdb/vm-get-from' was partially rewritten in order to make it more readable.
-;;
-;; Revision 1.59  2000/08/10 19:11:31  fenk
-;; T(bbdb/vm-get-from): uses now
-;; bbdb-extract-address-components to extract all recipients and uses
-;; vm-summary-uninteresting-senders for ignoring senders, which is
-;; more consistently with respect VM.  One can set the variable
-;; `bbdb/vm-get-from-headers' and `bbdb/vm-get-first-from-p' in order
-;; to control what headers are processed and what is display is what
-;; order.
-;; (bbdb/vm-message-cache-lookup):
-;; (bbdb/vm-encache-message): We use our own caching functions
-;; instead of the bbdb default functions since we are handling a set
-;; of records and not a single one.
-;; (bbdb/vm-update-record): is now just a call to
-;; (bbdb/vm-update-records): which performs the actual work of
-;; finding and updating records.
-;; (bbdb/vm-set-auto-folder-alist): Is a function from Mark Thomas
-;; <mthomas@jprc.com> which sets `vm-auto-folder-alist' according to
-;; the field `bbdb/vm-set-auto-folder-alist-field'.
-;;
-;; Files:	lisp/bbdb-vm.el
-;;
-;; Revision 1.58  2000/08/01 10:51:41  waider
-;; Added Howard Melman's VM labeling code. It's switched off by default;
-;; use (add-hook 'bbdb-notice-hook 'bbdb/vm-auto-add-label) to enable it.
-;;
-;; Revision 1.57  2000/06/14 14:51:34  waider
-;; * Trying another way to get the from field, since the Presentation
-;;   buffer hack seems to be somewhat unusable.
-;;
-;; Revision 1.56  2000/03/31 09:58:50  bbdb-writer
-;; (bbdb/vm-get-from): If there's a presentation buffer, get the address
-;; from there, since it will be MIME-decoded.
-;;
-;; Revision 1.55  1998/04/11 07:06:47  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back
-;;
-;; Revision 1.54  1998/02/23 07:14:01  simmonmt
-;; Use add-hook, not bbdb-add-hook
-;;
-;; Revision 1.53  1997/11/02 07:40:18  simmonmt
-;; bbdb/vm-annotate-sender now takes REPLACE argument
-;;
-;;
 
 (require 'cl)
 (require 'bbdb)
@@ -99,8 +43,8 @@
 
 (defcustom bbdb/vm-get-from-headers
   '(;; authors headers
-    "From:" "Sender:" "Resent-From:" "Reply-To:" 
-    ;; recipients headers 
+    "From:" "Sender:" "Resent-From:" "Reply-To:"
+    ;; recipients headers
     "Resent-To:" "Resent-CC:" "To:" "CC:")
   "*List of headers to search for senders respectively recipients.
 You may add additional headers, however be warned since it will take
@@ -122,23 +66,23 @@ If an address matches `vm-summary-uninteresting-senders' it will be ignored.
 The headers to search can be configured by `bbdb/vm-get-from-headers'."
   (setq msg (vm-real-message-of msg))
   (let ((headers  bbdb/vm-get-from-headers)
-	(fromlist nil)
-	header adlist fn ad)
+    (fromlist nil)
+    header adlist fn ad)
     (while headers
       (setq header (vm-get-header-contents msg (car headers)))
       (when header
-	(setq adlist (bbdb-extract-address-components
-		      (vm-decode-mime-encoded-words-in-string header)))
-	(while adlist
-	  (setq fn (caar adlist)
-		ad (cadar adlist))
-	  (if (not ;; ignore uninteresting addresses
-	       (or (and fn (string-match vm-summary-uninteresting-senders fn))
-		   (string-match vm-summary-uninteresting-senders ad)))
-	      (add-to-list 'fromlist (car adlist)))
-	  (if (and only-first-from fromlist)
-	      (setq adlist nil headers nil)
-	    (setq adlist (cdr adlist)))))
+    (setq adlist (bbdb-extract-address-components
+              (vm-decode-mime-encoded-words-in-string header)))
+    (while adlist
+      (setq fn (caar adlist)
+        ad (cadar adlist))
+      (if (not ;; ignore uninteresting addresses
+           (or (and fn (string-match vm-summary-uninteresting-senders fn))
+           (string-match vm-summary-uninteresting-senders ad)))
+          (add-to-list 'fromlist (car adlist)))
+      (if (and only-first-from fromlist)
+          (setq adlist nil headers nil)
+        (setq adlist (cdr adlist)))))
       (setq headers (cdr headers)))
     (nreverse fromlist)))
 
@@ -149,18 +93,18 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
   (bbdb-records)
   (if bbdb-message-caching-enabled
       (let ((records (assq message-key bbdb-message-cache))
-	    (invalid nil))
-	(mapcar (lambda (record)
-		  (if (bbdb-record-deleted-p record)
-		      (setq invalid t)))
-		(cdr records))
-	(if invalid nil records))))
+        (invalid nil))
+    (mapcar (lambda (record)
+          (if (bbdb-record-deleted-p record)
+              (setq invalid t)))
+        (cdr records))
+    (if invalid nil records))))
 
 (defun bbdb/vm-encache-message (message-key bbdb-record)
   "Don't call this multiple times with the same args, it doesn't replace."
   (and bbdb-message-caching-enabled
        (setq bbdb-message-cache  (cons (cons message-key bbdb-record)
-				       bbdb-message-cache))
+                       bbdb-message-cache))
        (notice-buffer-with-cache (current-buffer))))
 
 ;;;###autoload
@@ -170,8 +114,8 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
 
 ;;;###autoload
 (defun bbdb/vm-update-records (&optional offer-to-create)
-  "Returns the record corresponding to the current VM message, 
-creating or modifying it as necessary.  A record will be created if 
+  "Returns the record corresponding to the current VM message,
+creating or modifying it as necessary.  A record will be created if
 bbdb/mail-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
 the user confirms the creation.
 When hitting C-g you will not be asked anymore for new people listed
@@ -179,58 +123,58 @@ in this message."
   (vm-select-folder-buffer)
   (vm-check-for-killed-summary)
   (vm-error-if-folder-empty)
-  
+
   (let ((msg (car vm-message-pointer))
-	(inhibit-local-variables nil)	; vm binds this to t...
-	(enable-local-variables t)	; ...or vm bind this to nil.
-	(inhibit-quit nil)		; vm better not bind this to t!
-	cache records)
+    (inhibit-local-variables nil)   ; vm binds this to t...
+    (enable-local-variables t)  ; ...or vm bind this to nil.
+    (inhibit-quit nil)      ; vm better not bind this to t!
+    cache records)
 
     (setq cache (and msg (bbdb/vm-message-cache-lookup msg)))
 
-    (if (and cache
-             (cadr cache)
-             (cdr cache))
-	(setq records (if bbdb/vm-get-only-first-from-p
-			  (list (cadr cache))
-			(cdr cache)))
+    (if (and cache)
+        (setq records (if bbdb/vm-get-only-first-from-p
+                          (if (cadr cache) ;; stop it from returning '(nil)
+                              (list (cadr cache))
+                            nil)
+                        (cdr cache)))
       (and msg
-	   (let ((addrs (bbdb/vm-get-from msg bbdb/vm-get-only-first-from-p))
-		 (bbdb-records (bbdb-records))
-		 rec (create-p t))
-	     (mapc (lambda (address)
-		     (condition-case nil
-			 (setq rec
-			       (if create-p
-				   (bbdb-annotate-message-sender
-				    address t
-				    (bbdb-invoke-hook-for-value
-				     bbdb/mail-auto-create-p)
-				    t)
-				 (let ((name (car address))
-				       (net (cadr address)))
-				   (if name 
-				       (setq name (bbdb-search bbdb-records
-							       name nil net)))
-				   (if name (car name) nil))))
-		       (quit (setq create-p nil)))
-		     ;; people should be listed only once so we use
-		     ;; add-to-list  
-		     (if rec (add-to-list 'records rec)))
-		   addrs)
-	     (setq records (nreverse records))
-	     (bbdb/vm-encache-message msg records))))
+       (let ((addrs (bbdb/vm-get-from msg bbdb/vm-get-only-first-from-p))
+         (bbdb-records (bbdb-records))
+         rec (create-p t))
+         (mapc (lambda (address)
+             (condition-case nil
+             (setq rec
+                   (if create-p
+                   (bbdb-annotate-message-sender
+                    address t
+                    (bbdb-invoke-hook-for-value
+                     bbdb/mail-auto-create-p)
+                    t)
+                 (let ((name (car address))
+                       (net (cadr address)))
+                   (if name
+                       (setq name (bbdb-search bbdb-records
+                                   name nil net)))
+                   (if name (car name) nil))))
+               (quit (setq create-p nil)))
+             ;; people should be listed only once so we use
+             ;; add-to-list
+             (if rec (add-to-list 'records rec)))
+           addrs)
+         (setq records (nreverse records))
+         (bbdb/vm-encache-message msg records))))
     records))
 
 ;;;###autoload
 (defun bbdb/vm-annotate-sender (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record 
+  "Add a line to the end of the Notes field of the BBDB record
 corresponding to the sender of this message.  If REPLACE is non-nil,
 replace the existing notes entry (if any)."
   (interactive
    (list (if bbdb-readonly-p
-	     (error "The Insidious Big Brother Database is read-only.")
-	   (read-string "Comments: "))))
+         (error "The Insidious Big Brother Database is read-only.")
+       (read-string "Comments: "))))
   (vm-follow-summary-cursor)
   (bbdb-annotate-notes (car (bbdb/vm-update-record t)) string 'notes replace))
 
@@ -243,7 +187,7 @@ of the BBDB record corresponding to the sender of this message."
   (let ((records (or (bbdb/vm-update-record t) (error ""))))
     (bbdb-display-records records)
     (if arg
-	(bbdb-record-edit-property (car records) nil t)
+    (bbdb-record-edit-property (car records) nil t)
       (bbdb-record-edit-notes (car records) t))))
 
 ;;;###autoload
@@ -254,7 +198,7 @@ This buffer will be in bbdb-mode, with associated keybindings."
   (vm-follow-summary-cursor)
   (let ((records (bbdb/vm-update-record t)))
     (if records
-	(bbdb-display-records records)
+    (bbdb-display-records records)
       (error "unperson"))))
 
 
@@ -263,20 +207,20 @@ This buffer will be in bbdb-mode, with associated keybindings."
 Displays the records corresponding to the sender respectively
 recipients of the current message.
 See `bbdb/vm-get-from-headers' and 'bbdb/vm-get-only-first-from-p' for
-configuration of what is being displayed." 
+configuration of what is being displayed."
   (if bbdb-use-pop-up
       (bbdb-pop-up-bbdb-buffer
        (function (lambda (w)
-		   (let ((b (current-buffer)))
-		     (set-buffer (window-buffer w))
-		     (prog1 (eq major-mode 'vm-mode)
-		       (set-buffer b)))))))
-  
+           (let ((b (current-buffer)))
+             (set-buffer (window-buffer w))
+             (prog1 (eq major-mode 'vm-mode)
+               (set-buffer b)))))))
+
   (save-excursion
     (let ((bbdb-gag-messages t)
-	  (bbdb-electric-p nil)
-	  (records (bbdb/vm-update-records offer-to-create))
-	  (bbdb-elided-display (bbdb-pop-up-elided-display)))
+      (bbdb-electric-p nil)
+      (records (bbdb/vm-update-records offer-to-create))
+      (bbdb-elided-display (bbdb-pop-up-elided-display)))
       (if records (bbdb-display-records records))
       records)))
 
@@ -292,24 +236,24 @@ configuration of what is being displayed."
 Respects vm-summary-uninteresting-senders."
   (if (and vm-summary-uninteresting-senders (not to-p))
       (let ((case-fold-search nil))
-	(if (string-match vm-summary-uninteresting-senders (vm-su-from m))
-	    (concat vm-summary-uninteresting-senders-arrow
-		    (vm-summary-function-B m t))
-	  (or (bbdb/vm-alternate-full-name  (vm-su-from m))
-	      (vm-su-full-name m))))
+    (if (string-match vm-summary-uninteresting-senders (vm-su-from m))
+        (concat vm-summary-uninteresting-senders-arrow
+            (vm-summary-function-B m t))
+      (or (bbdb/vm-alternate-full-name  (vm-su-from m))
+          (vm-su-full-name m))))
     (or (bbdb/vm-alternate-full-name (if to-p (vm-su-to m) (vm-su-from m)))
-	(if to-p (vm-su-to-names m) (vm-su-full-name m)))))
+    (if to-p (vm-su-to-names m) (vm-su-full-name m)))))
 
 (defun bbdb/vm-alternate-full-name (address)
-  (if address 
+  (if address
       (let ((entry (bbdb-search-simple
-		    nil
-		    (if (and address bbdb-canonicalize-net-hook)
-			(bbdb-canonicalize-address address)
-		      address))))
-	(if entry
-	    (or (bbdb-record-getprop entry 'mail-name)
-		(bbdb-record-name entry))))))
+            nil
+            (if (and address bbdb-canonicalize-net-hook)
+            (bbdb-canonicalize-address address)
+              address))))
+    (if entry
+        (or (bbdb-record-getprop entry 'mail-name)
+        (bbdb-record-name entry))))))
 
 
 ;; From: Mark Thomas <mthomas@jprc.com>
@@ -343,17 +287,17 @@ consider using just the user part of the email address --- the part
 before the @."
   (interactive)
   (let* (;; we add the email-address/vm-folder-name pair to this
-	 ;; sublist of the vm-auto-folder-alist variable
-	 (element-name "from\\|to\\|cc")
-	 ;; grab the folder list from the vm-auto-folder-alist
-	 (folder-list (assoc element-name vm-auto-folder-alist))
-	 ;; the raw-notes and vm-folder attributes of the current bbdb
-	 ;; record
-	 notes-field folder
-	 ;; a regexp matching all the email addresses from the bbdb
+     ;; sublist of the vm-auto-folder-alist variable
+     (element-name "from\\|to\\|cc")
+     ;; grab the folder list from the vm-auto-folder-alist
+     (folder-list (assoc element-name vm-auto-folder-alist))
+     ;; the raw-notes and vm-folder attributes of the current bbdb
+     ;; record
+     notes-field folder
+     ;; a regexp matching all the email addresses from the bbdb
          ;; record
-	 email-regexp
-	 )
+     email-regexp
+     )
     ;; create the folder-list in vm-auto-folder-alist if it doesn't exist
     (unless folder-list
       (setq vm-auto-folder-alist (append vm-auto-folder-alist
@@ -362,19 +306,19 @@ before the @."
     (dolist (record (bbdb-records))
       (setq notes-field (bbdb-record-raw-notes record))
       (when (and (listp notes-field)
-		 (setq folder (cdr (assq bbdb/vm-set-auto-folder-alist-field
-					 notes-field))))
+         (setq folder (cdr (assq bbdb/vm-set-auto-folder-alist-field
+                     notes-field))))
         ;; quote all the email addresses for the record and join them
         ;; with OR
-	(setq email-regexp (mapconcat '(lambda (addr)
-					 (regexp-quote addr))
-				      (bbdb-record-net record) "\\|"))
-	(unless (or (zerop (length email-regexp))
-		    (assoc email-regexp folder-list))
-	  ;; be careful: nconc modifies the list in place
-	  (if (equal (elt folder 0) ?\')
-	      (setq folder (read folder)))
-	  (nconc folder-list (list (cons email-regexp folder))))))))
+    (setq email-regexp (mapconcat '(lambda (addr)
+                     (regexp-quote addr))
+                      (bbdb-record-net record) "\\|"))
+    (unless (or (zerop (length email-regexp))
+            (assoc email-regexp folder-list))
+      ;; be careful: nconc modifies the list in place
+      (if (equal (elt folder 0) ?\')
+          (setq folder (read folder)))
+      (nconc folder-list (list (cons email-regexp folder))))))))
 
 
 (defcustom bbdb/vm-snarf-all-headers
@@ -398,9 +342,9 @@ Optional argument MSG is a VM message pointer."
   (bbdb/vm-pop-up-bbdb-buffer t)
 
   (let ((bbdb/vm-get-from-headers bbdb/vm-snarf-all-headers)
-	(bbdb/vm-get-only-first-from-p nil)
-	(bbdb-message-cache nil)
-	records)
+    (bbdb/vm-get-only-first-from-p nil)
+    (bbdb-message-cache nil)
+    records)
     (setq records (bbdb/vm-update-records offer-to-create))
     (bbdb-display-records records)))
 
@@ -436,33 +380,33 @@ This works great when `bbdb-user-mail-names' is set.  As a result
 mail that you send to people (and copy yourself on) is labeled as well."
   (let (field aliases sep)
     (and (eq major-mode 'vm-mode)
-	 (mapcar #'(lambda(x)
-		     (and
-		      (setq field (bbdb-record-getprop record x))
-		      (setq sep (or (get x 'field-separator) ","))
-		      (setq aliases (append aliases (bbdb-split field sep)))))
-		 (cond ((listp bbdb/vm-auto-add-label-field)
-			bbdb/vm-auto-add-label-field)
-		       ((symbolp bbdb/vm-auto-add-label-field)
-			(list bbdb/vm-auto-add-label-field))
-		       (t (error "Bad value for bbdb/vm-auto-add-label-field"))
-		       ))
-	 (vm-add-message-labels
-	  (mapconcat #'(lambda (l)
-			 (cond ((stringp l)
-				(if (member l aliases)
-				    l))
-			       ((and (consp l)
-				     (stringp (car l))
-				     (stringp (cdr l)))
-				(if (member (car l) aliases)
-				    (cdr l)))
-			       (t
-				(error "Malformed bbdb/vm-auto-add-label-list")
-				)))
-		     bbdb/vm-auto-add-label-list
-		     " ")
-	  1))))
+     (mapcar #'(lambda(x)
+             (and
+              (setq field (bbdb-record-getprop record x))
+              (setq sep (or (get x 'field-separator) ","))
+              (setq aliases (append aliases (bbdb-split field sep)))))
+         (cond ((listp bbdb/vm-auto-add-label-field)
+            bbdb/vm-auto-add-label-field)
+               ((symbolp bbdb/vm-auto-add-label-field)
+            (list bbdb/vm-auto-add-label-field))
+               (t (error "Bad value for bbdb/vm-auto-add-label-field"))
+               ))
+     (vm-add-message-labels
+      (mapconcat #'(lambda (l)
+             (cond ((stringp l)
+                (if (member l aliases)
+                    l))
+                   ((and (consp l)
+                     (stringp (car l))
+                     (stringp (cdr l)))
+                (if (member (car l) aliases)
+                    (cdr l)))
+                   (t
+                (error "Malformed bbdb/vm-auto-add-label-list")
+                )))
+             bbdb/vm-auto-add-label-list
+             " ")
+      1))))
 
 ;; this is how you hook it in.
 ;;(add-hook 'bbdb-notice-hook 'bbdb/vm-auto-add-label)
@@ -472,11 +416,11 @@ mail that you send to people (and copy yourself on) is labeled as well."
 (defun bbdb-insinuate-vm ()
   "Call this function to hook BBDB into VM."
   (cond ((boundp 'vm-select-message-hook) ; VM 5.36+
-	 (add-hook 'vm-select-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
-	((boundp 'vm-show-message-hook)	; VM 5.32.L+
-	 (add-hook 'vm-show-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
-	(t
-	 (error "vm versions older than 5.36 no longer supported")))
+     (add-hook 'vm-select-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
+    ((boundp 'vm-show-message-hook) ; VM 5.32.L+
+     (add-hook 'vm-show-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
+    (t
+     (error "vm versions older than 5.36 no longer supported")))
   (define-key vm-mode-map ":" 'bbdb/vm-show-sender)
   (define-key vm-mode-map ";" 'bbdb/vm-edit-notes)
   (define-key vm-mode-map "/" 'bbdb)
