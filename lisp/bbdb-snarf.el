@@ -405,6 +405,7 @@ a space."
   :group 'bbdb-noticing-records
   :type 'string)
 
+;;;###autoload
 (defun bbdb-snarf-nice-real-name (str)
   "Removes unwanted characters form STR in order to get a nice full name.
 Remove any unwanted characters specifyed by `bbdb-snarf-nice-real-name-regexp',
