@@ -61,6 +61,12 @@
 (defconst bbdb-version "2.35")
 (defconst bbdb-version-date "$Date$")
 
+(defcustom bbdb-gui (not (null window-system))
+  "*Should the *BBDB* buffer be fontified?
+This variable has no effect if set outside of customize."
+  :group 'bbdb
+  :type 'boolean)
+
 ;; File format
 (defconst bbdb-file-format 6)
 (defvar bbdb-file-format-migration nil
@@ -1259,71 +1265,6 @@ options."
          (setq option-value (assoc option layout-spec))
          (cdr option-value))))
 
-(defcustom bbdb-elided-display nil
-  "*Display BBDB records in full or in brief.
-Set this to t to make the `bbdb-display-records' commands default to
-displaying one line per record instead of a full listing.  Set this to a
-list of some of the symbols '(address phone net notes) to select those
-fields to be left out of the listing (you can't leave out the name field).
-
-This is the default state for `bbdb' and friends.  You can have a
-different default for when the BBDB buffer is automatically updated by the
-mail and news interfaces by setting the variable `bbdb-pop-up-elided-display'.
-If that variable is unbound, this variable will be consulted instead."
-  :group 'bbdb-record-display
-  :type '(choice (const :tag "Display one line per record" t)
-                 (const :tag "Display records in their entirety" nil)
-                 (sexp :tag "Display only specific fields"
-                       :value (address phone net notes))))
-
-(defvar bbdb-pop-up-elided-display nil
-  "*Set this to t if to make the pop-up BBDB buffer default to displaying
-one line per record instead of a full listing.  Set this to a list of some
-of the symbols '(address phone net notes) to select those fields to be left
-out of the listing (you can't leave out the name field).
-
-The default state for Meta-x bbdb and friends is controlled by the variable
-`bbdb-elided-display'; this variable (`bbdb-pop-up-elided-display') is the
-default for when the BBDB buffer is automatically updated by the mail and
-news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
-`bbdb-elided-display' will be consulted instead by mail and news.")bbdb-pop-up-elided-display
-
-(defun bbdb-elided-display-sanity-setup ()
-  (interactive)
-  ;; if bbdb-elided-display is set then inform the user and do some sanity
-  ;; setup for the new layout variables
-  (when bbdb-elided-display
-    (when (eq t bbdb-elided-display)
-      (setq bbdb-display-layout 'one-line)
-      (bbdb-warn "Use the variable `bbdb-display-layout' instead of `bbdb-elided-display'!"))
-    (when (listp bbdb-elided-display)
-      (setq bbdb-display-layout 'multi-line)
-      (let (l)
-        (and (setq l (assoc 'multi-line bbdb-display-layout-alist))
-             (not (assoc 'omit l))
-             (setcdr l (cons (cons 'omit bbdb-elided-display) (cdr l)))))
-      (bbdb-warn "Use variable `bbdb-display-layout' and `bbdb-display-layout-alist' instead of `bbdb-elided-display'!"))
-    (setq bbdb-elided-display nil))
-
-  (when bbdb-pop-up-elided-display
-    (when (eq t bbdb-pop-up-elided-display)
-      (setq bbdb-pop-up-display-layout 'one-line)
-      (bbdb-warn "Use the variable `bbdb-pop-up-display-layout' instead of `bbdb-pop-up-elided-display'!"))
-    (when (listp bbdb-pop-up-elided-display)
-      (setq bbdb-pop-up-display-layout 'pop-up-multi-line)
-      (let (l)
-        (and (setq l (assoc 'pop-up-multi-line bbdb-display-layout-alist))
-             (not (assoc 'omit l))
-             (setcdr l (append (list (cons 'omit bbdb-pop-up-elided-display)
-                                     '(toggle . t))
-                               (cdr l)))))
-      (setq bbdb-display-layout-alist
-            (delete (assoc 'one-line bbdb-display-layout-alist)
-                    bbdb-display-layout-alist))
-      (bbdb-warn "Use variable `bbdb-pop-up-display-layout' and `bbdb-display-layout-alist' instead of `bbdb-pop-up-elided-display'!"))
-    (setq bbdb-pop-up-elided-display nil)))
-
-
 (defcustom bbdb-address-formatting-alist
   '((bbdb-address-is-continental . bbdb-format-address-continental)
     (nil . bbdb-format-address-default))
@@ -1724,13 +1665,11 @@ multi-line layout."
         '(bbdb-readonly-p "--%%%%-" (bbdb-modified-p "--**-" "-----"))))
 
 (defun bbdb-display-records-1 (records &optional append layout)
-  (setq append (or append (bbdb-add-next-search-results-p)))
+  (setq append (or append (bbdb-append-records-p)))
   
   (if (or (null records)
           (consp (car records)))
       nil
-
-    (bbdb-elided-display-sanity-setup)
 
     ;; add layout and a marker to the local list of records
     (setq layout (or layout bbdb-display-layout))
@@ -1804,6 +1743,7 @@ multi-line layout."
     ;; this doesn't really belong here, but it's convenient ... and when
     ;; using electric display it would not be called otherwise.
     (save-excursion (run-hooks 'bbdb-list-hook))
+    (if bbdb-gui (bbdb-fontify-buffer))
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
     (set-buffer b)))
@@ -3525,7 +3465,7 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map [(S)]          'bbdb-mode-search-map)
 
   (define-key bbdb-mode-map [(*)]          'bbdb-apply-next-command-to-all-records)
-  (define-key bbdb-mode-map [(+)]          'bbdb-add-next-search-results)
+  (define-key bbdb-mode-map [(+)]          'bbdb-append-records)
   (define-key bbdb-mode-map [(a)]          'bbdb-add-or-remove-mail-alias)
   (define-key bbdb-mode-map [(e)]          'bbdb-edit-current-field)
   (define-key bbdb-mode-map [(n)]          'bbdb-next-record)
@@ -3593,27 +3533,7 @@ passed as arguments to initiate the appropriate insinuations.
   (beep 1)
   (apply 'message args))
 
-(defcustom bbdb-gui (not (null window-system))
-  "*Should the *BBDB* buffer be fontified?
-This variable has no effect if set outside of customize."
-  :group 'bbdb
-  :type 'boolean
-  :set (lambda (symb val)
-         (set symb val)
-         (if val
-             (add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
-             (remove-hook 'bbdb-list-hook 'bbdb-fontify-buffer))))
 
 (provide 'bbdb)  ; provide before loading things which might require
-
-;; make it obsolete everywhere else, but not for the compatibility code in
-;; this file
-(make-obsolete-variable
- 'bbdb-elided-display
- 'bbdb-display-layout)
-
-(make-obsolete-variable
- 'bbdb-pop-up-elided-display
- 'bbdb-pop-up-display-layout)
 
 (run-hooks 'bbdb-load-hook)
