@@ -1554,9 +1554,9 @@ The display layout `full-multi-line' is used for this."
 (defun bbdb-display-record-with-layout (layout &optional records)
   "Show all the fields of the current record using LAYOUT."
   (interactive (list (completing-read "Layout: "
-				      (mapcar (lambda (i)
-						(list (symbol-name (car i))))
-					      bbdb-display-layout-alist))))
+                      (mapcar (lambda (i)
+                        (list (symbol-name (car i))))
+                          bbdb-display-layout-alist))))
   (when (stringp layout)
     (setq layout (intern layout)))
   (when (null records)
@@ -2282,16 +2282,26 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
          (typed (downcase orig))
          (pattern (bbdb-string-trim typed))
          (ht (bbdb-hashtable))
-         ;; make a unique set of matching records (yeah-yeah-this-one),
-         ;; a list of possible completion strings (all-the-completions),
-         ;; and a flag to indicate if there's a single matching record
-         ;; or not (only-one-p)
+         ;; make a list of possible completion strings
+         ;; (all-the-completions), and a flag to indicate if there's a
+         ;; single matching record or not (only-one-p)
          (only-one-p t)
          (all-the-completions nil)
          (pred
           (lambda (sym)
             (when (bbdb-completion-predicate sym)
-              (if (and only-one-p (> (length (symbol-value sym)) 1))
+              (if (and only-one-p
+                       all-the-completions
+                       (or
+                        ;; not sure about this. more than one record
+                        ;; attached to the symbol? does that happen?
+                        (> (length (symbol-value sym)) 1)
+                        ;; this is the doozy, though. multiple syms
+                        ;; which all match the same record
+                        (delete t (mapcar (lambda(x)
+                                            (equal (symbol-value x)
+                                                   (symbol-value sym)))
+                                          all-the-completions))))
                   (setq only-one-p nil))
               (if (not (memq sym all-the-completions))
                   (setq all-the-completions (cons sym all-the-completions))))))
@@ -2362,9 +2372,9 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
               (message "completion for \"%s\" unfound." pattern)
               (ding)))));; no matches, sorry!
 
-     ;; Perfect match for a single record
-     ((and only-one-p exact-match)
-      (let* ((sym (intern-soft pattern ht))
+     ;; match for a single record
+     (only-one-p
+      (let* ((sym (if exact-match (intern-soft pattern ht) (car all-the-completions)))
              (recs (symbol-value sym))
              the-net match-recs lst primary matched)
 
@@ -2373,7 +2383,10 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
 
             ;; Did we match on name?
             (if (string= pattern
-                         (downcase (or (bbdb-record-name (car recs)) "")))
+                         (substring (downcase (or (bbdb-record-name (car recs)) ""))
+                                    0 (if (bbdb-record-name (car
+                                                             recs))
+                                          (length pattern) 0)))
                 (setq match-recs (cons (car recs) match-recs)
                       matched t))
 
@@ -2381,7 +2394,11 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
             (when (not matched)
               (setq lst (bbdb-record-aka (car recs)))
               (while lst
-                (if (string= pattern (downcase (car lst)))
+                (if (string= pattern (substring (downcase (car lst)) 0
+                                                (min (length (downcase
+                                                              (car
+                                                               lst)))
+                                                     (length pattern))))
                     (setq match-recs (append match-recs (list (car recs)))
                           matched t
                           lst '())
@@ -2392,7 +2409,11 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
               (setq lst (bbdb-record-net (car recs)))
               (setq primary t) ;; primary wins over secondary...
               (while lst
-                (if (string= pattern (downcase (car lst)))
+                (if (string= pattern (substring (downcase (car lst))
+                                                0 (min (length
+                                                        (downcase (car
+                                                                   lst)))
+                                                       (length pattern))))
                     (setq the-net (car lst)
                           lst     nil
                           match-recs
@@ -2401,12 +2422,12 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                 (setq lst     (cdr lst)
                       primary nil))))
 
-	  ;; loop to next rec
-	  (setq recs    (cdr recs)
-		matched nil))
+          ;; loop to next rec
+          (setq recs    (cdr recs)
+                matched nil))
 
-	(unless match-recs
-	  (error "only exact matching record unhas net field"))
+        (unless match-recs
+          (error "only exact matching record unhas net field"))
 
         ;; now replace the text with the expansion
         (delete-region beg end)
