@@ -1387,6 +1387,12 @@ Completion behaviour is as dictated by the variable `bbdb-completion-type'."
 
 ;;; Send-Mail interface
 
+(defcustom bbdb-dwim-net-address-allow-redundancy nil
+  "*Non-nil means always use full name when sending mail, even if same as net."
+  :group 'bbdb
+  :type '(choice (const :tag "Disallow redundancy" nil)
+		 (const :tag "Allow redundancy" t)))
+
 ;;;###autoload
 (defun bbdb-dwim-net-address (record &optional net)
   "Returns a string to use as the email address of the given record.  The
@@ -1414,19 +1420,20 @@ address is used as-is."
 	  (setq name (concat (substring name 0 i) "\\" (substring name i))
 		i (+ i 2))))
     (cond ((or (null name)
-	       (cond ((and fn ln)
-		      (or (string-match
-			   (concat "\\`[^!@%]*\\b" (regexp-quote fn)
-				   "\\b[^!%@]+\\b" (regexp-quote ln) "\\b")
-			   net)
+	       (if (not bbdb-dwim-net-address-allow-redundancy)
+		   (cond ((and fn ln)
+			  (or (string-match
+			       (concat "\\`[^!@%]*\\b" (regexp-quote fn)
+				       "\\b[^!%@]+\\b" (regexp-quote ln) "\\b")
+			       net)
+			      (string-match
+			       (concat "\\`[^!@%]*\\b" (regexp-quote ln)
+				       "\\b[^!%@]+\\b" (regexp-quote fn) "\\b")
+			       net)))
+			 ((or fn ln)
 			  (string-match
-			   (concat "\\`[^!@%]*\\b" (regexp-quote ln)
-				   "\\b[^!%@]+\\b" (regexp-quote fn) "\\b")
-			   net)))
-		     ((or fn ln)
-		      (string-match
-		       (concat "\\`[^!@%]*\\b" (regexp-quote (or fn ln)) "\\b")
-		       net)))
+			   (concat "\\`[^!@%]*\\b" (regexp-quote (or fn ln)) "\\b")
+			   net))))
 	       ;; already in "foo <bar>" or "bar <foo>" format.
 	       (string-match "\\`[ \t]*[^<]+[ \t]*<" net)
 	       (string-match "\\`[ \t]*[^(]+[ \t]*(" net))
