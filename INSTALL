@@ -52,6 +52,23 @@ To compile and install the BBDB:
                    section.
              ii)   Issue the 'make install-pkg' command.
 
+***************************************************************************
+*                                                                         *
+*         THE BBDB INITIALIZATION PROCEDURE CHANGED IN 1.57unoff.         *
+*                                                                         *
+*                              YOU *MUST* ADD                             *
+*                                                                         *
+*   (require 'bbdb)                                                       *
+*   (bbdb-initialize)                                                     *
+*                                                                         *
+*   TO YOUR BBDB INITIALIZATION CODE.  THIS TAKES THE PLACE OF ALL BBDB   *
+*    AUTOLOADS.  IT DOES *NOT* TAKE THE PLACE OF THE INSINUATION CODE.    *
+*                                                                         *
+*       If you do not add this code, you will receive keymap errors       *
+*                          (among other things)                           *
+*                                                                         *
+***************************************************************************
+
 For information on post-installation BBDB configuration and setup, see 
 the info file.
 
