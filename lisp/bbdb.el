@@ -2542,13 +2542,13 @@ before the record is created, otherwise it is created without confirmation
       ;; first try to get a reasonable default name if not given
       ;; often I get things like <firstname>.<surname>@ ...
       (if (or (null name) (and (stringp name) (string= "" name)))
-	  (if (string-match "^[^@]+" net)
-	      (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
+      (if (string-match "^[^@]+" net)
+          (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
       (setq record (if (or (null prompt-to-create-p)
-			   (bbdb-y-or-n-p (format "%s is not in the db; add? "
-						  (or name net))))
-		       (make-vector bbdb-record-length nil))
-	    created-p (not (null record)))
+               (bbdb-y-or-n-p (format "%s is not in the db; add? "
+                          (or name net))))
+               (make-vector bbdb-record-length nil))
+        created-p (not (null record)))
       (if record
           (bbdb-record-set-cache record (make-vector bbdb-cache-length nil)))
       (if created-p (bbdb-invoke-hook 'bbdb-create-hook record)))
@@ -2573,50 +2573,50 @@ before the record is created, otherwise it is created without confirmation
                                        (downcase tmp)))))))
           ;; have a message-name, not the same as old name.
           (cond (bbdb-readonly-p nil)
-		((and bbdb-quiet-about-name-mismatches old-name)
-		 (let ((sit-for-secs
-			(if (numberp bbdb-quiet-about-name-mismatches)
-			    bbdb-quiet-about-name-mismatches
-			  2)))
-		   (if (or bbdb-silent-running (= 0 sit-for-secs)) nil
- 		     (message "name mismatch: \"%s\" changed to \"%s\""
- 			      (bbdb-record-name record) name)
-		     (sit-for sit-for-secs))))
+        ((and bbdb-quiet-about-name-mismatches old-name)
+         (let ((sit-for-secs
+            (if (numberp bbdb-quiet-about-name-mismatches)
+                bbdb-quiet-about-name-mismatches
+              2)))
+           (if (or bbdb-silent-running (= 0 sit-for-secs)) nil
+             (message "name mismatch: \"%s\" changed to \"%s\""
+                  (bbdb-record-name record) name)
+             (sit-for sit-for-secs))))
                 ((or created-p
                      (if bbdb-silent-running t
-		       (if (null old-name)
-			   (bbdb-y-or-n-p
-			    (format "Assign name \"%s\" to address \"%s\"? "
-				    name (car (bbdb-record-net record))))
-			 (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
+               (if (null old-name)
+               (bbdb-y-or-n-p
+                (format "Assign name \"%s\" to address \"%s\"? "
+                    name (car (bbdb-record-net record))))
+             (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
                                                 old-name name)))))
- 		 (setq change-p 'sort)
- 		 (and old-name bbdb-use-alternate-names
+         (setq change-p 'sort)
+         (and old-name bbdb-use-alternate-names
                       (if bbdb-silent-running
                           (bbdb-record-set-aka record
                                                (cons old-name
                                                      (bbdb-record-aka record)))
                           (if (bbdb-y-or-n-p
                                (format "Keep name \"%s\" as an AKA? "
- 						old-name))
- 			 (bbdb-record-set-aka record
-					      (cons old-name
-						    (bbdb-record-aka record)))
-			 (bbdb-remhash (downcase old-name) record))))
- 		 (bbdb-record-set-namecache record nil)
- 		 (bbdb-record-set-firstname record fname)
- 		 (bbdb-record-set-lastname record lname)
- 		 (bbdb-debug (or fname lname
- 				 (error "bbdb: should have a name by now")))
-		 (bbdb-puthash (downcase (bbdb-record-name record)) record))
- 		((and old-name
+                        old-name))
+             (bbdb-record-set-aka record
+                          (cons old-name
+                            (bbdb-record-aka record)))
+             (bbdb-remhash (downcase old-name) record))))
+         (bbdb-record-set-namecache record nil)
+         (bbdb-record-set-firstname record fname)
+         (bbdb-record-set-lastname record lname)
+         (bbdb-debug (or fname lname
+                 (error "bbdb: should have a name by now")))
+         (bbdb-puthash (downcase (bbdb-record-name record)) record))
+        ((and old-name
                       bbdb-use-alternate-names)
                  (if (not bbdb-silent-running)
-		     (bbdb-y-or-n-p
-		      (format "Make \"%s\" an alternate for \"%s\"? "
-			      name old-name)))
- 		 (setq change-p 'sort)
- 		 (bbdb-record-set-aka
+             (bbdb-y-or-n-p
+              (format "Make \"%s\" an alternate for \"%s\"? "
+                  name old-name)))
+         (setq change-p 'sort)
+         (bbdb-record-set-aka
                   record (cons name (bbdb-record-aka record)))
                  (bbdb-puthash (downcase name) record))))
 
@@ -2980,3 +2980,8 @@ passed as arguments to initiate the appropriate insinuations.
 (defun bbdb-warn (&rest args)
   (beep 1)
   (apply 'message args))
+
+;;;###autoload
+(defun bbdb-insinuate-message ()
+  "Call this function to hook BBDB into `message-mode'."
+  (define-key message-mode-map "[(meta tab)]" 'bbdb-complete-name))
