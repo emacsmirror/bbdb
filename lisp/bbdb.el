@@ -1014,21 +1014,23 @@ from string."
 
 ;;; Address formatting.
 
-(defvar bbdb-address-formatting-alist
+(defcustom bbdb-address-formatting-alist
   '((bbdb-address-is-continental . bbdb-format-address-continental)
     (nil . bbdb-format-address-default))
   "Alist of address identifying and address formatting functions.
 The key is an identifying function which accepts an address.  The
 associated value is a formatting function which inserts the formatted
 address in the current buffer.  If the identifying function returns
-non-nil, the formatting function is called.  The nil key is a default
-value will allways calls the associated formatting function.  Therefore
-you should always have (nil . bbdb-format-address-default) as the last
-element in the alist.
+non-nil, the formatting function is called.  When nil is used as the
+car, then the associated formatting function will always be called.
+Therefore you should always have (nil . bbdb-format-address-default) as
+the last element in the alist.
 
 This alist is used in `bbdb-format-address'.
 
-See also `bbdb-address-print-formatting-alist'.")
+See also `bbdb-address-print-formatting-alist'."
+  :group 'bbdb-record-display
+  :type '(repeat (cons function function))
 
 (defun bbdb-address-is-continental (addr)
   "Return non-nil if the address ADDR is a continental address.
@@ -2182,6 +2184,8 @@ doesn't know how to deal with."
 Letters no longer insert themselves.  Numbers are prefix arguments.
 You can move around using the usual cursor motion commands.
 \\<bbdb-mode-map>
+\\[bbdb-add-or-remove-mail-alias]\t Add new mail alias to visible records or \
+remove it.
 \\[bbdb-edit-current-field]\t Edit the field on the current line.
 \\[bbdb-record-edit-notes]\t Edit the `notes' field for the current record.
 \\[bbdb-delete-current-field-or-record]\t Delete the field on the \
