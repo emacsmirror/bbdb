@@ -1,4 +1,4 @@
-To compile and install the BBDB:
+To compile and install the BBDB on systems with `make':
 
   1) Configure the compilation process
        Edit the Makefile, setting (if necessary) the paths to the Mail
@@ -56,6 +56,18 @@ To compile and install the BBDB:
                    section.
              ii)   Issue the 'make install-pkg' command.
 
+To compile and install the BBDB on systems without `make':
+
+  If at all possible, use make to automatically build the BBDB as
+  outlined above.  While it looks like there are fewer steps in the
+  non-make instructions below, they're more tedious and involved.
+
+  1) Compile the .el files using the byte-compile-file function in
+     Emacs.
+
+  2) Install the BBDB as outlined in step 3 above.
+
+
 ***************************************************************************
 *                                                                         *
 *         THE BBDB INITIALIZATION PROCEDURE CHANGED IN 1.57unoff.         *
@@ -77,5 +89,5 @@ For information on post-installation BBDB configuration and setup, see
 the info file.
 
 Questions, Comments, Suggestions, and Bug Reports may be directed to
-the BBDB mailing list at info-bbdb@xemacs.org.  To subscribe, send
-mail to info-bbdb-request@xemacs.org, with 'subscribe' as the subject.
+the BBDB mailing list at bbdb-info@xemacs.org.  To subscribe, send
+mail to bbdb-info-request@xemacs.org, with 'subscribe' as the subject.
