@@ -19,15 +19,16 @@
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 ;;;
 ;;;  ------------------------------------------------------------------------
-;;; |  There is a mailing list for discussion of BBDB: bbdb-info@xemacs.org  |
-;;; |  To join, send mail to bbdb-info-request@xemacs.org (don't forget the  |
-;;; |  -request part or you'll look silly in front of lots of people who     |
-;;; |  have the ability to remember it indefinitely...)                      |
+;;; |  There is a mailing list for discussion of BBDB:                       |
+;;; |         bbdb-info@lists.sourceforge.net                                |
+;;; |  To join, send mail to bbdb-info-request@lists.sourceforge.net         |
+;;; |  (don't forget the "-request" part or you'll look silly in front of    |
+;;; |  lots of people who have the ability to remember it indefinitely...)   |
 ;;; |                                                                        |
 ;;; |  There is also a second mailing list, to which only bug fixes and      |
 ;;; |  new version announcements are sent; to be added to it, send mail to   |
-;;; |  bbdb-announce-request@xemacs.org.  This is a very low volume list,    |
-;;; |  and if you're using BBDB, you really should be on it.                 |
+;;; |  bbdb-announce-request@lists.sourceforge.net.  This is a very low      |
+;;; |  volume list, and if you're using BBDB, you really should be on it.    |
 ;;; |                                                                        |
 ;;; |  When joining these lists or reporting bugs, please mention which      |
 ;;; |  version you have.                                                     |
