@@ -2336,7 +2336,7 @@ of all of those people."
             (use-abbrev-p (fboundp 'define-mail-abbrev)))
         (if use-abbrev-p
             (define-mail-abbrev alias expansion)
-            (define-mail-alias alias expansion))
+          (define-mail-alias alias expansion))
         (setq alias (or (intern-soft alias
                                      (if use-abbrev-p
                                          mail-abbrevs mail-aliases))
@@ -2920,6 +2920,16 @@ functions `bbdb-update-records' and `bbdb-prompt-for-create'."
   "Used for inter-function communication between the functions
 `bbdb-update-records' and `bbdb-prompt-for-create'.")
 
+(defvar bbdb-update-address-class nil
+  "Class of currently processed address as in `bbdb-get-addresses-headers'.
+The `bbdb-notice-hook' and `bbdb-create-hook' functions may utilize this to
+treat updates in the right way.")
+
+(defvar bbdb-update-address-header nil
+  "Header the currently processed address was extracted from.
+The `bbdb-notice-hook' and `bbdb-create-hook' functions may utilize this to
+treat updates in the right way.")
+
 ;;;###autoload
 (defun bbdb-update-records (addrs auto-create-p offer-to-create)
   "Returns the records corresponding to the list of addresses ADDRS,
@@ -2944,11 +2954,17 @@ C-g again it will stop scanning."
                (eval bbdb-update-records-mode)
              bbdb-update-records-mode)))
         (addrslen (length addrs))
+        (bbdb-update-address-class nil)
+        (bbdb-update-address-header nil)
         records hits)
 
     (while addrs
-      (setq bbdb-address (car addrs))
-
+      
+      (setq bbdb-address (car addrs)
+            bbdb-update-address-class (car bbdb-address)
+            bbdb-update-address-header (cadr bbdb-address)
+            bbdb-address (caddr bbdb-address))
+      
       (condition-case nil
           (progn
             (setq hits
@@ -3109,24 +3125,11 @@ Type q  to quit updating records.  No more search or annotation is done.")))
                   (signal 'quit nil)))))))))
 
 ;;;###autoload
-(defcustom bbdb-get-addresses-from-headers
-  '("From" "Resent-From" "Reply-To")
-  "*List of headers to search for senders email addresses."
-  :group 'bbdb-mua-specific
-  :type 'list)
-
-;;;###autoload
-(defcustom bbdb-get-addresses-to-headers
-  '("Resent-To" "Resent-CC" "To" "CC" "BCC")
-  "*List of headers to search for recipients email addresses."
-  :group 'bbdb-mua-specific
-  :type 'list)
-
-;;;###autoload
 (defcustom bbdb-get-addresses-headers
-  ; (append bbdb-get-addresses-from-headers bbdb-get-addresses-to-headers)
-  bbdb-get-addresses-from-headers 
-  "*List of headers to search for senders and recipients email addresses."
+  '((authors    . ("From" "Resent-From" "Reply-To"))
+    (recipients . ("Resent-To" "Resent-CC" "To" "CC" "BCC")))
+  "*List of headers to search for senders and recipients email addresses.
+The headers are grouped into two classes, the authors and the senders headers."
   :group 'bbdb-mua-specific
   :type 'list)
 
@@ -3138,5 +3141,44 @@ Changing this variable will show its effect only after clearing the
 `bbdb-message-cache' of a folder or closing and visiting it again."
   :group 'bbdb-mua-specific
   :type 'boolean)
+
+(defun bbdb-get-addresses (only-first-address
+                           uninteresting-senders
+                           get-header-content-function
+                           &rest get-header-content-function-args)
+  ""
+  (let ((headers bbdb-get-addresses-headers)
+        (ignore-senders (or bbdb-user-mail-names uninteresting-senders))
+        addrlist adlist fn ad
+        header-type header-fields header-content)
+    (while headers
+      (setq header-type (caar headers)
+            header-fields (cdar headers))
+      (while header-fields
+        (setq header-content (apply get-header-content-function
+                                    (car header-fields)
+                                    get-header-content-function-args))
+        (when header-content
+          (setq adlist (funcall bbdb-extract-address-components-func
+                                header-content))
+          (while adlist
+            (setq fn (caar adlist)
+                  ad (cadar adlist))
+            
+            ;; ignore uninteresting addresses, this is kinda gross!
+            (if (or (not (stringp ignore-senders))
+                    (not (or (and fn (string-match ignore-senders fn))
+                             (and ad (string-match ignore-senders ad)))))
+                (add-to-list 'addrlist
+                             (list header-type
+                                   (car header-fields)
+                                   (car adlist))))
+            
+            (if (and only-first-address addrlist)
+                (setq adlist nil headers nil)
+              (setq adlist (cdr adlist)))))
+        (setq header-fields (cdr header-fields)))
+      (setq headers (cdr headers)))
+    (nreverse addrlist)))
 
 (provide 'bbdb-com)
