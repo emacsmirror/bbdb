@@ -29,21 +29,21 @@
 (if (string-match "XEmacs\\|Lucid" emacs-version)
     (progn
       (define-key bbdb-mode-map 'button3 'bbdb-menu)
-      (define-key bbdb-mode-map 'button2 '(lambda (e)
-                                            (interactive "e")
-                                            (mouse-set-point e)
-                                            (bbdb-elide-record nil))))
+      (define-key bbdb-mode-map 'button2 (lambda (e)
+                                           (interactive "e")
+                                           (mouse-set-point e)
+                                           (bbdb-elide-record nil))))
   (define-key bbdb-mode-map [mouse-3] 'bbdb-menu)
-  (define-key bbdb-mode-map [mouse-2] '(lambda (e)
-                                       (interactive "e")
-                                       (mouse-set-point e)
-                                       (bbdb-elide-record nil))))
+  (define-key bbdb-mode-map [mouse-2] (lambda (e)
+                                        (interactive "e")
+                                        (mouse-set-point e)
+                                        (bbdb-elide-record nil))))
 
 (if (fboundp 'find-face)
     (fset 'bbdb-find-face 'find-face)
   (if (fboundp 'internal-find-face) ;; GRR.
       (fset 'bbdb-find-face 'internal-find-face)
-    (defun bbdb-find-face(face)))) ;; XXX noop - you probably don't HAVE faces.
+    (fset bbdb-find-face 'ignore))) ; XXX noop - you probably don't HAVE faces.
 
 (or (bbdb-find-face 'bbdb-name)
     (face-differs-from-default-p (make-face 'bbdb-name))
@@ -136,6 +136,14 @@
     (fset 'bbdb-set-extent-end-glyph 'set-extent-end-glyph)
   (fset 'bbdb-set-extent-end-glyph 'ignore)) ; XXX noop
 
+
+(defvar bbdb-main-extent-priority
+  (if (string-match "XEmacs\\|Lucid" emacs-version) 3 1)
+  "The priority of the main extent.
+This should be less than 2 (the priority of the field extents)
+on XEmacs and greater than 2 on Emacs since they order priorities
+in the opposite directions.  Vive la difference!")
+
 ;;;###autoload
 (defun bbdb-fontify-buffer ()
   (save-excursion
@@ -159,17 +167,11 @@
               end (1- (or (nth 2 (car (cdr rest))) (point-max))))
         (bbdb-set-extent-property (setq e (bbdb-make-extent start end)) 'highlight t)
         (bbdb-set-extent-property e 'data 'bbdb)
-        ;; fix GNU overlay stacking order - despite what you might
-        ;; think from reading the elisp manual, a higher priority
-        ;; seems to push the main overlay (i.e. you're within the
-        ;; bounding box of a record, but not on any of its text) to
-        ;; the back, which is what I want - it means the per-field
-        ;; overlays override it.
         ;; note that on GNU Emacs, once you hit the main overlay, you
         ;; have to move off the record and back on again before it'll
         ;; notice that you're on a more specific overlay. This is
         ;; bogus, like most GNU Emacs GUI stuff.
-        (bbdb-set-extent-property e 'priority 3)
+        (bbdb-set-extent-property e 'priority bbdb-main-extent-priority)
         (setq p (+ start (length (bbdb-record-name record))))
         (if (bbdb-record-company record)
             (setq p (+ p 3 (length (bbdb-record-company record)))))
@@ -289,9 +291,9 @@ as of GNU Emacs 20.7"
     (if (cdr addrs)
         (cons "Finger..."
               (nconc
-               (mapcar '(lambda (addr)
-                          (vector addr (list 'bbdb-finger record addr)
-                                  t))
+               (mapcar (lambda (addr)
+                         (vector addr (list 'bbdb-finger record addr)
+                                 t))
                        addrs)
                (list "----"
                      (vector "Finger all addresses"
@@ -303,10 +305,10 @@ as of GNU Emacs 20.7"
   (let ((addrs (bbdb-record-net record)))
     (if (cdr addrs)
         (cons "Send Mail..."
-              (mapcar '(lambda (addr)
-                         (vector addr (list 'bbdb-send-mail-internal
-                                            (bbdb-dwim-net-address record addr))
-                                 t))
+              (mapcar (lambda (addr)
+                        (vector addr (list 'bbdb-send-mail-internal
+                                           (bbdb-dwim-net-address record addr))
+                                t))
                       addrs))
       (vector (concat "Send mail to " (car addrs))
               (list 'bbdb-send-mail-internal
@@ -348,20 +350,20 @@ as of GNU Emacs 20.7"
 (defun build-bbdb-insert-field-menu (record)
   (cons "Insert New Field..."
         (mapcar
-         '(lambda (field)
-            (let ((type (if (string= (car field) "AKA")
-                            'aka
-                          (intern (car field)))))
-              (vector (car field)
-                      (list 'bbdb-insert-new-field (list 'quote type)
-                            (list 'bbdb-prompt-for-new-field-value
-                                  (list 'quote type)))
-                      (not
-                       (or (and (eq type 'net) (bbdb-record-net record))
-                           (and (eq type 'aka) (bbdb-record-aka record))
-                           (and (eq type 'notes) (bbdb-record-notes record))
-                           (and (consp (bbdb-record-raw-notes record))
-                                (assq type (bbdb-record-raw-notes record))))))))
+         (lambda (field)
+           (let ((type (if (string= (car field) "AKA")
+                           'aka
+                         (intern (car field)))))
+             (vector (car field)
+                     (list 'bbdb-insert-new-field (list 'quote type)
+                           (list 'bbdb-prompt-for-new-field-value
+                                 (list 'quote type)))
+                     (not
+                      (or (and (eq type 'net) (bbdb-record-net record))
+                          (and (eq type 'aka) (bbdb-record-aka record))
+                          (and (eq type 'notes) (bbdb-record-notes record))
+                          (and (consp (bbdb-record-raw-notes record))
+                               (assq type (bbdb-record-raw-notes record))))))))
          (append '(("phone") ("address") ("net") ("AKA") ("notes"))
                  (bbdb-propnames)))))
 
