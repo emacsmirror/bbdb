@@ -7,64 +7,6 @@
 @c
 @c $Id$
 @c
-@c $Log$
-@c Revision 1.32  2000/11/07 12:55:39  waider
-@c Doc fix (Martin Buchholz)
-@c
-@c Revision 1.31  2000/09/12 10:43:00  waider
-@c Added "BBDB Development Team" to the list at the start.
-@c Fixed 'missing node' problem with older versions of makeinfo.
-@c Added Kai's example of working around the ispell key-mapping conflict.
-@c
-@c Revision 1.30  2000/08/21 08:35:15  waider
-@c Fix an error in VM doco that prevented file from building
-@c
-@c Revision 1.29  2000/08/18 13:34:26  fenk
-@c * texinfo/bbdb.texinfo (VM Features): Documentation of new VM
-@c 	features.
-@c
-@c Revision 1.28  2000/08/10 19:12:03  fenk
-@c Documentation of new features (somehow incomplete by now).
-@c
-@c Files:	texinfo/bbdb.texinfo
-@c
-@c Revision 1.27  2000/07/03 21:18:11  kuepper
-@c Fixed typo.
-@c
-@c Revision 1.26  2000/07/03 08:28:21  kuepper
-@c Fixed ftp address.
-@c Added thanks.
-@c Synced ml info to Web.
-@c
-@c Revision 1.25  2000/07/03 08:19:01  kuepper
-@c Various little info changes, including ml info, TeX output changes, thanks.
-@c Added info-directory information. Added detailed node list.
-@c
-@c Revision 1.24  2000/06/30 21:52:31  kuepper
-@c Minor fixes.
-@c
-@c Revision 1.23  2000/06/14 14:42:29  waider
-@c * Documented changes in database structure
-@c * Changed web address, email addresses
-@c * Some minor typos corrected & details added
-@c
-@c Revision 1.22  2000/04/16 12:47:00  kuepper
-@c bbdb-print documentation
-@c Fix \bigbf
-@c
-@c Revision 1.21  2000/03/30 11:13:59  bbdb-writer
-@c Fixed xref entries per mail from gareth rees.
-@c
-@c Revision 1.20  1998/11/02 07:17:36  simmonmt
-@c Correct escaping of mailing list address
-@c
-@c Revision 1.19  1998/11/02 07:08:41  simmonmt
-@c Change mailing list address
-@c
-@c Revision 1.18  1998/04/11 07:36:10  simmonmt
-@c Added EOL list, EOL'd advertized-bbdb-delete-current-field-or-record
-@c and GNUS support.  Documented new bindings in *BBDB* buffer.
-@c
 
 @ifinfo
 @direntry
@@ -80,7 +22,7 @@ Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
-Copyright (c) 2000 The BBDB Development Team
+Copyright (c) 2000-2001 The BBDB Development Team
 @end ifinfo
 
 @titlepage
@@ -94,7 +36,7 @@ Copyright @copyright{} 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright @copyright{} 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
-Copyright @copyright{} 2000 The BBDB Development Team
+Copyright @copyright{} 2000-2001 The BBDB Development Team
 
 @sp 2
 This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
@@ -3442,6 +3384,9 @@ where @var{NAME} is the symbol for the name of the note, and
 @node Mailing Lists, Changes, Internals, Top
 @section Mailing Lists
 
+(If you are looking for a way to create mailing lists with @b{BBDB}, you
+should be looking at the section on @xref{Mail Sending Interfaces}.)
+
 There are three mailing lists for the @b{BBDB}.
 @code{bbdb-info@@lists.sourceforge.net} gets moderate traffic, and is
 intended for the discussion and distribution of development versions of
@@ -3628,9 +3573,10 @@ Sorting individual types of fields - Sam Steingold's method.
 @item
 Button 3 menus (Mark Moll and Soren Dayton)
 
-@item
-@b{BBDB}-controlled mail splitting in Gnus.  Add hook for Soren to make
-splitting better.  Routine from Brian Edmonds.
+@c@item
+@c@b{BBDB}-controlled mail splitting in Gnus.  Add hook for Soren to make
+@csplitting better.  Routine from Brian Edmonds.
+@c Anyone have contact info for Soren Dayton?
 
 @item
 Conditionalized erasure of properties when text is pasted into the @b{BBDB}.
@@ -3659,9 +3605,9 @@ because GNUS runs its exit-hooks too early.  This should be fixed.@refill
 String area codes (German area codes can begin with zeroes) patch from
 @code{Michael Sperber <sperber@@informatik.uni-tuebingen.de>}
 
-@item
-Internationalization of addresses.  Country code to control formats for
-printing, etc.  Country->Format mapping.
+@c@item
+@cInternationalization of addresses.  Country code to control formats for
+@cprinting, etc.  Country->Format mapping.
 
 @item
 Default country variable, similar to @code{bbdb-default-area-code}.
@@ -3824,14 +3770,14 @@ GNUS code at this time.  This EOL statement was added for version 2.1.
 @section Thanks
 
 Thanks to everyone on the info-bbdb mailing list for many useful
-suggestions. This hack would be far less insidious without their input !
+suggestions. This hack would be far less insidious without their input!
 
 @subheading Thanks list for versions after 2.00.06.
+@c I'm trying to include as many code contributors as possible here. It
+@c doesn't happen without your help!
 
-Thanks to Alex Schroeder, Ronan Waide, Thomas DeWeese.
-
-Last, but not least, thanks to Jamie Zawinski for writing @b{BBDB} in the
-first place.
+Thanks to Alex Schroeder, Ronan Waide, Thomas DeWeese, Robert Fenk,
+Didier Verna, Bill Carpenter.
 
 @subheading Thanks list for versions after 1.51 prior to and including 2.00.06.
 
@@ -3849,6 +3795,9 @@ Kimball Collins, Dirk Grunwald, Philippe Queinnec, Boris Putanec, Dave
 Disser, Francois Felix Ingrand, Sean Owens, Guido Bosch, Lance Brown,
 Tom Emerson, George Hartzell, Luis Miguel Silveira, Kimmo Suominen,
 Derek Upham, David Zuhn, Rod Whitby, Richard Mlynarik.
+
+Last, but not least, thanks to Jamie Zawinski for writing @b{BBDB} in the
+first place.
 
 @ifinfo
 @node _,,,(dir)
