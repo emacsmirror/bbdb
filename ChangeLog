@@ -1,3 +1,48 @@
+2000-03-30  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el (bbdb-annotate-notes): do not add a repeated
+	annotation (Sam Steingold)
+
+	* lisp/bbdb.el:
+	Added gareth rees' patch to improve bbdb-mode documentation.
+
+	* lisp/bbdb-com.el:
+	Added Noah Friedman's patch to make completion work as documented.
+
+	* texinfo/bbdb.texinfo:
+	Fixed xref entries per mail from gareth rees.
+
+1999-01-26  simmonmt  <simmonmt@acm.org>
+
+	* lisp/bbdb-gnus.el:
+	Don't freak out on 0-line Article buffers (pgnus)
+
+	* tex/bbdb-print.tex:
+	Make e-mail addresses scale properly
+
+1999-01-25  simmonmt  <simmonmt@acm.org>
+
+	* lisp/bbdb-snarf.el:
+	Add autoload cookie for bbdb-snarf-region
+
+	* lisp/auto-autoloads.el:
+	Added bbdb/gnus-snarf-signature
+
+	* lisp/bbdb.el:
+	Set-text-properties to nil in bbdb-string-trim
+
+	* lisp/bbdb-com.el:
+	Protect mark in bbdb-redisplay-records
+
+	* lisp/bbdb-com.el: Use Info-directory-list
+
+	* lisp/bbdb.el:
+	Nil out hooks to keep view-mode from interfering with bbdb-mode
+
+	* lisp/bbdb-gnus.el: Don't use concat with integers
+
+	* lisp/bbdb-gnus.el: Added bbdb/gnus-snarf-signature
+
 1999-01-24  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 2.00.06 released
