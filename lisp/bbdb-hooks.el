@@ -35,6 +35,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.63  2001/01/29 14:43:07  waider
+;; Added autoload cookie for bbdb-ignore-selected-messages-hook
+;;
 ;; Revision 1.62  2001/01/08 12:35:14  waider
 ;; Added Bill Carpenter-provided function
 ;;   'bbdb-ignore-selected-messages-confirmation'
@@ -245,6 +248,7 @@ the bbdb-ignore-most-messages-alist (which see) and *no* others."
 auto-create-hook, this variable governs whether you are prompted for
 creation of BBDB entries." nil)
 
+;;;###autoload
 (defun bbdb-ignore-selected-messages-hook ()
   "For use as a bbdb/news-auto-create-hook or bbdb/mail-auto-create-hook.
 This will automatically create BBDB entries for messages based on a
