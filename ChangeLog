@@ -1,3 +1,10 @@
+2000-07-03  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
+
+	* texinfo/bbdb.texinfo: Various little changes, including ml info,
+ 	TeX output changes, thanks.
+	Added info-directory information.
+	Added detailed node list.
+
 2000-06-30  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
 
 	* lisp/Makefile: Add everything to build bbdb-merge.elc.

@@ -8,6 +8,10 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.25  2000/07/03 08:19:01  kuepper
+@c Various little info changes, including ml info, TeX output changes, thanks.
+@c Added info-directory information. Added detailed node list.
+@c
 @c Revision 1.24  2000/06/30 21:52:31  kuepper
 @c Minor fixes.
 @c
@@ -33,45 +37,19 @@
 @c Added EOL list, EOL'd advertized-bbdb-delete-current-field-or-record
 @c and GNUS support.  Documented new bindings in *BBDB* buffer.
 @c
-@c Revision 1.17  1998/03/13 10:17:18  simmonmt
-@c This is for version 2.00
-@c
-@c Revision 1.16  1998/03/10 07:46:43  simmonmt
-@c Finished revision
-@c
-@c Revision 1.16  1998/03/10 07:46:43  simmonmt
-@c Finished revision
-@c
-@c Revision 1.15  1998/02/23 06:59:17  simmonmt
-@c Almost finished doc rewrite
-@c
-@c Revision 1.14  1998/01/06 06:53:22  simmonmt
-@c Changed to `setq' to `add-hook' in setup instructions.  Added to
-@c Internals section.
-@c
-@c Revision 1.13  1997/12/01 14:51:57  simmonmt
-@c Documented new startup procedure
-@c
-@c Revision 1.12  1997/12/01 05:23:09  simmonmt
-@c Removed `BBDB database' per jwz, added prerequisites section, more
-@c description of special fields, and dissection of record format in
-@c internals section
-@c
-@c Revision 1.11  1997/11/02 06:31:00  simmonmt
-@c Rewrite Part 2 (through MUA-specific features)
-@c
-@c Revision 1.10  1997/10/26 05:17:56  simmonmt
-@c Rewrite part 1
-@c
-@c
-@c
 
 @ifinfo
+@direntry
+* BBDB: (bbdb).             The Insidious Big Brother Database.
+@end direntry
+
 This file documents the Insidious Big Brother Database
 
-This is edition $Revision$ of the BBDB User Manual for BBDB version 2.2.
+This is edition $Revision$ of the BBDB User Manual for BBDB 
+version 2.2.
 
 Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
+
 Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
 @end ifinfo
 
@@ -163,6 +141,99 @@ field (@samp{company} or @samp{notes,} for example); @refill
 
 * Concept Index::		Concept Index
 * Variable Index::		Variable Index
+
+@detailmenu --- The Detailed Node Listing ---
+
+Installation
+
+* General Prerequisites::       General @b{BBDB} requirements
+
+File Installation
+* Normal User::                 "Normal" Installations
+* XEmacs Package::              Installing as an XEmacs package
+
+Initial Configuration
+* Initial Configuration::       How to initially set up the @b{BBDB}
+
+Manual initialization
+
+* Gnus Prep::           Initializing @b{BBDB} support for Gnus
+* MH-E Prep::           Initializing @b{BBDB} support for MH-E
+* RMAIL Prep::          Initializing @b{BBDB} support for RMAIL
+* Sendmail Prep::       Initializing @b{BBDB} support for Sendmail
+* VM Prep::             Initializing @b{BBDB} support for VM
+
+Other packages:
+
+* Message Prep::        Initializing @b{BBDB} support for Message mode
+* Reportmail Prep::     Initializing @b{BBDB} support for Reportmail
+* Supercite Prep::      Initializing @b{BBDB} support for Supercite
+* Web Browser Prep::    Initializing @b{BBDB} support for Web Browsers
+
+The @b{BBDB}
+
+* Database Fields::             Description of database fields
+* Basic Searching::             Basic database searching commands
+* Advanced Searching::          Advanced database searching commands
+* Manual Record Addition::      Adding records by hand
+
+Interfaces
+
+* Mail Reading Interfaces::		Mail Reading Interfaces
+* News Reading Interfaces::		News Reading Interfaces
+* Mail Sending Interfaces::		Mail Sending Interfaces
+
+Reader-specific Features
+
+* Gnus Features::                       Gnus-specific Features
+* VM Features::                         VM-specific Features
+
+Gnus-specific Features
+
+* Gnus Scoring::                        Store score adjustments in the @b{BBDB}
+* Gnus Summary Buffer::                 @b{BBDB} information in the Summary buffer
+* GNUS Subject List::                   @b{BBDB} information in the Subject List
+
+VM-specific features
+
+* VM Message Summary::                  @b{BBDB} information in message summary
+
+Using the @b{BBDB} with other packages
+
+* Using Message Mode::          Using the @b{BBDB} with Message Mode
+* Using Reportmail::            Using the @b{BBDB} with Reportmail
+* Using Supercite::             Using the @b{BBDB} with Supercite
+* Using Web Browsers::          Using the @b{BBDB} with Web Browsers
+
+Options
+
+* Customization Parameters::	Customization Parameters
+* Customization Hooks::		Customization Hooks
+* Predefined Hooks::		Predefined Hooks
+
+Utilities
+
+* bbdb-ftp::                    Storing FTP sites in the @b{BBDB}
+* bbdb-print::                  Print the @b{BBDB}
+* bbdb-snarf::                  Record generation from raw text
+* bbdb-srv::                    External control of the @b{BBDB}
+
+Changes in this Version
+
+* Major Changes::                Major changes in this version
+* Other Changes::                Not-so-major changes
+
+The Future
+
+* Known Bugs::          Known Bugs, and how to submit new ones
+* TODO List::           The TODO List
+* EOL Statements::      EOL (End Of Life) Statements
+
+_
+
+* Top::
+
+@end detailmenu
 @end menu
 
 @node Installation, The BBDB, Top, Top
@@ -451,8 +522,9 @@ the @code{INFOPATH} environment variable.
 
 @noindent
 @b{NOTE:} XEmacs packages are currently supported only under XEmacs
-20.5.  If you are not running 20.5, you should install the @b{BBDB}
-according to the instructions in @ref{Normal User}.
+versions after and including 20.5. If you are not running such a version
+of XEmacs, you should install the @b{BBDB} according to the instructions
+in @ref{Normal User}.
 
 @subheading Byte Compiling the Lisp files
 
@@ -3243,23 +3315,16 @@ where @var{NAME} is the symbol for the name of the note, and
 @node Mailing Lists, Changes, Internals, Top
 @section Mailing Lists
 
-There are three mailing lists for the @b{BBDB}.  The first is
-@code{bbdb-announce@@xemacs.org}, and is used for new release
-announcements, and as a result has very low traffic.  To subscribe to
-@code{bbdb-announce@@xemacs.org}, send mail to
-@code{bbdb-announce-request@@xemacs.org} with @samp{subscribe} as the
-subject.
+There are two mailing lists for the @b{BBDB}.
+@code{bbdb-info@@lists.sourceforge.net} gets moderate traffic, and is
+intended for the discussion and distribution of development versions of
+the @b{BBDB}. Users of development versions of the @b{BBDB} should be
+subscribed to this list. It is also to this list that bugs should be
+reported. @xref{Known Bugs}. for instructions on submitting bug reports.
 
-The second mailing list, @code{bbdb-info@@lists.sourceforge.net}, gets
-moderate traffic, and is intended for the discussion and distribution of
-development versions of the @b{BBDB}. Users of development versions of
-the @b{BBDB} should be subscribed to this list. It is to this list that
-bugs should be reported. @xref{Known Bugs}. for instructions on
-submitting bug reports.
-
-A third mailing list, @code{bbdb-cvs@@lists.sourceforge.net}, is
+A second mailing list, @code{bbdb-cvs@@lists.sourceforge.net}, is
 intended for developers to follow the changes made to the @b{BBDB}
-development version.  Developers of the @b{BBDB} should consider to
+development version. Developers of the @b{BBDB} should consider to
 subscribe to this list.
 
 @node Changes, The Latest Version, Mailing Lists, Top
@@ -3299,30 +3364,36 @@ be reverse-migrated from their internal version to that of the disk file.
 @node Other Changes,  , Major Changes, Changes
 @subsection Other Changes
 
+@subsubheading TeX Output
+
+By default, ec fonts are used for TeX output instead of cm fonts. With
+the @code{ps-fonts} option set in @code{bbdb-print-alist}, TimesNewRoman
+and Courier fonts are used.
+
 @itemize @bullet
 @end itemize
 
 @node The Latest Version, The Future, Changes, Top
 @section The Latest Version
 
-@noindent Released versions of the @b{BBDB} can be found at the following
-sites:
+@noindent Released versions of the @b{BBDB} can be found at the 
+following site:
 
 @itemize @bullet
 @item
 WWW: @code{http://bbdb.sourceforge.net}
 @end itemize
 
-@noindent Development versions of the @b{BBDB} can be found at the following
-sites:
+@noindent Development versions of the @b{BBDB} can be obtained in the
+following ways:
 
 @itemize @bullet
 @item
 WWW: @code{http://bbdb.sourceforge.net}
 @item
-WWW: @code{http://www.netcom.com/~simmonmt}
+FTP: @code{ftp://ftp.sourceforge.net/pub/bbdb}
 @item
-Anononymous CVS: @code{http://bbdb.sourceforge.net}.
+Anonymous CVS: See @code{http://bbdb.sourceforge.net} for instructions.
 @end itemize
 
 Users of development versions of the @b{BBDB} should subscribe to the
@@ -3615,17 +3686,22 @@ GNUS code at this time.  This EOL statement was added for version 2.1.
 @section Thanks
 
 Thanks to everyone on the info-bbdb mailing list for many useful
-suggestions. This hack would be far less insidious without their input!
+suggestions. This hack would be far less insidious without their input !
 
-@subheading Thanks list for versions after 1.51
+@subheading Thanks list for versions after 2.00.06.
+
+Thanks to Ronan Waide.
+
+Last, but not least, thanks to Jamie Zawinski for writing @b{BBDB} in the
+first place.
+
+@subheading Thanks list for versions after 1.51 prior to and including 2.00.06.
 
 Thanks to Adrian Aichner, Kees de Bruin, David Carlton, Soren Dayton,
 Brian Edmonds, Boris Goldowsky, Seth Golub, John Heidemann, Christopher
 Kline, Carsten Leonhardt, Hrvoje Niksic, Jens-Ulrik Hoger Petersen,
-Colin Rafferty, Sam Steingold, Marco Walther, Christoph Wedler
-
-Last, but not least, thanks to Jamie Zawinski for writing @b{BBDB} in the
-first place.
+Colin Rafferty, Matt Simmons, Sam Steingold, Marco Walther, Christoph
+Wedler
 
 @subheading Thanks list for versions prior to and including 1.51.
 
