@@ -85,17 +85,27 @@ AC_DEFUN([BBDB_PROG_ETAGS],
     fi ])
 
 dnl Choose an Emacs flavor:
-dnl If I were pedantic, I'd check that the user-specified executable is
-dnl actually working. I might do that someday.
+dnl #### NOTE: when running from an Emacs shell buffer, the variable EMACS is
+dnl set to t, which confuses AC_CHECK_PROG. The solution we adopt is to use
+dnl another variable (namely tmp_EMACS) to perform the checkings. However, we
+dnl also want to preserve the ability to override the executable name through
+dnl the EMACS env var as is standardly done in configure scripts. So we take
+dnl care of initializing tmp_EMACS to EMACS, unless the value is t.
 AC_DEFUN([BBDB_PROG_EMACS],
-  [ AC_SUBST(EMACS)
+  [ if test "x${EMACS}" != "xt" ; then
+      tmp_EMACS=${EMACS}
+    fi
     AC_ARG_WITH([emacs],
                 [  --with-emacs=PROG       which flavor of Emacs to use],
-                [ EMACS="${withval}" ],
-                [ AC_CHECK_PROGS(EMACS, emacs xemacs) ])
-    if test "x${EMACS}" = "x" ; then
+                [ tmp_EMACS="${withval}" ],
+                [ AC_CHECK_PROGS(tmp_EMACS, emacs xemacs) ])
+    if test "x${tmp_EMACS}" = "x" ; then
       dnl This is critical enough to generate an error and not a warning...
       AC_MSG_ERROR([*** No Emacs program found.])
-    fi ])
+    fi
+    dnl If I were pedantic, I'd check that the user-specified executable is
+    dnl actually working. I might do that someday.
+    EMACS="${tmp_EMACS}"
+    AC_SUBST(EMACS) ])
 
 dnl aclocal.m4 ends here

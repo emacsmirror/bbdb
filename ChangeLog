@@ -1,9 +1,14 @@
+2001-05-23  Didier Verna  <didier@xemacs.org>
+
+	* aclocal.m4 (BBDB_PROG_EMACS): fix Emacs detection problem when
+	configuring from an Emacs shell buffer.
+
 2001-05-21  Robert Fenk  <Robert.Fenk@gmx.de>
 
-	* lisp/bbdb-com.el (bbdb-complete-name): 
+	* lisp/bbdb-com.el (bbdb-complete-name):
 	(bbdb-complete-name-hooks): Instead of dinging when completing a
 	complete address (and with cycling disabled) call theses hook
-	functions.  
+	functions.
 	(bbdb-update-records): Fixed a typo.
 
 2001-05-18  Robert Fenk  <Robert.Fenk@gmx.de>
@@ -16,21 +21,21 @@
 	* lisp/bbdb.el (bbdb-invoke-hook-for-value): Return symbols just
 	as they are, do not eval them.
 
-	* lisp/bbdb-com.el (bbdb-update-records-mode): 
+	* lisp/bbdb-com.el (bbdb-update-records-mode):
 	* lisp/bbdb-vm.el (bbdb/vm-update-records-mode):
-	* lisp/bbdb-gnus.el (bbdb/gnus-update-records-mode): 
-	Removed extra quote from the defcustom arguments.	
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records-mode):
+	Removed extra quote from the defcustom arguments.
 
 	* lisp/bbdb-com.el (bbdb-complete-clicked-name): Fixed a cycling
 	bug when choosing a completion which ia already complete.
 
 2001-05-14  Robert Fenk  <Robert.Fenk@gmx.de>
 
-	* lisp/bbdb.el (bbdb/mail-auto-create-p): 
+	* lisp/bbdb.el (bbdb/mail-auto-create-p):
 	(bbdb/news-auto-create-p): When set to 'promt then ask the user
 	before automatically creating a record.
 
-	* lisp/bbdb.el (bbdb*prompt-for-auto-create-p): Removed the 
+	* lisp/bbdb.el (bbdb*prompt-for-auto-create-p): Removed the
 	variable and packed its functionality into the
 	bbdb/*-auto-create-p variables.
 
@@ -45,11 +50,11 @@
 
 	* lisp/bbdb-hooks.el
 	(bbdb-ignore-selected-messages-confirmation): Added the missing
-	default value nil. 
+	default value nil.
 	(bbdb-force-record-create): New hook function for automatic adding
-	of addresses when replying to a message. 
+	of addresses when replying to a message.
 
-	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): 
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records):
 	* lisp/bbdb-vm.el (bbdb/vm-update-records): Fixed documentation.
 
 	* lisp/bbdb-com.el (bbdb-update-records): Fixed search for nets
@@ -57,24 +62,24 @@
 
 2001-04-19  Robert Fenk  <Robert.Fenk@gmx.de>
 
-	* lisp/bbdb-gui.el (bbdb-fontify-buffer): 
+	* lisp/bbdb-gui.el (bbdb-fontify-buffer):
 	* lisp/bbdb.el (bbdb-elided-display-fields):
-	Renamed the variables bbdb-pop-up-elided-display-name-end and 
-	bbdb-pop-up-elided-display-fields to bbdb-elided-display-name-end and 
+	Renamed the variables bbdb-pop-up-elided-display-name-end and
+	bbdb-pop-up-elided-display-fields to bbdb-elided-display-name-end and
 	bbdb-elided-display-fields, as they are not related to the pop-up
 	feature.
 
 	* texinfo/bbdb.texinfo: Added missing docs for the variables
-	bbdb-elided-display-name-end and bbdb-elided-display-fields 
+	bbdb-elided-display-name-end and bbdb-elided-display-fields
 
 2001-04-16  Waider  <waider@waider.ie>
 
-	* configure.in Makefile.in lisp/Makefile.in tex/Makefile.in 
+	* configure.in Makefile.in lisp/Makefile.in tex/Makefile.in
 	  texinfo/Makefile.in utils/Makefile.in
 	Make sure RM is set, since apparently it's not set in BSD Make by
 	default.
-	
-	* lisp/bbdb-com.el: 
+
+	* lisp/bbdb-com.el:
 	Whoops. Stray quote mark.
 
 2001-04-15  Waider  <waider@waider.ie>
@@ -94,17 +99,17 @@
 
 2001-03-29  Robert Fenk  <Robert.Fenk@gmx.de>
 
-	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): Fixed a bug in 
+	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): Fixed a bug in
 	getting the header content.  mail-fetch-field requires a final
-	newline! 
+	newline!
 
 2001-03-26  Robert Fenk  <Robert.Fenk@gmx.de>
 
-	* lisp/bbdb.el (bbdb-message-cache-lookup): 
-	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): 
+	* lisp/bbdb.el (bbdb-message-cache-lookup):
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records):
 	* lisp/bbdb-vm.el (bbdb/vm-update-records):
 	YABugfix: first record was lost when looking it up from the
-	cache. 
+	cache.
 
 2001-03-25  Robert Fenk  <Robert.Fenk@gmx.de>
 
@@ -132,7 +137,7 @@
 
 2001-03-23  Waider  <waider@waider.ie>
 
-	* lisp/bbdb-com.el (bbdb-display-completion-list): 
+	* lisp/bbdb-com.el (bbdb-display-completion-list):
 	  Make completion on GNU Emacs remove what you've typed before
 	  inserting the completion data.
 
@@ -145,8 +150,8 @@
 
 2001-03-23  Robert Fenk  <Robert.Fenk@gmx.de>
 
-	* lisp/bbdb-vm.el (bbdb/vm-update-records): 
-	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): 
+	* lisp/bbdb-vm.el (bbdb/vm-update-records):
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records):
 	* lisp/bbdb-com.el (bbdb-update-records): honor the right
 	offer-to-create flag and removed the faulty *-auto-create-p which
 	was added by the last commit.
@@ -166,29 +171,29 @@
 
 	* lisp/bbdb-com.el (bbdb-update-records): honors now
 	bbdb-gag-messages; fixed the overall number in the progress
-	message. 
+	message.
 
 2001-03-18  Waider  <waider@waider.ie>
 
-	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): 
+	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses):
 	  gnus-ignored-from-addresses is not defined in the Gnus that
 	  comes with Emacs 20.7. Check for boundness before using.
 
 2001-03-17  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-whois.el: Definition of some variable in order to
-	avoid warnings during compilation 
+	avoid warnings during compilation
 
-	* lisp/bbdb-mhe.el: 
+	* lisp/bbdb-mhe.el:
 	* lisp/bbdb-rmail.el: uses the new caching functions + some
-	other minor changes 
+	other minor changes
 
 	* lisp/bbdb-snarf.el (bbdb-snarf-region): Unused variables
 	'country and 'namebegin removed
 
 	(bbdb-snarf-nice-real-name-regexp):
 	(bbdb-snarf-nice-real-name): removed and calls replaced by
-	bbdb-clean-username which is more sophisticated 
+	bbdb-clean-username which is more sophisticated
 
 	* lisp/bbdb-vm.el (bbdb/vm-get-addresses): was formally
 	bbdb/vm-get-from
@@ -198,29 +203,29 @@
 	(bbdb/vm-encache-message): have been removed, global variables and
 	functions are used now
 
-	(bbdb/vm-show-sender): when called with a prefix call 
+	(bbdb/vm-show-sender): when called with a prefix call
 	bbdb/vm-show-all-recipients instead, so we use the same binding
 	for getting both.
 	(bbdb/vm-show-records): new function doing the bbdb/vm-show-*
-	thing and caring for updating the records. 
+	thing and caring for updating the records.
 
 	(bbdb/vm-snarf-all):
 	(bbdb/vm-snarf-all-headers): have been removed as the
 	bbdb/vm-show-* function provide the same functionality
-	
+
 	* lisp/bbdb-gnus.el: the same changes as for bbdb-vm.el
-	
+
 	* lisp/bbdb-xemacs.el (bbdb-load-touchtones): unused variale
 	'error removed
 
-	* lisp/bbdb.el (bbdb-pop-up-elided-display): 
+	* lisp/bbdb.el (bbdb-pop-up-elided-display):
 	(bbdb-pop-up-elided-display): changed to require no unbound
 	bbdb-pop-up-elided-display
-	
-	(bbdb-message-cache-lookup): 
+
+	(bbdb-message-cache-lookup):
 	(bbdb-encache-message): Once again functions to replace the old
 	macros.  This was necessary as the old macros were not sufficient
-	for the new update mechanism, were we have a list of records.  
+	for the new update mechanism, were we have a list of records.
 
 	* lisp/bbdb-merge.el (bbdb-merge-file): unused variable
 	'live-records removed
@@ -238,26 +243,26 @@
 	'bbdb-complete-clicked-name when running in Xemacs, thus to
 	further complete after the user selects a completion.
 
-	(bbdb-complete-name): 
+	(bbdb-complete-name):
 	(bbdb-complete-name-full-completion): new variable controlling
 	whether completion shows expanded entries or not.  This avoids
 	the need for subsequent completions, but might generate more
 	completion alternatives.
-	
+
 	(bbdb-prompt-for-create):
 	(bbdb-prompt-for-create):
 	(bbdb-get-help-window):
-	(bbdb-update-records): functions used to update BBDB records from 
+	(bbdb-update-records): functions used to update BBDB records from
 	headers of messages in Gnus and VM (RMail and MHE may eventually
 	follow).  Those functions have been renamed and moved from
 	bbdb-vm.el to this location.
 
-	(bbdb-update-records-mode): 
-	(bbdb-offer-to-create): 
-	(bbdb-address): 
-	(bbdb-get-addresses-from-headers): 
-	(bbdb-get-addresses-to-headers): 
-	(bbdb-get-addresses-headers): 
+	(bbdb-update-records-mode):
+	(bbdb-offer-to-create):
+	(bbdb-address):
+	(bbdb-get-addresses-from-headers):
+	(bbdb-get-addresses-to-headers):
+	(bbdb-get-addresses-headers):
 	(bbdb-get-only-first-address-p): variables for generic
 	update-records support in Gnus and VM.  Those variables have been
 	renamed and moved from bbdb-vm.el to this location.
@@ -289,7 +294,7 @@
 	* lisp/bbdb.el (bbdb-submit-bug-report): A function for submitting bug
 	reports, which should make it easier for reportes and maintaines
 	to give and have all necessary information.  Additional variables
-	may have to be add and a remark in the documentation to use this 
+	may have to be add and a remark in the documentation to use this
         function when reporting problems.
 
 2001-02-25  Waider  <waider@waider.ie>
@@ -304,7 +309,7 @@
 	can parse it.
 
 	* texinfo/infohack.el: New.
-	
+
 	* texinfo/Makefile.in (Makefile): Add.
 	(bbdb.info): Use batch-makeinfo if there is no makeinfo.
 
@@ -314,21 +319,21 @@
 	  were buggy.
         Stop BBDB from adding AKAs when you tell it you don't want them.
 
-2001-02-21  Sam Steingold  <sds@gnu.org>	
+2001-02-21  Sam Steingold  <sds@gnu.org>
 	*lisp/bbdb.el
 	New user option for GUI features
 
 2001-02-19  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
-	* lisp/Makefile.in (bbdb-autoloads.el): 
+	* lisp/Makefile.in (bbdb-autoloads.el):
 	Insert (provide 'bbdb-autoloads) when generated by FSF Emacs.
 
 2001-02-19  Waider  <waider@waider.ie>
 
-	* lisp/bbdb-snarf.el: 
+	* lisp/bbdb-snarf.el:
 	doco typo fixo
 
-	* lisp/bbdb.el: 
+	* lisp/bbdb.el:
 	bbdb-electric-p defaults to off.
 	require 'bbdb-autoloads instead of loading them.
 	bbdb-whois moved from M-w to W so you can do copies in *BBDB*
@@ -337,7 +342,7 @@
 	* lisp/bbdb-xemacs.el:
 	Moved font and menu stuff to bbdb-gui.el
 
-	* lisp/Makefile.in: 
+	* lisp/Makefile.in:
 	Added target for bbdb-gui
 
 	* lisp/bbdb-gui.el:
@@ -358,13 +363,13 @@
 	Some more defcustom stuff (Alex Schroeder)
 	Empty string is a valid Zip code (Alex Schroeder)
 
-	* lisp/bbdb.el: 
+	* lisp/bbdb.el:
 	Some defvars changed to defcustoms (Alex Schroeder)
 	bbdb-add-or-remove-mail-alias documented in mode help (Alex Schroeder)
 
 	* texinfo/bbdb.texinfo
 	Zipcode stuff (Alex Schroeder)
-	
+
 2001-02-13  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-vm.el
@@ -375,7 +380,7 @@
 	Applied ShengHuos patch to fix the customize problems caused by
 	defining 'characterp as a mcaro im GNU Emacs.
 
-	* lisp/bbdb-com.el (bbdb-complete-name): 
+	* lisp/bbdb-com.el (bbdb-complete-name):
 	(bbdb-complete-name-allow-cycling): Allow to enable/disable the
 	cycling of nets.  Default is disabled, as there are some strange
 	problems with GNU Emacs.
@@ -406,12 +411,12 @@
 	Applied bugfix for adding new net addresses, which was broken by
 	the new featue of creating a new record if the address does not
 	belong to the existing record.
-	(bbdb-display-records): 
-	(bbdb-display-records-1): 
+	(bbdb-display-records):
+	(bbdb-display-records-1):
 	run the hooks 'bbdb-list-hook in bbdb-display-records-1, instead
 	of bbdb-display-records, in order to call them also for electric
 	display.
-	
+
 2001-02-07  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-com.el:
@@ -442,7 +447,7 @@
 
 2001-02-03  Robert.Fenk@gmx.de
 
-	* lisp/bbdb.el (bbdb-message-cache-lookup), (bbdb-encache-message): 
+	* lisp/bbdb.el (bbdb-message-cache-lookup), (bbdb-encache-message):
 	Replaced the unreadable macros by a function in order to use it
 	also for bbdb-vm.el.
 	(bbdb-decache-message): new function to remove an element from
@@ -498,7 +503,7 @@
 	for button2
 
 	* lisp/bbdb-vm.el (bbdb/vm-pop-up-bbdb-buffer): Fixed the pop-up
-	behaviour. 
+	behaviour.
 
 2001-01-30  Robert.Fenk@gmx.de
 
@@ -507,15 +512,15 @@
 
 2001-01-24  Waider  <waider@waider.ie>
         * RELEASED BBDB 2.2
-	
-	* texinfo/Makefile.in: 
+
+	* texinfo/Makefile.in:
 	Added distclean target
 
 	* Makefile.in:
 	Removed test targets as they weren't helpful
 	Added some new cleaning targets, including distclean
 
-	* lisp/Makefile.in: 
+	* lisp/Makefile.in:
 	New cleanup targets
 
 	* Makefile, configure
