@@ -89,7 +89,6 @@ the user confirms the creation."
          (records (bbdb/gnus-update-records offer-to-create)))
     (if records (car records) nil)))
 
-
 ;;;###autoload
 (defun bbdb/gnus-update-records (&optional offer-to-create)
   "Return the records corresponding to the current GNUS message, creating
@@ -130,7 +129,7 @@ C-g again it will stop scanning."
                           (or (if (boundp 'gnus-ignored-from-addresses)
                                   gnus-ignored-from-addresses)
                               bbdb-user-mail-names)
-                          'mail-fetch-field)
+                          'gnus-fetch-field)
                          bbdb/news-auto-create-p
                          offer-to-create)))
         (if (and bbdb-message-caching-enabled msg-id)
