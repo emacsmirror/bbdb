@@ -1,3 +1,7 @@
+2003-03-28  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el: Call bbdb-complete-name-hooks after name completion
+
 2003-03-27  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-mail-abbrev-expand-hook): save-excursion
