@@ -31,30 +31,53 @@ CANDIDATE: lots
     WHERE: http://www.forwiss.uni-erlangen.de/~jws/bbdb/index.html
 
 STATUS: Pending
-  WHEN: 28-Sep-1997
-REASON: Need sleep
+ SINCE: 5-Oct-1997
+ ADDED: 28-Sep-1997
+REASON: This is an amazingly slow site - I'm now getting a stunning 4 bytes/sec
 ---------------------------------------------------------------------------------
-PURPOSE: three patches from Boris Goldowsky
+PURPOSE: Take birthdays from the BBDB, add them to calendar
 
-CANDIDATE: bbdb-print
-CANDIDATE: bbdb-bng.el
+CANDIDATE: bbdb/calendary-birthdays
+   AUTHOR: Boris Goldowsky <boris@gnu.ai.mit.edu>
+    WHERE: my laptop (or by request)
+
+STATUS: Pending
+ SINCE: 5-Oct-1997
+ ADDED: 28-Sep-1997
+REASON: Hopefully will be in 1.54unoff
+---------------------------------------------------------------------------------
+PURPOSE: Make mail aliases file for other mailers
+
+CANDIDATE: bbdb-mail-alias-file
+   AUTHOR: Boris Goldowsky <boris@gnu.ai.mit.edu>
+    WHERE: my laptop (or by request)
+
+STATUS: Pending
+ SINCE: 5-Oct-1997
+ ADDED: 28-Sep-1997
+REASON: Hopefully in 1.54unoff
+---------------------------------------------------------------------------------
+PURPOSE: Alternate record sorting (first name, last name or company)
+
+CANDIDATE: bbdb-sort-by
+   AUTHOR: Boris Goldowsky <boris@gnu.ai.mit.edu>
+    WHERE: my laptop (or by request)
+
+STATUS: Pending
+ SINCE: 5-Oct-1997
+ ADDED: 28-Sep-1997
+REASON: Hopefully in 1.54unoff
+---------------------------------------------------------------------------------
+PURPOSE: a file o' patches from Boris Goldowsky
+
 CANDIDATE: bbdb-ext.el
    AUTHOR: Boris Goldowsky <boris@gnu.ai.mit.edu>
     WHERE: on my laptop
 
-STATUS: Pending
-  WHEN: 28-Sep-1997
-REASON: Need sleep
----------------------------------------------------------------------------------
-PURPOSE: diffs from jwz's source tree
-
-CANDIDATE: various
-   AUTHOR: Jamie Jawinski <jwz@netscape.com>
-    WHERE: <342C1B44.CA7A8D7D@netscape.com>
-
-STATUS: Pending
-  WHEN: 28-Sep-1997
-REASON: Need sleep
+STATUS: Investigatory
+ SINCE: 5-Oct-1997
+ ADDED: 28-Sep-1997
+REASON: Haven't even looked at it yet
 ---------------------------------------------------------------------------------
 PURPOSE: button3 menus
 
@@ -66,9 +89,21 @@ CANDIDATE: <unnamed>
     WHERE: <unknown>
 
 STATUS: Pending
-  WHEN: 28-Sep-1997
+ SINCE: 28-Sep-1997
+ ADDED: 28-Sep-1997
 REASON: Need sleep
 ---------------------------------------------------------------------------------
+PURPOSE: allowing null (VM|GNUS|MHE)DIR variables in Makefile if they
+         will be found in their default directories
+
+CANDIDATE: <unnamed>
+   AUTHOR: Boris Goldowsky <boris@gnu.ai.mit.edu>
+    WHERE: my laptop
+
+STATUS: Investigatory
+ SINCE: 5-Oct-1997
+ ADDED: 5-Oct-1997
+REASON: Because
 
 MAYBE?
 ======
@@ -86,18 +121,6 @@ REASON: I've removed mail-extr from the distribution since it's distributed with
         Emacs.  Should this patch be submitted to the maintainers of Emacs, or
         should I find a way to sneak it into BBDB?
 --------------------------------------------------------------------------------
-PURPOSE: interface with CSO
-
-CANDIDATE: ph.el
-   AUTHOR: Oscar Figueiredo <Oscar.Figueiredo@di.epfl.ch>
-    WHERE: http://diwww.epfl.ch/~figueire/  (not up until 9/29)
-
-STATUS: Investigatory
-  WHEN: 27-Sep-1997
-REASON: ph.el is distributed with GNU 20.1 and XEmacs 20.3.  The BBDB bits are
-        disabled in GNU.  Trying to figure out how to integrate it so it'll
-        work with GNU 19.34 and 20 and XEmacs 19.14-19.16 and 20.
---------------------------------------------------------------------------------
 
 Documentation
 =============
@@ -108,32 +131,13 @@ Add documentation of bbdb-reportmail.el
 Add documentation of Soren Dayton's message for bbdb-send-mail-internal
 Add documentation of Christoph Wedler's finger-host
            ...    of Christopher Kline's bbdb-reportmail.el
+           ...    of Christopher Kline's bbdb-unlazy-lock.pl
+Changes to bbdb-print.el
 
 In a util directory
 ===================
 
---------------------------------------------------------------------------------
-PURPOSE: given a list of exchanges, change phone numbers containing them to
-         a new area code
-
-CANDIDATE: bbdb-area-code-split
-   AUTHOR: Seth Golub <seth@cs.wustl.edu>
-    WHERE: http://www.cs.wustl.edu/~seth/projects/bbdb/
-
-STATUS: Pending Inclusion Approval
-  WHEN: 28-Sep-1997
-REASON: Waiting for approval from Seth Golub before I include it.
---------------------------------------------------------------------------------
-PURPOSE: remove lazy-lock mung from a .bbdb file
-
-CANDIDATE: <unnamed>
-   AUTHOR: Christopher Kline <ckline@tc.cornell.edu>
-    WHERE: <pzrd8r1u3yo.fsf@theory.tc.cornell.edu> 08 May 1997 16:02:55 -0400
-
-STATUS: Pending Inclusion Approval
-  WHEN: 28-Sep-1997
-REASON: Waiting for approval from Christopher Kline before I include it.
---------------------------------------------------------------------------------
+*** NONE ***
 
 TTNTBDBIDHAPFYAHGATWOF
 ======================
