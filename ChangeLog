@@ -1,3 +1,33 @@
+2000-04-13  Waider  <waider@waider.ie>
+
+	* Makefile:
+	Made the dist target work again, and started fixing/adding a few
+	more targets to help testing.
+
+	* lisp/bbdb-com.el:
+	Thomas Deweese's multiple-same-name-records patch
+	"streets" is now a list, not street1 street2 street3
+	relaxed zip checking a little.
+	new function: bbdb-add-new-field. allows you to programatically
+	add properties to the bbdb file.
+
+	* lisp/bbdb-migrate.el
+	streets -> list patch
+
+	* lisp/bbdb-whois.el
+	commented out streets code. This code mostly fails to work right now.
+
+	* lisp/bbdb.el
+	Thomas's duplicates patch
+	streets patch
+	
+	* lisp/bbdb-gnus.el: 
+	Added keymap C-: for bbdb/gnus-summary-show-all-recipients
+
+	* lisp/bbdb-print.el: 
+	Address layout patch, including Euro addresses and the
+	streets->list thing
+
 2000-04-05  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-gnus.el:
