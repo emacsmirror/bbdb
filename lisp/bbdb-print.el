@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.62  2000/04/15 17:11:49  kuepper
+;; Adopt TeX-output of streets to new file-format v5.
+;;
 ;; Revision 1.61  2000/04/13 17:19:58  kuepper
 ;; Improved TeX output (fonts, breaks).
 ;;
@@ -425,10 +428,13 @@ The result looks like this:
     (bbdb-print-tex-quote 
      (if addr
 	 (concat
-	  (mapcar (function (lambda(street) 
-						  (bbdb-print-if-not-blank street "\\\\\n"))) 
-			  (bbdb-address-streets addr))
-	  (let ((c (bbdb-address-city addr))
+          (mapconcat (function (lambda(str) 
+                                 (if (= 0 (length (bbdb-string-trim str)))
+                                     ()
+                                   (concat str"\\\\\n"))))
+                     (bbdb-address-streets addr)
+                     "")
+          (let ((c (bbdb-address-city addr))
 		(s (bbdb-address-state addr))
 		(z (bbdb-address-zip-string addr)))
 	    (if (or (> (length c) 0)
@@ -461,10 +467,13 @@ The result looks like this:
     "\\address{%s}\n"
     (bbdb-print-tex-quote 
      (if addr
-	 (concat 
-	  (mapcar (function (lambda(street)
-						  (bbdb-print-if-not-blank street "\\\\\n")))
-			  bbdb-address-streets addr)
+         (concat 
+          (mapconcat (function (lambda(str) 
+                                 (if (= 0 (length (bbdb-string-trim str)))
+                                     ()
+                                   (concat str"\\\\\n"))))
+                     (bbdb-address-streets addr)
+                     "")
 	  (let ((c (bbdb-address-city addr))
 		(s (bbdb-address-state addr))
 		(z (bbdb-address-zip-string addr)))

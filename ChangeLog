@@ -1,3 +1,9 @@
+2000-04-15  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
+
+	* lisp/bbdb-print.el (bbdb-print-format-address-continental) :
+	(bbdb-print-format-address-default): Adopt street output to new
+	file format v5.
+
 2000-04-13  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
 
 	* tex/bbdb-print-brief.tex, tex/bbdb-print.tex: Use ec fonts
