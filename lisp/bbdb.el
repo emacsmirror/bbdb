@@ -1071,25 +1071,33 @@ If the note is absent, returns a zero length string."
 
 (defcustom bbdb-phones-label-list
   bbdb-default-label-list
-  "*List of labels for Phone field."
+  "*List of labels for Phone field.
+The default value is `bbdb-default-label-list'."
   :group 'bbdb-record-creation
   :type '(repeat string))
 
 (defcustom bbdb-addresses-label-list
   bbdb-default-label-list
-  "*List of labels for Address field."
+  "*List of labels for Address field.
+The default value is `bbdb-default-label-list'."
   :group 'bbdb-record-creation
   :type '(repeat string))
 
 (defun bbdb-label-completion-list (field)
-  "Figure out a completion list for the specified FIELD."
+  "Figure out a completion list for the specified FIELD label.
+This evaluates the variable bbdb-FIELD-label-list, such
+as `bbdb-phones-label-list'."
   (if (boundp (intern (format "bbdb-%s-label-list" field)))
       (eval (intern (format "bbdb-%s-label-list" field)))
     ;; special-case out the ones it doesn't make sense for here?
     bbdb-default-label-list))
 
 (defun bbdb-label-completion-default (field)
-  "Figure out a default from the completion list for FIELD"
+  "Figure out a default label from the completion list for FIELD.
+This evaluates the variable bbdb-default-FIELD-label, such
+as `bbdb-default-phones-label', if it exists, or it takes
+the first item from the list of completions for FIELD as
+returned by `bbdb-label-completion-list'."
   (if (boundp (intern (format "bbdb-default-%s-label" field)))
       (eval (intern (format "bbdb-default-%s-label" field)))
     (nth 0 (bbdb-label-completion-list field))))
@@ -1097,14 +1105,21 @@ If the note is absent, returns a zero length string."
 ;; These are so you can accumulate e.g. mail aliases or company names
 ;; and have BBDB offer completion on them.
 (defun bbdb-data-completion-list (field)
-  "Figure out a completion list for the specified FIELD."
+  "Figure out a completion list for the specified FIELD value.
+This evaluates the variable bbdb-FIELD-data-list, such
+as `bbdb-mail-alias-data-list', if it exists, or it uses
+`bbdb-default-label-list'."
   (if (boundp (intern (format "bbdb-%s-data-list" field)))
       (eval (intern (format "bbdb-%s-data-list" field)))
     ;; special-case out the ones it doesn't make sense for here?
     bbdb-default-label-list))
 
 (defun bbdb-data-completion-default (field)
-  "Figure out a default from the completion list for FIELD"
+  "Figure out a default value from the completion list for FIELD.
+This evaluates the variable bbdb-default-FIELD-data, such
+as `bbdb-default-mail-alias-data', if it exists, or it takes
+the first item from the list of completions for FIELD as
+returned by `bbdb-data-completion-list'."
   (if (boundp (intern (format "bbdb-default-%s-data" field)))
       (eval (intern (format "bbdb-default-%s-data" field)))
     (nth 0 (bbdb-label-completion-list field))))
@@ -1117,7 +1132,7 @@ If the note is absent, returns a zero length string."
     (when (and bbdb-file-remote
                (file-newer-than-file-p bbdb-file-remote bbdb-file))
       (let ((coding-system-for-write bbdb-file-coding-system))
-    (copy-file bbdb-file-remote bbdb-file t t)))
+	(copy-file bbdb-file-remote bbdb-file t t)))
     (setq bbdb-buffer (find-file-noselect bbdb-file 'nowarn))))
 
 (defmacro bbdb-with-db-buffer (&rest body)
