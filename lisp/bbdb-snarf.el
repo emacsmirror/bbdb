@@ -478,7 +478,7 @@ this handler."
   :group 'bbdb-noticing-records)
 
 ;;;###autoload
-(defun bbdb-extract-address-components (adstring)
+(defun bbdb-extract-address-components (adstring &optional ignore-errors)
   "Return a list of address components found in ADSTRING.
 If extracting fails one probably has to adjust the variable
 `bbdb-extract-address-component-regexps'."
@@ -541,8 +541,8 @@ If extracting fails one probably has to adjust the variable
           (setq adcom-regexp (cdr adcom-regexp))))
 
       ;; Now handle problems
-      (if nomatch
-          (cond ((equal bbdb-extract-address-component-handler nil))
+      (if (and nomatch (not ignore-errors))
+	  (cond ((equal bbdb-extract-address-component-handler nil))
                 ((equal bbdb-extract-address-component-handler 'warn)
                  (bbdb-warn "Cannot extract an address component at \"%s\".
 See `bbdb-extract-address-component-handler' for more information."
