@@ -227,13 +227,13 @@ as of GNU Emacs 20.7"
        ;; ripped pretty much verbatim from VM; X Faces for recent XEmacsen.
        ((string-match "^21\\." emacs-version) ;; XXX how far back can I go?
         (condition-case data
-            (let (g h)
+            (let* ((h (concat "X-Face: " (car face))) ;; from vm-display-xface
+                   (g (intern h vm-xface-cache)))
               (if (find-face 'vm-xface) ;; heck, why not use the same face?
                   nil
                 (make-face 'vm-xface)
                 (set-face-background 'vm-xface "white")
                 (set-face-foreground 'vm-xface "black"))
-              (setq g (intern (car face) vm-xface-cache))
               (if (boundp g)
                   (setq g (symbol-value g))
                 (set g (make-glyph

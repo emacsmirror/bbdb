@@ -1,3 +1,7 @@
+2001-08-13  Jeff Mincy  <jeff@delphioutpost.com>
+
+	* fix bbdb-hack-x-face call to make-glyph
+
 2001-08-01  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-unelide-record),
@@ -40,6 +44,18 @@
 	(bbdb-record-edit-phone): Added optional location arg 
 	(bbdb-prompt-for-create): Use characters instead of integers for
 	the key-presses and avoid calling char-int.
+
+2001-07-29  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el (bbdb-complete-name): 
+	Make it respect the order in which net addresses are listed.
+
+	* lisp/bbdb-srv.el (bbdb-srv-add-phone):
+	Make less interactive, autoload it, and make sure it requires
+	anything it needs.
+
+	* lisp/bbdb-snarf.el (bbdb-rfc822-addresses):
+	This should take an optional ignore-errors parameter.
 
 2001-07-08  Waider  <waider@waider.ie>
 
