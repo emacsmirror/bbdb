@@ -25,6 +25,9 @@
 ;; $Revision$
 ;;
 ;; $Log$
+;; Revision 1.53  1998/01/06 04:52:15  simmonmt
+;; Customized variables (into utilities-ftp group).  Added provide.
+;;
 ;; Revision 1.52  1997/09/28 05:59:18  simmonmt
 ;; Added check for EFS (there must be a better way that what I did, but I
 ;; really don't want to be reduced to checking version strings.
@@ -72,14 +75,20 @@
     (require 'efs)
     (require 'ange-ftp))
 
-(defvar bbdb-default-ftp-user "anonymous"
-  "*The default login to use when ftp-ing.")
+(defcustom bbdb-default-ftp-user "anonymous"
+  "*The default login to use when ftp-ing."
+  :group 'bbdb-utilities-ftp
+  :type 'string)
 
-(defvar bbdb-default-ftp-dir "/"
-  "*The default directory to open when ftp-ing.")
+(defcustom bbdb-default-ftp-dir "/"
+  "*The default directory to open when ftp-ing."
+  :group 'bbdb-utilities-ftp
+  :type 'string)
 
-(defvar bbdb-ftp-site-name-designator-prefix "Ftp Site: "
-  "*The prefix that all ftp sites in the bbdb will have in their name field.")
+(defcustom bbdb-ftp-site-name-designator-prefix "Ftp Site: "
+  "*The prefix that all ftp sites in the bbdb will have in their name field."
+  :group 'bbdb-utilities-ftp
+  :type 'string)
 
 (defmacro defun-bbdb-raw-notes-accessor (slot)
   "Expands into an accessor function for slots in the notes alist."
@@ -191,3 +200,4 @@ using the echo area, inserts the new record in the db, sorted alphabetically."
   (bbdb-change-record record t)
   (bbdb-display-records (list record)))
 
+(provide 'bbdb-ftp)
