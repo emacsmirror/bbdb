@@ -189,31 +189,39 @@ of the BBDB record corresponding to the sender of this message."
 (defun bbdb/gnus-show-records (&optional headers)
   "Display the contents of the BBDB for all addresses of this message.
 This buffer will be in `bbdb-mode', with associated keybindings."
-  (interactive "P")
+  (interactive)
   (gnus-summary-select-article)
   (let ((bbdb-get-addresses-headers (or headers bbdb-get-addresses-headers))
         (bbdb/gnus-update-records-mode 'annotating)
         (bbdb-message-cache nil)
+        (bbdb-user-mail-names nil)
+        (gnus-ignored-from-addresses nil)
         records)
     (setq records (bbdb/gnus-update-records t))
     (if records
         (bbdb-display-records records)
-      (bbdb-undisplay-records))))
-
-(defun bbdb/gnus-show-sender (&optional show-recipients)
-  "Display the contents of the BBDB for the senders of this message.
-With a prefix argument show the recipients instead.
-This buffer will be in `bbdb-mode', with associated keybindings."
-  (interactive "P")
-  (if show-recipients
-      (bbdb/gnus-show-records  bbdb-get-addresses-to-headers)
-    (bbdb/gnus-show-records  bbdb-get-addresses-from-headers)))
+      (bbdb-undisplay-records))
+    records))
 
 ;;;###autoload
 (defun bbdb/gnus-show-all-recipients ()
   "Show all recipients of this message. Counterpart to `bbdb/vm-show-sender'."
   (interactive)
   (bbdb/gnus-show-records  bbdb-get-addresses-to-headers))
+
+(defun bbdb/gnus-show-sender (&optional show-recipients)
+  "Display the contents of the BBDB for the senders of this message.
+With a prefix argument show the recipients instead,
+with two prefix arguments show all records.
+This buffer will be in `bbdb-mode', with associated keybindings."
+  (interactive "p")
+  (cond ((= 4 show-recipients)
+         (bbdb/gnus-show-all-recipients))
+        ((= 16 show-recipients)
+         (bbdb/gnus-show-records))
+        (t 
+         (if (null (bbdb/gnus-show-records bbdb-get-addresses-from-headers))
+             (bbdb/gnus-show-all-recipients)))))
 
 (defun bbdb/gnus-pop-up-bbdb-buffer (&optional offer-to-create)
   "Make the *BBDB* buffer be displayed along with the GNUS windows,

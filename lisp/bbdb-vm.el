@@ -131,7 +131,7 @@ C-g again it will stop scanning."
         (setq records (bbdb-update-records
                        (bbdb/vm-get-addresses
                         msg bbdb-get-only-first-address-p)
-                       (or bbdb/mail-auto-create-p offer-to-create)
+                       bbdb/mail-auto-create-p
                        offer-to-create))
         
         (bbdb-encache-message msg records)))
@@ -162,19 +162,23 @@ of the BBDB record corresponding to the sender of this message."
       (bbdb-record-edit-notes record t))))
 
 ;;;###autoload
-(defun bbdb/vm-show-records (headers)
+(defun bbdb/vm-show-records (&optional headers)
   "Display the contents of the BBDB for the sender of this message.
 This buffer will be in bbdb-mode, with associated keybindings."
   (interactive)
   (vm-follow-summary-cursor)
-  (let ((bbdb-get-addresses-headers headers)
+  (let ((bbdb-get-addresses-headers (or headers bbdb-get-addresses-headers))
         (bbdb/vm-update-records-mode 'annotating)
         (bbdb-message-cache nil)
+        ;; should we move this to bbdb/vm-show-sender?
+        (bbdb-user-mail-names nil)
+        (vm-summary-uninteresting-senders nil)
         records)
     (setq records (bbdb/vm-update-records t))
     (if records
         (bbdb-display-records records)
-      (bbdb-undisplay-records))))
+      (bbdb-undisplay-records))
+    records))
 
 ;;;###autoload
 (defun bbdb/vm-show-all-recipients ()
@@ -185,13 +189,18 @@ This buffer will be in bbdb-mode, with associated keybindings."
 ;;;###autoload
 (defun bbdb/vm-show-sender (&optional show-recipients)
   "Display the contents of the BBDB for the senders of this message.
-With a prefix argument show the recipients instead.
+With a prefix argument show the recipients instead,
+with two prefix arguments show all records.
 This buffer will be in `bbdb-mode', with associated keybindings."
-  (interactive "P")
-  (if show-recipients
-      (bbdb/vm-show-records bbdb-get-addresses-to-headers)
-    (bbdb/vm-show-records bbdb-get-addresses-from-headers)))
-  
+  (interactive "p")
+  (cond ((= 4 show-recipients)
+         (bbdb/vm-show-all-recipients))
+        ((= 16 show-recipients)
+         (bbdb/vm-show-records))
+        (t
+         (if (null (bbdb/vm-show-records bbdb-get-addresses-from-headers))
+             (bbdb/vm-show-all-recipients)))))
+
 (defun bbdb/vm-pop-up-bbdb-buffer (&optional offer-to-create)
   "Make the *BBDB* buffer be displayed along with the VM window(s).
 Displays the records corresponding to the sender respectively
