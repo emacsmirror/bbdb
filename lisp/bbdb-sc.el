@@ -195,8 +195,8 @@ Custom."
       (end                          (setq sc-mail-headers-end (point))))))
 
 ;; insert our hooks - call me from your Emacs initialization file
+(defvar attribution) ;; dammit, supercite!
 ;;;###autoload
-(defvar attribution nil) ;; dammit, supercite!
 (defun bbdb-insinuate-sc ()
   "Call this function to hook BBDB into Supercite."
 
