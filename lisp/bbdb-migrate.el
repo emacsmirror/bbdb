@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.5  2000/04/12 23:57:16  waider
+;; * Added v5 migration. NB no back-migration yet.
+;;
 ;; Revision 1.4  2000/04/05 16:45:07  bbdb-writer
 ;; * Added Alex's BBDB v4 format migration (country field)
 ;;
@@ -49,7 +52,8 @@
 (defconst bbdb-migration-features
   '((3 . "* Date format for `creation-date' and `timestamp' has changed,
   from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")
-    (4 . "* Country field added.")))
+    (4 . "* Country field added.")
+	(5 . "* More flexible street address.")))
 
 ;;;###autoload
 (defun bbdb-migration-query (ondisk)
@@ -124,14 +128,6 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 	    (let* ((old-addr (car old-addr-list))
 			   (new-addr))
 	      (setq old-addr-list (cdr old-addr-list))
-; 		  (setq new-addr (vector (aref old-addr 0) ;; tag
-; 								 (list (aref old-addr 1) ;; street 1
-; 									   (aref old-addr 2) ;; street 2
-; 									   (aref old-addr 3)) ;; street 3
-; 								 (aref old-addr 4) ;; city
-; 								 (aref old-addr 5) ;; state
-; 								 (aref old-addr 6) ;; zip
-;         set below old-addr to new-addr for street migration
 	      (setq new-addr (vconcat old-addr [""])) ;; add country field
 	      (setq new-addr-list (append new-addr-list (list new-addr)))))
 	  (aset (car records) 5 new-addr-list))
@@ -139,6 +135,33 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 						  (list (car records)))
 	      records (cdr records)))
       newrecs))
+   ;; Version 4 -> 5
+   ((= (car bbdb-file-format-migration) 4)
+    (let (newrecs)
+      (while records
+		;;; Do address changes
+		(let ((old-addr-list (aref (car records) 5))
+			  (new-addr-list))
+		  (while old-addr-list
+			(let* ((old-addr (car old-addr-list))
+				   (new-addr))
+			  (setq old-addr-list (cdr old-addr-list))
+			  (setq new-addr (vector (aref old-addr 0) ;; tag
+				 (delete ""       ;; nuke empties
+						 (list (bbdb-string-trim (aref old-addr 1)) ;; street1
+							   (bbdb-string-trim (aref old-addr 2)) ;; street2
+							   (bbdb-string-trim (aref old-addr 3))) ;; street3
+						 (aref old-addr 4) ;; city
+						 (aref old-addr 5) ;; state
+						 (aref old-addr 6) ;; zip
+						 (aref old-addr 7)))) ;; country
+			  (setq new-addr-list (append new-addr-list (list new-addr)))))
+		  (aset (car records) 5 new-addr-list))
+		(setq newrecs (append newrecs 
+							  (list (car records)))
+			  records (cdr records)))
+	  newrecs))
+
    ;; Unknown Version
    (t (error (format "BBDB Cannot migrate from unknown version %d"
 					 (car bbdb-file-format-migration))))))
@@ -149,6 +172,10 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 `bbdb-file-format') to the version to be saved (the cdr of
 `bbdb-file-format-migration')."
   (cond
+   ;; Version 5 -> 4
+   ((= (cdr bbdb-file-format-migration 4))
+	(message "Need to implement 5 -> 4"))
+
    ;; Version 4 -> 3
    ((= (cdr bbdb-file-format-migration) 3)
     ;; Take all the old addresses, ie. the 5th field, and for each
