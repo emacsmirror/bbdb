@@ -1982,6 +1982,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                      (setq recs (cdr recs)))
                    nets))))
          (completion (try-completion pattern ht pred)))
+
     ;; If there were multiple completions for this record, the one that was
     ;; picked is random (hash order.)  So canonicalize that to be the one
     ;; closest to the front of the list.
@@ -2000,12 +2001,34 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                  (setq rest (cdr rest))))))
     (setq yeah-yeah-this-one nil
           all-the-completions nil)
+    
+    ;; If there is no completion or the address is already a completed one,
+    ;; then cycle though the list of addresses.
+    (let ((addr (bbdb-extract-address-components (buffer-substring beg end) t))
+	  name the-net rec nets)
+      (when (and (or (null completion) (eq completion t)) ; no or exact match
+		 (not (boundp 'bbdb-complete-name-recursion)) ; avoid recursion
+		 addr
+		 (setq addr (car addr))
+		 (setq name (car addr)
+		       the-net (cadr addr))
+		 (setq rec (bbdb-search-simple name the-net))
+		 (setq nets (bbdb-record-net rec))
+		 (setq the-net (member the-net nets)))
+	(setq the-net (if (cdr the-net) (cadr nets) (car nets)))
+	(delete-region beg end)
+	(insert (bbdb-dwim-net-address rec the-net))
+	(setq completion 'done)))
+    
     (cond
-      ;; No match
-      ((null completion)
-       (bbdb-complete-name-cleanup)
-       (message "completion for \"%s\" unfound." pattern)
-       (ding))
+     ;; We have switched to another net
+     ((equal completion 'done)
+      (bbdb-complete-name-cleanup))
+     
+     ;; No match
+     ((null completion)
+      (bbdb-complete-name-cleanup)
+      (ding))
 
       ;; Perfect match...
       ((eq completion t)
@@ -2092,7 +2115,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
        (delete-region beg end)
        (insert completion)
        (setq end (point))
-       (let ((last ""))
+       (let ((last "")
+	     (bbdb-complete-name-recursion t))
          (while (and (stringp completion)
                      (not (string= completion last))
                      (setq last completion
@@ -2107,7 +2131,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
       (t
        (or (eq (selected-window) (minibuffer-window))
            (message "Making completion list..."))
-       (let ((list (all-completions pattern ht pred)))
+       (let ((list (all-completions pattern ht pred))
+	     (bbdb-complete-name-recursion t))
          ;;       (recs (delq nil (mapcar (lambda (x)
          ;;                     (symbol-value (intern-soft x ht)))
          ;;                   list)))
