@@ -312,7 +312,7 @@ Neither are used if CALLBACK is nil."
 
 ;;;###autoload
 (defcustom bbdb-sounds-directory (expand-file-name "~/.xemacs/etc/sounds")
-  "The directory to load the touchtone sound files from."
+  "The directory to load the touchtone sound files from, or nil if none."
   :group 'bbdb-phone-dialing
   :type 'directory)
 
@@ -346,7 +346,9 @@ They are stored ins `sound-alist' as touchtone0 to touchtone11."
       (setq files (cdr files)
             nr (1+ nr)))))
 
-(if (and (boundp 'xemacsp) (featurep 'native-sound))
+(if (and bbdb-sounds-directory
+         (boundp 'xemacsp)
+         (featurep 'native-sound))
     (bbdb-load-touchtones))
 
 (provide 'bbdb-xemacs)
