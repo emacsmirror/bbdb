@@ -35,6 +35,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.56  1998/03/10 07:37:13  simmonmt
+;; Fixed customization of bbdb-auto-notes-alist
+;;
 ;; Revision 1.55  1998/02/23 07:09:37  simmonmt
 ;; We use add-hook now
 ;;
@@ -213,7 +216,7 @@ match the bbdb-ignore-some-messages-alist (which see)."
 
 ;;; Automatically add to the notes field based on the current message.
 
-(defcustom bbdb-auto-notes-alist '()
+(defcustom bbdb-auto-notes-alist nil
   "*An alist which lets you have certain pieces of text automatically added
 to the BBDB record representing the sender of the current message based on
 the subject or other header fields.  This only works if bbdb-notice-hook 
@@ -275,11 +278,12 @@ a different value when in mail as when in news.
 
 See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'."
   :group 'bbdb-noticing-records
-  :type '(repeat (group
+  :type '(repeat (bbdb-alist-with-header
 		  (string :tag "Header name")
 		  (repeat (cons
 			   (regexp :tag "Regexp to match on header value")
-			   (string :tag "String for notes if regexp matches"))))))
+			   (string :tag "String for notes if regexp matches")))
+		  )))
 
 (defcustom bbdb-auto-notes-ignore nil
   "Alist of headers and regexps to ignore in bbdb-auto-notes-hook.
