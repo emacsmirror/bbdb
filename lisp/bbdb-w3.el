@@ -20,6 +20,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.4  1997/10/26 05:03:49  simmonmt
+;; Use browse-url-browser-function rather than a funcall
+;;
 ;; Revision 1.3  1997/10/12 00:18:50  simmonmt
 ;; Added bbdb-insinuate-w3 to set keyboard map correctly.  Merged
 ;; bbdb-www-netscape into bbdb-www using browse-url-browser-function to
@@ -47,8 +50,9 @@ Non-interactively, do all records if arg is nonnil."
 			(list (bbdb-current-record)))))
 	(got-one nil))
     (while urls
-      (if (car urls)
-	  (funcall browse-url-browser-function (setq got-one (car urls))))
+      (cond ((car urls)
+	     (or (fboundp 'browse-url) (autoload 'browse-url "browse-url"))
+	     (browse-url (setq got-one (car urls)))))
       (setq urls (cdr urls)))
     (if (not got-one)
 	(error "No WWW field!"))))
