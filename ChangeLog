@@ -1,3 +1,10 @@
+2002-07-03  Waider  <waider@waider.ie>
+
+	* texinfo/bbdb.texinfo (Customization Parameters):
+	bbdb-complete-name-allow-cycling /does/ work in GNUmacs.
+
+	* Eli Tziperman's fix for rmail expunge problem
+
 2002-06-30  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-ftp.el
