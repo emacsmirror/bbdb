@@ -8,6 +8,9 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.27  2000/07/03 21:18:11  kuepper
+@c Fixed typo.
+@c
 @c Revision 1.26  2000/07/03 08:28:21  kuepper
 @c Fixed ftp address.
 @c Added thanks.
@@ -3329,7 +3332,7 @@ reported. @xref{Known Bugs}. for instructions on submitting bug reports.
 
 The second mailing list @code{bbdb-announce@@lists.sourceforge.net} has
 very low volume. Any user of the @b{BBDB} should consider subscribing to
-lhis list, as new releases and security issues will be posted here.
+this list, as new releases and security issues will be posted here.
 
 A third mailing list, @code{bbdb-cvs@@lists.sourceforge.net}, is
 intended for developers to follow the changes made to the @b{BBDB}
@@ -3710,7 +3713,7 @@ Thanks to Adrian Aichner, Kees de Bruin, David Carlton, Soren Dayton,
 Brian Edmonds, Boris Goldowsky, Seth Golub, John Heidemann, Christopher
 Kline, Carsten Leonhardt, Hrvoje Niksic, Jens-Ulrik Hoger Petersen,
 Colin Rafferty, Matt Simmons, Sam Steingold, Marco Walther, Christoph
-Wedler
+Wedler.
 
 @subheading Thanks list for versions prior to and including 1.51.
 
