@@ -228,7 +228,7 @@ be returned."
   "Regrinds the contents of the *BBDB* buffer, without scrolling.
 If possible, you should call `bbdb-redisplay-one-record' instead."
   (let ((p (point))
-        (m (condition-case condition (mark) (error nil))))
+        (m (condition-case nil (mark) (error nil))))
     (goto-char (window-start))
     (let ((p2 (point)))
       (bbdb-display-records-1 bbdb-records)
@@ -1174,13 +1174,12 @@ that line represents from the database.  If the cursor is on the first line
 of a database entry (the name/company line) then the entire entry will be
 deleted."
   (interactive (list (if (bbdb-do-all-records-p)
-             (mapcar 'car bbdb-records)
-               (list (bbdb-current-record)))
-             current-prefix-arg))
-  (let* ((do-all-p (> 1 (length records)))
-         (field (bbdb-current-field t))
+                         (mapcar 'car bbdb-records)
+                       (list (bbdb-current-record)))
+                     current-prefix-arg))
+  (let* ((field (bbdb-current-field t))
          (type (car field))
-     record
+         record
          (name (cond ((null field) (error "on an unfield"))
                      ((eq type 'property) (symbol-name (car (nth 1 field))))
                      (t (symbol-name type)))))
@@ -1503,11 +1502,17 @@ Phone numbers, addresses, and network addresses are simply concatenated.
 The first record is the record under the point; the second is prompted for.
 Completion behaviour is as dictated by the variable `bbdb-completion-type'."
   (interactive
-   (let ((r (bbdb-current-record)))
-     (list r (bbdb-completing-read-one-record
-              (format "merge record \"%s\" into: "
-                      (or (bbdb-record-name r) (car (bbdb-record-net r))
-                          "???")) (list r)))))
+   (let ((r (bbdb-current-record))
+         name)
+     (setq name (bbdb-record-name r))
+     (list r
+           (if current-prefix-arg
+               (car (delq r (bbdb-search (bbdb-records) name nil)))
+             (bbdb-completing-read-one-record
+                (format "merge record \"%s\" into: "
+                        (or (bbdb-record-name r) (car (bbdb-record-net r))
+                            "???")) (list r))))))
+
   (if (or (null new-record) (eq old-record new-record))
       (error "those are the same"))
   (setq new-record (bbdb-merge-records old-record new-record))
@@ -1905,7 +1910,10 @@ completion with."
 (defun bbdb-display-completion-list (list &optional callback data)
   "Wrapper for `display-completion-list'.
 CALLBACK and DATA are discarded."
-  (display-completion-list list))
+  (if (featurep 'xemacs)
+      (display-completion-list list :activate-callback callback
+                               :user-data data)
+    (display-completion-list list)))
 
 (defun bbdb-complete-clicked-name (event extent user-data)
   "Find the record for a name clicked in a completion buffer.
@@ -1935,8 +1943,15 @@ Currently only used by XEmacs."
           (cons (car l) (bbdb-remove-assoc-duplicates (cdr l))))))
 
 (defcustom bbdb-complete-name-allow-cycling nil
-  "Wheater to allowd cycling of email addresses when calling
+  "Wheater to allow cycling of email addresses when calling
 `bbdb-complete-name' on a completed address in a composition buffer."
+  :group 'bbdb-mua-specific
+  :type 'boolean)
+
+(defcustom bbdb-complete-name-full-completion 5
+  "Show full expanded completion rather than partial matches.
+If t then do it always, if a number then just is the number of
+completions for a specific match is below that number."
   :group 'bbdb-mua-specific
   :type 'boolean)
 
@@ -2042,8 +2057,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                 (switch-to-buffer standard-output))
             (setq the-net (member the-net nets))
             (setq the-net (if (cdr the-net) (cadr the-net) (car nets)))
-            (insert (bbdb-dwim-net-address rec the-net)))))
-      (setq completion 'done))
+            (insert (bbdb-dwim-net-address rec the-net))
+            (setq completion 'done)))))
 
     (cond
      ;; We have switched to another net
@@ -2158,13 +2173,32 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
      (t
       (or (eq (selected-window) (minibuffer-window))
           (message "Making completion list..."))
-      (let ((list (all-completions pattern ht pred))
-            (bbdb-complete-name-allow-cycling nil))
+      
+      (let ((clist (all-completions pattern ht pred))
+            (bbdb-complete-name-allow-cycling nil)
+            list recs)
+        ;; Now collect the expanded completions 
+        (if (or (eq t bbdb-complete-name-full-completion)
+                (and (numberp bbdb-complete-name-full-completion)
+                     (< (length clist) bbdb-complete-name-full-completion)))
+            (while clist
+              (if (and (setq recs (intern-soft (car clist) ht))
+                       (setq recs (symbol-value recs)))
+                  (while recs
+                    (add-to-list 'list (bbdb-dwim-net-address
+                                        (car recs)
+                                        (car (bbdb-record-net (car recs)))))
+                    (setq recs (cdr recs)))
+                (add-to-list 'list (car clist)))
+              (setq clist (cdr clist)))
+          (setq list clist))
+        
         ;;       (recs (delq nil (mapcar (lambda (x)
         ;;                     (symbol-value (intern-soft x ht)))
         ;;                   list)))
         (if (and (not (eq bbdb-completion-type 'net))
                  (= 2 (length list))
+                 (boundp (intern (car list) ht))
                  (eq (symbol-value (intern (car list) ht))
                      (symbol-value (intern (nth 1 list) ht)))
                  (not (string= completion (car list))))
@@ -2644,7 +2678,7 @@ The results of the search is returned as a list of records."
         (setq ret (append hash ret))
         (message "BBDB record `%s' causes duplicates, maybe it is equal to a company name."
                  (bbdb-record-name rec))
-        (sit-for 1))
+        (sit-for 0))
 
       (if (memq 'net fields)
           (let ((nets (bbdb-record-net rec)))
@@ -2654,7 +2688,7 @@ The results of the search is returned as a list of records."
                 (setq ret (append hash ret))
                 (message "BBDB record `%s' has duplicate net `%s'."
                          (bbdb-record-name rec) (car nets))
-                (sit-for 1))
+                (sit-for 0))
               (setq nets (cdr nets)))))
 
       (if (memq 'aka fields)
@@ -2665,7 +2699,7 @@ The results of the search is returned as a list of records."
                 (setq ret (append hash ret))
                 (message "BBDB record `%s' has duplicate aka `%s'"
                          (bbdb-record-name rec) (car aka))
-                (sit-for 1))
+                (sit-for 0))
               (setq aka (cdr aka)))))
 
       (setq records (cdr records)))
@@ -2797,5 +2831,226 @@ info: \\[bbdb-info]")))
          (string-lessp emacs-version "19")) ; v19 has history built in
     (mapcar 'gmhist-make-magic
             '(bbdb bbdb-name bbdb-company bbdb-net bbdb-changed)))
+
+;;----------------------------------------------------------------------------
+;;;###autoload
+(defcustom bbdb-update-records-mode 'annotating
+  "Controls how `bbdb-update-records' processes email addresses.
+Set this to an expression which evaluates either to 'searching or
+'annotating.  When set to 'annotating email addresses will be fed to
+`bbdb-annotate-message-sender' in order to update existing records or create
+new ones.  A value of 'searching will search just for existing records having
+the right net.
+
+There is a version of this variable for each MUA, which overrides this variable
+when set!
+
+This variable is also used for inter-function communication between the
+functions `bbdb-update-records' and `bbdb-prompt-for-create'."
+  :group 'bbdb-mua-specific
+  :type '(choice (const :tag "annotating all messages"
+                        'annotating)
+                 (const :tag "annotating no messages"
+                        'searching)
+                 (sexp   :tag "user defined")))
+
+(defvar bbdb-offer-to-create nil
+  "Used for inter-function communication between the functions
+`bbdb-update-records' and `bbdb-prompt-for-create'.")
+(defvar bbdb-address nil
+  "Used for inter-function communication between the functions
+`bbdb-update-records' and `bbdb-prompt-for-create'.")
+
+;;;###autoload
+(defun bbdb-update-records (addrs auto-create-p offer-to-create )
+  "Returns the records corresponding to the current VM message,
+creating or modifying them as necessary.  A record will be created if
+bbdb/mail-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
+the user confirms the creation.
+
+When hitting C-g once you will not be asked anymore for new people listed
+in this message, but it will search only for existing records.  When hitting
+C-g again it will stop scanning."
+  (let ((bbdb-records (bbdb-records))
+        (processed-addresses 0)
+        (bbdb-offer-to-create nil)
+        (bbdb-update-records-mode
+         (if offer-to-create 'annotating
+           (if (listp bbdb-update-records-mode)
+               (eval bbdb-update-records-mode)
+             bbdb-update-records-mode)))
+        records hits)
+    
+    (while addrs
+      (setq bbdb-address (car addrs))
+
+      (condition-case nil
+          (progn
+            (setq hits
+                  (cond ((eq bbdb-update-records-mode 'annotating)
+                         (list ;; search might return a list 
+                          (bbdb-annotate-message-sender
+                           bbdb-address t
+                           (or (bbdb-invoke-hook-for-value auto-create-p)
+                               bbdb-offer-to-create);; force create
+                           'bbdb-prompt-for-create)))
+                        ((eq bbdb-update-records-mode 'searching)
+                         ;; search for records having this net
+                         (let ((net (cadr bbdb-address))
+                               ;; there is no case for nets
+                               (bbdb-case-fold-search t))
+                           (bbdb-search bbdb-records nil nil net))))
+                  processed-addresses (+ processed-addresses 1))
+            
+            (when (and (not bbdb-silent-running)
+                       (not (eq bbdb-offer-to-create 'quit))
+                       (= 0 (% processed-addresses 5)))
+              (message
+               "Hit C-g to stop BBDB from %s.  %d of %d addresses processed."
+               bbdb-update-records-mode processed-addresses (length addrs))
+              (sit-for 0)))
+        
+        ;; o.k. there was a quit signal so how should we proceed now?
+        (quit (cond ((eq bbdb-update-records-mode 'annotating)
+                     (setq bbdb-update-records-mode 'searching))
+                    ((eq bbdb-update-records-mode 'searching)
+                     nil)
+                    ((eq bbdb-update-records-mode 'next)
+                     (setq bbdb-update-records-mode 'annotating))
+                    (t
+                     (setq bbdb-update-records-mode 'quit)))
+              nil))
+      
+      (while hits
+        ;; people should be listed only once so we use add-to-list
+        (if (car hits) (add-to-list 'records (car hits)))
+        (setq hits (cdr hits)))
+    
+      (setq addrs (cdr addrs)))
+
+    ;; add-to-list adds at the front so we have to reverse the list in order
+    ;; to reflect the order of the records as they appear in the headers.
+    (setq records (nreverse records))
+
+    (if (not bbdb-silent-running)
+        (message "Updating of BBDB records finished"))
+    records))
+
+
+(defun bbdb-get-help-window (message)
+  "Display MESSAGE in a new window wich is the last one in the current frame."
+  (let ((b (get-buffer-create " *BBDB Help*"))
+        (w (get-buffer-window " *BBDB Help*"))
+        (wl (window-list))
+        (lines (let ((l 2) (s 0))
+                 (while (setq s (string-match "\n" message s))
+                   (setq s (1+ s) l (1+ l)))
+                 l)))
+
+    (when (not w)
+      (setq w (car wl)
+            wl (cdr wl))
+      
+      (while wl
+        (if (< (nth 1 (window-pixel-edges w))
+               (nth 1 (window-pixel-edges (car wl))))
+            (setq w (car wl)))
+        (setq wl (cdr wl)))
+      (setq w (split-window w)))
+
+    (select-window w)
+    (switch-to-buffer b)
+    (erase-buffer b)
+    (insert message)
+    (goto-char (point-min))
+    (let ((window-min-height 1))
+      (enlarge-window (- lines (window-height w))))
+    w))
+
+(defun bbdb-kill-help-window (window)
+  "Kill the buffer coresponding to WINDOW and delete the WINDOW."
+  (kill-buffer (window-buffer window))
+  (delete-window window))
+
+;; This is a hack.  The function is called by bbdb-annotate-message-sender and
+;; uses the above variable in order to manipulate bbdb-update-records.
+;; Some cases are handled with signals in order to keep the changes in
+;; bbdb-annotate-message-sender as minimal as possible.
+(defun bbdb-prompt-for-create ()
+  "This function is used by `bbdb-update-records' to ask the user how to
+proceed the processing of records."
+  (let ((old-offer-to-create bbdb-offer-to-create)
+        event prompt)
+    (when (or (bbdb-invoke-hook-for-value bbdb/prompt-for-create-p)
+              bbdb-offer-to-create)
+      (when (not (integerp bbdb-offer-to-create))
+        (setq prompt (format "%s is not in the db; add? (y,!,n,s,q,?)"
+                             (or (car bbdb-address) (cadr bbdb-address))))
+        (while (not (key-press-event-p
+                     (setq event (next-command-event nil prompt)))))
+        (setq bbdb-offer-to-create (char-int (event-to-character event))))
+      
+      (cond ((eq bbdb-offer-to-create (char-int ?y))
+             (setq bbdb-offer-to-create old-offer-to-create)
+             nil)
+            ((eq bbdb-offer-to-create  (char-int ?!))
+             nil)
+            ((eq bbdb-offer-to-create  (char-int ?n))
+             (setq bbdb-update-records-mode 'next
+                   bbdb-offer-to-create old-offer-to-create)
+             (signal 'quit nil))
+            ((eq bbdb-offer-to-create  (char-int ?q))
+             (setq bbdb-update-records-mode 'quit)
+             (signal 'quit nil))
+            ((eq bbdb-offer-to-create  (char-int ?s))
+             (setq bbdb-update-records-mode 'searching)
+             (signal 'quit nil))
+            (t
+             (let ((w (bbdb-get-help-window
+"Your answer controls how BBDB updates/searches for records.
+
+Type ?  for this help.
+Type y  to add the current record.
+Type !  to add all remaining records.  
+Type n  to skip the current record.
+Type s  to switch from annotate to search mode.
+Type q  to quit updating records.  No more search or annotation is done.")))
+               (setq bbdb-offer-to-create nil)
+               (condition-case nil
+                   (bbdb-prompt-for-create)
+                 (quit
+                  (bbdb-kill-help-window w)
+                  (signal 'quit nil)))))))))
+  
+;;----------------------------------------------------------------------------
+;;;###autoload
+(defcustom bbdb-get-addresses-from-headers 
+  '("From" "Resent-From" "Reply-To")
+  "*List of headers to search for senders email addresses."
+  :group 'bbdb-mua-specific
+  :type 'list)
+
+;;;###autoload
+(defcustom bbdb-get-addresses-to-headers
+  '("Resent-To" "Resent-CC" "To" "CC" "BCC")
+  "*List of headers to search for recipients email addresses."
+  :group 'bbdb-mua-specific
+  :type 'list)
+
+;;;###autoload
+(defcustom bbdb-get-addresses-headers
+  (append bbdb-get-addresses-from-headers bbdb-get-addresses-to-headers)
+  "*List of headers to search for sendes and recipients email addresses."
+  :group 'bbdb-mua-specific
+  :type 'list)
+
+;;;###autoload
+(defcustom bbdb-get-only-first-address-p
+  nil
+  "*If t `bbdb-update-records' will return only the first one.
+Changing this variable will show its effect only after clearing the
+`bbdb-message-cache' of a folder or closing and visiting it again."
+  :group 'bbdb-mua-specific
+  :type 'boolean)
 
 (provide 'bbdb-com)
