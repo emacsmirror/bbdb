@@ -384,7 +384,7 @@ particular mailing list, or to only create records automatically if
 the mail has a particular subject."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
-                 (const :tag "Prompt before creating" prompt) 
+                 (const :tag "Prompt before creating" prompt)
                  (const :tag "Do not automatically create" nil)
                  (function :tag "Create with function" bbdb-)))
 
@@ -400,7 +400,7 @@ nil from your `gnus-select-group-hook' (for Gnus - use
 gnus-Select-group-hook for GNUS) instead."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
-                 (const :tag "Prompt before creating" prompt) 
+                 (const :tag "Prompt before creating" prompt)
                  (const :tag "Do not automatically create" nil)
                  (function :tag "Create with function" bbdb-)))
 
@@ -1039,9 +1039,12 @@ from string."
   (set-text-properties 0 (length string) nil string)
   string)
 
-(defun bbdb-read-string (prompt &optional default)
+(defun bbdb-read-string (prompt &optional default completions)
   "Reads a string, trimming whitespace and text properties."
-  (bbdb-string-trim (read-string prompt default)))
+  (bbdb-string-trim
+   (if completions
+       (completing-read prompt completions nil nil (cons default 0))
+     (bbdb-string-trim (read-string prompt default)))))
 
 (defsubst bbdb-field-shown-p (field)
   (or (null bbdb-elided-display)
