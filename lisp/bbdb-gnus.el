@@ -49,7 +49,7 @@
   "Return real name and email address of sender respectively recipients.
 If an address matches `gnus-ignored-from-addresses' it will be ignored.
 If `gnus-ignored-from-addresses' is nil we use `bbdb-user-mail-names'
-instead.    
+instead.
 The headers to search can be configured by `bbdb-get-addresses-headers'."
   (save-restriction
     (goto-char (point-min))
@@ -57,9 +57,10 @@ The headers to search can be configured by `bbdb-get-addresses-headers'."
                       (if (search-forward "\n\n" nil 'force)
                           (- (point) 2)
                         (point)))
-    
+
     (let ((headers bbdb-get-addresses-headers)
-          (uninteresting-senders (or gnus-ignored-from-addresses
+          (uninteresting-senders (or (if (boundp 'gnus-ignored-from-addresses)
+                                         gnus-ignored-from-addresses)
                                      bbdb-user-mail-names))
           addrlist header adlist fn ad)
       (while headers
@@ -69,14 +70,14 @@ The headers to search can be configured by `bbdb-get-addresses-headers'."
           (while adlist
             (setq fn (caar adlist)
                   ad (cadar adlist))
-            
+
             ;; ignore uninteresting addresses, this is kinda gross!
             (if (or (not (stringp uninteresting-senders))
                     (not (or
                           (and fn (string-match uninteresting-senders fn))
                           (and ad (string-match uninteresting-senders ad)))))
                 (add-to-list 'addrlist (car adlist)))
-          
+
             (if (and only-first-address addrlist)
                 (setq adlist nil headers nil)
               (setq adlist (cdr adlist)))))
@@ -85,7 +86,7 @@ The headers to search can be configured by `bbdb-get-addresses-headers'."
 
 (defun bbdb/gnus-get-message-id ()
   "Return the message-id of the current message."
-  (save-excursion 
+  (save-excursion
     (set-buffer (get-buffer gnus-article-buffer))
     (set-buffer gnus-original-article-buffer)
     (goto-char (point-min))
@@ -142,7 +143,7 @@ the user confirms the creation."
         ;; else as message key.
         (msg-id (bbdb/gnus-get-message-id))
         records cache)
-    (save-excursion 
+    (save-excursion
       (set-buffer (get-buffer gnus-article-buffer))
       (message ">>%s<<<<<< flags"
                (gnus-summary-article-mark
@@ -211,7 +212,7 @@ This buffer will be in `bbdb-mode', with associated keybindings."
   (if show-recipients
       (bbdb/gnus-show-records  bbdb-get-addresses-to-headers)
     (bbdb/gnus-show-records  bbdb-get-addresses-from-headers)))
-       
+
 ;;;###autoload
 (defun bbdb/gnus-show-all-recipients ()
   "Show all recipients of this message. Counterpart to `bbdb/vm-show-sender'."
