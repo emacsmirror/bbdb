@@ -1,5 +1,8 @@
 2000-08-11  Sam Steingold  <sds@gnu.org>
 
+	* lisp/bbdb.el (bbdb-save-db): fixed the calling sequence of
+	`y-or-n-p-with-timeout'
+
 	* lisp/bbdb-snarf.el (bbdb-extract-address-components): use
 	`bbdb-warn' instead of `warn'
 	(replace-in-string): check for `boundp', not `functionp'

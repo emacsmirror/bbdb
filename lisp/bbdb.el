@@ -610,14 +610,15 @@ Database initialization function `bbdb-initialize' is run."
 
 (defun bbdb-y-or-n-p (prompt)
   (prog1
-      (cond ((and bbdb-force-dialog-boxes
-                  (fboundp 'yes-or-no-p-dialog-box))
-             (if (and (fboundp 'raise-frame)
-                      (not (frame-visible-p (selected-frame))))
-                 (raise-frame (selected-frame)))
-             (yes-or-no-p-dialog-box prompt))
-            (t
-             (y-or-n-p prompt)))
+      (funcall
+       (cond ((and bbdb-force-dialog-boxes
+                   (fboundp 'yes-or-no-p-dialog-box))
+              (when (and (fboundp 'raise-frame)
+                         (not (frame-visible-p (selected-frame))))
+                (raise-frame (selected-frame)))
+              'yes-or-no-p-dialog-box)
+             (t 'y-or-n-p))
+       prompt)
     (message " ")))
 
 (defun bbdb-yes-or-no-p (prompt)
@@ -2275,11 +2276,12 @@ function `y-or-n-p-with-timeout' is defined."
     (if (and (buffer-modified-p)
              (or (null prompt-first)
                  (if bbdb-readonly-p
-                     (bbdb-y-or-n-p "Save the BBDB, even though it's supposedly read-only? ")
+                     (bbdb-y-or-n-p
+                      "Save the BBDB, even though it's supposedly read-only? ")
                    (if (and bbdb-save-db-timeout
                             (fboundp 'y-or-n-p-with-timeout))
                        (y-or-n-p-with-timeout
-                        bbdb-save-db-timeout "Save the BBDB now? " t)
+                        "Save the BBDB now? " bbdb-save-db-timeout t)
                      (bbdb-y-or-n-p "Save the BBDB now? ")))))
         (save-buffer)
       (if mention-if-not-saved (message "BBDB not saved")))))
