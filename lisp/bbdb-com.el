@@ -28,6 +28,7 @@
 (eval-when-compile
   (require 'cl)
   (defvar bbdb-extract-address-components-func)) ;; bbdb-snarf
+
 ;; ARGH. fmh, dammit.
 (require
  (eval-and-compile
@@ -2729,7 +2730,7 @@ of all of those people."
 
 (defun bbdb-mail-abbrev-expand-hook (records)
   (mail-abbrev-expand-hook)
-  (save-excursion 
+  (save-excursion
     (when bbdb-completion-display-record
       (if bbdb-use-pop-up
           (bbdb-pop-up-bbdb-buffer))
@@ -3272,7 +3273,6 @@ standard place."
   :type '(choice (const :tag "Standard location" nil)
                  (file :tag "New location")))
 
-(defvar Info-directory)                 ; v18
 ;;;###autoload
 (defun bbdb-info ()
   (interactive)
@@ -3280,10 +3280,7 @@ standard place."
   (if bbdb-inside-electric-display
       (bbdb-electric-throw-to-execute '(bbdb-info))
     (let ((file (or bbdb-info-file "bbdb")))
-      (if (file-name-directory file)
-          (let ((Info-directory (file-name-directory file)))
-            (Info-goto-node (format "(%s)Top" file)))
-        (Info-goto-node (format "(%s)Top" file))))))
+      (Info-goto-node (format "(%s)Top" file)))))
 
 ;;;###autoload
 (defun bbdb-help ()
