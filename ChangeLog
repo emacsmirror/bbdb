@@ -1,3 +1,16 @@
+2004-10-13  Waider  <waider@waider.ie>
+
+	* texinfo/bbdb.texinfo (bbdb-print):
+	Correct variable name
+	Change copyright date to include 2004
+
+	* lisp/bbdb-print.el:
+	Correct variable name in comment
+
+	* lisp/bbdb-com.el (bbdb): 
+	Don't open a new window for BBDB if there are no records to
+	display.
+
 2004-10-10  Alex Schroeder  <alex@gnu.org>
 
 	* texinfo/bbdb.texinfo (Database Fields): New entry for the
