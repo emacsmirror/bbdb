@@ -29,9 +29,10 @@
 (require 'cl)
 ;; ARGH. fmh, dammit.
 (require
- (if (locate-library "mailabbrev")
-     (quote mailabbrev)
-   (quote mail-abbrevs)))
+ (eval-and-compile
+   (if (locate-library "mailabbrev")
+       (quote mailabbrev)
+     (quote mail-abbrevs))))
 
 
 (defcustom bbdb-default-country
@@ -480,7 +481,7 @@ COMPANY is a string or nil.
 NET is a comma-separated list of email addresses, or a list of strings.
  An error is signalled if that name is already in use.
 ADDRS is a list of address objects.  An address is a vector of the form
-   [\"location\" (\"line1\" \"line2\" ... ) \"State\" \"Zip\" \"Country\"].
+   [\"location\" (\"line1\" \"line2\" ... ) \"City\" \"State\" \"Zip\" \"Country\"].
 PHONES is a list of phone-number objects.  A phone-number is a vector of
  the form
    [\"location\" areacode prefix suffix extension-or-nil]
@@ -2056,29 +2057,26 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                    nets))))
          (completion (try-completion pattern ht pred)))
 
-    ;; this is to pick the primary mail address by default, unless
+    ;; This is to pick the primary mail address by default, unless
     ;; it's not a valid expansion of 'pattern' above.
     ;;
-    ;; this is somewhat convoluted, but it does work.
+    ;; There is a small amount of non-obviousness here; if, for
+    ;; example, I type ronan<M-TAB>, should this fill in
+    ;; "ronan.waide@myworkaddress.com", or the primary email record
+    ;; for "Ronan Waide"? Possibly yet another tuning parameter. Oop.
     (and (stringp completion)
          yeah-yeah-this-one
          (not only-one-p)
-         (let (rest addrs)
+         (let ((rest all-the-completions) addrs)
            (while yeah-yeah-this-one
-             (setq addrs (bbdb-record-net (car yeah-yeah-this-one))
-                   rest all-the-completions)
-             (while rest
-               (if (member (car rest) addrs)
-                   (progn
-                     (while addrs
-                       (if (string-match (concat "^" pattern) (car addrs))
-                           (setq completion (car addrs)
-                                 rest nil
-                                 addrs nil)
-                         (setq addrs (cdr addrs))))
-                     (setq addrs (bbdb-record-net (car yeah-yeah-this-one))))
-                 (setq rest (cdr rest))))
-             (setq yeah-yeah-this-one (cdr yeah-yeah-this-one)))))
+             (setq addrs (append addrs
+                                 (bbdb-record-net (car yeah-yeah-this-one)))
+                   yeah-yeah-this-one (cdr yeah-yeah-this-one)))
+           (while rest
+             (if (member (car rest) addrs)
+                 (setq completion (car rest)
+                       rest nil)
+               (setq rest (cdr rest))))))
 
     (setq yeah-yeah-this-one nil
           all-the-completions nil)
@@ -2959,12 +2957,12 @@ C-g again it will stop scanning."
         records hits)
 
     (while addrs
-      
+
       (setq bbdb-address (car addrs)
             bbdb-update-address-class (car bbdb-address)
             bbdb-update-address-header (cadr bbdb-address)
             bbdb-address (caddr bbdb-address))
-      
+
       (condition-case nil
           (progn
             (setq hits
@@ -3164,7 +3162,7 @@ Changing this variable will show its effect only after clearing the
           (while adlist
             (setq fn (caar adlist)
                   ad (cadar adlist))
-            
+
             ;; ignore uninteresting addresses, this is kinda gross!
             (if (or (not (stringp ignore-senders))
                     (not (or (and fn (string-match ignore-senders fn))
@@ -3173,7 +3171,7 @@ Changing this variable will show its effect only after clearing the
                              (list header-type
                                    (car header-fields)
                                    (car adlist))))
-            
+
             (if (and only-first-address addrlist)
                 (setq adlist nil headers nil)
               (setq adlist (cdr adlist)))))
