@@ -3383,8 +3383,9 @@ not clutter the buffer-list."
         (new-bbdb-buffer-name bbdb-buffer-name))
 
     (when (and bbdb-multiple-buffers (not (eq major-mode 'bbdb-mode)))
-      (cond ((memq major-mode '(vm-presentation-mode vm-summary-mode
-                                                     vm-virtual-mode))  
+      (cond ((memq major-mode '(vm-mode vm-summary-mode
+                                        vm-presentation-mode
+                                        vm-virtual-mode))  
              (vm-select-folder-buffer))
             ((memq major-mode '(gnus-summary-mode gnus-group-mode))
              (set-buffer gnus-article-buffer)))
