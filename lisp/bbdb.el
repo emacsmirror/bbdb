@@ -997,6 +997,60 @@ If the note is absent, returns a zero length string."
                           (message "Error: %s" (nth 1 --c--)))
                         (sit-for 2)))))))
 
+;;; Completion on labels and field data
+
+;;; Realistically speaking, it doesn't make sense to offer minibuffer
+;;; completion for some fields - like ones that don't have labels!
+;;;
+;;; Also, I could probably do this with macros similar to the
+;;; def-struct stuff.
+(defcustom bbdb-default-label-list
+ '("Home" "Office" "Mobile" "Other")
+  "*Default list of labels for Address and Phone fields."
+  :group 'bbdb-record-creation
+  :type '(repeat string))
+
+(defcustom bbdb-phones-label-list
+  bbdb-default-label-list
+  "*List of labels for Phone field."
+  :group 'bbdb-record-creation
+  :type '(repeat string))
+
+(defcustom bbdb-addresses-label-list
+  bbdb-default-label-list
+  "*List of labels for Address field."
+  :group 'bbdb-record-creation
+  :type '(repeat string))
+
+(defun bbdb-label-completion-list( field )
+  "Figure out a completion list for the specified FIELD."
+  (if (boundp (intern (format "bbdb-%s-label-list" field)))
+      (eval (intern (format "bbdb-%s-label-list" field)))
+    ;; special-case out the ones it doesn't make sense for here?
+    bbdb-default-label-list))
+
+(defun bbdb-label-completion-default( field )
+  "Figure out a default from the completion list for FIELD"
+  (if (boundp (intern (format "bbdb-default-%s-label" field)))
+      (eval (intern (format "bbdb-default-%s-label" field)))
+    (nth 0 (bbdb-label-completion-list field))))
+
+;; These are so you can accumulate e.g. mail aliases or company names
+;; and have BBDB offer completion on them.
+(defun bbdb-data-completion-list( field )
+  "Figure out a completion list for the specified FIELD."
+  (if (boundp (intern (format "bbdb-%s-data-list" field)))
+      (eval (intern (format "bbdb-%s-data-list" field)))
+    ;; special-case out the ones it doesn't make sense for here?
+    bbdb-default-label-list))
+
+(defun bbdb-data-completion-default( field )
+  "Figure out a default from the completion list for FIELD"
+  (if (boundp (intern (format "bbdb-default-%s-data" field)))
+      (eval (intern (format "bbdb-default-%s-data" field)))
+    (nth 0 (bbdb-label-completion-list field))))
+
+;;;
 (defvar bbdb-buffer nil)
 (defun bbdb-buffer ()
   (if (and bbdb-buffer (buffer-live-p bbdb-buffer))
@@ -1945,6 +1999,34 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
        (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
        (point-marker))
       (forward-line 1)
+
+      ;; frob the label completion lists (and data completion when I,
+      ;; uh, get around to it, maybe. this stuff should probably be
+      ;; conditional, in case you're not running a 42GHz Pentium 69
+      ;; with chrome tailpipes)
+      (let ((ps (bbdb-record-phones record))
+            (pl (bbdb-label-completion-list "phones"))
+            (as (bbdb-record-addresses record))
+            (al (bbdb-label-completion-list "addresses")))
+        (while ps
+          (let ((l (bbdb-phone-location (car ps))))
+            (or (member l pl)
+                (setq bbdb-phones-label-list
+                      (append (or bbdb-phones-label-list
+                                  bbdb-default-label-list)
+                              (list l))
+                      pl bbdb-phones-label-list)))
+          (setq ps (cdr ps)))
+        ;; Yes, I cut and pasted.
+        (while as
+          (let ((l (bbdb-address-location (car as))))
+            (or (member l al)
+                (setq bbdb-addresses-label-list
+                      (append (or bbdb-addresses-label-list
+                                  bbdb-default-label-list)
+                              (list l))
+                      al bbdb-addresses-label-list)))
+          (setq as (cdr as))))
 
       (if bbdb-no-duplicates-p
           ;; warn the user that there is a duplicate...
