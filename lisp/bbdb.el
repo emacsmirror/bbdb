@@ -37,6 +37,18 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.58  1998/01/06 06:39:49  simmonmt
+;; Added define-widget definition for users without Custom.  Added Custom
+;; groups for utilities (print, finger, etc).  Moved migration code to
+;; bbdb-migrate.el.  Commented some code (mostly code dealing with the
+;; manipulation of the internal database representation).  Added code to
+;; `bbdb-initialize' that allows for the selective insinuation of the
+;; BBDB into various external packages.
+;;
+;;
+;; Revision 1.57.1.1  1997/12/01 15:10:58  simmonmt
+;; BBDB 1.57A (documentation)
+;;
 ;; Revision 1.57  1997/12/01 05:15:01  simmonmt
 ;; Added migration code, customized variables, created record-copying
 ;; function, moved automatically-executing code into bbdb-initialize
@@ -66,7 +78,7 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "1.57unoff")
+(defconst bbdb-version "1.58")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
@@ -120,7 +132,11 @@ version.")
     (defmacro defgroup (&rest args)
       nil)
     (defmacro defcustom (var value doc &rest args) 
-      (` (defvar (, var) (, value) (, doc))))))
+      (` (defvar (, var) (, value) (, doc))))
+    (defmacro define-widget (&rest args)
+      nil)))
+
+;; Custom groups
 
 (defgroup bbdb nil
   "The Insidious Big Brother Database."
@@ -176,10 +192,44 @@ version.")
   :group 'bbdb)
 (put 'bbdb-phone-dialing 'custom-loads '("bbdb-com"))
 
-(defgroup bbdb-finger nil
-  "Customizations for fingering from within the BBDB"
+(defgroup bbdb-utilities nil
+  "Customize BBDB Utilities"
   :group 'bbdb)
-(put 'bbdb-finger 'custom-loads '("bbdb-com"))
+
+(defgroup bbdb-utilities-finger nil
+  "Customizations for fingering from within the BBDB"
+  :group 'bbdb-utilities
+  :prefix "bbdb-finger")
+(put 'bbdb-utilities-finger 'custom-loads '("bbdb-com"))
+
+(defgroup bbdb-utilities-ftp nil
+  "Customizations for using FTP sites stored in BBDB records."
+  :group 'bbdb-utilities)
+(put 'bbdb-utilities-ftp 'custom-loads '("bbdb-ftp"))
+
+(defgroup bbdb-utilities-print nil
+  "Customizations for printing the BBDB."
+  :group 'bbdb-utilities
+  :prefix "bbdb-print")
+(put 'bbdb-utilities-print 'custom-loads '("bbdb-print"))
+
+(defgroup bbdb-utilities-supercite nil
+  "Customizations for using Supercite with the BBDB."
+  :group 'bbdb-utilities
+  :prefix "bbdb/sc")
+(if (or (featurep 'supercite)
+	(locate-library "supercite"))
+    (put 'bbdb-utilities-supercite 'custom-loads '("bbdb-sc")))
+
+(defgroup bbdb-utilities-server nil
+  "Customizations for interfacing with the BBDB from external programs."
+  :group 'bbdb-utilities
+  :prefix "bbdb/srv")
+(if (and (or (featurep 'gnuserv) (locate-library "gnuserv"))
+	 (or (featurep 'itimer)  (locate-library "itimer")))
+    (put 'bbdb-utilities-server 'custom-loads '("bbdb-srv")))
+
+;; Customizable variables
 
 (defcustom bbdb-file "~/.bbdb"
   "*The name of the Insidious Big Brother Database file."
@@ -505,12 +555,6 @@ Database initialization function `bbdb-initialize' is run."
 (defvar bbdb-mode-map nil
   "Keymap for Insidious Big Brother Database listings.")
 
-;; Features that have changed in the various database revs.  Format:
-;;    ((VERSION . DIFFERENCES) ... )
-(defvar bbdb-migration-features
-  '((3 . "* Date format for `creation-date' and `timestamp' has changed,
-  from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")))
-
 
 ;;; These are the buffer-local variables we use.
 ;;; They are mentioned here so that the compiler doesn't warn about them 
@@ -644,6 +688,7 @@ that holds the number of slots."
   namecache sortkey marker deleted-p
   )
 
+;; Build the namecache for a record
 (defsubst bbdb-record-name-1 (record)
   (bbdb-cache-set-namecache (bbdb-record-cache record)
     (let ((fname (bbdb-record-firstname record))
@@ -654,10 +699,14 @@ that holds the number of slots."
 	    fname)
 	lname))))
 
+;; Return the full name from a record.  If the name is not available
+;; in the namecache, the namecache value is generated (and stored).
 (defun bbdb-record-name (record)
   (or (bbdb-cache-namecache (bbdb-record-cache record))
       (bbdb-record-name-1 record)))
 
+;; Return the sortkey for a record, building (and storing) it if
+;; necessary.
 (defun bbdb-record-sortkey (record)
   (or (bbdb-cache-sortkey (bbdb-record-cache record))
       (bbdb-cache-set-sortkey (bbdb-record-cache record)
@@ -837,13 +886,16 @@ that holds the number of slots."
 
 
 (defsubst bbdb-string-trim (string)
-  "Lose leading and trailing whitespace.  Also remove face property
+  "Lose leading and trailing whitespace.  Also remove some properties
 from string."
   (if (string-match "\\`[ \t\n]+" string)
       (setq string (substring string (match-end 0))))
   (if (string-match "[ \t\n]+\\'" string)
       (setq string (substring string 0 (match-beginning 0))))
-  (remove-text-properties 0 (length string) '(face nil) string)
+  (remove-text-properties 0 (length string) '(face        nil mouse-face    nil
+					      tm-callback nil tm-data       nil
+					      highlight   nil gnus-callback nil
+					      gnus-data   nil) string)
   string)
 
 
@@ -1314,7 +1366,8 @@ while the .bbdb buffer is selected."
 
 ;;; Reading the BBDB
 
-(defvar inside-bbdb-records nil)
+(defvar inside-bbdb-records nil
+  "Internal variable.  Do not touch.")
 
 (defun bbdb-records (&optional dont-check-disk already-in-db-buffer)
   "Return a list of all bbdb records; read in and parse the db if necessary.
@@ -1472,6 +1525,8 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 	   (t
 	    (setq bbdb-file-format-migration (cons bbdb-file-format
 						   bbdb-file-format)))))
+  ;; A trap to catch a bug
+  ;;(assert (not (null (car bbdb-file-format-migration))))
   
   (bbdb-debug
    (or (eobp) (looking-at "[\[]")
@@ -1553,216 +1608,6 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
   (run-hooks 'bbdb-after-read-db-hook)
   (bbdb-debug (message "Parsing BBDB... (frobnicating...done)"))
   records)
-
-
-;;; Migrating the BBDB
-
-(defun bbdb-migration-query (ondisk)
-  "Ask if the database is to be migrated.  ONDISK is the version
-number of the database as currently stored on disk.  Returns the
-version for the saved database."
-  (save-excursion
-    (let ((wc (current-window-configuration))
-	  (buf (get-buffer-create "*BBDB Migration Info*"))
-	  (newfeatures bbdb-migration-features)
-	  (first t)
-	  win update)
-      (set-buffer buf)
-      (erase-buffer)
-      (goto-char (point-min))
-      (insert-string (format "BBDB new data version notice:
-=============================
-
-Your BBDB data is stored in an older format (version %d).  At this point,
-you have the option of either upgrading or continuing to save your data
-in your current format.  Please note that if you elect the latter option,
-any changes made to your data using features intended for the newer
-versions will be lost.  For your convenience, a list of file format
-changes introduced after version %d is shown below:\n\n" ondisk ondisk))
-
-      (while newfeatures
-	(if (> (caar newfeatures) ondisk)
-	  (insert-string (concat (if first (setq first nil) "\n\n")
-				 "New features in database version "
-				 (caar newfeatures)
-				 ":\n\n" (cdar newfeatures))))
-	(setq newfeatures (cdr newfeatures)))
-      (setq win (display-buffer buf))
-      (shrink-window-if-larger-than-buffer win)
-      (setq update
-	    (y-or-n-p (concat "Upgrade to version " bbdb-file-format "? ")))
-      (delete-window win)
-      (kill-this-buffer)
-      (set-window-configuration wc)
-      (if update bbdb-file-format ondisk))))
-
-(defun bbdb-migrate (records)
-  "Migrate the BBDB from the version on disk (the car of
-`bbdb-file-format-migration') to the current version (in
-`bbdb-file-format')."
-  (cond
-   ;; Version 2 -> 3
-   ((= (car bbdb-file-format-migration) 2)
-    (let (newrecs currec)
-      (while records
-	(setq newrecs (append newrecs
-			      (list (bbdb-migrate-record
-				     (car records)
-				     '((bbdb-record-raw-notes
-					bbdb-record-set-raw-notes
-					bbdb-migrate-change-dates)))))
-	      records (cdr records)))
-      newrecs))
-   
-   (t (error (format "BBDB Cannot migrate from unknown version %d"
-		     (car bbdb-file-format-migration))))))
-
-(defun bbdb-unmigrate-record (record)
-  "Reverse-migrate a single record from the current version (in
-`bbdb-file-format') to the version to be saved (the cdr of
-`bbdb-file-format-migration')."
-  (cond
-   ;; Version 3 -> 2
-   ((= (cdr bbdb-file-format-migration) 2)
-    (bbdb-migrate-record record '((bbdb-record-raw-notes
-				   bbdb-record-set-raw-notes
-				   bbdb-unmigrate-change-dates))))
-   (t (error (format "BBDB Cannot unmigrate to unknown version %d"
-		     (car bbdb-file-format-migration))))))
-
-(defun bbdb-migrate-record (rec changes)
-  "Perform changes on a single database record (passed in REC).
-CHANGES is a function containing entries of the form
-
-        (GET SET FUNCTION)
-
-where GET is the function to be used to retrieve the field to be
-modified, and SET is the function to be used te set the field to be
-modified.  FUNCTION will be applied to the result of GET, and its
-results will be saved with SET."
-
-;  (message "bbdb-migrate-record %s %s" (prin1-to-string rec)
-;	   (prin1-to-string changes))
-  (let (a b)
-    (while changes
-      ;; Whee!!!
-      (setq a (eval (list (nth 0 (car changes)) rec)))
-      (setq b (eval (list (nth 2 (car changes)) (quote a))))
-      (eval (list (nth 1 (car changes)) rec (quote b)))
-      (setq changes (cdr changes))))
-  rec)
-
-(defun bbdb-migrate-change-dates (rec)
-  "Change date formats in timestamp and creation-date fields from
-\"dd mmm yy\" to \"yyyy-mm-dd\".  Assumes the notes list is passed in as an
-argument."
-
-;  (message "bbdb-migrate-change-dates %s" (prin1-to-string rec))
-  (let (newrec)
-    (while rec
-      (setq newrec
-	    (append newrec
-		    (if (memq (caar rec) '(creation-date timestamp))
-			(list (bbdb-migrate-change-dates-change-field (car rec)))
-			      (list (car rec)))))
-      (setq rec (cdr rec)))
-    newrec))
-
-(defun bbdb-migrate-change-dates-change-field (field)
-  "Migrate the date field (the cdr of FIELD) from \"dd mmm yy\" to
-\"yyyy-mm-dd\"."
-;  (message "bbdb-migrate-change-dates-change-fields %s" (prin1-to-string field))
-  (let ((date (cdr field))
-	parsed)
-      ;; Verify and extract - this is fairly hideous
-      (and (equal (setq parsed (timezone-parse-date (concat date " 00:00:00")))
-		  ["0" "0" "0" "0" nil])
-	   (equal (setq parsed (timezone-parse-date date)) ["0" "0" "0" "0" nil])
-	   (cond ((string-match
-		   "^\\([0-9]+\\)-\\([0-9]+\\)-\\([0-9]+\\)$" date)
-		  (setq parsed (vector (match-string 1 date)
-				       (match-string 2 date)
-				       (match-string 3 date)))
-		  ;; This should be fairly loud for GNU Emacs users
-		  (bbdb-warn "BBDB is treating %s field value %s as %s %s %s"
-			     (symbol-name (car field))
-			     (upcase-initials (downcase
-					       (rassoc (aref 1 parsed)
-						       timezone-months-assoc)))
-			     date))
-		 (t ["0" "0" "0" "0" nil])))
-
-      ;; I like numbers
-      (and (stringp (aref parsed 0))
-	   (aset parsed 0 (string-to-int (aref parsed 0))))
-      (and (stringp (aref parsed 1))
-	   (aset parsed 1 (string-to-int (aref parsed 1))))
-      (and (stringp (aref parsed 2))
-	   (aset parsed 2 (string-to-int (aref parsed 2))))
-      
-      ;; Sanity check
-      (cond ((and (< 0 (aref parsed 0))
-		  (< 0 (aref parsed 1)) (>= 12 (aref parsed 1))
-		  (< 0 (aref parsed 2))
-		  (>= (timezone-last-day-of-month (aref parsed 1)
-						  (aref parsed 0))
-		      (aref parsed 2)))
-	     (setq date (format "%02s-%02s-%02s" (aref parsed 0)
-				(aref parsed 1) (aref parsed 2)))
-	     (cons (car field) date))
-	    (t
-	   (error (concat "BBDB Cannot parse " (symbol-name field)
-			  " header value \"" date "\" for upgrade"))))))
-	
-(defun bbdb-unmigrate-change-dates (rec)
-  "Change date formats is timestamp and creation-date fields from
-\"yyyy-mm-dd\" to \"dd mmm yy\".  Assumes the notes list is passed in
-as an argument."
-
-  (let (newrec)
-    (while rec
-      (setq newrec
-	    (append newrec
-		    (if (memq (caar rec) '(creation-date timestamp))
-			(list (bbdb-unmigrate-change-dates-change-field
-			       (car rec)))
-		      (list (car rec))))
-	    rec (cdr rec)))
-    newrec))
-
-(defun bbdb-unmigrate-change-dates-change-field (field)
-  "Unmigrate the date field (the cdr of FIELD) from \"yyyy-mm-dd\" to
-\"yyyy-mm-dd\"."
-  (cons (car field) (bbdb-time-convert (cdr field) "%e %b %y")))
-
-(defun bbdb-migrate-rewrite-all (message-p &optional records)
-  "Rewrite each and every record in the bbdb file; this is necessary if we 
-are updating an old file format.  MESSAGE-P says whether to sound off
-for each record converted.  If RECORDS is non-nil, its value will be
-used as the list of records to update."
-  ;; RECORDS is used by the migration mechanism.  Since the migration
-  ;; mechanism is called from within bbdb-records, if we called
-  ;; bbdb-change-record, we'd recurse and die.  We're therefore left
-  ;; with the slightly more palatable (but still not pretty) calling
-  ;; of bbdb-overwrite-record-internal.
-  (or records (setq records (bbdb-records)))
-  (let ((i 0))
-    (while records
-      (bbdb-overwrite-record-internal (car records) nil)
-      (if message-p (message "Updating %d: %s %s" (setq i (1+ i))
-			     (bbdb-record-firstname (car records))
-			     (bbdb-record-lastname  (car records))))
-      (setq records (cdr records)))))
-(defalias 'bbdb-dry-heaves 'bbdb-migrate-rewrite-all)
-
-(defun bbdb-migrate-update-file-version (old new)
-  "Change the `file-version' string from the OLD version to the NEW
-version."
-  (goto-char (point-min))
-  (if (re-search-forward (format "^;;; file-version: %d$" old) nil t)
-      (replace-match (format ";;; file-version: %d" new))
-    (error (format "Can't find file-version string in %s buffer for v%d migration"
-		   bbdb-file new))))
 
 (defmacro bbdb-user-mail-names ()
   "Returns a regexp matching the address of the logged-in user"
@@ -2160,7 +2005,6 @@ function y-or-n-p-with-timeout is defined (meaning XEmacs.)"
   :type '(choice (const :tag "Don't time out" nil)
 		 (integer :tag "Time out after this many seconds" 5)))
 
-;;;###autoload
 (defun bbdb-save-db (&optional prompt-first mention-if-not-saved)
   "save the db if it is modified."
   (interactive (list nil t))
@@ -2175,7 +2019,7 @@ function y-or-n-p-with-timeout is defined (meaning XEmacs.)"
 			bbdb-save-db-timeout "Save the BBDB now? " t)
 		     (bbdb-y-or-n-p "Save the BBDB now? ")))))
 	(save-buffer)
-      (if mention-if-not-saved (message "BBDB unsaved")))))
+      (if mention-if-not-saved (message "BBDB not saved")))))
 
 (defun bbdb-add-hook (hook function &optional append)
   "Add to the value of HOOK the function FUNCTION.
@@ -2705,9 +2549,37 @@ the window will be split vertically rather than horizontally."
        (kill-all-local-variables)
        (error "the BBDB was mis-sorted: it has been repaired.")))))
 
-;;; Keybindings
+;;;###autoload
+(defun bbdb-initialize (&rest to-insinuate)
+  "*Initialize the BBDB.  One or more of the following symbols can be
+passed as arguments to initiate the appropriate insinuations.
 
-(defun bbdb-initialize ()
+ Initialization of mail/news readers:
+
+   Gnus       Initialize BBDB support for the Gnus version 3.14 or
+              older.
+   gnus       Initialize BBDB support for the Gnus mail/news reader
+              version 3.15 or newer.  If you pass the `gnus' symbol,
+              you should probably also pass the `message' symbol.
+   mh-e       Initialize BBDB support for the MH-E mail reader.
+   rmail      Initialize BBDB support for the RMAIL mail reader.
+   sendmail   Initialize BBDB support for sendmail (M-x mail).
+   vm         Initialize BBDB support for the VM mail reader.
+              NOTE: For the VM insinuation to work properly, you must
+              either call `bbdb-initialize' with the `vm' symbol from
+              within your VM initialization file (\"~/.vm\") or you
+              must call `bbdb-insinuate-vm' manually from within your
+              VM initialization file.
+
+ Initialization of miscellaneous package:
+
+   message    Initialize BBDB support for Message mode.
+   reportmail Initialize BBDB support for the Reportmail mail
+              notification.
+   sc         Initialize BBDB support for the Supercite message
+              citation package.
+   w3         Initialize BBDB support for Web browsers."
+  
   (fset 'advertized-bbdb-delete-current-field-or-record
 	'bbdb-delete-current-field-or-record)
 
@@ -2817,10 +2689,17 @@ the window will be split vertically rather than horizontally."
     (autoload 'bbdb-www-grab-homepage "bbdb-w3" bbdbid nil)
     (autoload 'bbdb-insinuate-w3      "bbdb-w3" bbdbid nil)
     
-    (autoload 'bbdb-insinuate-sc      "bbdb-sc" bbdbid nil)
-    
-    (autoload 'bbdb-snarf "bbdb-snarf" bbdbid t)
-    
+    (autoload 'bbdb-migration-query             "bbdb-migrate" bbdbid nil)
+    (autoload 'bbdb-migrate                     "bbdb-migrate" bbdbid nil)
+    (autoload 'bbdb-migrate-rewrite-all         "bbdb-migrate" bbdbid nil)
+    (autoload 'bbdb-migrate-update-file-version "bbdb-migrate" bbdbid nil)
+    (autoload 'bbdb-unmigrate-record            "bbdb-migrate" bbdbid nil)
+
+    (autoload 'bbdb-insinuate-reportmail "bbdb-reportmail" bbdbid nil)
+    (autoload 'bbdb-insinuate-sc         "bbdb-sc"         bbdbid nil)
+    (autoload 'bbdb-snarf                "bbdb-snarf"      bbdbid t)
+    (autoload 'bbdb-whois                "bbdb-whois"      bbdbid t)
+
     ;;; RMAIL, MHE, and VM interfaces might need these.
     (autoload 'mail-strip-quoted-names "mail-utils")
     (autoload 'mail-fetch-field "mail-utils")
@@ -2829,25 +2708,62 @@ the window will be split vertically rather than horizontally."
     (autoload 'mail-extract-address-components "mail-extr")
     )
 
-  (cond ((featurep 'rmail)
-	 (safe-require 'bbdb-rmail)
-	 (if (fboundp 'bbdb-rmail-initialize)
-	     (bbdb-rmail-initialize))))
+  ;; Mail/News readers
+  (cond ((member 'Gnus to-insinuate)         ;; Gnus 3.14 or older
+	 (add-hook 'gnus-Startup-hook 'bbdb-insinuate-gnus)
+	 (setq to-insinuate (delq 'Gnus to-insinuate))))
+  (cond ((member 'gnus to-insinuate)         ;; Gnus 3.15 or newer
+	 (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus)
+	 (setq to-insinuate (delq 'gnus to-insinuate))))
+  
+  (cond ((member 'mh-e to-insinuate)         ;; MH-E
+	 (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh)
+	 (setq to-insinuate (delq 'mh-e to-insinuate))))
+  
+  (cond ((member 'rmail to-insinuate)        ;; RMAIL
+	 (add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail)
+	 (setq to-insinuate (delq 'rmail to-insinuate))))
 
-  (cond ((featurep 'gnus)
-	 (safe-require 'bbdb-gnus)
-	 (if (fboundp 'bbdb-gnus-initialize)
-	     (bbdb-gnus-initialize))))
-  
-  (cond ((featurep 'vm)
-	 (safe-require 'bbdb-vm)
-	 (if (fboundp 'bbdb-vm-initialize)
-	     (bbdb-vm-initialize))))
-  
-  (cond ((featurep 'mh-e)
-	 (safe-require 'bbdb-mhe)
-	 (if (fboundp 'bbdb-mhe-initialize))))
-  
+  (cond ((member 'sendmail to-insinuate)
+	 (add-hook 'mail-setup-hook 'bbdb-insinuate-sendmail)
+	 (setq to-insinuate (delq 'sendmail to-insinuate))))
+
+  (cond ((member 'vm to-insinuate)
+	 (if (or (featurep 'vm) (locate-library "vm"))
+	     (bbdb-insinuate-vm)
+	   (bbdb-warn "Could not find VM for initialization/insinuation"))
+	 (setq to-insinuate (delq 'vm to-insinuate))))
+
+  ;; Other packages
+  (cond ((member 'message to-insinuate)
+	 (if (or (featurep 'message) (locate-library "message"))
+	     (bbdb-insinuate-message)
+	   (bbdb-warn "Could not find Message for initialization/insinuation"))
+	 (setq to-insinuate (delq 'message to-insinuate))))
+
+  (cond ((member 'reportmail to-insinuate)
+	 (if (or (featurep 'reportmail) (locate-library "reportmail"))
+	     (bbdb-insinuate-reportmail)
+	   (bbdb-warn "Could not find Reportmail for initialization/insinuation"))
+	 (setq to-insinuate (delq 'reportmail to-insinuate))))
+
+  (cond ((member 'sc to-insinuate)
+	 (if (or (featurep 'supercite) (locate-library "supercite"))
+	     (bbdb-insinuate-sc)
+	   (bbdb-warn "Could not find Supercite for initialization/insinuation"))
+	 (setq to-insinuate (delq 'sc to-insinuate))))
+
+  (cond ((member 'w3 to-insinuate)
+	 (if (or (featurep 'w3) (locate-library "w3"))
+	     (bbdb-insinuate-w3)
+	   (bbdb-warn "Could not find W3 for initialization/insinuation"))
+	 (setq to-insinuate (delq 'w3 to-insinuate))))
+
+  (if to-insinuate
+      (while to-insinuate
+	(bbdb-warn "Unknown symbol %s in initialization arguments" (car to-insinuate))
+	(setq to-insinuate (cdr to-insinuate))))
+
   ;;; Support for the various Emacsen.  This is for features that the
   ;;; BBDB adds to itself for different Emacsen.  For definitions of
   ;;; functions that aren't present in various Emacsen (for example,
