@@ -4,6 +4,7 @@
 	(bbdb-complete-name-hooks): Instead of dinging when completing a
 	complete address (and with cycling disabled) call theses hook
 	functions.  
+	(bbdb-update-records): Fixed a typo.
 
 2001-05-18  Robert Fenk  <Robert.Fenk@gmx.de>
 
