@@ -1,3 +1,44 @@
+2001-08-31  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-hooks.el (bbdb-auto-notes-alist): applied posted
+	patch of better customization.
+
+	* lisp/bbdb-srv.el, lisp/bbdb-rmail.el, lisp/bbdb-mhe.el,
+	lisp/bbdb-vm.el, lisp/bbdb-gnus.el, lisp/bbdb.el,
+	lisp/bbdb-com.el: replaced occureneces of bbdb-elided-display and
+	bbdb-pop-up-elided-display. 
+
+	* lisp/bbdb-gui.el (build-bbdb-menu): Fix menus to use new display
+	layout toggeling functions.
+
+	* lisp/bbdb-com.el (bbdb-change-records-state-and-redisplay),
+	(bbdb-toggle-all-records-display-layout),
+	(bbdb-toggle-records-display-layout),
+	(bbdb-display-all-records-completely),
+	(bbdb-display-record-completely): modified functions for toggeling
+	the display layout of records.  Old functions bbdb-elide-record
+	and bbdb-unelide-records have been removed.
+
+	* lisp/bbdb.el
+	(bbdb-display-layout-alist): variable controling options for
+	display layouts, support for user defines format functions still
+	missing.
+	(bbdb-display-layout): variable controling the default display layout
+	(bbdb-pop-up-display-layout): variable controling  the default display
+	layout for pop-up buffers. 
+	(bbdb-elided-display), (bbdb-pop-up-elided-display): are obsolete
+	variables now.
+	(bbdb-elided-display-sanity-setup): function which sets up the
+	layout variables from the obsolete bbdb-elided-display and
+	bbdb-pop-up-elided-display variables.  Might be removed along with
+	the variables in the future.
+	(bbdb-format-record): rewitten to support multiple
+	layouts according to bbdb-display-layout-alist
+	(bbdb-format-record-layout-multi-line),
+	(bbdb-format-record-layout-one-line),
+	(bbdb-format-record-one-line-*): Function specific to certain
+	layouts.
+
 2001-08-13  Jeff Mincy  <jeff@delphioutpost.com>
 
 	* fix bbdb-hack-x-face call to make-glyph
