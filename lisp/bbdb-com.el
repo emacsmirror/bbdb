@@ -3056,12 +3056,14 @@ field `finger-host' (default value of `bbdb-finger-host-field')."
                           (copy-sequence (bbdb-record-finger-host
                                           (car record)))))))
       (setq record (cdr record)))
-    (save-excursion
-      (with-output-to-temp-buffer bbdb-finger-buffer-name
-        (set-buffer bbdb-finger-buffer-name)
-        (make-local-variable 'bbdb-remaining-addrs-to-finger)
-        (setq bbdb-remaining-addrs-to-finger (cdr addrs))
-        (bbdb-finger-internal (car addrs))))))
+    (if (car addrs)
+        (save-excursion
+          (with-output-to-temp-buffer bbdb-finger-buffer-name
+            (set-buffer bbdb-finger-buffer-name)
+            (make-local-variable 'bbdb-remaining-addrs-to-finger)
+            (setq bbdb-remaining-addrs-to-finger (cdr addrs))
+            (bbdb-finger-internal (car addrs))))
+      (error "Nothing to finger!"))))
 
 
 (defun bbdb-remove-duplicate-nets (records)
