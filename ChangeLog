@@ -1,3 +1,12 @@
+2002-12-25  Alex Schroeder  <alex@emacswiki.org>
+
+	* lisp/bbdb.el (bbdb-phones-label-list): Doc.
+	(bbdb-addresses-label-list): Doc.
+	(bbdb-label-completion-list): Doc.
+	(bbdb-label-completion-default): Doc.
+	(bbdb-data-completion-list): Doc.
+	(bbdb-data-completion-default): Doc.
+
 2002-12-24  Alex Schroeder  <alex@emacswiki.org>
 
 	* lisp/bbdb-com.el (bbdb-complete-name): Handle the case where the
