@@ -1,3 +1,11 @@
+2000-08-03  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb.el (bbdb-notes-default-separator): new user option
+	(bbdb-annotate-notes): use it
+	(notes, company): put `field-separator' property
+	* lisp/bbdb-hooks.el (bbdb-auto-notes-hook): search the whole
+	notes string for the new note before adding
+
 2000-08-01  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/Makefile (bbdb-autoloads.el): Added setting of variable

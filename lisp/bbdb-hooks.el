@@ -35,6 +35,13 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.60  2000/08/03 18:04:50  sds
+;; * lisp/bbdb.el (bbdb-notes-default-separator): new user option
+;; (bbdb-annotate-notes): use it
+;; (notes, company): put `field-separator' property
+;; * lisp/bbdb-hooks.el (bbdb-auto-notes-hook): search the whole
+;; notes string for the new note before adding
+;;
 ;; Revision 1.59  2000/07/13 17:07:00  sds
 ;; minor doc fixes to comply with the standards
 ;;
@@ -226,9 +233,9 @@ the bbdb-ignore-some-messages-alist (which see) and *no* others."
 
 ;;;###autoload
 (defun bbdb-ignore-some-messages-hook ()
-  "For use as a bbdb/news-auto-create-hook or bbdb/mail-auto-create-hook.
+  "For use as a `bbdb/news-auto-create-hook' or `bbdb/mail-auto-create-hook'.
 This will automatically create BBDB entries for messages which do *not*
-match the bbdb-ignore-some-messages-alist (which see)."
+match the `bbdb-ignore-some-messages-alist' (which see)."
   (bbdb-ignore-most-messages-hook t))
 
 
@@ -237,8 +244,8 @@ match the bbdb-ignore-some-messages-alist (which see)."
 (defcustom bbdb-auto-notes-alist nil
   "*An alist which lets you have certain pieces of text automatically added
 to the BBDB record representing the sender of the current message based on
-the subject or other header fields.  This only works if bbdb-notice-hook
-is 'bbdb-auto-notes-hook.  The format of this alist is
+the subject or other header fields.  This only works if `bbdb-notice-hook'
+contains `bbdb-auto-notes-hook'.  The format of this alist is
 
    (( HEADER-NAME
        (REGEXP . STRING) ... )
@@ -250,7 +257,7 @@ for example,
 
 will cause the text \"VM mailing list\" to be added to the notes field of
 the record corresponding to anyone you get mail from via one of the VM
-mailing lists.  If, that is, bbdb/mail-auto-create-p is set such that the
+mailing lists.  If, that is, `bbdb/mail-auto-create-p' is set such that the
 record would have been created, or the record already existed.
 
 The format of elements of this list may also be
@@ -350,114 +357,111 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
   ;; This could stand to be faster...
   ;; could optimize this to check the cache, and noop if this record is
   ;; cached for any other message, but that's probably not the right thing.
-  (or bbdb-readonly-p
-  (let ((rest bbdb-auto-notes-alist)
-	ignore
-	(ignore-all bbdb-auto-notes-ignore-all)
-	(case-fold-search t)
-	(b (current-buffer))
-	(marker (bbdb-header-start))
-	field pairs fieldval  ; do all bindings here for speed
-	regexp string notes-field-name notes
-	 replace-p replace-or-add-msg)
+  (unless bbdb-readonly-p
+   (let ((rest bbdb-auto-notes-alist)
+         ignore
+         (ignore-all bbdb-auto-notes-ignore-all)
+         (case-fold-search t)
+         (b (current-buffer))
+         (marker (bbdb-header-start))
+         field pairs fieldval  ; do all bindings here for speed
+         regexp string notes-field-name notes
+         replace-p replace-or-add-msg)
     (set-buffer (marker-buffer marker))
     (save-restriction
       (widen)
       (goto-char marker)
       (if (and (setq fieldval (bbdb-extract-field-value "From"))
-	       (string-match (bbdb-user-mail-names) fieldval))
-	  ;; Don't do anything if this message is from us.  Note that we have
-	  ;; to look at the message instead of the record, because the record
-	  ;; will be of the recipient of the message if it is from us.
-	  nil
-	;; check the ignore-all pattern
-	(while (and ignore-all (not ignore))
-	  (goto-char marker)
-	  (setq field (car (car ignore-all))
-		regexp (cdr (car ignore-all))
-		fieldval (bbdb-extract-field-value field))
-	  (if (and fieldval
-		   (string-match regexp fieldval))
-	      (setq ignore t)
-	    (setq ignore-all (cdr ignore-all))))
+               (string-match (bbdb-user-mail-names) fieldval))
+          ;; Don't do anything if this message is from us.  Note that we have
+          ;; to look at the message instead of the record, because the record
+          ;; will be of the recipient of the message if it is from us.
+          nil
+        ;; check the ignore-all pattern
+        (while (and ignore-all (not ignore))
+          (goto-char marker)
+          (setq field (car (car ignore-all))
+                regexp (cdr (car ignore-all))
+                fieldval (bbdb-extract-field-value field))
+          (if (and fieldval
+                   (string-match regexp fieldval))
+              (setq ignore t)
+            (setq ignore-all (cdr ignore-all))))
 
-	(if ignore  ; ignore-all matched
-	    nil
-	 (while rest ; while their still are clauses in the auto-notes alist
-	  (goto-char marker)
-	  (setq field (car (car rest))	; name of header, e.g., "Subject"
-		pairs (cdr (car rest))	; (REGEXP . STRING) or
-					; (REGEXP FIELD-NAME STRING) or
-					; (REGEXP FIELD-NAME STRING REPLACE-P)
-		fieldval (bbdb-extract-field-value field)) ; e.g., Subject line
-	  (if fieldval
-	      (while pairs
-		(setq regexp (car (car pairs))
-		      string (cdr (car pairs)))
-		(if (consp string)	; not just the (REGEXP .STRING) format
-		    (setq notes-field-name (car string)
-			  replace-p (nth 2 string) ; perhaps nil
-			  string (nth 1 string))
-		  ;; else it's simple (REGEXP . STRING)
-		  (setq notes-field-name 'notes
-			replace-p nil))
-		(setq notes (bbdb-record-getprop record notes-field-name))
-		(let ((did-match
-		       (and (string-match regexp fieldval)
-			    ;; make sure it is not to be ignored
-			    (let ((re (cdr (assoc field bbdb-auto-notes-ignore))))
-			      (if re
-				  (not (string-match re fieldval))
-				t)))))
-		  ;; An integer as STRING is an index into match-data:
-		  ;; A function as STRING calls the function on fieldval:
-		  (if did-match
-		      (setq string
-			    (cond ((integerp string) ; backward compat
-				   (substring fieldval
-					      (match-beginning string)
-					      (match-end string)))
-				  ((stringp string)
-				   (bbdb-auto-expand-newtext fieldval string))
-				  (t
-				   (goto-char marker)
-				   (let ((s (funcall string fieldval)))
-				     (or (stringp s)
-					 (null s)
-					 (error "%s returned %s: not a string"
-						string s))
-				     s)))))
-		  ;; need expanded version of STRING here:
-		  (if (and did-match
-			   string ; A function as STRING may return nil
-			   (not (and notes
-				     ;; check that STRING is not already
-				     ;; present in the NOTES field
-				     (string-match
-				      (concat "\\(\\Sw\\|\\`\\)"
-					      (regexp-quote string)
-					      "\\(\\Sw\\|\\'\\)")
-				      notes))))
-		      (if replace-p
-			  ;; replace old contents of field with STRING
-			  (progn
-			    (if (eq notes-field-name 'notes)
-				(message "Replacing with note \"%s\"" string)
-			      (message "Replacing field \"%s\" with \"%s\""
-				       notes-field-name string))
-			    (bbdb-record-putprop record notes-field-name
-						 string)
-			    (bbdb-maybe-update-display record))
-			;; add STRING to old contents, don't replace
-			(if (eq notes-field-name 'notes)
-			    (message "Adding note \"%s\"" string)
-			  (message "Adding \"%s\" to field \"%s\""
-				   string notes-field-name))
-			(bbdb-annotate-notes record string notes-field-name))))
-		(setq pairs (cdr pairs))))
-	  (setq rest (cdr rest))))))
+        (unless ignore          ; ignore-all matched
+         (while rest ; while their still are clauses in the auto-notes alist
+          (goto-char marker)
+          (setq field (car (car rest))  ; name of header, e.g., "Subject"
+                pairs (cdr (car rest))  ; (REGEXP . STRING) or
+                                        ; (REGEXP FIELD-NAME STRING) or
+                                        ; (REGEXP FIELD-NAME STRING REPLACE-P)
+                fieldval (bbdb-extract-field-value field)) ; e.g., Subject line
+          (when fieldval
+            (while pairs
+              (setq regexp (car (car pairs))
+                    string (cdr (car pairs)))
+              (if (consp string) ; not just the (REGEXP . STRING) format
+                  (setq notes-field-name (car string)
+                        replace-p (nth 2 string) ; perhaps nil
+                        string (nth 1 string))
+                  ;; else it's simple (REGEXP . STRING)
+                  (setq notes-field-name 'notes
+                        replace-p nil))
+              (setq notes (bbdb-record-getprop record notes-field-name))
+              (let ((did-match
+                     (and (string-match regexp fieldval)
+                          ;; make sure it is not to be ignored
+                          (let ((re (cdr (assoc field
+                                                bbdb-auto-notes-ignore))))
+                            (if re
+                                (not (string-match re fieldval))
+                                t)))))
+                ;; An integer as STRING is an index into match-data:
+                ;; A function as STRING calls the function on fieldval:
+                (if did-match
+                    (setq string
+                          (cond ((integerp string) ; backward compat
+                                 (substring fieldval
+                                            (match-beginning string)
+                                            (match-end string)))
+                                ((stringp string)
+                                 (bbdb-auto-expand-newtext fieldval string))
+                                (t
+                                 (goto-char marker)
+                                 (let ((s (funcall string fieldval)))
+                                   (or (stringp s)
+                                       (null s)
+                                       (error "%s returned %s: not a string"
+                                              string s))
+                                   s)))))
+                ;; need expanded version of STRING here:
+                (if (and did-match
+                         string ; A function as STRING may return nil
+                         (not (and notes
+                                   ;; check that STRING is not already
+                                   ;; present in the NOTES field
+                                   (string-match
+                                    (regexp-quote string)
+                                    notes))))
+                    (if replace-p
+                        ;; replace old contents of field with STRING
+                        (progn
+                          (if (eq notes-field-name 'notes)
+                              (message "Replacing with note \"%s\"" string)
+                              (message "Replacing field \"%s\" with \"%s\""
+                                       notes-field-name string))
+                          (bbdb-record-putprop record notes-field-name
+                                               string)
+                          (bbdb-maybe-update-display record))
+                        ;; add STRING to old contents, don't replace
+                        (if (eq notes-field-name 'notes)
+                            (message "Adding note \"%s\"" string)
+                            (message "Adding \"%s\" to field \"%s\""
+                                     string notes-field-name))
+                        (bbdb-annotate-notes record string notes-field-name))))
+              (setq pairs (cdr pairs))))
+          (setq rest (cdr rest))))))
     (set-buffer b))))
-
 
 (defun bbdb-auto-expand-newtext (string newtext)
   ;; Expand \& and \1..\9 (referring to STRING) in NEWTEXT.

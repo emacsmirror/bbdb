@@ -673,6 +673,9 @@ that holds the number of slots."
   cache
   )
 
+(put 'company 'field-separator "; ")
+(put 'notes 'field-separator "\n")
+
 ;; Build reading and setting functions for location, area, exchange,
 ;; suffix, and extension.  These are for accessing the elements of the
 ;; individual phone number forms.
@@ -2224,7 +2227,20 @@ The keybindings, more precisely:
                              (bbdb-redisplay-records))))
               (set-buffer b)))))))
 
+(defcustom bbdb-notes-default-separator ", "
+  "*The default separator inserted by `bbdb-annotate-notes'.
+This is used for notes which do not have `field-separator' property set.
+E.g., if you want URLs to be separated by newlines, you can put
+  (put 'www 'field-separator \"\\n\")
+into your .emacs."
+  :group 'bbdb-noticing-records
+  :type 'string)
+
 (defun bbdb-annotate-notes (bbdb-record annotation &optional fieldname replace)
+  "Add an annotation to a record.
+Adds (or replaces, when the fourth argument REPLACE is non-nil)
+an ANNOTATION to the note FIELDNAME in BBDB-RECORD.
+Called by `bbdb-auto-notes-hook'."
   (or bbdb-record (error "unperson"))
   (setq annotation (bbdb-string-trim annotation))
   (if (memq fieldname '(name address addresses phone phones net aka AKA))
@@ -2242,9 +2258,8 @@ The keybindings, more precisely:
                            (if (or replace (string= notes ""))
                                annotation
                                (concat notes
-                                       (if (eq fieldname 'company) "; "
-                                         (or (get fieldname 'field-separator)
-                                             "\n"))
+                                       (or (get fieldname 'field-separator)
+                                           bbdb-notes-default-separator)
                                        annotation)))
       (bbdb-maybe-update-display bbdb-record))))
 
