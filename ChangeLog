@@ -20,7 +20,7 @@
 	(bbdb-add-next-search-results): A prefix command (like "*") bound
 	to "+" which forces the next display command to add its content to
 	the BBDB buffer rather than replacing it.
-	(bbdb-yank-addresses): removed the dependency on
+	(bbdb-completion-check-record): removed the dependency on
 	`bbdb-case-fold-search' since completions from the bbdb-hashtable
 	are always lower case.
 	(bbdb-complete-name): fixed cycling when the
@@ -31,11 +31,11 @@
 	When will this function finnaly do exactly what it should do?
 	(bbdb-define-all-aliases-mode): new variable controling special
 	aliases, i.e. alias<NUMBER> & alias*.
-	(bbdb-define-all-aliases): Clear abbrev-table before defining
-	abbreves and modified to honor new aliases-mode.  Automatice
-	rebuilt of aliases if necessary (XEmacs only sofar)
+	(bbdb-define-all-aliases): (XEmacs only sofar) Clear abbrev-table
+	before defining abbreves and honor new aliases-mode.
+	Automatice rebuilt of aliases if necessary.
 	(bbdb-add-or-remove-mail-alias): after adding or removing an
-	alias, redefine them.
+	alias, set a flag for rebuilting..
 
 2002-01-15  Waider  <waider@waider.ie>
 
