@@ -22,6 +22,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.61  1998/12/05 16:44:21  simmonmt
+;; bbdb/gnus-show-sender should refer to summary buffer, not article
+;; buffer.
+;;
 ;; Revision 1.60  1998/12/05 16:41:38  simmonmt
 ;; Honor bbdb-user-mail-names.
 ;;
@@ -101,12 +105,14 @@ replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
 			 (error "The Insidious Big Brother Database is read-only.")
 			 (read-string "Comments: "))))
+  (gnus-summary-select-article)
   (bbdb-annotate-notes (bbdb/gnus-update-record t) string 'notes replace))
 
 (defun bbdb/gnus-edit-notes (&optional arg)
   "Edit the notes field or (with a prefix arg) a user-defined field
 of the BBDB record corresponding to the sender of this message."
   (interactive "P")
+  (gnus-summary-select-article)
   (let ((record (or (bbdb/gnus-update-record t) (error ""))))
     (bbdb-display-records (list record))
     (if arg
@@ -118,6 +124,7 @@ of the BBDB record corresponding to the sender of this message."
   "Display the contents of the BBDB for the sender of this message.
 This buffer will be in bbdb-mode, with associated keybindings."
   (interactive)
+  (gnus-summary-select-article)
   (let ((record (bbdb/gnus-update-record t)))
     (if record
 	(bbdb-display-records (list record))
