@@ -4,6 +4,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.55  1997/10/26 05:11:20  simmonmt
+# Installation timing change: .el before .elc.  Tried to optimize
+# install
+#
 # Revision 1.54  1997/10/11 23:48:40  simmonmt
 # Removed my paths from VMDIR and MHEDIR.  Seems I had broken the
 # documented 'if these are blank and the packages live on load-path,
@@ -59,8 +63,8 @@ MHEDIR 		=
      MAKEINFO = makeinfo
 
 # Uncomment one of the below
-  SYSVINSTALL = /usr/sbin/install
-#  BSDINSTALL = /usr/ucb/install
+#  SYSVINSTALL = /usr/sbin/install
+   BSDINSTALL = /usr/ucb/install
 
           TAR = tar
      COMPRESS = gzip --verbose --best
@@ -104,34 +108,57 @@ install-pkg: bbdb autoloads info
 	   echo "You must specify PACKAGEROOT (see Makefile)"; \
 	   exit 1 ; \
 	else \
-	   rm -fr $(PACKAGEROOT)/lisp/bbdb $(PACKAGEROOT)/info/bbdb; \
+	   rm -fr $(PACKAGEROOT)/lisp/bbdb $(PACKAGEROOT)/info/bbdb \
+		  $(PACKAGEROOT)/etc/bbdb; \
            if [ -z "$(LINKTOPACKAGE)" ] ; then \
-	      mkdir $(PACKAGEROOT)/lisp/bbdb; \
-	      for i in `ls lisp/*.elc` ; do \
-		if [ -z "$(SYSVINSTALL)" ] ; then \
-		   $(BSDINSTALL) -c -m 0644 $$i `echo $$i | sed 's/c$$//g` \
+	      mkdir -p -m 0755 $(PACKAGEROOT)/lisp/bbdb; \
+	      if [ -z "$(SYSVINSTALL)" ] ; then \
+		for i in `ls lisp/*.elc` ; do \
+		   $(BSDINSTALL) -c -m 0644 `echo $$i | sed 's/c$$//g` \
 			$(PACKAGEROOT)/lisp/bbdb ; \
-		else \
-		   $(SYSVINSTALL) -c $(PACKAGEROOT)/lisp/bbdb -s -m 0644 $$i ; \
+		   $(BSDINSTALL) -c -m 0644 $$i $(PACKAGEROOT)/lisp/bbdb ; \
+		done ; \
+	      else \
+		for i in `ls lisp/*.elc` ; do \
 		   $(SYSVINSTALL) -c $(PACKAGEROOT)/lisp/bbdb -s -m 0644 \
 			`echo $$i | sed 's/c$$//g` $(PACKAGEROOT)/lisp/bbdb ; \
-		fi ; \
-	      done ; \
-	      mkdir $(PACKAGEROOT)/info/bbdb ; \
-	      for i in `ls texinfo/*.info* ` ; do \
-		if [ -z "$(SYSVINSTALL)" ] ; then \
+		   $(SYSVINSTALL) -c $(PACKAGEROOT)/lisp/bbdb -s -m 0644 $$i ; \
+		done ; \
+	      fi ; \
+	      mkdir -p -m 0755 $(PACKAGEROOT)/info/bbdb ; \
+	      if [ -z "$(SYSVINSTALL)" ] ; then \
+		for i in `ls texinfo/*.info* ` ; do \
 		   $(BSDINSTALL) -c -m 0644 $$i $(PACKAGEROOT)/info/bbdb ; \
-		else \
+		done ; \
+	      else \
+		for i in `ls texinfo/*.info* ` ; do \
 		   $(SYSVINSTALL) -c $(PACKAGEROOT)/info/bbdb -s -m 0644 $$i ; \
-		fi ; \
-	      done ; \
+		done ; \
+	      fi ; \
+	      mkdir -p -m 0755 $(PACKAGEROOT)/etc/bbdb/tex \
+			       $(PACKAGEROOT)/etc/bbdb/utils ; \
+	      if [ -z "$(SYSVINSTALL)" ] ; then \
+		for i in `ls tex/*.tex` ; do \
+		   $(BSDINSTALL) -c -m 0644 $$i $(PACKAGEROOT)/etc/bbdb/tex ; \
+		done ; \
+		for i in `ls -d utils/* |egrep -v '(RCS|SCCS)'` ; do \
+		   $(BSDINSTALL) -c -m 0644 $$i $(PACKAGEROOT)/etc/bbdb/utils ; \
+		done ; \
+	      else \
+		for i in `ls tex/*.tex` ; do \
+		   $(SYSVINSTALL) -c $(PACKAGEROOT)/etc/bbdb/tex -s -m 0644 $$i; \
+		done ; \
+		for i in `ls -d utils/* |egrep -v '(RCS|SCCS)'` ; do \
+		   $(SYSVINSTALL) -c $(PACKAGEROOT)/etc/bbdb/utils -s -m 0644 $$i; \
+		done ; \
+	      fi ; \
 	   else \
 	      if [ -z "$(LINKPATH)" ] ; then \
 		 ln -s `pwd`/lisp $(PACKAGEROOT)/lisp/bbdb ; \
-		 ln -s `pwd`/info $(PACKAGEROOT)/info/bbdb ; \
+		 ln -s `pwd`/texinfo $(PACKAGEROOT)/info/bbdb ; \
 	      else \
 		 ln -s $(LINKPATH)/lisp $(PACKAGEROOT)/lisp/bbdb ; \
-		 ln -s $(LINKPATH)/info $(PACKAGEROOT)/info/bbdb ; \
+		 ln -s $(LINKPATH)/texinfo $(PACKAGEROOT)/info/bbdb ; \
 	      fi ; \
 	   fi ; \
 	fi
