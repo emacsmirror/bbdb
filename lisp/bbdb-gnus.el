@@ -89,8 +89,7 @@ replace the existing notes entry (if any)."
 of the BBDB record corresponding to the sender of this message."
   (interactive "P")
   (gnus-summary-select-article)
-  (let ((record (or (bbdb/gnus-update-record t) (error ""))))
-    (bbdb-display-records (list record))
+  (let ((record (or (bbdb/gnus-pop-up-bbdb-buffer t) (error "unperson"))))
     (if arg
     (bbdb-record-edit-property record nil t)
       (bbdb-record-edit-notes record t))))
@@ -98,13 +97,11 @@ of the BBDB record corresponding to the sender of this message."
 ;;;###autoload
 (defun bbdb/gnus-show-sender ()
   "Display the contents of the BBDB for the sender of this message.
-This buffer will be in bbdb-mode, with associated keybindings."
+This buffer will be in `bbdb-mode', with associated keybindings."
   (interactive)
   (gnus-summary-select-article)
-  (let ((record (bbdb/gnus-update-record t)))
-    (if record
-    (bbdb-display-records (list record))
-    (error "unperson"))))
+  (or (bbdb/gnus-pop-up-bbdb-buffer t)
+      (error "unperson")))
 
 
 (defun bbdb/gnus-pop-up-bbdb-buffer (&optional offer-to-create)
@@ -114,32 +111,30 @@ displaying the record corresponding to the sender of the current message."
     (record (bbdb/gnus-update-record offer-to-create))
     (bbdb-electric-p nil))
 
-    (if bbdb-use-pop-up
+    (when bbdb-use-pop-up
     (let ((bbdb-elided-display (bbdb-pop-up-elided-display))
           (b (current-buffer)))
       ;; display the bbdb buffer iff there is a record for this article.
-      (cond (record
+        (if record
          (bbdb-pop-up-bbdb-buffer
-          (function (lambda (w)
+             (lambda (w)
                   (let ((b (current-buffer)))
                 (set-buffer (window-buffer w))
                 (prog1 (or (eq major-mode 'gnus-Article-mode)
                        (eq major-mode 'gnus-article-mode))
-                  (set-buffer b)))))))
-        (t
+                   (set-buffer b)))))
          (or bbdb-inside-electric-display
              (not (get-buffer-window bbdb-buffer-name))
              (let (w)
                (delete-other-windows)
-               (if (assq 'article gnus-window-configuration) ; 3.15+
+                  (if (assq 'article gnus-buffer-configuration)
                (gnus-configure-windows 'article)
              (gnus-configure-windows 'SelectArticle))
                (if (setq w (get-buffer-window
                     (if (boundp 'gnus-summary-buffer)
                     gnus-summary-buffer
                       gnus-Subject-buffer)))
-               (select-window w))
-               ))))
+                      (select-window w)))))
       (set-buffer b)))
     (if record (bbdb-display-records (list record)))
     record))
