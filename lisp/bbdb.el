@@ -37,6 +37,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.53  1997/10/06 01:12:49  simmonmt
+;; Version number format changes
+;;
 ;; Revision 1.52  1997/09/28 05:54:24  simmonmt
 ;; Began to fix some obsolete functions to shut up the compiler,
 ;; integrated some patches (see ChangeLog) to allow use of message-mail
@@ -44,7 +47,8 @@
 ;;
 ;;
 
-(defconst bbdb-version "1.52unoff; 27-Sep-1997.")
+(defconst bbdb-version "1.53unoff")
+(defconst bbdb-version-date "$Date$")
 (defconst bbdb-file-format 2)
 
 ;; This nonsense is to get the definition of defsubst loaded in when this file
@@ -765,7 +769,8 @@ bbdb-elided-display will be consulted instead by mail and news.")
 		  (list 10
 		    (format "%d/%d" n (length (bbdb-records))))
 		  '(bbdb-showing-changed-ones " !!" "   "))
-	  '("- Insidious Big Brother Database " mode-line-modified "-"))
+	  '("- Insidious Big Brother Database v" bbdb-version " "
+	    mode-line-modified "-"))
 	mode-line-modified
 	'(bbdb-readonly-p "--%%%%-" (bbdb-modified-p "--**-" "-----"))))
 
@@ -2117,7 +2122,8 @@ the window will be split vertically rather than horizontally."
 	  (set-buffer b)
 	  t)))))
 
-(defun bbdb-version () (interactive) (message "BBDB version %s" bbdb-version))
+(defun bbdb-version () (interactive) (message "BBDB version %s (%s)"
+					      bbdb-version bbdb-version-date))
 
 ;;; resorting, which really shouldn't be necesary...
 
