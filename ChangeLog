@@ -1,3 +1,10 @@
+2003-08-01  Robert Widhopf  <bbdb@robf.de>
+
+	* lisp/bbdb-com.el (bbdb-dwim-net-address-allow-redundancy): 
+	(bbdb-dwim-net-address): *shurg* added 'netonly thus allowing to
+	have no real-names being shown for expanded aliases and completed
+	names.
+
 2003-08-05  Waider  <waider@waider.ie>
 
 	* lisp/bbdb.el:
@@ -24,7 +31,7 @@
 	(bbdb/pgp-quiet): Added.
 	(bbdb/pgp-hook-fun): Be quite if bbdb/pgp-quiet is set.
 
-2003-07-24  Robert Fenk  <Robert Fenk>
+2003-07-24  Robert Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb-com.el (bbdb-send-mail-internal): 
 	* lisp/bbdb.el (bbdb-send-mail-style): Patch to support sending
@@ -34,7 +41,7 @@
 	addresses, e.g. extraction on "foo@bar.baz<>" results in (nil nil)
 	which should be ignored.  (reported by "Neil W. Van Dyke)
 
-2003-07-23  Robert Fenk  <Robert Fenk>
+2003-07-23  Robert Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb.el (bbdb-annotate-message-sender): Invoke the
 	prompt-to-create hook just if it has a value.  (fixes MH not
@@ -43,7 +50,7 @@
 	* lisp/bbdb-hooks.el (bbdb-force-record-create): A fix for the
 	mhe-mode case (from Vladimir G. Ivanovic) 
 
-2003-06-25  Robert Fenk  <Robert Fenk>
+2003-06-25  Robert Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb.el (bbdb-pop-up-bbdb-buffer): Some fixes for special
 	cases of the multiple *BBDB* buffers hack.
