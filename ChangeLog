@@ -1,10 +1,41 @@
+2000-10-27  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-mhe.el (bbdb/mh-update-record): 
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-record): 
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-record):
+	* lisp/bbdb-vm.el (bbdb/vm-update-records): 
+	* lisp/bbdb.el (bbdb/prompt-for-create-p):
+	The new variable `bbdb/prompt-for-create-p' can be set to `t' in
+	order to force VM, Gnus, MHE, RMAIL to ask the user before adding a
+	new BBBD record, caused by the automatic update of the popup buffer.
+	(bbdb-pop-up-elided-display-name-end): A new variable which
+	controls for elided display where the "name - company" pair
+	usually ends and where we start to display phone numbers and the
+	like.  
+	(bbdb-pop-up-elided-display-fields): A new variable controlling
+	what fields are displayed in elided display.  Users may write
+	their own formating functions.
+
+	* lisp/bbdb-xemacs.el (bbdb-fontify-buffer): changed in order to
+	meet flexible `bbdb-pop-up-elided-display-name-end'.
+
+	* lisp/bbdb-vm.el (bbdb/vm-update-records): Searching for existing
+	records is limited to the net, as a search for a name may no
+	return the right record. 
+	Adding of new records can be controlled similar to query-replace,
+	with y,!,n,s,q 
+	(vm-summary-function-B): Added decoding of mime-encoded strings.
+	(bbdb/vm-auto-add-label): Moved the docu on how to hook this
+	function into the function docu.
+	(bbdb/vm-update-records): 
+
 2000-10-20  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-com.el (bbdb-complete-name): If there are multiple
 	nets and the address is already completed then cycle trough the
 	list of nets.
 
-	* lisp/bbdb-snarf.el (bbdb-extract-address-components): added an
+	* lisp/bbdb-snarf.el (bbdb-extract-address-components): Added an
 	optional argument `ignore-errors'.
 
 2000-10-15  Waider  <waider@waider.ie>
