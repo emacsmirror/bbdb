@@ -1,3 +1,11 @@
+2001-02-07  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el:
+	(ding) if there's nothing in mail-abbrevs either.
+
+	* lisp/bbdb-vm.el:
+	Only call the sit-for bugfix in fsfemacs.
+
 2001-02-07  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-com.el (bbdb-complete-name): Fxed bug which showed
