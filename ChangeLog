@@ -1,3 +1,37 @@
+2001-01-17  Robert.Fenk@gmx.de
+
+	* lisp/bbdb.el (bbdb-always-add-addresses): Docfix
+
+	* lisp/bbdb-vm.el (bbdb/vm-update-record):
+	Restored old behavior of returning one record 
+	(bbdb/vm-update-records-mode): 
+	(bbdb/vm-update-records):
+	Enhanced in order to allow annotating only new messages, which is
+	now the default.  This avoids the annoying questions repetition
+	weather to add records for unknown persons after restarting a
+	VM session.
+
+	* lisp/bbdb-w3.el (bbdb-www-grab-homepage):
+	Fix to read just one record not a list of records
+
+	* lisp/bbdb-xemacs.el (bbdb-sounds-directory): 
+	(bbdb-sound-volume): 
+	(bbdb-load-touchtones):
+	Added variables & functions for Xemacs native sound support
+	used by	bbdb-dialing stuff
+
+	* lisp/bbdb-com.el (bbdb-complete-name):
+	If the completion is done then cycle thru the nets or when called
+	with a prefix arg then display a list of all nets.
+	(bbdb-dial-local-prefix-alist):
+	Used to replace parts of the number depending on a regexp.
+	(bbdb-modem-dial): command used for dialing with the modem.
+	(bbdb-modem-device): the modem device
+	(bbdb-dial-number): new function which performs the dialing of a
+	number.  Depending on the settings it uses the play command,
+	native Xemacs sound support or the modem device.
+	(bbdb-dial): modified in order to use the new stuff
+
 2001-01-03  Didier Verna  <didier@xemacs.org>
 
 	* aclocal.m4: new file (Autoconf support).
@@ -67,7 +101,7 @@
 	bbdb-address-zip-string.
 	(bbdb-format-address-default): Ditto.
 
-2000-11-16  Robert Fenk  <fenk@forwiss.de>
+2000-11-16  Robert.Fenk@gmx.de
 
 	* lisp/bbdb-com.el (bbdb-show-all-recipients): simplified the
 	function and added missing headers
@@ -115,7 +149,7 @@
 	(bbdb-records): use `bbdb-hashtable-size' when initializing
 	`bbdb-hashtable'
 
-2000-10-27  Robert Fenk  <fenk@forwiss.de>
+2000-10-27  Robert.Fenk@gmx.de
 
 	* lisp/bbdb-mhe.el (bbdb/mh-update-record):
 	* lisp/bbdb-rmail.el (bbdb/rmail-update-record):
@@ -146,7 +180,7 @@
 	function into the function docu.
 	(bbdb/vm-update-records):
 
-2000-10-20  Robert Fenk  <fenk@forwiss.de>
+2000-10-20  Robert.Fenk@gmx.de
 
 	* lisp/bbdb-com.el (bbdb-complete-name): If there are multiple
 	nets and the address is already completed then cycle trough the
@@ -192,7 +226,7 @@
 	Fix primary-or-name search to pay attention to bbdb-case-fold-search
 	when checking names. (bug report: Eli Tziperman)
 
-2000-09-12  Robert Fenk  <fenk@forwiss.de>
+2000-09-12  Robert.Fenk@gmx.de
 
 	* lisp/bbdb-vm.el (bbdb/vm-snarf-all):
 	fixed wrong documentation
@@ -271,7 +305,7 @@
 	particular message, so you don't get asked every time.
 	Removed Log entry at top of file.
 
-2000-08-18  Robert Fenk  <fenk@forwiss.de>
+2000-08-18  Robert.Fenk@gmx.de
 
 	* texinfo/bbdb.texinfo (VM Features): Documentation of new VM
 	features.
@@ -322,7 +356,7 @@
 	`bbdb-file' when it is newer
 	(bbdb-write-file-hook-fn): maybe write `bbdb-file-remote'
 
-2000-08-10  Robert Fenk  <fenk@forwiss.de>
+2000-08-10  Robert.Fenk@gmx.de
 
 	* lisp/bbdb.el (bbdb-quiet-about-name-mismatches): if a number it
 	will be the number of seconds to sit-for when displaying the
@@ -385,7 +419,7 @@
 	* lisp/bbdb-hooks.el (bbdb-auto-notes-hook): search the whole
 	notes string for the new note before adding
 
-2000-08-01  Robert Fenk  <fenk@forwiss.de>
+2000-08-01  Robert.Fenk@gmx.de
 
 	* lisp/Makefile (bbdb-autoloads.el): Added setting of variable
 	autoload-package-name and deletion of bbdb-autoloads.el file before
