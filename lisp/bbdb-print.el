@@ -56,6 +56,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.55  1998/02/23 07:12:40  simmonmt
+;; Moved key binding to bbdb.el, changed default of bbdb-print-elide,
+;; fixed problem with nil bbdb-default-area-code
+;;
 ;; Revision 1.54  1998/01/06 06:08:38  simmonmt
 ;; Customized variables and removed autoloads
 ;;
@@ -87,8 +91,6 @@
 (require 'bbdb)
 (require 'bbdb-com)
 
-(define-key bbdb-mode-map "P" 'bbdb-print)
-
 ;;; Variables:
 
 (defcustom bbdb-print-file-name "~/bbdb.tex"
@@ -96,7 +98,7 @@
   :group 'bbdb-utilities-print
   :type 'file)
 
-(defcustom bbdb-print-elide '(tex-name aka mail-alias nic nic-updated)
+(defcustom bbdb-print-elide '(tex-name aka mail-alias)
   "*List of fields NOT to print in address list.
 See also bbdb-print-require."
   :group 'bbdb-utilities-print
@@ -147,7 +149,10 @@ in the following simple examples:
 				      (const :tag "Letters with suits" 6)
 				      (const :tag "Boxed letters with suits" 7)))
 	   (cons :tag "Omit certain area codes"
-		 :value (omit-area-code . ,(concat "^(" (int-to-string bbdb-default-area-code) ") "))
+		 :value (omit-area-code . ,(concat "^("
+						   (if bbdb-default-area-code
+						       (int-to-string bbdb-default-area-code)
+						     "000") ") "))
 		 (const :tag "Omit certain area codes" omit-area-code)
 		 (regexp :tag "Pattern to omit"))
 	   (cons :tag "Phone number location" :value (phone-on-first-line . t)
@@ -195,7 +200,9 @@ in the following simple examples:
 		 (string :tag "Width (must be valid TeX dimension)")))))
 
 (defcustom bbdb-print-alist
-  `((omit-area-code . ,(concat "^(" (int-to-string bbdb-default-area-code) ") "))
+  `((omit-area-code . ,(concat "^(" (if bbdb-default-area-code
+					(int-to-string bbdb-default-area-code)
+				      "000") ") "))
     (phone-on-first-line . "^[ \t]*$")
     (ps-fonts . nil)
     (font-size . 6)
