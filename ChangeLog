@@ -1,3 +1,10 @@
+2001-05-21  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-complete-name): 
+	(bbdb-complete-name-hooks): Instead of dinging when completing a
+	complete address (and with cycling disabled) call theses hook
+	functions.  
+
 2001-05-18  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb.el (bbdb-invoke-hook-for-value): Fix: Return symbols
