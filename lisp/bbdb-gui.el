@@ -39,7 +39,7 @@
                                         (mouse-set-point e)
                                         (bbdb-elide-record nil))))
 
-(eval-when-compile
+(eval-and-compile
   (if (fboundp 'find-face)
       (fset 'bbdb-find-face 'find-face)
     (if (fboundp 'internal-find-face) ;; GRR.
@@ -66,7 +66,7 @@
 ;;; Extents vs. Overlays unhappiness
 ;;; FIXME: see if VM is around, and call its extents code instead;
 ;;; change bbdb-foo-extents below to vm-foo-extents, etc.
-(eval-when-compile
+(eval-and-compile
   (if (fboundp 'make-extent)
       (fset 'bbdb-make-extent 'make-extent)
     (fset 'bbdb-make-extent 'make-overlay))
