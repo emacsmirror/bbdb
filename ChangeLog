@@ -1,3 +1,26 @@
+2002-06-30  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-ftp.el
+	(bbdb-read-new-ftp-site-record): Parse URL or ange-ftp style names
+	for username and directory.
+
+	* bits/bbdb-obsolete.el
+	Added. This is some code from Colin Rafferty which allows you to
+	keep track of obsolete network addresses while preventing you from
+	completing on them.
+
+	* lisp/bbdb-snarf.el 
+	(bbdb-snarf-phone-regexp): Don't escape '.' in [] (Howard Melman)
+
+	* lisp/bbdb-com.el
+	(bbdb-phone-main-regexp): Allow '.' as a separator (Howard Melman)
+	(bbdb-finger): Don't try to finger if there are no addresses
+
+2002-06-29  Waider  <waider@waider.ie>
+
+	* configure.ac:
+	Don't configure the testing directory if it doesn't exist.
+
 2002-06-28  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-rebuilt-all-aliases): applied a fix from
@@ -43,8 +66,7 @@
 	* lisp/bbdb-srv.el (bbdb-srv): Defalias, not fset.
 	(bbdb-header-start): Autoload.
 
-	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
-	Match Outlook style.
+	* lisp/bbdb-snarf.el
 	(bbdb-extract-address-components): Avoid cadar, caddar.
 
 	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail): Use defalias, not
