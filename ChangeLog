@@ -1,3 +1,48 @@
+Mon Mar 09 23:25:00 1998  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 1.90unoff released
+	* lisp/bbdb.el (defface): Fixed defface standin
+	* lisp/bbdb.el (bbdb-alist-with-header): Created widget for
+	  bbdb-auto-notes-alist custom fix.
+	* lisp/bbdb.el (bbdb-create-hook): Default to bbdb-creation-date-hook
+	* lisp/bbdb.el (bbdb-change-hook): Default to bbdb-timestamp-hook
+	* lisp/bbdb.el (bbdb-initialize): Added autoload for bbdb-srv
+	* Makefile: Removed my paths
+	* Makefile: Added 19.34 comment about Custom
+	* Makefile: Started test harness for 19.34 and 20.2
+	* INSTALL: Added 19.34 comment about Custom
+	* lisp/Makefile: Fixed 19.34 problem with custom (:link bug)
+	* lisp/bbdb-hooks.el (bbdb-auto-notes-alist): Fixed customization
+	* lisp/bbdb-srv.el (bbdb/srv-handle-headers): buffer-disable-undo
+	  doesn't always return the argument
+	* texinfo/bbdb.texinfo: Finished revisions.
+	
+Mon Mar 09 03:03:21 1998  Carsten Leonhardt  <leo@arioch.oche.de>
+
+	* lisp/bbdb-xemacs.el (bbdb-fontify-buffer): don't access
+	  scrollbars on XEmacsen without scrollbars
+
+Mon Mar 02 00:00:00 1998  Colin Rafferty  <colin@xemacs.org>
+
+	* bbdb-com.el (bbdb-refile-notes-generate-alist): Created.
+	* bbdb-com.el (bbdb-refile-notes-default-merge-function): Created.
+	* bbdb-com.el (bbdb-refile-notes-remove-duplicates): Created.
+	* bbdb-com.el (bbdb-refile-notes-string-least): Create.
+	* bbdb-com.el (bbdb-refile-record): Use `bbdb-refile-notes-generate-alist'
+	  and `bbdb-refile-notes-default-merge-function' for merging notes.
+
+Wed Feb 25 23:35:00 1998  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb-print.el (bbdb-print-alist-widget): Protect bbdb-default-area-code
+	* lisp/bbdb-print.el (bbdb-print-alist): Protect bbdb-default-area-code
+	* lisp/bbdb-com.el (bbdb-read-new-record): Protect bbdb-default-area-code
+	* lisp/bbdb-com.el (bbdb-prompt-for-new-field-value): Protect bbdb-default-area-code
+	* lisp/bbdb-com.el (bbdb-dial): Protect bbdb-default-area-code
+	
+Sat Jan 16 00:00:00 1998  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/Makefile (extras): fixed typo in bbdb-migrate.elc
+
 Sun Feb 22 20:58:00 1998  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 1.59unoff released
@@ -100,7 +145,7 @@ Sun Nov 30 23:26:21 1997  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 1.57unoff released
 
-Sun Nov 30 22:47:04 1997  <sshteingold@cctrading.com>
+Sun Nov 30 22:47:04 1997  Sam Steingold  <sshteingold@cctrading.com>
 
 	* lisp/bbdb-hooks.el (bbdb-time-string): Uses format string now
 	* lisp/bbdb-com.el (bbdb-display-some): Added
