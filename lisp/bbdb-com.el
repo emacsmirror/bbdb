@@ -22,6 +22,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.54  1997/10/11 23:53:42  simmonmt
+;; Message-mode fixes from Kees de Bruin <kees_de_bruin@tasking.nl>
+;;
 ;; Revision 1.53  1997/10/06 01:03:34  simmonmt
 ;; Jamie Zawinski <jwz@netscape.com>'s comment change about the new area
 ;; codes that aren't restricted to [012] in the second digit.
@@ -1379,6 +1382,7 @@ address is used as-is."
   (let ((type (or bbdb-send-mail-style
 		  (cond ((featurep 'mh-e) 'mh)
 			((featurep 'vm) 'vm)
+			((featurep 'message) 'message)
 			(t 'mail)))))
     (cond
      ((eq type 'mh)
@@ -1393,10 +1397,11 @@ address is used as-is."
         (and records (format "mail to %s%s" (bbdb-record-name (car records))
 			     (if (cdr records) ", ..." "")))
 	to subj))
+     ((eq type 'message)
+      (or (fboundp 'message-mail) (autoload 'message-mail "message"))
+      (message-mail to subj))
      ((or (eq type 'mail) (eq type 'rmail))
       (mail nil to subj))
-     ((or (eq type 'message))
-      (message-mail to subj))
      (t
       (error "bbdb-send-mail-style must be vm, mh, message, or rmail")))))
 		   
