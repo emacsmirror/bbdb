@@ -25,6 +25,9 @@
 ;; $Revision$
 ;;
 ;; $Log$
+;; Revision 1.54  1998/02/23 07:00:18  simmonmt
+;; Intro rewrite to say that EFS is also OK as a prereq
+;;
 ;; Revision 1.53  1998/01/06 04:52:15  simmonmt
 ;; Customized variables (into utilities-ftp group).  Added provide.
 ;;
@@ -33,13 +36,12 @@
 ;; really don't want to be reduced to checking version strings.
 ;;
 
-;;; This file adds the ability to define ftp-sites in a BBDB, much the
-;;; same way one adds a regular person's name to the BBDB.  It also
-;;; defines the bbdb-ftp command which allows you to ftp a site that
-;;; is in a bbdb-record.  This code relies on ange-ftp and will not
-;;; work without it.  Ange-ftp is available at
-;;; archive.cis.ohio-state.edu in the
-;;; /pub/gnu/emacs/elisp-archive/packages directory.
+;;; This file adds the ability to define ftp-sites in a BBDB, much the same
+;;; way one adds a regular person's name to the BBDB.  It also defines the
+;;; bbdb-ftp command which allows you to ftp a site that is in a bbdb-record.
+;;; You must have either EFS or ange-ftp in order to use this code.  Ange-ftp
+;;; is available at archive.cis.ohio-state.edu in the
+;;; /pub/gnu/emacs/elisp-archive/packages directory.  EFS ships with XEmacs.
 
 ;;; Note that Ftp Site BBDB entries differ from regular entries by the
 ;;; fact that the Name Field must have the ftp site preceeded by the
