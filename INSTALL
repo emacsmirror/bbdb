@@ -49,7 +49,7 @@ To compile and install the BBDB:
                   add the new directory to the Info search path)
         c) XEmacs Package
              NOTE: This installation option is only available to users 
-                   running XEmacs 20.4 or higher.  At the time of this 
+                   running XEmacs 20.3 or higher.  At the time of this 
                    writing, this includes only XEmacs beta testers.
              i)    Follow steps 1 and 2, making sure to set the
                    appropriate variables in the XEmacs package
