@@ -1,3 +1,9 @@
+2001-03-29  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): Fixed a bug in
+	gettiung the header content.  mail-fetch-field requires a final
+	newline! 
+
 2001-03-26  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb.el (bbdb-message-cache-lookup): 
