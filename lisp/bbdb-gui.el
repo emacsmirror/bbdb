@@ -190,7 +190,12 @@
         ;; notice that you're on a more specific overlay. This is
         ;; bogus, like most GNU Emacs GUI stuff.
         (bbdb-set-extent-property e 'priority 3)
-        (setq p (+ start (length (bbdb-record-name record))))
+        ;; Temp workaround to make company highlighting work properly [Bon
+        ;; records that have no name field.  Need to account for the
+        ;; "???" string that is dumped in the name field at display time.
+        (setq p (+ start (if (bbdb-record-name record)
+                             (length (bbdb-record-name record))
+                           3)))
         (if (bbdb-record-company record)
           (setq p (next-single-property-change (+ p 3) 'bbdb-field)))
         (goto-char start)
