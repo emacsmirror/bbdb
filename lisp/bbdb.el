@@ -1712,42 +1712,41 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 			(read (point-marker)))))))
   ;; look backwards for file version, and convert if necessary.
   ;; (at least, I'll write this code if I ever change the file format again...)
-  (let (v)
-    (save-excursion
-       (if (re-search-backward
-	    "^;+[ \t]*file-version:[ \t]*\\([0-9]+\\)[ \t]*$" nil t)
-	   (setq v (car (read-from-string
-			 (buffer-substring
-			  (match-beginning 1) (match-end 1)))))))
-     (if (null v) ; current version, but no file-version: line. Bootstrap it.
-	 (let ((modp (buffer-modified-p)))
-	   ;; This should never happen (not any more, anyway...)
-	   (bbdb-debug (error "bbdb corrupted: no file-version line"))
-	   (setq v 2)
-	   (save-excursion
-	     (if (re-search-backward "^;" nil t)
-		 (forward-line 1)
-	       (goto-char 1))
-	     ;; remember, this goes before the begin-marker of the first
-	     ;; record in the database!
-	     (insert-before-markers (format ";;; file-version: %d\n"
-					    bbdb-file-format)))
-	   (set-buffer-modified-p modp)))
-     (cond ((< v bbdb-file-format)
-	    (if bbdb-file-format-migration
-		;; Sanity checking.
-		(if (/= (car bbdb-file-format-migration) v)
-		  (error
-		   (format "BBDB file format has changed on disk from %d to %d!"
-			   (car bbdb-file-format-migration) v)))
-	      (setq bbdb-file-format-migration
-		    (cons v (bbdb-migration-query v)))))
-	   ((> v bbdb-file-format)
-	    (error "BBDB version %s doesn't understand file format version %s."
-		   bbdb-version v))
-	   (t
-	    (setq bbdb-file-format-migration (cons bbdb-file-format
-						   bbdb-file-format)))))
+  (let ((v (save-excursion
+             (if (re-search-backward
+                  "^;+[ \t]*file-version:[ \t]*\\([0-9]+\\)[ \t]*$" nil t)
+                 (car (read-from-string
+                       (buffer-substring
+                        (match-beginning 1) (match-end 1))))))))
+    (if (null v) ; current version, but no file-version: line. Bootstrap it.
+        (let ((modp (buffer-modified-p)))
+          ;; This should never happen (not any more, anyway...)
+          (bbdb-debug (error "bbdb corrupted: no file-version line"))
+          (setq v 2)
+          (save-excursion
+            (if (re-search-backward "^;" nil t)
+                (forward-line 1)
+                (goto-char 1))
+            ;; remember, this goes before the begin-marker of the first
+            ;; record in the database!
+            (insert-before-markers (format ";;; file-version: %d\n"
+                                           bbdb-file-format)))
+          (set-buffer-modified-p modp)))
+    (cond ((< v bbdb-file-format)
+           (if bbdb-file-format-migration
+               ;; Sanity checking.
+               (if (/= (car bbdb-file-format-migration) v)
+                   (error
+                    (format
+                     "BBDB file format has changed on disk from %d to %d!"
+                     (car bbdb-file-format-migration) v)))
+               (setq bbdb-file-format-migration
+                     (cons v (bbdb-migration-query v)))))
+          ((> v bbdb-file-format)
+           (error "BBDB version %s doesn't understand file format version %s."
+                  bbdb-version v))
+          (t (setq bbdb-file-format-migration (cons bbdb-file-format
+                                                    bbdb-file-format)))))
   ;; A trap to catch a bug
   ;;(assert (not (null (car bbdb-file-format-migration))))
 

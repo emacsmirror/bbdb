@@ -1,9 +1,19 @@
+2000-07-05  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb.el (parse-bbdb-internal): bind, not setq the version.
+
 2000-07-03  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
 
 	* texinfo/bbdb.texinfo: Various little changes, including ml info,
  	TeX output changes, thanks.
 	Added info-directory information.
 	Added detailed node list.
+
+2000-06-30  Sam Steingold  <sds@gnu.org>
+
+	* bbdb-migrate.el (bbdb-migrate):
+	re-wrote using `mapcar' instead of `append'
+	this is linear instead of quadratic and avoids much consing
 
 2000-06-30  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
 
@@ -83,7 +93,7 @@
 
 	* lisp/bbdb-merge.el:
 	Refined so it works a little better, particularly with merging
-	timestamps 
+	timestamps
 	Added bbdb-merge-file, so you can now import another bbdb and
 	merge it.
 
