@@ -2,14 +2,26 @@
 (if (not (featurep 'bbdb-autoloads))
     (progn
 
-;;;### (autoloads (bbdb/gnus-score) "bbdb-gnus" "lisp/bbdb-gnus.el")
+;;;### (autoloads (bbdb-creation-no-change bbdb-creation-newer bbdb-creation-older bbdb-timestamp-newer bbdb-timestamp-older) "bbdb-com" "lisp/bbdb-com.el")
 
-(autoload 'bbdb/gnus-score "bbdb-gnus" "\
-This returns a score alist for GNUS.  A score pair will be made for
-every member of the net field in records which also have a gnus-score
-field.  This allows the BBDB to serve as a supplemental global score
-file, with the advantage that it can keep up with multiple and changing
-addresses better than the traditionally static global scorefile." nil nil)
+(autoload 'bbdb-timestamp-older "bbdb-com" "\
+*Display records with timestamp older than DATE.  DATE must be in
+yyyy-mm-dd format." t nil)
+
+(autoload 'bbdb-timestamp-newer "bbdb-com" "\
+*Display records with timestamp newer than DATE.  DATE must be in
+yyyy-mm-dd format." t nil)
+
+(autoload 'bbdb-creation-older "bbdb-com" "\
+*Display records with creation-date older than DATE.  DATE must be
+in yyyy-mm-dd format." t nil)
+
+(autoload 'bbdb-creation-newer "bbdb-com" "\
+*Display records with creation-date newer than DATE.  DATE must be
+in yyyy-mm-dd format." t nil)
+
+(autoload 'bbdb-creation-no-change "bbdb-com" "\
+*Display records that have the same timestamp and creation-date." t nil)
 
 ;;;***
 
