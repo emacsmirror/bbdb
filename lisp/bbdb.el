@@ -542,6 +542,7 @@ Should be 'vm, 'mh, 'mail, or 'message (or nil, meaning guess.)"
                  (const :tag "Use MH-E to send mail" mh)
                  (const :tag "Use send-mail mode to send mail" mail)
                  (const :tag "Use Message to send mail" message)
+                 (const :tag "Use Mew to send mail" mew)
                  (const :tag "Use compose-mail to send mail" compose-mail)
                  (const :tag "Guess which package to use" nil)))
 
