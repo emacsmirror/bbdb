@@ -2252,7 +2252,7 @@ Currently only used by XEmacs."
   :group 'bbdb-mua-specific
   :type 'boolean)
 
-(defcustom bbdb-complete-name-hooks '(ding)
+(defcustom bbdb-complete-name-hooks nil
   "List of functions called after a sucessful completion."
   :group 'bbdb-mua-specific
   :type 'boolean)
@@ -2366,6 +2366,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                     ;; replace with new mail address
                     (delete-region beg end)
                     (insert (bbdb-dwim-net-address rec this-addr))
+                    (run-hooks 'bbdb-complete-name-hooks)
                     (throw 'bbdb-cycling-exit t))))))
 
           ;; FALL THROUGH
@@ -2458,7 +2459,10 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
             (let ((bbdb-gag-messages t))
               (bbdb-pop-up-bbdb-buffer)
               (bbdb-display-records-1 match-recs t)))
-        (bbdb-complete-name-cleanup)))
+        (bbdb-complete-name-cleanup)
+
+        ;; call the exact-completion hook
+        (run-hooks 'bbdb-complete-name-hooks)))
 
      ;; Partial match
      ;; note, we can't use the trimmed version of the pattern here or
