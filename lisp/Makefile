@@ -2,52 +2,6 @@
 # Original Author: Jamie Zawinski (jwz@netscape.com)
 #
 # $Id$
-#
-# $Log$
-# Revision 1.10  2000/08/01 14:09:38  fenk
-# Added setting of variable autoload-package-name and deletion of
-# bbdb-autoloads.el file before creation in order to create it with the right
-# featurep and contents.
-# Otherwise it was not working correctly with my Xemacs.
-#
-# Revision 1.9  2000/07/25 17:47:19  sds
-# use auto-generated autoloads consistently
-#
-# Revision 1.8  2000/06/30 21:58:11  kuepper
-# Build bbdb-merge.elc
-#
-# Revision 1.7  1998/03/10 07:33:12  simmonmt
-# Finally fixed that damn 19.34 :link problem - needed to put OTHERDIR
-# stuff first in the load-path before loading bbdb.el.
-#
-# Revision 1.6  1998/02/23 07:23:23  simmonmt
-# Support for OTHERDIR, rearranged flags to Emacs so we can use
-# bbdb-split-string (19.34 doesn't have split-string)
-#
-# Revision 1.5  1998/01/06 06:48:50  simmonmt
-# Fixed bug
-#
-# Revision 1.4  1998/01/06 06:45:39  simmonmt
-# Added deploy target.  Added migrate.el
-#
-# Revision 1.3  1997/11/02 06:32:38  simmonmt
-# Support for bbdb-sc.el
-#
-# Revision 1.2  1997/10/12 00:24:41  simmonmt
-# Changed VM, GNUS, and MHE definitions.  If the corresponding DIR
-# variables are set, the (the DIR vars) are added to load-path.  The
-# relevant el files are then loaded using the load-path.  This allows
-# VMDIR, et al to be unset if the packages live in load-path by
-# default.  Added bbdb-snarf and bbdb-w3.  Made the bbdb-srv and
-# bbdb-reportmail skip messages more informative for the poor souls (FSF
-# Emacs users) who can't use them.  Added a check for itimer, since
-# apparently some FSF Emacs users have installed gnuserv - without
-# itimer, bbdb-srv still won't compile.
-#
-# Revision 1.1  1997/10/06 01:16:00  simmonmt
-# Initial revision
-#
-#
 
 # this is lovely, isn't it?  Surprisingly enough, it seems to work...
 VM	= -eval '(progn (if (not (string-match "$(VMDIR)" ""))            \
@@ -116,7 +70,6 @@ bbdb-autoloads.el: $(DEPSRCS)
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
 		--eval '(setq make-backup-files nil)' \
 		--eval '(setq autoload-package-name "bbdb")' \
-		--eval '(delete-file generated-autoload-file)' \
 		-f batch-update-autoloads `pwd`
 
 bbdb-autoloads.elc: bbdb-autoloads.el
