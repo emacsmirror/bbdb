@@ -1,3 +1,94 @@
+2000-04-02  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el (bbdb-dwim-net-address): 
+	updated docstring to mention bbdb-dwim-net-address-allow-redundancy
+	(it's been asked about!)
+	
+	* texinfo/bbdb.texinfo: 
+	started updating to account for changes since 2.00.03
+
+2000-04-01  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-hooks.el: 
+	autoload cookie for bbdb-header-start (Yair Friedman)
+
+	* Alex Schroeder's country patch. I've taken all his ChangeLog
+	entries and added them in here; everything from here down to the
+	next datestamp is his. PLEASE NOTE this changes the bbdb file
+	format and will most likely break all your tools that depend on
+	the old format.
+	
+	* lisp/bbdb-com.el (bbdb-address-editing-function): New variable.
+	(bbdb-record-edit-address): Use bbdb-address-editing-function.
+	(bbdb-address-edit-default): New function.
+
+	* lisp/bbdb.el (bbdb-version): Version updated.
+	(bbdb-version-date): Version updated.
+	(bbdb-format-address-continental): Bugfix, removed binding for f.
+	(bbdb-format-address-default): dito.
+
+	* lisp/bbdb-print.el (bbdb-print-format-address-continental): dito.
+	(bbdb-print-format-address-default): dito.
+
+	* lisp/bbdb.el (bbdb-address-formatting-alist): New variable.
+	(bbdb-address-is-continental): New function.
+	(bbdb-format-streets): New function.
+	(bbdb-format-address-continental): New function.
+	(bbdb-format-address-default): New formatting function.
+	(bbdb-format-address): New function.
+	(bbdb-format-record): Uses bbdb-format-address.
+
+	* lisp/bbdb-print.el (bbdb-address-print-formatting-alist): New
+	variable.
+	(bbdb-print-format-address-continental): New function.
+	(bbdb-print-format-address-default): New function.
+	(bbdb-print-format-record): Uses bbdb-format-address.
+
+	* lisp/bbdb.el (bbdb-address-format): Match zip codes from Sweden.
+	* lisp/bbdb-com.el (bbdb-parse-zip-string): Match zip codes from Sweden
+	where the five digits are grouped 3+2 at the request from Mats
+	Lofdahl <MLofdahl@solar.stanford.edu>.
+
+	* lisp/bbdb.el (bbdb-version): Changed version strings.
+	(bbdb-version-date): Changed date.
+
+	* lisp/bbdb-migrate.el (bbdb-unmigrate-record): Added migration from
+	version 4 back to version 3 by removing the country field.  Some
+	version 4 zip codes will be illegal version 3 (as used in 2.00.06)
+	zip codes.  This problem has not been solved!
+	(bbdb-migrate): Fixed migration from version 3 forward to version
+	4.  The bug affected all records with more than one address.
+
+	* lisp/bbdb-com.el (bbdb-parse-zip-string): Support russian zip codes
+	which have 6 digits.  Removed some existing checks.
+	
+	* lisp/bbdb-snarf.el (bbdb-snarf-region): Added country field.
+
+	* lisp/bbdb.el (bbdb-address-format): New, required for continental zip
+	codes.
+	(bbdb-file-format): New file format with country field.
+	(bbdb-address-): Added country field.
+	(bbdb-address-zip-string): Added continental zip codes.
+	(bbdb-address-format): New, indicates wether an address is
+	continental or not, based on the zip code.
+	(bbdb-format-record): Added continental zip codes and country
+	field.
+
+	* lisp/bbdb-print.el (bbdb-print): Fixed a bug (?) when reading the
+	file name.
+	(bbdb-print-format-record): Added country field.
+
+	* lisp/bbdb-migrate.el (bbdb-migration-features): New file format with
+	country field.
+	(bbdb-migrate): Added country field.
+	(bbdb-migrate-record): Fixed typo in doc string.
+
+	* lisp/bbdb-com.el (bbdb-parse-zip-string): Added continental zip
+	codes.
+	(bbdb-create-internal): Added country field.
+	(bbdb-current-field): Added country field.
+	(bbdb-record-edit-address): Added country field.
+
 2000-03-30  Waider  <waider@waider.ie>
 
 	* lisp/bbdb.el (bbdb-annotate-notes): do not add a repeated
