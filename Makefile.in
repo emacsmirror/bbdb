@@ -1,0 +1,237 @@
+@SET_MAKE@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_DATA = @INSTALL_DATA@
+
+LN_S = @LN_S@
+TAR = @TAR@
+COMPRESS = @COMPRESS@
+COMPEXT = @COMPEXT@
+
+ETAGS = @ETAGS@
+EMACS = @EMACS@ -no-site-file -no-init-file
+
+PACKAGEDIR = @PACKAGEDIR@
+SYMLINKS = @SYMLINKS@
+LINKPATH = @LINKPATH@
+
+# Deployment
+TARFILES = ChangeLog INSTALL Makefile README                        \
+           aclocal.m4 configure configure.in install-sh Makefile.in \
+           bits html lisp misc tex texinfo utils
+
+syntax:
+	@echo "" ;\
+	echo "*** make one or more of: rmail vm mhe gnus all bbdb" ;\
+	echo ""
+
+all: bbdb rmail vm mhe gnus info
+
+bbdb:
+	cd lisp; $(MAKE) bbdb
+
+rmail:
+	cd lisp; $(MAKE) rmail
+
+vm:
+	cd lisp; $(MAKE) vm
+
+mhe:
+	cd lisp; $(MAKE) mhe
+
+gnus:
+	cd lisp; $(MAKE) gnus
+
+autoloads:
+	cd lisp; $(MAKE) autoloads
+
+install-pkg: bbdb autoloads info
+	rm -fr $(PACKAGEDIR)/lisp/bbdb $(PACKAGEDIR)/info/bbdb \
+               $(PACKAGEDIR)/etc/bbdb; \
+        if test "x$(SYMLINKS)" = "xno" ; then \
+          mkdir -p -m 0755 $(PACKAGEDIR)/lisp/bbdb; \
+          for i in `ls lisp/*.elc` ; do \
+            $(INSTALL_DATA) `echo $$i | sed 's/c$$//g'` \
+                            $(PACKAGEDIR)/lisp/bbdb ; \
+            $(INSTALL_DATA) $$i $(PACKAGEDIR)/lisp/bbdb ; \
+          done ; \
+          mkdir -p -m 0755 $(PACKAGEDIR)/info/bbdb ; \
+          for i in `ls texinfo/*.info* ` ; do \
+            $(INSTALL_DATA) $$i $(PACKAGEDIR)/info/bbdb ; \
+          done ; \
+          mkdir -p -m 0755 $(PACKAGEDIR)/etc/bbdb/tex \
+                           $(PACKAGEDIR)/etc/bbdb/utils ; \
+          for i in `ls tex/*.tex` ; do \
+            $(INSTALL_DATA) $$i $(PACKAGEDIR)/etc/bbdb/tex ; \
+          done ; \
+          for i in `ls -d utils/* |egrep -v '(RCS|SCCS|CVS)'` ; do \
+            $(INSTALL_DATA) $$i $(PACKAGEDIR)/etc/bbdb/utils ; \
+          done ; \
+        else \
+          if test "x$(LINKPATH)" = "x" ; then \
+            ln -s `pwd`/lisp $(PACKAGEDIR)/lisp/bbdb ; \
+            ln -s `pwd`/texinfo $(PACKAGEDIR)/info/bbdb ; \
+          else \
+              ln -s $(LINKPATH)/lisp $(PACKAGEDIR)/lisp/bbdb ; \
+              ln -s $(LINKPATH)/texinfo $(PACKAGEDIR)/info/bbdb ; \
+          fi ; \
+        fi
+
+info:
+	cd texinfo; $(MAKE) info
+
+clean:
+	cd lisp; $(MAKE) clean
+	cd texinfo; $(MAKE) clean
+
+reallyclean: clean
+	cd texinfo; $(MAKE) reallyclean
+
+# Testing
+test: test-setup test-bbdb
+
+test-setup:
+	cp $${HOME}/.bbdb $${HOME}/.bbdb-test
+
+test-bbdb:
+	$(EMACS) -l $${HOME}/bbdb-test.el
+
+# FSF Emacs 19.34 (w32 emacs is actually 19.36)
+EMACS_19_34_DIR=/local/downloads/emacs-19.34
+
+emacs19.34-test: emacs19.34-test-setup emacs19.34-test-bbdb
+emacs19.34-test: emacs19.34-test-rmail emacs19.34-test-vm
+emacs19.34-test: emacs19.34-test-mhe   emacs19.34-test-gnus
+emacs19.34-test: emacs19.34-test-all
+
+emacs19.34-test-setup: clean
+	@echo '--- TESTING BBDB WITH FSF EMACS 19.34 ---'
+	@echo
+	@echo '** Setting up **'
+	@-rm -rf $(EMACS_19_34_DIR)/site-lisp
+	@mkdir $(EMACS_19_34_DIR)/site-lisp
+	@cp lisp/*.el $(EMACS_19_34_DIR)/site-lisp
+	@cp ../emacs-19.34/site-lisp $(EMACS_19_34_DIR)/site-lisp
+
+emacs19.34-test-bbdb:
+	@echo
+	@echo '** Testing build of "bbdb" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs bbdb
+
+emacs19.34-test-rmail:
+	@echo
+	@echo '** Testing build of "rmail" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs rmail
+
+emacs19.34-test-vm:
+	@echo
+	@echo '** Testing build of "vm" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs vm
+
+emacs19.34-test-mhe:
+	@echo
+	@echo '** Testing build of "mhe" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs mhe
+
+emacs19.34-test-gnus:
+	@echo
+	@echo '** Testing build of "gnus" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs gnus
+
+emacs19.34-test-all: clean
+	@echo
+	@echo '** Testing build of "all" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs all
+
+# FSF Emacs 20.6
+EMACS_19_34_DIR=/local/downloads/emacs-20.6
+
+emacs20.6-test: emacs20.6-test-setup emacs20.6-test-bbdb
+emacs20.6-test: emacs20.6-test-rmail emacs20.6-test-vm
+emacs20.6-test: emacs20.6-test-mhe   emacs20.6-test-gnus
+emacs20.6-test: emacs20.6-test-all
+
+emacs20.6-test-setup: clean
+	@echo '--- TESTING BBDB WITH FSF EMACS 20.6 ---'
+	@echo
+	@echo '** Setting up **'
+	@-rm -rf $(EMACS_19_34_DIR)/site-lisp
+	@mkdir $(EMACS_19_34_DIR)/site-lisp
+	@cp lisp/*.el $(EMACS_19_34_DIR)/site-lisp
+	@cp ../emacs-20.6/site-lisp $(EMACS_19_34_DIR)/site-lisp
+
+emacs20.6-test-bbdb:
+	@echo
+	@echo '** Testing build of "bbdb" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs bbdb
+
+emacs20.6-test-rmail:
+	@echo
+	@echo '** Testing build of "rmail" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs rmail
+
+emacs20.6-test-vm:
+	@echo
+	@echo '** Testing build of "vm" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs vm
+
+emacs20.6-test-mhe:
+	@echo
+	@echo '** Testing build of "mhe" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs mhe
+
+emacs20.6-test-gnus:
+	@echo
+	@echo '** Testing build of "gnus" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs gnus
+
+emacs20.6-test-all: clean
+	@echo
+	@echo '** Testing build of "all" **'
+	@echo
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs all
+
+tar: $(TARFILES)
+	@if test "x$(TAR)" = "x" ; then                                    \
+          echo "Sorry, no \`tar' program available." ;                     \
+        else                                                               \
+          name=`sed -n 's/^(defconst bbdb-version "\([0-9]\.[0-9][0-9]*\).*/bbdb-\1/p' lisp/bbdb.el` ;                                                    \
+          rm -f $${name} ; $(LN_S) . $${name} ;                            \
+          if test "x$(COMPRESS)" = "x" ; then                              \
+            echo "Sorry, no compression program available." ;              \
+            echo "The tarball will not be compressed." ;                   \
+            echo "creating tar file $${name}.tar..." ;                     \
+            $(TAR) --exclude=CVS  --exclude=".*" -vchf $${name}.tar        \
+            `echo $(TARFILES) | sed "s|^|$${name}/|g; s| | $${name}/|g"` ; \
+          else                                                             \
+            echo "creating tar file $${name}.tar.$(COMPEXT)..." ;          \
+            $(TAR) --exclude=CVS  --exclude=".*" -vchf - `echo $(TARFILES) \
+            | sed "s|^|$${name}/|g; s| | $${name}/|g"`                     \
+            | $(COMPRESS) > $${name}.tar.$(COMPEXT) ;                      \
+          fi ;                                                             \
+          rm $${name} ;                                                    \
+        fi
+
+dist: clean info tar
+
+TAGS: tags
+
+tags:
+	@if test "x$(ETAGS)" = "x" ; then                 \
+           echo "Sorry, no \`etags' program available." ; \
+         else                                             \
+           $(ETAGS) */*.el                              ; \
+         fi
