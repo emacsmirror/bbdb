@@ -43,7 +43,7 @@
 (defmacro bbdb-grovel-elide-arg (arg)
   (list 'if arg
         (list 'not (list 'eq arg 0))
-        'bbdb-elided-display))
+        'bbdb-display-layout))
 
 
 (defmacro bbdb-search (records &optional name company net notes phone)
@@ -153,7 +153,7 @@
   "Display all entries in the BBDB matching the regexp STRING
 in either the name(s), company, network address, or notes."
   (interactive "sRegular Expression for General Search: \nP")
-  (let ((bbdb-elided-display (or bbdb-elided-display (and elidep t)))
+  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
         (notes (cons '* string)))
     (bbdb-display-records
      (bbdb-search (bbdb-records) string string string notes nil))))
@@ -163,21 +163,21 @@ in either the name(s), company, network address, or notes."
   "Display all entries in the BBDB matching the regexp STRING in the name
 \(or ``alternate'' names\)."
   (interactive "sRegular Expression for Name Search: \nP")
-  (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
+  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) string))))
 
 ;;;###autoload
 (defun bbdb-company (string elidep)
   "Display all entries in BBDB matching STRING in the company field."
   (interactive "sRegular Expression for Company Search: \nP")
-  (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
+  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) nil string))))
 
 ;;;###autoload
 (defun bbdb-net (string elidep)
   "Display all entries in BBDB matching regexp STRING in the network address."
   (interactive "sRegular Expression for Net Address Search: \nP")
-  (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
+  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) nil nil string))))
 
 ;;;###autoload
@@ -191,7 +191,7 @@ in either the name(s), company, network address, or notes."
              (read-with-history-in 'bbdb-notes-field "Regular expression: ")
              (read-string "Regular Expression: "))
          current-prefix-arg))
-  (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep))
+  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
         (notes (if (string= which "")
                    (cons '* string)
                    (cons (intern which) string))))
@@ -200,7 +200,7 @@ in either the name(s), company, network address, or notes."
 (defun bbdb-phones (string elidep)
   "Display all entries in BBDB matching the regexp STRING in the phones field."
   (interactive "sRegular Expression for Phone Search: \nP")
-  (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
+  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records
      (bbdb-search (bbdb-records) nil nil nil nil string))))
 
@@ -209,7 +209,7 @@ in either the name(s), company, network address, or notes."
   "Display all entries in the bbdb database which have been changed since
 the database was last saved."
   (interactive "P")
-  (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
+  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records
      (bbdb-with-db-buffer
       bbdb-changed-records))))
@@ -256,8 +256,7 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
   (beginning-of-line)
   (let ((marker (nth 2 record-cons))
         (next-marker (nth 2 next-record-cons))
-        (buffer-read-only nil)
-        (p (point)))
+        (buffer-read-only nil))
     (bbdb-debug
      (if (null record-cons) (error "doubleplus ungood: record unexists!"))
      (if (null marker) (error "doubleplus ungood: marker unexists!")))
@@ -265,7 +264,7 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
     (if delete-p nil
         (bbdb-format-record (car record-cons) (car (cdr record-cons))))
     (delete-region (point) (or next-marker (point-max)))
-    (goto-char p)
+    (goto-char marker)
     (save-excursion
       (run-hooks 'bbdb-list-hook))))
 
@@ -731,7 +730,7 @@ value of \"\", the default) means do not alter the address."
           (t (error "doubleplus ungood: unknow how to set slot %s" name)))
     (bbdb-change-record record nil)
                                 ;    (bbdb-offer-save)
-    (let ((bbdb-elided-display nil))
+    (let ((bbdb-display-layout nil))
       (bbdb-redisplay-one-record record))))
 
 (defun bbdb-prompt-for-new-field-value (name)
@@ -1236,15 +1235,54 @@ deleted."
         ;; (bbdb-offer-save)
         )))
 
+
+(defun bbdb-change-records-state-and-redisplay (desired-state records)
+  (let (rec)
+    (while records
+      (setq rec (car records))
+      (unless (eq desired-state (nth 1 rec))
+        (setcar (cdr rec) desired-state)
+        (bbdb-redisplay-one-record (car rec) rec))
+      (setq records (cdr records)))))
+
 ;;;###autoload
-(defun bbdb-elide-record (arg)
+(defun bbdb-toggle-all-records-display-layout (arg &optional records)
+  "Show all the fields of all visible records.
+Like `bbdb-toggle-records-display-layout' but for all visible records."
+  (interactive "P")
+  (if (null records)
+      (setq records bbdb-records))
+  (let* ((record (bbdb-current-record))
+         (cons (assq record bbdb-records))
+         (current-state (nth 1 cons))
+         (layout-alist
+          (or (delete nil (mapcar (lambda (l)
+                                    (if (and (assoc 'toggle l)
+                                             (cdr (assoc 'toggle l)))
+                                        l))
+                                  bbdb-display-layout-alist))
+              bbdb-display-layout-alist))
+         (desired-state (assoc current-state layout-alist)))
+    (setq desired-state
+          (cond ((eq arg 0)
+                 'one-line)
+                ((null current-state)
+                 'multi-line)
+                ((null (cdr (memq desired-state layout-alist)))
+                 (caar layout-alist))
+                (t
+                 (caadr (memq desired-state layout-alist)))))
+    (bbdb-change-records-state-and-redisplay desired-state records)))
+
+;;;###autoload
+(defun bbdb-toggle-records-display-layout (arg)
   "Toggle whether the current record is displayed expanded or elided
 \(multi-line or one-line display.\)  With a numeric argument of 0, the
 current record will unconditionally be made elided; with any other argument,
 the current record will unconditionally be shown expanded.
 \\<bbdb-mode-map>
-If \"\\[bbdb-apply-next-command-to-all-records]\\[bbdb-elide-record]\" is \
-used instead of simply \"\\[bbdb-elide-record]\", then the state of all \
+If \"\\[bbdb-apply-next-command-to-all-records]\\[bbdb-toggle-records-display-layout]\" is \
+used instead of simply \"\\[bbdb-toggle-records-display-layout]\", then the state of all \
 records will
 be changed instead of just the one at point.  In this case, an argument
 of 0 means that all records will unconditionally be made elided; any other
@@ -1252,73 +1290,38 @@ numeric argument means that all of the records will unconditionally be shown
 expanded; and no numeric argument means that the records are made to be in
 the opposite state of the record under point."
   (interactive "P")
-  (if (bbdb-do-all-records-p)
-      (bbdb-elide-all-records-internal arg)
-    (bbdb-elide-record-internal arg)))
+  (bbdb-toggle-all-records-display-layout
+   arg
+   (if (not (bbdb-do-all-records-p))
+       (list (assq (bbdb-current-record) bbdb-records)))))
 
 ;;;###autoload
-(defun bbdb-unelide-record (arg)
-  "Show all the fields of a record.
-This is done by disabling the variables `bbdb-elided-display' and
-`bbdb-omit-display' and uneliding the record."
+(defun bbdb-display-all-records-completely
+  (arg &optional records)
+  "Show all the fields of all currently displayed records.
+The display layout `full-multi-line' is used for this."
   (interactive "P")
-  (let* ((record (bbdb-current-record))
-         (cons (assq record bbdb-records))
-         (current-state (nth 1 cons)))
-    (cond ((or (memq current-state '(nil t))
-               (eq current-state 'omitted-display))
-           (let ((bbdb-display-omit-fields nil)
-                 (bbdb-elided-display nil))
-             (setcar (cdr cons) nil)
-             (bbdb-redisplay-one-record record))
-           (setcar (cdr cons) 'full-display)
-           )
-          (t
-           (setcar (cdr cons) nil)
-           (bbdb-redisplay-one-record record)
-           (setcar (cdr cons) 'omitted-display)
-           ))))
-
-;;;###autoload
-(defun bbdb-elide-all-records (arg)
-  "Show all the fields of all visible records.
-Like `bbbd-elide-record' but for all visible records."
-  (interactive "P")
-  (bbdb-elide-all-records-internal arg))
-
-(defun bbdb-elide-record-internal (arg)
+  (if (null records)
+      (setq records bbdb-records))
   (let* ((record (bbdb-current-record))
          (cons (assq record bbdb-records))
          (current-state (nth 1 cons))
          (desired-state
-          (cond ((null arg)
-                 (or (not (eq current-state t)) (not current-state)))
-                ((eq arg 0) nil)
-                (t t))))
-    (unless (eq current-state desired-state)
-      (setcar (cdr cons) desired-state)
-      (bbdb-redisplay-one-record record))))
+          (cond ((not (eq current-state 'full-multi-line))
+                 'full-multi-line)
+                (t
+                 'multi-line))))
+    (bbdb-change-records-state-and-redisplay desired-state records)))
 
-(defun bbdb-elide-all-records-internal (arg)
-  (let* ((record (bbdb-current-record))
-         (cons (assq record bbdb-records))
-         (current-state (nth 1 cons))
-         (desired-state
-          (cond ((null arg) (not current-state))
-                ((eq arg 0) nil)
-                (t t)))
-         (records bbdb-records)
-         (any-change-p nil))
-    (while records
-      (unless (eq desired-state (nth 1 (car records)))
-        (setq any-change-p t)
-        (setcar (cdr (car records)) desired-state))
-      (setq records (cdr records)))
-    (unless (not any-change-p)
-      (bbdb-redisplay-records)
-      (set-buffer bbdb-buffer-name)
-      (goto-char (nth 2 (assq record bbdb-records)))
-      (recenter '(4)))))
+;;;###autoload
+(defun bbdb-display-record-completely (arg)
+  "Show all the fields of the current record.
+The display layout `full-multi-line' is used for this."
+  (interactive "P")
+  (bbdb-display-all-records-completely
+   arg
+   (if (not (bbdb-do-all-records-p))
+       (list (assq (bbdb-current-record) bbdb-records)))))
 
 ;;;###autoload
 (defun bbdb-omit-record (n)
@@ -1545,7 +1548,7 @@ Completion behaviour is as dictated by the variable `bbdb-completion-type'."
 
   (bbdb-delete-current-record old-record 'noprompt)
   (bbdb-change-record new-record t) ; don't always need-to-sort...
-  (let ((bbdb-elided-display nil))
+  (let ((bbdb-display-layout nil))
     (if (assq new-record bbdb-records)
         (bbdb-redisplay-one-record new-record))
     (bbdb-with-db-buffer
