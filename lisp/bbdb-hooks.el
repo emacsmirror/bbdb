@@ -698,8 +698,8 @@ get records added for those people you reply to."
              (bbdb/gnus-pop-up-bbdb-buffer))
             ((member major-mode '(rmail-mode rmail-summary-mode))
              (bbdb/rmail-pop-up-bbdb-buffer))
-            ((member major-mode '(mhe-mode mhe-summary-mode))
-             (bbdb/gnus-pop-up-bbdb-buffer))
+            ((member major-mode '(mhe-mode mhe-summary-mode mh-folder-mode))
+             (bbdb/mh-pop-up-bbdb-buffer))
             ))))
 
 (provide 'bbdb-hooks)
