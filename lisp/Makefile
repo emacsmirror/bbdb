@@ -68,6 +68,7 @@ bbdb-autoloads.el: $(DEPSRCS)
 	@echo "" > $@;
 	$(EMACS) -batch -q -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
+		--eval "(if (featurep 'xemacs) (delete-file generated-autoload-file))" \
 		--eval '(setq make-backup-files nil)' \
 		--eval '(setq autoload-package-name "bbdb")' \
 		-f batch-update-autoloads `pwd`
