@@ -47,7 +47,6 @@
     (face-differs-from-default-p (make-face 'bbdb-field-name))
     (copy-face 'bold 'bbdb-field-name))
 
-;##autoload
 (defun bbdb-fontify-buffer ()
   (save-excursion
     (set-buffer bbdb-buffer-name)
@@ -259,7 +258,6 @@
    ))
 
 
-;##autoload
 (defun bbdb-menu (e)
   (interactive "e")
   (mouse-set-point e)
