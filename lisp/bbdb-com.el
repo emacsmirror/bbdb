@@ -597,93 +597,21 @@ NOTES is a string, or an alist associating symbols with strings."
         ((eq field 'property)   (bbdb-record-set-raw-notes record value))
         (t (error "doubleplus ungood: unknown field type %s" field))))
 
-(defun bbdb-record-edit-field-internal (record field &optional which)
-  (cond ((eq field 'name)   (bbdb-record-edit-name record))
-        ((eq field 'net)    (bbdb-record-edit-net record))
-        ((eq field 'aka)    (bbdb-record-edit-aka record))
-        ((eq field 'phone)  (bbdb-record-edit-phone which))
-        ((eq field 'address)    (bbdb-record-edit-address which))
-        ((eq field 'property)   (bbdb-record-edit-property record (car which)))
+(defun bbdb-record-edit-field-internal (record field &optional which location)
+  (cond ((eq field 'name)     (bbdb-record-edit-name record))
+        ((eq field 'company)  (bbdb-record-edit-company record))
+        ((eq field 'net)      (bbdb-record-edit-net record))
+        ((eq field 'aka)      (bbdb-record-edit-aka record))
+        ((eq field 'phone)    (bbdb-record-edit-phone which location))
+        ((eq field 'address)  (bbdb-record-edit-address which location))
+        ((eq field 'property) (bbdb-record-edit-property record (car which)))
         (t (error "doubleplus ungood: unknown field type %s" field))))
 
 
 (defun bbdb-current-field (&optional planning-on-modifying)
-  (save-excursion
-    ;; get to beginning of this record
-    (beginning-of-line)
-    (let ((p (point)))
-      ;; ' - ' is the start of a record with no name.
-      (while (not (or (eobp) (bobp) (looking-at "^\\([^ \t\n]\\| - \\)")))
-        (forward-line -1))
-      (let* ((record (or (bbdb-current-record planning-on-modifying)
-                         (error "unperson")))
-             (bbdb-elided-display (nth 1 (assq record bbdb-records)))
-             (count 0)
-             (tmp (nconc
-                   (list (list 'name record))
-                   (and (bbdb-field-shown-p 'phone)
-                        (mapcar (lambda (phone) (list 'phone phone))
-                                (bbdb-record-phones record)))
-                   (and (bbdb-field-shown-p 'address)
-                        (apply 'nconc
-                               (mapcar (lambda (addr);; foreach address...
-                                         (let ((L (list 'address addr)))
-                                           (nconc
-                                            ;; XXX This block of code is dependant on how your
-                                            ;; addresses are formatted. So, if you define a new
-                                            ;; address format, this needs to be fixed. Ideally,
-                                            ;; the address format would have an accompanying
-                                            ;; function to tell you how many lines per address,
-                                            ;; or something.
-                                            ;; count street lines
-                                            (apply 'nconc (mapcar (lambda(street)
-                                                                    (unless (string= "" street)
-                                                                      (list L)))
-                                                                  (bbdb-address-streets addr)))
-
-                                            ;; these are all on the same line
-                                            (if (and (string= "" (bbdb-address-city addr))
-                                                     (string= "" (bbdb-address-state addr))
-                                                     (string= "" (bbdb-address-zip-string addr)))
-                                                nil (list L))
-
-                                            ;; separate line for country
-                                            (if (string= "" (bbdb-address-country addr))
-                                                nil (list L)))))
-                                       (bbdb-record-addresses record))))
-
-                   (if (and (bbdb-record-net record)
-                            (bbdb-field-shown-p 'net))
-                       (list (list 'net record)))
-                   (if (and (bbdb-record-aka record)
-                            (bbdb-field-shown-p 'aka))
-                       (list (list 'aka record)))
-                   (let ((notes (bbdb-record-raw-notes record)))
-                     (if (stringp notes)
-                         (setq notes (list (cons 'notes notes))))
-                     (apply
-                      'nconc
-                      (mapcar
-                       (lambda (note)
-                         (if (bbdb-field-shown-p (car note))
-                             (let* ((L (list 'property note))
-                                    (LL (list L))
-                                    (i 0)
-                                    (notefun (intern (concat "bbdb-format-record-"
-                                                             (symbol-name (car note)))))
-                                    (text (if (fboundp notefun)
-                                              (funcall notefun (cdr note))
-                                              (cdr note))))
-                               (while (string-match "\n" text i)
-                                 (setq i (match-end 0)
-                                       LL (cons L LL)))
-                               LL)))
-                       notes))))))
-        (while (< (point) p)
-          (setq count (1+ count))
-          (forward-line 1))
-        (nth count tmp)))))
-
+  (or (bbdb-current-record planning-on-modifying)
+      (error "unperson"))
+  (get-text-property (point) 'bbdb-field))
 
 ;;;###autoload
 (defun bbdb-apply-next-command-to-all-records ()
@@ -870,7 +798,7 @@ section, then the entire field is edited, not just the current line."
          need-to-sort)
     (or field (error "on an unfield"))
     (setq need-to-sort
-          (bbdb-record-edit-field-internal record (car field) (nth 1 field)))
+          (apply 'bbdb-record-edit-field-internal record field))
     (bbdb-change-record record need-to-sort)
     (bbdb-redisplay-one-record record)
     ;; (bbdb-offer-save)
@@ -890,10 +818,11 @@ section, then the entire field is edited, not just the current line."
                                            (bbdb-record-name bbdb-record)))))
              (setq fn (car names)
                    ln (nth 1 names))))
-       (setq need-to-sort (or (not (string= fn
-                                            (or (bbdb-record-firstname bbdb-record) "")))
-                              (not (string= ln
-                                            (or (bbdb-record-lastname bbdb-record) "")))))
+       (setq need-to-sort
+             (or (not (string= fn
+                               (or (bbdb-record-firstname bbdb-record) "")))
+                 (not (string= ln
+                               (or (bbdb-record-lastname bbdb-record) "")))))
        (if (string= "" fn) (setq fn nil))
        (if (string= "" ln) (setq ln nil))
        ;; check for collisions
@@ -931,6 +860,32 @@ section, then the entire field is edited, not just the current line."
          (bbdb-puthash (downcase (bbdb-record-name bbdb-record))
                        bbdb-record))
     need-to-sort))
+
+(defun bbdb-record-edit-company (bbdb-record)
+  (let ((co (bbdb-read-string "Company: " (bbdb-record-company bbdb-record)))
+        need-to-sort)
+
+    (if (string= "" co) (setq co nil))
+    (setq need-to-sort
+          (or need-to-sort
+              (not (equal (if co (downcase co) "")
+                          (downcase (or (bbdb-record-company bbdb-record)
+                                        ""))))))
+    
+    ;; delete the old hash entry
+    (let ((name    (bbdb-record-name    bbdb-record))
+          (company (bbdb-record-company bbdb-record)))
+      (if (> (length name) 0)
+          (bbdb-remhash (downcase name) bbdb-record))
+      (if (> (length company) 0)
+          (bbdb-remhash (downcase company) bbdb-record)))
+
+    (bbdb-record-set-company bbdb-record co)
+    ;; add a new hash entry
+    (bbdb-puthash (downcase (bbdb-record-name bbdb-record))
+                  bbdb-record)
+    
+  need-to-sort))
 
 (defun bbdb-address-edit-default (addr)
   "Function to use for address editing.
@@ -981,7 +936,7 @@ The default value is the symbol `bbdb-address-edit-default'."
 
 (defun bbdb-record-edit-address (addr &optional location)
   "Edit an address ADDR.
-If optional parameter LOCATION is non-nil, edit the location sub-field
+If optional parameter LOCATION is nil, edit the location sub-field
 of the address as well.  The address itself is edited using the editing
 function in `bbdb-address-editing-function'."
   (let ((loc
@@ -995,14 +950,14 @@ function in `bbdb-address-editing-function'."
     (bbdb-address-set-location addr loc))
   (funcall bbdb-address-editing-function addr))
 
-
-(defun bbdb-record-edit-phone (phone-number)
-  (let ((newl (bbdb-read-string "Location: "
-                                (or (bbdb-phone-location phone-number)
+(defun bbdb-record-edit-phone (phone-number &optional location)
+  (let ((newl (or location
+                  (bbdb-read-string "Location: "
+                                    (or (bbdb-phone-location phone-number)
                                     (bbdb-label-completion-default "phones"))
-                                (mapcar (function (lambda(x) (list x)))
-                                        (bbdb-label-completion-list
-                                         "phones"))))
+                                    (mapcar (function (lambda(x) (list x)))
+                                            (bbdb-label-completion-list
+                                             "phones")))))
         (newp (let ((bbdb-north-american-phone-numbers-p
                      (= (length phone-number) bbdb-phone-length)))
                 (bbdb-error-retry
@@ -1298,8 +1253,24 @@ the opposite state of the record under point."
   (interactive "P")
   (if (bbdb-do-all-records-p)
       (bbdb-elide-all-records-internal arg)
-      (bbdb-elide-record-internal arg)))
+    (bbdb-elide-record-internal arg)))
 
+;;;###autoload
+(defun bbdb-unelide-record (arg)
+  "Show all the fields of a record.
+This is done by disabling the variables `bbdb-elided-display' and
+`bbdb-omit-display'."  
+  (interactive "P")
+  (let ((bbdb-display-omit-fields nil)
+        (bbdb-elided-display nil))
+    (bbdb-elide-record arg)))
+
+;;;###autoload
+(defun bbdb-elide-all-records (arg)
+  "Show all the fields of all visible records.
+Like `bbbd-elide-record' but for all visible records."  
+  (interactive "P")
+  (bbdb-elide-all-records-internal arg))
 
 (defun bbdb-elide-record-internal (arg)
   (let* ((record (bbdb-current-record))
@@ -3073,22 +3044,22 @@ proceed the processing of records."
               (setq event (event-to-character (aref event 0)))
             (setq event (if (stringp event) (aref event 0)))))
 
-        (setq bbdb-offer-to-create (char-int event)))
+        (setq bbdb-offer-to-create event))
       (message "") ;; clear the message buffer
 
-      (cond ((eq bbdb-offer-to-create (char-int ?y))
+      (cond ((eq bbdb-offer-to-create ?y)
              (setq bbdb-offer-to-create old-offer-to-create)
              nil)
-            ((eq bbdb-offer-to-create  (char-int ?!))
+            ((eq bbdb-offer-to-create  ?!)
              nil)
-            ((eq bbdb-offer-to-create  (char-int ?n))
+            ((eq bbdb-offer-to-create  ?n)
              (setq bbdb-update-records-mode 'next
                    bbdb-offer-to-create old-offer-to-create)
              (signal 'quit nil))
-            ((eq bbdb-offer-to-create  (char-int ?q))
+            ((eq bbdb-offer-to-create  ?q)
              (setq bbdb-update-records-mode 'quit)
              (signal 'quit nil))
-            ((eq bbdb-offer-to-create  (char-int ?s))
+            ((eq bbdb-offer-to-create  ?s)
              (setq bbdb-update-records-mode 'searching)
              (signal 'quit nil))
             (t
