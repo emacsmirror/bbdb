@@ -2445,33 +2445,51 @@ these caches.")
               (cons buffer bbdb-buffers-with-message-caches)))))
 
 (defvar bbdb-message-cache nil
-  "Alist of (MESSAGE-KEY BBDB-RECORDS) cached in order to avoid updating
-messages each time they are visited.  This is used my all MUAs, while the
+  "alist of (MESSAGE-KEY BBDB-RECORDS) cached in order to avoid updating
+messages each time they are visited.  This is used by all MUAs, while the
 MESSAGE-KEY is specific to the MUA and the cache is local for each MUA or MUA
 folder.")
 
 (make-variable-buffer-local 'bbdb-message-cache)
 
-(defun bbdb-message-cache-lookup (message-key)
-  "Return cached bbeb records for MESSAGE-KEY.
-If not present or when the records have been modified return nil."
-  (bbdb-records)
-  (if bbdb-message-caching-enabled
-      (let ((records (assq message-key bbdb-message-cache))
-            (invalid nil))
-        (if (and (not (listp records)) (bbdb-record-deleted-p records))
-            (setq invalid t)
-          (mapcar (lambda (record)
-                    (if (bbdb-record-deleted-p record)
-                        (setq invalid t)))
-                  (cdr records)))
-        (if invalid nil records))))
+(defmacro bbdb-message-cache-lookup (message-key
+                     &optional message-sequence-buffer)
+  (list 'progn '(bbdb-records)  ; yuck, this is to make auto-revert happen
+                ; in a convenient place.
+  (list 'and 'bbdb-message-caching-enabled
+    (let ((bod
+           (list 'let (list (list '--cons--
+                      (list 'assq message-key 'bbdb-message-cache)))
+             '(if (and --cons-- (bbdb-record-deleted-p (cdr --cons--)))
+               (progn
+             (setq bbdb-message-cache (delq --cons-- bbdb-message-cache))
+             nil)
+               (cdr --cons--)))))
+      (if message-sequence-buffer
+          (list 'save-excursion
+            (list 'set-buffer message-sequence-buffer)
+            bod)
+          bod))))
+  )
 
-(defun bbdb-encache-message (message-key bbdb-records)
-  "Cache the BBDB-RECORDS for a message identified by MESSAGE-KEY."
-  (and bbdb-message-caching-enabled
-       (add-to-list 'bbdb-message-cache (cons message-key bbdb-records))
-       (notice-buffer-with-cache (current-buffer))))
+(defmacro bbdb-encache-message (message-key bbdb-record &optional message-sequence-buffer)
+  "Don't call this multiple times with the same args, it doesn't replace."
+  (let ((bod (list 'let (list (list '--rec-- bbdb-record))
+           (list 'if 'bbdb-message-caching-enabled
+             (list 'and '--rec--
+              (list 'progn
+               '(notice-buffer-with-cache (current-buffer))
+               (list 'cdr
+                (list 'car
+                 (list 'setq 'bbdb-message-cache
+                  (list 'cons (list 'cons message-key '--rec--)
+                    'bbdb-message-cache))))))
+             '--rec--))))
+    (if message-sequence-buffer
+    (cons 'save-excursion
+          (list (list 'set-buffer message-sequence-buffer)
+            bod))
+    bod)))
 
 (defun bbdb-decache-message (message-key)
   "Remove an element form the cache."
@@ -3130,4 +3148,3 @@ This variable has no effect if set outside of customize."
 (provide 'bbdb)  ; provide before loading things which might require
 
 (run-hooks 'bbdb-load-hook)
-
