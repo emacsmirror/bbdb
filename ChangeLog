@@ -1,3 +1,13 @@
+2003-06-25  Robert Fenk  <Robert Fenk>
+
+	* lisp/bbdb.el (bbdb-pop-up-bbdb-buffer): Some fixes for special
+	cases of the multiple *BBDB* buffers hack.
+
+	* lisp/bbdb-gui.el (bbdb-user-menu-commands): Is defcustom now
+	instead of defvar.
+	(build-bbdb-menu): If bbdb-user-menu-commands is a functionp we
+	call it in order to get a menu.
+
 2003-04-09  Dave Love  <fx@gnu.org>
 
 	* lisp/bbdb.el (bbdb-file-coding-system): Make it defconst, test
