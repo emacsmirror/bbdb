@@ -2218,8 +2218,11 @@ completion with."
   (if bbdb-complete-name-saved-window-config
       (progn
         (if (get-buffer-window "*Completions*")
-            (set-window-configuration
-             bbdb-complete-name-saved-window-config))
+            (progn
+              (set-window-configuration
+               bbdb-complete-name-saved-window-config)
+              (bury-buffer "*Completions*"))
+          )
         (setq bbdb-complete-name-saved-window-config nil))))
 
 (defun bbdb-display-completion-list (list &optional callback data)
