@@ -1,0 +1,80 @@
+$Id$
+
+Patches
+-------
+
+New area code patch (change bbdb-phone-area-regexp to accept [0-9][0-9][0-9])
+---
+John Heidemann's bbdb-snarf.el -- convert free-form text to BBDB records
+   John Heidemann <johnh@ISI.EDU>
+   http://www.isi.edu/~johnh/
+   <199708050543.WAA16969@dash.isi.edu> Mon, 04 Aug 1997 22:43:06 -0700
+ with patch from 
+   <199708062026.NAA29354@dash.isi.edu> Wed, 06 Aug 1997 13:26:45 -0700
+AND/OR
+One or more of Simon Rowe, Graham Clark and Adrian Aichner's body-snarfing code
+   Simon Rowe <Simon.Rowe@cre.canon.co.uk>
+    <u6lo4azj58.fsf@cre.canon.co.uk> 16 Jun 1997 16:01:39 +0100
+   Graham Clark <gcla@dcs.ed.ac.uk>
+    <6282.199706161624@havra.dcs.ed.ac.uk> Mon, 16 Jun 1997 17:24:49 +0100
+   Adrian Aichner <aichner@ecf.teradyne.com>
+    <rxsiuzebpgp.fsf@midnight.ecf.teradyne.com>
+---
+Colin Rafferty's XEmacs packagization
+   Colin Rafferty <craffert@ml.com>
+   <ocrrac656up.fsf@ml.com> 07 Aug 1997 11:51:42 -0400
+   and <ocrbu31yd0m.fsf@ml.com> 13 Aug 1997 17:43:53 -0400
+---
+Colin Rafferty's nil name -> net address patch
+   Colin Rafferty <craffert@ml.com>
+   <ocrafhul421.fsf@ml.com> 03 Sep 1997 13:07:02 -0400
+---
+Jens-Ulrik Hoger Petersen's Gnus 5 patches
+   Jens-Ulrik Holger Petersen <petersen@kurims.kyoto-u.ac.jp>
+   <lbd8mkfvb4.fsf@orion.kurims.kyoto-u.ac.jp> 08 Sep 1997 10:28:31 +0900
+---
+Soren Dayton's bbdb-send-mail => message-mode patch
+   Soren Dayton <csdayton+bbdb@cs.uchicago.edu>
+   <xcdu3j2snzw.fsf@ra.cs.uchicago.edu> 13 Jun 1997 07:09:38 -0500
+---
+Christoph Wedler's finger-host patch
+   Christoph Wedler <wedler@fmi.uni-passau.de>
+   <hwhiuvqycrn.fsf@vivaldi.fmi.uni-passau.de> 24 Sep 1997 17:03:56 +0200
+
+MAYBE?
+
+Raymond Toy's international name mail-extract-address-components patch
+   Raymond Toy <toy@rtp.ericsson.se>
+   <27077.864998003@rtp.ericsson.se> Fri, 30 May 1997 09:13:23 -0400
+ I can't tell from the discussion whether or not the patch was judged to be
+ a Good Thing.
+---
+Oscar Figueiredo's CSO interface
+   Oscar Figueiredo <Oscar.Figueiredo@di.epfl.ch>
+   <o97d8px2h60.fsf@lspsun16.epfl.ch> 08 Jun 1997 18:28:07 +0200
+ If he's got it done
+---
+Christopher Kline's bbdb-reportmail.el
+   Christopher Kline <ckline@mitre.org>
+   <gj9wwnhaxkq.fsf@mitre.org> 26 Jun 1997 17:00:53 -0400
+ What is reportmail?  Should this (bbdb-reportmail.el) come with bbdb, or
+ with reportmail?
+
+In a util directory
+-------------------
+
+Seth Golub's BBDB area code changer
+   Seth Golub <seth@cs.wustl.edu>
+   http://www.cs.wustl.edu/~seth/projects/bbdb/
+   <199708071942.MAA23880@pegleg.thehouse.org> Thu, 7 Aug 1997 12:42:45 -0700
+
+Christopher Kline's .bbdb lazy-lock unmungifier
+   Christopher Kline <ckline@tc.cornell.edu>
+   <pzrd8r1u3yo.fsf@theory.tc.cornell.edu> 08 May 1997 16:02:55 -0400
+
+Patches I'd like somebody else to do. =)
+----------------------------------------
+
+* Selectable ampersand processing in names
+* An elisp (or perl) function/program that, given a set of prefixes in
+  a defined format, will properly split area codes
