@@ -58,7 +58,13 @@ prompt the users on how to merge records when duplicates are detected.")
   (if (fboundp 'unless) nil
     (defmacro unless (bool &rest forms) `(if ,bool nil ,@forms))
     (defmacro when (bool &rest forms) `(if ,bool (progn ,@forms))))
+  (unless (fboundp 'save-current-buffer)
+    (fset 'save-current-buffer 'save-excursion))
   (unless (fboundp 'mapc) (fset 'mapc 'mapcar)))
+
+(unless (fboundp 'with-current-buffer)
+  (defmacro with-current-buffer (buf &rest body)
+    `(save-current-buffer (set-buffer ,buf) ,@body)))
 
 ;; This nonsense is to get the definition of defsubst loaded in when this file
 ;; is loaded,without necessarily forcing the compiler to be loaded if we're
@@ -903,14 +909,6 @@ If the note is absent, returns a zero length string."
                           (message "Error: %s" (nth 1 --c--)))
                         (sit-for 2)))))))
 
-;;; I no longer remember why I felt this was necessary, but I think it
-;;; might have been because of the bug in the save-excursion of 18.55-57
-(defmacro bbdb-save-buffer-excursion (&rest body)
-  (list 'save-excursion
-    (list 'let '((--bbdb-obuf-- (current-buffer)))
-      (list 'unwind-protect (cons 'progn body)
-        '(set-buffer --bbdb-obuf--)))))
-
 (defvar bbdb-buffer nil)
 (defmacro bbdb-buffer ()
   '(if (and bbdb-buffer (buffer-name bbdb-buffer))
@@ -918,8 +916,8 @@ If the note is absent, returns a zero length string."
      (setq bbdb-buffer (find-file-noselect bbdb-file 'nowarn))))
 
 (defmacro bbdb-with-db-buffer (&rest body)
-  (cons 'bbdb-save-buffer-excursion
-        (cons '(set-buffer (bbdb-buffer))
+  (cons 'with-current-buffer
+        (cons '(bbdb-buffer)
               (if (and (boundp 'bbdb-debug) bbdb-debug)
                   ;; if we're debugging, and the .bbdb buffer is visible in
                   ;; a window, temporarilly switch to that window so that
@@ -1609,89 +1607,84 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
       (let ((debug-on-error t))
         (error "catastrophic: bbdb-records recursed")))
   (let ((inside-bbdb-records t)
+        (buf (if already-in-db-buffer (current-buffer) (bbdb-buffer)))
         shut-up)
-    (bbdb-save-buffer-excursion
-      ;; get the buffer, don't worry if it's out of synch with disk yet.
-      (let ((buf (if already-in-db-buffer
-                     --bbdb-obuf--  ; hackorama; let's bum some cycles...
-                     (set-buffer (bbdb-buffer)))))
-        ;; make sure the BBDB in memory is not out of synch with disk.
-        (cond (dont-check-disk nil)
-              ((verify-visited-file-modtime buf) nil)
-              ((and bbdb-auto-revert-p
-                    (not (buffer-modified-p buf)))
-               (message "BBDB has changed on disk, reverting...")
-               (setq shut-up t)
-               (revert-buffer t t))
-              ;; hassle the user
-              ((bbdb-yes-or-no-p
-                (if (buffer-modified-p buf)
-                    "BBDB has changed on disk; flush your changes and revert? "
-                    "BBDB has changed on disk; revert? "))
-               (or (file-exists-p bbdb-file)
-                   (error "bbdb: file %s no longer exists!!" bbdb-file))
-               (revert-buffer t t))
-              ;; this is the case where the .bbdb file has changed; the buffer
-              ;; has changed as well; and the user has answered "no" to the
-              ;; "flush your changes and revert" question.  The only other
-              ;; alternative is to save the file right now.  If they answer
-              ;; no to the following question, they will be asked the
-              ;; preceeding question again and again some large (but finite)
-              ;; number of times.  `bbdb-records' is called a lot, you see...
-              ((buffer-modified-p buf)
-               ;; this prompts
-               (bbdb-save-db t t))
-              ;; otherwise, the buffer and file are inconsistent, but we let
-              ;; them stay that way.
-              )
-        (if (assq 'bbdb-records (buffer-local-variables))
-            nil
-          (set (make-local-variable 'bbdb-records) nil)
-          (set (make-local-variable 'bbdb-changed-records) nil)
-          (set (make-local-variable 'bbdb-end-marker) nil)
-          (set (make-local-variable 'bbdb-hashtable) nil)
-          (set (make-local-variable 'bbdb-propnames) nil)
-          (set (make-local-variable 'revert-buffer-function)
-               'bbdb-revert-buffer)
-          (mapc (lambda (ff) (add-hook 'local-write-file-hooks ff))
-                bbdb-write-file-hooks)
-          (setq bbdb-hashtable (make-vector 1021 0)))
-        (setq bbdb-modified-p (buffer-modified-p)
-              buffer-read-only bbdb-readonly-p)
-        (or bbdb-records
-            (cond ((= (point-min) (point-max)) ; special-case empty db
-                   ;; this doesn't need to be insert-before-markers because
-                   ;; there are no db-markers in this buffer.
-                   (insert (format ";;; file-version: %d\n" bbdb-file-format))
-                   (bbdb-flush-all-caches)
-                   (setq bbdb-end-marker (point-marker))
-                   ;;(run-hooks 'bbdb-after-read-db-hook) ; run this?
-                   nil)
-                  (t
-                   (or shut-up bbdb-silent-running (message "Parsing BBDB..."))
-                   (bbdb-flush-all-caches)
-                   (cond ((and bbdb-notice-auto-save-file
-                               (file-newer-than-file-p (make-auto-save-file-name)
-                                                       buffer-file-name))
-                          (if (bbdb-yes-or-no-p "BBDB auto-save file is newer; recover it? ")
-                              (progn
-                                (recover-file buffer-file-name)
-                                (bury-buffer (current-buffer)) ; recover-file selects it
-                                (auto-save-mode 1) ; turn autosave back on
-                                (delete-file (make-auto-save-file-name))
-                                (message "Auto-save mode is ON in BBDB buffer.  Suggest you save it soon.")
-                                (sleep-for 2))
-                              ;; delete auto-save anyway, so we don't keep asking.
-                            (condition-case nil
-                                (delete-file (make-auto-save-file-name))
-                              (file-error nil)))
-                          ;; tail-recurse and try again
-                          (let ((inside-bbdb-records nil))
-                            (bbdb-records)))
-                         (t
-                          ;; normal case
-                          (fillarray bbdb-hashtable 0)
-                          (parse-bbdb-internal))))))))))
+    (with-current-buffer buf
+      ;; make sure the BBDB in memory is not out of synch with disk.
+      (cond (dont-check-disk nil)
+            ((verify-visited-file-modtime buf) nil)
+            ((and bbdb-auto-revert-p (not (buffer-modified-p buf)))
+             (message "BBDB has changed on disk, reverting...")
+             (setq shut-up t)
+             (revert-buffer t t))
+            ;; hassle the user
+            ((bbdb-yes-or-no-p
+              (if (buffer-modified-p buf)
+                  "BBDB has changed on disk; flush your changes and revert? "
+                "BBDB has changed on disk; revert? "))
+             (or (file-exists-p bbdb-file)
+                 (error "bbdb: file %s no longer exists!!" bbdb-file))
+             (revert-buffer t t))
+            ;; this is the case where the .bbdb file has changed; the buffer
+            ;; has changed as well; and the user has answered "no" to the
+            ;; "flush your changes and revert" question.  The only other
+            ;; alternative is to save the file right now.  If they answer
+            ;; no to the following question, they will be asked the
+            ;; preceeding question again and again some large (but finite)
+            ;; number of times.  `bbdb-records' is called a lot, you see...
+            ((buffer-modified-p buf)
+             ;; this prompts
+             (bbdb-save-db t t))
+            ;; otherwise, the buffer and file are inconsistent, but we let
+            ;; them stay that way.
+            )
+      (unless (assq 'bbdb-records (buffer-local-variables))
+        (set (make-local-variable 'bbdb-records) nil)
+        (set (make-local-variable 'bbdb-changed-records) nil)
+        (set (make-local-variable 'bbdb-end-marker) nil)
+        (set (make-local-variable 'bbdb-hashtable) nil)
+        (set (make-local-variable 'bbdb-propnames) nil)
+        (set (make-local-variable 'revert-buffer-function)
+             'bbdb-revert-buffer)
+        (mapc (lambda (ff) (add-hook 'local-write-file-hooks ff))
+              bbdb-write-file-hooks)
+        (setq bbdb-hashtable (make-vector 1021 0)))
+      (setq bbdb-modified-p (buffer-modified-p)
+      buffer-read-only bbdb-readonly-p)
+      (or bbdb-records
+      (cond ((= (point-min) (point-max)) ; special-case empty db
+             ;; this doesn't need to be insert-before-markers because
+             ;; there are no db-markers in this buffer.
+             (insert (format ";;; file-version: %d\n" bbdb-file-format))
+             (bbdb-flush-all-caches)
+             (setq bbdb-end-marker (point-marker))
+             ;;(run-hooks 'bbdb-after-read-db-hook) ; run this?
+             nil)
+            (t
+             (or shut-up bbdb-silent-running (message "Parsing BBDB..."))
+             (bbdb-flush-all-caches)
+             (cond ((and bbdb-notice-auto-save-file
+                         (file-newer-than-file-p (make-auto-save-file-name)
+                                                 buffer-file-name))
+                    (if (bbdb-yes-or-no-p "BBDB auto-save file is newer; recover it? ")
+                        (progn
+                          (recover-file buffer-file-name)
+                          (bury-buffer (current-buffer)) ; recover-file selects it
+                          (auto-save-mode 1) ; turn autosave back on
+                          (delete-file (make-auto-save-file-name))
+                          (message "Auto-save mode is ON in BBDB buffer.  Suggest you save it soon.")
+                          (sleep-for 2))
+                      ;; delete auto-save anyway, so we don't keep asking.
+                      (condition-case nil
+                          (delete-file (make-auto-save-file-name))
+                        (file-error nil)))
+                    ;; tail-recurse and try again
+                    (let ((inside-bbdb-records nil))
+                      (bbdb-records)))
+                   (t
+                    ;; normal case
+                    (fillarray bbdb-hashtable 0)
+                    (parse-bbdb-internal)))))))))
 
 (defun bbdb-revert-buffer (arg noconfirm)
   ;; The .bbdb file's revert-buffer-function.
@@ -1857,11 +1850,10 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
   (setq bbdb-modified-p nil
         bbdb-changed-records nil)
   (let ((b (get-buffer bbdb-buffer-name)))
-    (if b
-        (bbdb-save-buffer-excursion
-          (set-buffer b)
-          (setq bbdb-showing-changed-ones nil)
-          (set-buffer-modified-p nil)))))
+    (when b
+      (with-current-buffer b
+        (setq bbdb-showing-changed-ones nil)
+        (set-buffer-modified-p nil)))))
 
 
 (defun bbdb-delete-record-internal (record)
