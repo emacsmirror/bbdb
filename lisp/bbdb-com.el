@@ -2387,6 +2387,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
         ;; Update the *BBDB* buffer if desired.
         (if bbdb-completion-display-record
             (let ((bbdb-gag-messages t))
+              (bbdb-pop-up-bbdb-buffer)
               (bbdb-display-records-1 match-recs t)))
         (bbdb-complete-name-cleanup)))
 
