@@ -65,8 +65,8 @@
 (defconst bbdb-version-date "$Date$")
 
 (defcustom bbdb-gui (if (fboundp 'display-color-p) ; Emacs 21
-            (display-color-p)
-              (not (null window-system))) ; wrong for XEmacs?
+                        (display-color-p)
+                      (not (null window-system))) ; wrong for XEmacs?
   "*Non-nil means fontify the *BBDB* buffer."
   :group 'bbdb
   :type 'boolean)
@@ -351,7 +351,7 @@ you should reload `bbdb-file'."
 This variable also affects dialing."
   :group 'bbdb-record-creation
   :type '(choice (const :tag "none" nil)
-                 'integer)
+                 (integer :tag "Default Area Code"))
   :set (lambda( symb val )
          (if (or (and (stringp val)
                       (string-match "^[0-9]+$" val))
@@ -736,9 +736,9 @@ Database initialization function `bbdb-initialize' is run."
 ;; emacs-mule would be better) with both Emacs 21 and XEmacs.  Emacs
 ;; 22 will really need utf-8-emacs.
 (defconst bbdb-file-coding-system (if (fboundp 'coding-system-p)
-				      (if (coding-system-p 'utf-8-emacs)
-					  'utf-8-emacs
-					'iso-2022-7bit))
+                      (if (coding-system-p 'utf-8-emacs)
+                      'utf-8-emacs
+                    'iso-2022-7bit))
   "Coding system used for reading and writing `bbdb-file'.
 This should not be changed by users.")
 
@@ -1136,7 +1136,7 @@ returned by `bbdb-data-completion-list'."
     (when (and bbdb-file-remote
                (file-newer-than-file-p bbdb-file-remote bbdb-file))
       (let ((coding-system-for-write bbdb-file-coding-system))
-	(copy-file bbdb-file-remote bbdb-file t t)))
+    (copy-file bbdb-file-remote bbdb-file t t)))
     (setq bbdb-buffer (find-file-noselect bbdb-file 'nowarn))))
 
 (defmacro bbdb-with-db-buffer (&rest body)
@@ -1251,7 +1251,7 @@ layout function, the multi-line layout will be used."
           (choice :tag "Layout type"
                   (const one-line)
                   (const multi-line)
-		  (const pop-up-multi-line)
+          (const pop-up-multi-line)
                   (const full-multi-line)
                   (symbol))
           (set :tag "Properties"
@@ -1288,22 +1288,22 @@ layout function, the multi-line layout will be used."
                (cons :tag "Toggle"
                      (const :tag "The layout is included when toggling display layout" toggle)
                      boolean)
-	       (cons :tag "Primary Net Only"
-		     (const :tag "Only the primary net address is included" primary)
-		     boolean)
-	       (cons :tag "Test"
-		     (const :tag "Show only records passing this test" test) 
-		     (choice (const :tag "No test" nil)
-			     (cons :tag "List of required fields"
-				   (const :tag "Choose from the attributes in the following set:" and)
-				   (set
-				    (const name)
-				    (const company)
-				    (const net)
-				    (const phones)
-				    (const addresses)
-				    (const notes)))
-			     (sexp :tag "Lisp expression")))))))
+           (cons :tag "Primary Net Only"
+             (const :tag "Only the primary net address is included" primary)
+             boolean)
+           (cons :tag "Test"
+             (const :tag "Show only records passing this test" test)
+             (choice (const :tag "No test" nil)
+                 (cons :tag "List of required fields"
+                   (const :tag "Choose from the attributes in the following set:" and)
+                   (set
+                    (const name)
+                    (const company)
+                    (const net)
+                    (const phones)
+                    (const addresses)
+                    (const notes)))
+                 (sexp :tag "Lisp expression")))))))
 
 
 (defcustom bbdb-display-layout 'multi-line
@@ -1531,8 +1531,8 @@ See `bbdb-display-layout-alist' for more."
           (setq values (eval (list contentfun record)))
         (setq values (bbdb-record-getprop record field)))
       (when (and (eq field 'net)
-		 (bbdb-display-layout-get-option layout 'primary))
-	(setq values (list (car values))))
+         (bbdb-display-layout-get-option layout 'primary))
+    (setq values (list (car values))))
       (when values
         (if (not (listp values)) (setq values (list values)))
         (setq formatfun (intern (format "bbdb-format-record-%s-%s"
@@ -1618,9 +1618,9 @@ See `bbdb-display-layout-alist' for more."
                  (put-text-property start (point) 'bbdb-field
                                     '(net field-name))
                  (setq start (point))
-		 (if (bbdb-display-layout-get-option layout 'primary)
-		     (insert (car net) "\n")
-		   (insert (mapconcat (function identity) net ", ") "\n"))
+         (if (bbdb-display-layout-get-option layout 'primary)
+             (insert (car net) "\n")
+           (insert (mapconcat (function identity) net ", ") "\n"))
                  (put-text-property start (point) 'bbdb-field '(net)))))
             ((eq field 'aka)
              (let ((aka (bbdb-record-aka record)))
@@ -1680,7 +1680,7 @@ multi-line layout."
                      (t
                       (error "Unknown layout `%s'" layout))))
   (let* ((layout-spec (assoc layout bbdb-display-layout-alist))
-	 (test        (bbdb-display-layout-get-option layout-spec 'test))
+     (test        (bbdb-display-layout-get-option layout-spec 'test))
          (omit-list   (bbdb-display-layout-get-option layout-spec 'omit))
          (order-list  (bbdb-display-layout-get-option layout-spec 'order))
          (all-fields  (append '(phones addresses net aka)
@@ -1690,50 +1690,50 @@ multi-line layout."
                                   (mapcar (lambda (r) (car r)) raw-notes)))))
          format-function field-list)
     (when (or (not test)
-	      ;; bind some variables for the test
-	      (let ((name (bbdb-record-name record))
-		    (company (bbdb-record-company record))
-		    (net (bbdb-record-net record))
-		    (phones (bbdb-record-phones record))
-		    (addresses (bbdb-record-addresses record))
-		    (notes (bbdb-record-raw-notes record)))
-		;; this must evaluate to non-nil if the record is to be shown
-		(eval test)))
+          ;; bind some variables for the test
+          (let ((name (bbdb-record-name record))
+            (company (bbdb-record-company record))
+            (net (bbdb-record-net record))
+            (phones (bbdb-record-phones record))
+            (addresses (bbdb-record-addresses record))
+            (notes (bbdb-record-raw-notes record)))
+        ;; this must evaluate to non-nil if the record is to be shown
+        (eval test)))
       (if (functionp omit-list)
-	  (setq omit-list (funcall omit-list record layout)))
+      (setq omit-list (funcall omit-list record layout)))
       (if (functionp order-list)
-	  (setq order-list (funcall order-list record layout)))
+      (setq order-list (funcall order-list record layout)))
       ;; first omit unwanted fields
       (when (and omit-list (or (not order-list) (memq t order-list)))
-	(if (not (listp omit-list))
-	    ;; t => show nothing
-	    (setq all-fields nil)
-	  ;; listp => show all fields except those listed here
-	  (while omit-list
-	    (setq all-fields (delete (car omit-list) all-fields)
-		  omit-list (cdr omit-list)))))
+    (if (not (listp omit-list))
+        ;; t => show nothing
+        (setq all-fields nil)
+      ;; listp => show all fields except those listed here
+      (while omit-list
+        (setq all-fields (delete (car omit-list) all-fields)
+          omit-list (cdr omit-list)))))
       ;; then order them
       (if (not order-list)
-	  (setq field-list all-fields)
-	(if (not (memq t order-list))
-	    (setq field-list order-list)
-	  (setq order-list (reverse order-list))
-	  (setq all-fields (delete nil (mapcar (lambda (f)
-						 (if (memq f order-list) 
-						     nil
-						   f))
-					       all-fields)))
-	  (while order-list
-	    (if (eq t (car order-list))
-		(setq field-list (append all-fields field-list))
-	      (setq field-list (cons (car order-list) field-list)))
-	    (setq order-list (cdr order-list)))))
+      (setq field-list all-fields)
+    (if (not (memq t order-list))
+        (setq field-list order-list)
+      (setq order-list (reverse order-list))
+      (setq all-fields (delete nil (mapcar (lambda (f)
+                         (if (memq f order-list)
+                             nil
+                           f))
+                           all-fields)))
+      (while order-list
+        (if (eq t (car order-list))
+        (setq field-list (append all-fields field-list))
+          (setq field-list (cons (car order-list) field-list)))
+        (setq order-list (cdr order-list)))))
       ;; call the actual format function
       (setq format-function
-	    (intern (format "bbdb-format-record-layout-%s" layout)))
+        (intern (format "bbdb-format-record-layout-%s" layout)))
       (if (functionp format-function)
-	  (funcall format-function layout record field-list)
-	(bbdb-format-record-layout-multi-line layout record field-list)))))
+      (funcall format-function layout record field-list)
+    (bbdb-format-record-layout-multi-line layout record field-list)))))
 
 (defun bbdb-frob-mode-line (n)
   (setq
@@ -1768,7 +1768,7 @@ multi-line layout."
         (first (car (car records))))
 
     (if bbdb-multiple-buffers (bbdb-pop-up-bbdb-buffer))
-    
+
     (with-output-to-temp-buffer bbdb-buffer-name
       (set-buffer bbdb-buffer-name)
 
@@ -3377,7 +3377,7 @@ You can also set this to a function returning a buffer name."
                  (function :tag "User defined function")))
 
 (defun bbdb-multiple-buffers-default ()
-  "Default function for guessing a better name for new *BBDB* buffers." 
+  "Default function for guessing a better name for new *BBDB* buffers."
   (cond ((memq major-mode '(vm-mode vm-summary-mode
                                     vm-presentation-mode
                                     vm-virtual-mode))
