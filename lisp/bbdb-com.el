@@ -2582,48 +2582,77 @@ field `finger-host' (default value of `bbdb-finger-host-field')."
         (bbdb-finger-internal (car addrs))))))
 
 
+(defun bbdb-remove-duplicate-nets (records)
+  "*Remove duplicate nets from a record."
+  (interactive (if (bbdb-do-all-records-p)
+                   (mapcar 'car bbdb-records)
+                 (bbdb-current-record)))
+  (let (nets cnets)
+    (while records
+      (setq nets (bbdb-record-net (car records))
+            cnets nil)
+      (while nets
+        (add-to-list 'cnets (car nets))
+        (setq nets (cdr nets)))
+      (bbdb-record-set-net (car records) cnets)
+      (setq records (cdr records)))))
+
 (defun bbdb-find-duplicates (&optional fields)
-  "*Find all records that have duplicate entries for given FIELDS.
+  "Find all records that have duplicate entries for given FIELDS.
 FIELDS should be a list of the symbols `name', `net', and/or `aka'.
 Note that overlap between these fields is noted if either is selected
-(most common case `aka' and `name').  If FIELDS is not given it
+ (most common case `aka' and `name').  If FIELDS is not given it
 defaults to all of them.
 
 The results of the search is returned as a list of records."
   (setq fields (or fields '(name net aka)))
   (let ((records (bbdb-records))
-    rec hash ret)
+        rec hash ret)
     (while records
       (setq rec (car records))
 
-      (and (memq 'name fields)
-       (setq hash (bbdb-gethash (downcase (bbdb-record-name rec))))
-       (> (length hash) 1)
-       (setq ret (append hash ret)))
-
+      (when (and (memq 'name fields)
+                 (bbdb-record-name rec)
+                 (setq hash (bbdb-gethash (downcase (bbdb-record-name rec))))
+                 (> (length hash) 1))
+        (setq ret (append hash ret)
+              hit 1)
+        (message "BBDB record `%s' causes duplicates, maybe it is equal to a company name."
+                 (bbdb-record-name rec))
+        (sit-for 1))
+      
       (if (memq 'net fields)
-      (let ((nets (bbdb-record-net rec)))
-        (while nets
-          (setq hash (bbdb-gethash (downcase (car nets))))
-          (if (> (length hash) 1)
-          (setq ret (append hash ret)))
-          (setq nets (cdr nets)))))
+          (let ((nets (bbdb-record-net rec)))
+            (while nets
+              (setq hash (bbdb-gethash (downcase (car nets))))
+              (when (> (length hash) 1)
+                (setq ret (append hash ret))
+                (message "BBDB record `%s' has duplicate net `%s'."
+                         (bbdb-record-name rec) (car nets))
+                (sit-for 1))
+              (setq nets (cdr nets)))))
 
       (if (memq 'aka fields)
-      (let ((aka (bbdb-record-aka rec)))
-        (while aka
-          (setq hash (bbdb-gethash (downcase (car aka))))
-          (if (> (length hash) 1)
-          (setq ret (append hash ret)))
-          (setq aka (cdr aka)))))
+          (let ((aka (bbdb-record-aka rec)))
+            (while aka
+              (setq hash (bbdb-gethash (downcase (car aka))))
+              (when (> (length hash) 1)
+                (setq ret (append hash ret)
+                      hit 3)
+                (message "BBDB record `%s' has duplicate aka `%s'"
+                         (bbdb-record-name rec) (car aka))
+                (sit-for 1))
+              (setq aka (cdr aka)))))
+      
       (setq records (cdr records)))
-    (bbdb-remove-memq-duplicates ret)))
+
+    (reverse (bbdb-remove-memq-duplicates ret))))
 
 (defun bbdb-show-duplicates (&optional fields)
   "*Find all records that have duplicate entries for given FIELDS.
 FIELDS should be a list of the symbols `name', `net', and/or `aka'.
 Note that overlap between these fields is noted if either is selected
-(most common case `aka' and `name').  If FIELDS is not given it
+ (most common case `aka' and `name').  If FIELDS is not given it
 defaults to all of them.
 
 The results are displayed in the bbdb buffer."
