@@ -8,6 +8,9 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.24  2000/06/30 21:52:31  kuepper
+@c Minor fixes.
+@c
 @c Revision 1.23  2000/06/14 14:42:29  waider
 @c * Documented changes in database structure
 @c * Changed web address, email addresses
@@ -414,11 +417,11 @@ tree and the production code.
 @subsubheading TeX files
 
 The @file{tex} subdirectory contains the TeX support files for
-bbdb-print, the @b{BBDB} printing utility (@xref{bbdb-print}.).
-The three support files, @file{bbdb-cols.tex}, @file{bbdb-print.tex}, and
+bbdb-print, the @b{BBDB} printing utility (@xref{bbdb-print}.). The
+three support files, @file{bbdb-cols.tex}, @file{bbdb-print.tex}, and
 @file{bbdb-print-brief.tex}, must be placed in a directory that is
 either on the default TeX search path or is listed in the
-@code{TEXINPUTS} environment variable.  If neither of these two options
+@code{TEXINPUTS} environment variable. If neither of these two options
 is taken, TeX will not be able to process the file output by
 @code{bbdb-print}.
 @end ifinfo
@@ -426,11 +429,11 @@ is taken, TeX will not be able to process the file output by
 @subsubheading @TeX files
 
 The @file{tex} subdirectory contains the @TeX support files for
-bbdb-print, the @b{BBDB} printing utility (@xref{bbdb-print}).
-The three support files, @file{bbdb-cols.tex}, @file{bbdb-print.tex}, and
+bbdb-print, the @b{BBDB} printing utility (@xref{bbdb-print}). The three
+support files, @file{bbdb-cols.tex}, @file{bbdb-print.tex}, and
 @file{bbdb-print-brief.tex}, must be placed in a directory that is
 either on the default @TeX search path or is listed in the
-@code{TEXINPUTS} environment variable.  If neither of these two options
+@code{TEXINPUTS} environment variable. If neither of these two options
 is taken, @TeX will not be able to process the file output by
 @code{bbdb-print}.
 @end iftex
@@ -3240,16 +3243,24 @@ where @var{NAME} is the symbol for the name of the note, and
 @node Mailing Lists, Changes, Internals, Top
 @section Mailing Lists
 
-There are two mailing lists for the @b{BBDB}.  The first is
-@code{bbdb-announce@@xemacs.org}, and is used for new release announcements, and as a
-result has very low traffic.  To subscribe to @code{bbdb-announce@@xemacs.org}, send mail
-to @code{bbdb-announce-request@@xemacs.org} with @samp{subscribe} as the subject.
+There are three mailing lists for the @b{BBDB}.  The first is
+@code{bbdb-announce@@xemacs.org}, and is used for new release
+announcements, and as a result has very low traffic.  To subscribe to
+@code{bbdb-announce@@xemacs.org}, send mail to
+@code{bbdb-announce-request@@xemacs.org} with @samp{subscribe} as the
+subject.
 
-The second mailing list, @code{bbdb-info@@xemacs.org}, is gets moderate traffic, and is
-intended for the discussion and distribution of development versions of the
-@b{BBDB}.  Users of development versions of the @b{BBDB} should be subscribed
-to this list.  It is to this list that bugs should be reported.  @xref{Known
-Bugs}. for instructions on submitting bug reports.
+The second mailing list, @code{bbdb-info@@lists.sourceforge.net}, gets
+moderate traffic, and is intended for the discussion and distribution of
+development versions of the @b{BBDB}. Users of development versions of
+the @b{BBDB} should be subscribed to this list. It is to this list that
+bugs should be reported. @xref{Known Bugs}. for instructions on
+submitting bug reports.
+
+A third mailing list, @code{bbdb-cvs@@lists.sourceforge.net}, is
+intended for developers to follow the changes made to the @b{BBDB}
+development version.  Developers of the @b{BBDB} should consider to
+subscribe to this list.
 
 @node Changes, The Latest Version, Mailing Lists, Top
 @section Changes in this Version
@@ -3299,7 +3310,7 @@ sites:
 
 @itemize @bullet
 @item
-WWW: @code{http://bbdb.sourceforge.net/}
+WWW: @code{http://bbdb.sourceforge.net}
 @end itemize
 
 @noindent Development versions of the @b{BBDB} can be found at the following
@@ -3307,12 +3318,15 @@ sites:
 
 @itemize @bullet
 @item
-@item Anon-CVS: @code{cvs.xemacs.org}.  Use the following as the value for the CVS
-@code{-d} flag:@*:pserver:xemacs@@cvs.xemacs.org:/usr/CVSroot
+WWW: @code{http://bbdb.sourceforge.net}
+@item
+WWW: @code{http://www.netcom.com/~simmonmt}
+@item
+Anononymous CVS: @code{http://bbdb.sourceforge.net}.
 @end itemize
 
 Users of development versions of the @b{BBDB} should subscribe to the
-@code{info-bbdb} mailing list.  @xref{Mailing Lists}.
+@code{bbdb-info} mailing list.  @xref{Mailing Lists}.
 
 @node The Future,  , The Latest Version, Top
 @section The Future
@@ -3355,10 +3369,11 @@ name (@samp{John} in this example).
 
 @end enumerate
 
-It is commonly known that there are no bugs in the @b{BBDB}.  Bugs found in
-defiance of this rule should be submitted to the @code{info-bbdb} mailing
-list.  To assist the developers, please include the version numbers of the
-various programs used when the bug occurred.  An example report follows.
+It is commonly known that there are no bugs in the @b{BBDB}. Bugs found
+in defiance of this rule should be submitted to the @code{bbdb-info}
+mailing list.  To assist the developers, please include the version
+numbers of the various programs used when the bug occurred.  An example
+report follows.
 
 @example
 BBDB Version:
@@ -3599,8 +3614,8 @@ GNUS code at this time.  This EOL statement was added for version 2.1.
 @node Thanks,  , , Top
 @section Thanks
 
-Thanks to everyone on the info-bbdb mailing list for many useful suggestions.
-This hack would be far less insidious without their input!
+Thanks to everyone on the info-bbdb mailing list for many useful
+suggestions. This hack would be far less insidious without their input!
 
 @subheading Thanks list for versions after 1.51
 
