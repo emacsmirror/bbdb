@@ -8,6 +8,11 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.28  2000/08/10 19:12:03  fenk
+@c Documentation of new features (somehow incomplete by now).
+@c
+@c Files:	texinfo/bbdb.texinfo
+@c
 @c Revision 1.27  2000/07/03 21:18:11  kuepper
 @c Fixed typo.
 @c
@@ -1201,7 +1206,8 @@ line. @refill
 (@code{bbdb-delete-current-field-or-record}) Delete the field on the
 current line.  If the current line is the first line of a record, the
 @b{BBDB} will, after prompting the user, delete the entire record from
-the database.
+the database.  This may also be applied to multiple records at once by
+@kbd{*}.
 
 @item C-o
 @findex bbdb-insert-new-field
@@ -1624,6 +1630,7 @@ to add them to the list.
 @cindex Mailing lists
 @cindex Mail Aliases
 @findex bbdb-define-all-aliases
+@findex bbdb-add-or-remove-mail-alias
 @findex define-mail-alias
 
 If you are using Jamie Zawinski's @file{mail-abbrevs.el} package, which
@@ -1634,6 +1641,11 @@ elsewhere.@refill
 If you want a mail alias to be defined for a person, simply add a
 @code{mail-alias} field to their record.  You may have multiple aliases
 for the same person; simply separate them with commas.@refill
+
+For convenience there is the function @code{bbdb-add-or-remove-mail-alias}
+bound to @kbd{a} which adds an alias to one or multiple records when prefixed
+by a @kbd{*}.  Called with a prefix argument @kbd{C-u} it will remove
+the given alias.@refill 
 
 If more than one person has the same mail-alias, then that alias expands
 to the addresses of all of those people; in this way you can maintain
@@ -2085,7 +2097,10 @@ name change, that is, when the ``real name'' in a message doesn't correspond
 to a record already in the database with the same network address.  As in,
 @w{@i{``John Smith <jqs@@frob.com>''}} versus
 @w{@i{``John Q. Smith <jqs@@frob.com>''.}}  If this is true, then you will
-not be asked if you want to change it (and it will not be changed.) @refill
+not be asked if you want to change it (and it will not be changed.)
+If a number then it is the number of seconds to sit-for while
+displaying the name mismatch.
+@refill
 
 @item bbdb-use-alternate-names
 @vindex bbdb-use-alternate-names
@@ -3206,6 +3221,12 @@ for modifications to individual address vectors.
 @tab  @code{bbdb-address-streets}@*
       @code{bbdb-address-set-streets}
 @tab  List of street address lines.  @code{nil} if none.
+
+@item Street3
+@tab  String
+@tab  @code{bbdb-address-street3}@*
+      @code{bbdb-address-set-street3}
+@tab  Third line of street address.  ``'' if none.
 
 @item City
 @tab  String
