@@ -2000,7 +2000,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
              (rec (car (symbol-value sym)))
              (pattern (buffer-substring beg end))
              name the-net nets)
-        (setq the-net (bbdb-extract-address-components pattern)
+        (setq the-net (bbdb-extract-address-components pattern t)
               the-net (car the-net)
               name (car the-net)
               the-net (cadr the-net))
