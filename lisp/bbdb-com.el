@@ -43,8 +43,8 @@
     (fset 'bbdb-auto-fill-function 'auto-fill-hook))
 
   (autoload 'mh-send "mh-e")
-  (autoload 'vm-session-initialization "vm-startup.el")
-  (autoload 'vm-mail-internal "vm-reply.el")
+  (autoload 'vm-session-initialization "vm-startup")
+  (autoload 'vm-mail-internal "vm-reply")
   (autoload 'mew-send "mew")
   (autoload 'bbdb-header-start "bbdb-hooks")
   (autoload 'bbdb-extract-field-value "bbdb-hooks")
@@ -62,6 +62,8 @@
     (fset 'bbdb-extent-string 'ignore)
     (fset 'bbdb-display-message 'ignore)
     (fset 'bbdb-event-to-character 'ignore)))
+
+(defvar bbdb-define-all-aliases-needs-rebuilt nil)
 
 (defcustom bbdb-default-country
   '"Emacs";; what do you mean, it's not a country?
@@ -974,6 +976,8 @@ section, then the entire field is edited, not just the current line."
     (bbdb-change-record record need-to-sort)
     (bbdb-redisplay-one-record record)
     ;; (bbdb-offer-save)
+    (if (and (eq 'property (car field)) (eq 'mail-alias (caadr field)))
+        (setq bbdb-define-all-aliases-needs-rebuilt 'edit))
     ))
 
 (defun bbdb-record-edit-name (bbdb-record)
@@ -1423,9 +1427,9 @@ deleted."
 (defun bbdb-delete-current-record (recs &optional noprompt)
   "Delete the entire bbdb database entry which the cursor is within.
 Pressing \\<bbdb-mode-map>\\[bbdb-apply-next-command-to-all-records] will
-delete all records listed in th BBDB buffer."
+delete all records listed in the BBDB buffer."
   (interactive (list (if (bbdb-do-all-records-p)
-                         (mapcat 'car bbdb-records)
+                         (mapcar 'car bbdb-records)
                        (list (bbdb-current-record t)))
                      current-prefix-arg))
   (if (not (listp recs))
@@ -2584,8 +2588,6 @@ all:   Generate an alias as for all nets ('star) and an alias for each net
                  (symbol :tag "<alias>* for all nets" star)
                  (symbol :tag "All aliases" all)))
 
-(defvar bbdb-define-all-aliases-needs-rebuilt nil)
-
 ;;;###autoload
 (defun bbdb-define-all-aliases ()
   "Define mail aliases for some of the records in the database.
@@ -2711,6 +2713,8 @@ of all of those people."
       (modify-syntax-entry ?* "w" mail-mode-header-syntax-table)
       (sendmail-pre-abbrev-expand-hook))))
 
+;; We should be cleverer here and instead of rebuilding all aliases we should
+;; just do what's necessary, i.e. remove deleted records and add new records
 (defun bbdb-rebuilt-all-aliases ()
   (let ((needs-rebuilt bbdb-define-all-aliases-needs-rebuilt))
     (when needs-rebuilt
@@ -2776,7 +2780,12 @@ The new alias will only be added if it isn't there yet."
     (if do-all-p
         (bbdb-redisplay-records)
       (bbdb-redisplay-one-record (bbdb-current-record))))
-  (setq bbdb-define-all-aliases-needs-rebuilt  (if delete "deleted" "new")))
+  (setq bbdb-define-all-aliases-needs-rebuilt
+        (if delete
+            'deleted
+          (if (bbdb-record-net (bbdb-current-record))
+              'new
+            nil))))
 
 ;;; Dialing numbers from BBDB
 (defcustom bbdb-dial-local-prefix-alist
@@ -3476,7 +3485,8 @@ proceed the processing of records."
              nil)
             ((eq bbdb-offer-to-create  ?!)
              nil)
-            ((eq bbdb-offer-to-create  ?n)
+            ((or (eq bbdb-offer-to-create  ?n)
+                 (eq bbdb-offer-to-create  ? ))
              (setq bbdb-update-records-mode 'next
                    bbdb-offer-to-create old-offer-to-create)
              (signal 'quit nil))
@@ -3493,15 +3503,16 @@ proceed the processing of records."
 Type ?  for this help.
 Type y  to add the current record.
 Type !  to add all remaining records.
-Type n  to skip the current record.
+Type n  to skip the current record. (You might also type space)
 Type s  to switch from annotate to search mode.
 Type q  to quit updating records.  No more search or annotation is done.")))
                (setq bbdb-offer-to-create nil)
-               (condition-case nil
-                   (bbdb-prompt-for-create)
-                 (quit
+               (condition-case error
+                   (progn (bbdb-prompt-for-create)
+                          (bbdb-kill-help-window w))
+                 (t
                   (bbdb-kill-help-window w)
-                  (signal 'quit nil)))))))))
+                  (apply 'signal error)))))))))
 
 ;;;###autoload
 (defcustom bbdb-get-addresses-headers
