@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.3  1997/11/02 06:32:38  simmonmt
+# Support for bbdb-sc.el
+#
 # Revision 1.2  1997/10/12 00:24:41  simmonmt
 # Changed VM, GNUS, and MHE definitions.  If the corresponding DIR
 # variables are set, the (the DIR vars) are added to load-path.  The
@@ -85,12 +88,13 @@ bbdb-vm.elc:	bbdb.elc bbdb-vm.el
 	$(EMACS) -batch -q -l ./bbdb.elc $(VM) -f batch-byte-compile $(@:.elc=.el)
 
 bbdb-srv.elc:   bbdb.elc bbdb-srv.el
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval \
-	'(if (and (locate-library "gnuserv") (locate-library "itimer")) (byte-compile-file "bbdb-srv.el") (message "Optional package bbdb-srv skipped"))'
+	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (and (locate-library "gnuserv") (locate-library "itimer")) (byte-compile-file "bbdb-srv.el") (message "Optional package bbdb-srv skipped - gnuserv not found"))'
 
 bbdb-reportmail.elc: bbdb.elc bbdb-reportmail.el
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval \
-	'(if (locate-library "reportmail") (byte-compile-file "bbdb-reportmail.el") (message "Optional package bbdb-reportmail skipped"))'
+	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "reportmail") (byte-compile-file "bbdb-reportmail.el") (message "Optional package bbdb-reportmail skipped - reportmail not found"))'
+
+bbdb-sc.elc: bbdb.elc bbdb-sc.el
+	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "supercite") (byte-compile-file "bbdb-sc.el") (message "Optional package bbdb-sc skipped - supercite not found"))'
 
 # bbdb-hooks uses VM macros if it can find VM.  If you don't have VM,
 # then the $(VM) makefile variable should be undefined or empty.
@@ -101,7 +105,7 @@ bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
 autoloads: auto-autoloads.elc
 
 extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc bbdb-srv.elc \
-	bbdb-reportmail.elc bbdb-snarf.elc bbdb-w3.elc
+	bbdb-reportmail.elc bbdb-snarf.elc bbdb-w3.elc bbdb-sc.elc
 bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc extras
 rmail:	bbdb bbdb-rmail.elc
 vm:	bbdb bbdb-vm.elc
