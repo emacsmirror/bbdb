@@ -1,3 +1,38 @@
+2000-08-28  Waider  <waider@stepstone.ie>
+
+	* lisp/Makefile:
+	Fix for bbdb-autoloads.el and Xemacs
+
+	* lisp/bbdb-gnus.el:
+	Moved bbdb-insinuate-message out to bbdb.el to prevent gnus
+	startup looping
+
+	* lisp/bbdb.el:
+	Moved bbdb-insinuate-message into this file to prevent gnus
+	startup looping 
+	Changed \M-\t to [(meta tab)]
+
+2000-08-25  Waider  <waider@stepstone.ie>
+
+	* lisp/bbdb-vm.el:
+	Cache the fact that you didn't want to create an entry for someone, so
+	you don't get prompted repeatedly.
+	Also removed changelog from file.
+
+2000-08-25  Waider  <waider@stepstone.ie>
+
+	* html/bbdb*.html,html/index.html:
+	Updated the HTML version of the manual.
+	Fixed broken stylesheet reference in web page.
+	Added link for Noah Friedman's copy of jwz's bbdb-pilot.el
+	Fixed link to Alex's page.
+	Added link to Martin's bbdb-gnokii.el
+
+	* lisp/bbdb-vm.el (bbdb/vm-update-records):
+        Fixed to remember that you didn't want to create an entry for a
+	particular message, so you don't get asked every time.
+	Removed Log entry at top of file.
+
 2000-08-18  Robert Fenk  <fenk@forwiss.de>
 
 	* texinfo/bbdb.texinfo (VM Features): Documentation of new VM
