@@ -40,12 +40,8 @@
     (error nil)))
 
 ;;; Compiler hushing
-;;; Some of these are probably obsolete variables for older versions
-;;; of gnus that should be taken out back and shot.
 (eval-when-compile
-   (defvar gnus-optional-headers)
-   (defvar gnus-Subject-mode-map)
-   (defvar gnus-Subject-buffer))
+   (defvar gnus-optional-headers))
 
 (defun bbdb/gnus-get-message-id ()
   "Return the message-id of the current message."
@@ -216,20 +212,14 @@ displaying the record corresponding to the sender of the current message."
              (lambda (w)
                (let ((b (current-buffer)))
                  (set-buffer (window-buffer w))
-                 (prog1 (or (eq major-mode 'gnus-Article-mode)
-                            (eq major-mode 'gnus-article-mode))
+                 (prog1 (eq major-mode 'gnus-article-mode)
                    (set-buffer b)))))
           (or bbdb-inside-electric-display
               (not (get-buffer-window bbdb-buffer-name))
               (let (w)
                 (delete-other-windows)
-                (if (assq 'article gnus-buffer-configuration)
-                    (gnus-configure-windows 'article)
-                  (gnus-configure-windows 'SelectArticle))
-                (if (setq w (get-buffer-window
-                             (if (boundp 'gnus-summary-buffer)
-                                 gnus-summary-buffer
-                               gnus-Subject-buffer)))
+                (gnus-configure-windows 'article)
+                (if (setq w (get-buffer-window gnus-summary-buffer))
                     (select-window w)))))
         (set-buffer b))
       (if records (bbdb-display-records records bbdb-pop-up-display-layout)))
@@ -685,7 +675,8 @@ determine the group and spooling priority for a single address."
        ((and rgx pub
          (goto-char (point-min))
          (re-search-forward "^From: \\([^ \n]+\\)[ \n]" nil t)
-         (string-match rgx (buffer-substring (match-beginning 1) (match-end 1))))
+         (string-match rgx (buffer-substring (match-beginning 1)
+                                             (match-end 1))))
         (cons pub 3))
        (prv
         (cons prv
@@ -705,18 +696,10 @@ determine the group and spooling priority for a single address."
 (defun bbdb-insinuate-gnus ()
   "Call this function to hook BBDB into GNUS."
   (setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
-  (cond ((boundp 'gnus-Article-prepare-hook) ; 3.14 or lower
-     (add-hook 'gnus-Article-prepare-hook 'bbdb/gnus-pop-up-bbdb-buffer)
-     (add-hook 'gnus-Save-newsrc-hook 'bbdb-offer-save)
-     (define-key gnus-Subject-mode-map ":" 'bbdb/gnus-show-sender)
-     (define-key gnus-Subject-mode-map [(control :)]
-       'bbdb/gnus-summary-show-all-recipients)
-     (define-key gnus-Subject-mode-map ";" 'bbdb/gnus-edit-notes))
-    (t                                   ; 3.15 or higher
-     (add-hook 'gnus-article-prepare-hook 'bbdb/gnus-pop-up-bbdb-buffer)
-     (add-hook 'gnus-save-newsrc-hook 'bbdb-offer-save)
-     (define-key gnus-summary-mode-map ":" 'bbdb/gnus-show-sender)
-     (define-key gnus-summary-mode-map ";" 'bbdb/gnus-edit-notes)))
+  (add-hook 'gnus-article-prepare-hook 'bbdb/gnus-pop-up-bbdb-buffer)
+  (add-hook 'gnus-save-newsrc-hook 'bbdb-offer-save)
+  (define-key gnus-summary-mode-map ":" 'bbdb/gnus-show-sender)
+  (define-key gnus-summary-mode-map ";" 'bbdb/gnus-edit-notes)))
 
   ;; Set up user field for use in gnus-summary-line-format
   (let ((get-author-user-fun (intern

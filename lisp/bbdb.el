@@ -420,8 +420,7 @@ entry should be automatically created.  You can use this to, for
 example, create or not create messages which have a particular
 subject.  If you want to autocreate messages based on the current
 newsgroup, it's probably a better idea to set this variable to t or
-nil from your `gnus-select-group-hook' (for Gnus - use
-gnus-Select-group-hook for GNUS) instead."
+nil from your `gnus-select-group-hook' instead."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
                  (const :tag "Prompt before creating" prompt)
@@ -3509,9 +3508,7 @@ after having used inferior software to add entries to the BBDB, however."
        (error "the BBDB was mis-sorted: it has been repaired.")))))
 
 (defvar bbdb-init-forms
-  '((Gnus                       ; Gnus 3.14 or older
-     (add-hook 'gnus-Startup-hook 'bbdb-insinuate-gnus))
-    (gnus                       ; Gnus 3.15 or newer
+  '((gnus                       ; gnus 3.15 or newer
      (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus))
     (mh-e                       ; MH-E
      (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh))
@@ -3533,7 +3530,7 @@ after having used inferior software to add entries to the BBDB, however."
      (add-hook 'sc-load-hook 'bbdb-insinuate-sc))
     (w3                         ; WWW browser
      (add-hook 'w3-load-hook 'bbdb-insinuate-w3)))
-  "The alist which maps features to insinuationn forms.")
+  "The alist which maps features to insinuation forms.")
 
 ;;;###autoload
 (defun bbdb-initialize (&rest to-insinuate)
@@ -3542,9 +3539,7 @@ passed as arguments to initiate the appropriate insinuations.
 
  Initialization of mail/news readers:
 
-   Gnus       Initialize BBDB support for the Gnus version 3.14 or
-              older.
-   gnus       Initialize BBDB support for the Gnus mail/news reader
+   gnus       Initialize BBDB support for the gnus mail/news reader
               version 3.15 or newer.  If you pass the `gnus' symbol,
               you should probably also pass the `message' symbol.
    mh-e       Initialize BBDB support for the MH-E mail reader.
