@@ -932,7 +932,7 @@ If the note is absent, returns a zero length string."
 (defun bbdb-buffer ()
   (if (and bbdb-buffer (buffer-live-p bbdb-buffer))
       bbdb-buffer
-    (when (file-newer-than-file-p bbdb-file-remote bbdb-file)
+    (if (and bbdb-file-remote (file-newer-than-file-p bbdb-file-remote bbdb-file))
       (copy-file bbdb-file-remote bbdb-file t t))
     (setq bbdb-buffer
           (find-file-noselect bbdb-file 'nowarn))))
