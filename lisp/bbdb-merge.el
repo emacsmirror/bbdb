@@ -115,7 +115,9 @@ Returns the Grand Unified Record."
           ;; lifted from bbdb-com.el
           (let ((n1 (bbdb-record-raw-notes merge-record))
                 (n2 notes)
-                tmp)
+                tmp
+				(bbdb-refile-notes-default-merge-function ;; XXX
+				 'bbdb-merge-strings)) 
             (or (equal n1 n2)
                 (progn
                   (or (listp n1) (setq n1 (list (cons 'notes n1))))
