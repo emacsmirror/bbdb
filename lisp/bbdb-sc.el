@@ -26,15 +26,16 @@
 ;;; for improvements and to Michael D. Carney  <carney@ltx-tr.com>
 ;;; for testing and feedback.
  
-;;; Date: 1995/03/28 12:11:01  by Author: marsj 
-;;; Revision: 1.6 
+;;; $Date$ by $Author$
+;;; $Revision$
 
 ;;; This file adds the ability to define attributions for Supercite in
 ;;; a BBDB, enables you to retrieve your standard attribution from
-;;; BBDB. If the from header in the mail to which you are replying only
-;;; contains the e-mail address, the personal name is lookup in BBDB. You
-;;; need Supercite to make this code work. The attribution os is stored
-;;; under the key attribution.
+;;; BBDB. If the from header in the mail to which you are replying
+;;; only contains the e-mail address, the personal name is lookup in
+;;; BBDB. You need Supercite to make this code work. The attribution
+;;; os is stored under the key attribution (unless you've changed
+;;; bbdb/sc-attribution-field).
 
 ;;; To use enable this code you will have to the "sc-consult" to your
 ;;; sc-preferred-attribution-list. This file sets variable if it is not
@@ -71,8 +72,9 @@
 
 ;;;
 ; $Log$
-; Revision 1.6  1997/11/02 05:26:08  simmonmt
-; *** empty log message ***
+; Revision 1.7  1997/11/02 07:46:44  simmonmt
+; Welcome to the family.  Moved the automatically running code into
+; functions.  Generalized attribution field.
 ;
 ; Revision 1.6  1995/03/28  12:11:01  marsj
 ; Added original source and thanks
@@ -93,33 +95,6 @@
 ; Initial revision
 ;;;
 
-;;; setup the default setting of the variables
-
-;; check for sc-consult in sc-preferred-attribution-list
-(if (boundp 'sc-preferred-attribution-list)
-    (or (member '"sc-consult" sc-preferred-attribution-list)
-	(error "\"sc-consult\" not included in sc-preferred-attribution-list"))
-  (defvar sc-preferred-attribution-list
-    '("sc-lastchoice" "x-attribution" "sc-consult" 
-        "initials" "firstname" "lastname")))
-
-;; check sc-attrib-selection-list
-(defvar sc-attrib-selection-list
-  '(("sc-from-address" 
-     ((".*" . (bbdb/sc-consult-attr 
-	       (sc-mail-field "sc-from-address")))))))
-
-;; set sc-mail-glom-frame
-(defvar sc-mail-glom-frame
-   '((begin                        (setq sc-mail-headers-start (point)))
-     ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
-     ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
-     ("^$"                         (progn (bbdb/sc-default)
- 					 (list 'abort '(step . 0))))
-     ("^[ \t]+"                    (sc-mail-append-field))
-     (sc-mail-warn-if-non-rfc822-p (sc-mail-error-in-mail-field))
-     (end                          (setq sc-mail-headers-end (point)))))
-
 ;;; packages
 (require 'bbdb)
 (require 'supercite)
@@ -129,6 +104,9 @@
  "t if you like to create a new BBDB entry when 
 entering a non-default attribution, 'ask if the user
 should be asked before creation and NIL if we never create a new entry.")
+
+(defvar bbdb/sc-attribution-field 'attribution
+  "The BBDB field used for Supercite attribution information.")
 
 ;;; Code starts 
 (defvar bbdb/sc-last-attribution ""
@@ -146,7 +124,7 @@ FROM is user e-mail address to look for in BBDB."
 		   from)))
       (if from
 	  (let ((record (bbdb-search-simple nil from)))
-	    (and record (bbdb-record-getprop record 'attribution))))))
+	    (and record (bbdb-record-getprop record bbdb/sc-attribution-field))))))
 
 (defun bbdb/sc-set-attr ()
   "Add attribute to BBDB."
@@ -168,7 +146,8 @@ FROM is user e-mail address to look for in BBDB."
 		(if (and (not (and old (string-equal old attr)))
 			 (or (not (eq bbdb/sc-replace-attr-p 'ask))
 			     (y-or-n-p (concat "Change attribution " attr))))
-		    (progn (bbdb-record-putprop record 'attribution attr)
+		    (progn (bbdb-record-putprop record
+						bbdb/sc-attribution-field attr)
 			   (bbdb-change-record record nil)))))))))
 
 (defun bbdb/sc-default ()
@@ -186,13 +165,55 @@ BBDB, and prepend a new \"from\" field to sc-mail-info."
 				(format "%s (%s)" (car (cdr pair)) name))
 			  sc-mail-info)))))))
 
-;; insert our hooks
-(bbdb-add-hook 'sc-post-hook 'bbdb/sc-set-attr)
-(bbdb-add-hook 'sc-attribs-postselect-hook 
-	       (function (lambda()
-			   (setq bbdb/sc-last-attribution 
-				 (if sc-downcase-p 
-				     (downcase attribution) attribution)))))
+;;; setup the default setting of the variables
+(defun bbdb/sc-setup-variables ()
+  "Set up the various Supercite variables for the BBDB.
+`sc-preferred-attribution-list', `sc-attrib-selection-list', and
+`sc-mail-glom-frame' are set, but only if they have not previously
+been defined.  It is strongly suggested that you not call this
+function directly, but that you use this function (specifically the
+settings contained herein) as an example.  In other words, set these
+variables yourself, either in your Emacs configuration file or using
+Custom."
+
+  ;; check for sc-consult in sc-preferred-attribution-list
+  (if (boundp 'sc-preferred-attribution-list)
+      (or (member '"sc-consult" sc-preferred-attribution-list)
+	  (bbdb-warn (concat "\"sc-consult\" not included in "
+			     "sc-preferred-attribution-list.  Attributions cannot"
+			     "be gathered from the BBDB without \"sc-consult\""
+			     "in sc-preferred-attribution-list")))
+    (defvar sc-preferred-attribution-list
+      '("sc-lastchoice" "x-attribution" "sc-consult" 
+        "initials" "firstname" "lastname")))
+  
+  ;; check sc-attrib-selection-list
+  (defvar sc-attrib-selection-list
+    '(("sc-from-address" 
+       ((".*" . (bbdb/sc-consult-attr 
+		 (sc-mail-field "sc-from-address")))))))
+  
+  ;; set sc-mail-glom-frame
+  (defvar sc-mail-glom-frame
+    '((begin                        (setq sc-mail-headers-start (point)))
+      ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
+      ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
+      ("^$"                         (progn (bbdb/sc-default)
+					   (list 'abort '(step . 0))))
+      ("^[ \t]+"                    (sc-mail-append-field))
+      (sc-mail-warn-if-non-rfc822-p (sc-mail-error-in-mail-field))
+      (end                          (setq sc-mail-headers-end (point))))))
+
+;; insert our hooks - call me from your Emacs initialization file
+;;;###autoload
+(defun bbdb-insinuate-sc ()
+  "Call this function to hook BBDB into Supercite."
+  
+  (bbdb-add-hook 'sc-post-hook 'bbdb/sc-set-attr)
+  (bbdb-add-hook 'sc-attribs-postselect-hook 
+		 (function (lambda()
+			     (setq bbdb/sc-last-attribution 
+				   (if sc-downcase-p 
+				       (downcase attribution) attribution))))))
 
 ;;; end of bbdb-sc.el
-
