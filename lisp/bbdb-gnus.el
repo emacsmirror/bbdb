@@ -111,8 +111,8 @@ C-g again it will stop scanning."
         (msg-id (bbdb/gnus-get-message-id))
         records cache)
     (save-excursion
-      (set-buffer (get-buffer gnus-article-buffer))
-      (gnus-summary-toggle-header 1)
+      (set-buffer gnus-article-buffer)
+      
       (if (and msg-id (not bbdb/gnus-offer-to-create))
           (setq cache (bbdb-message-cache-lookup msg-id)))
 
@@ -134,7 +134,6 @@ C-g again it will stop scanning."
                          offer-to-create)))
         (if (and bbdb-message-caching-enabled msg-id)
             (bbdb-encache-message msg-id records))))
-    (gnus-summary-toggle-header -1)	; assume hidden originally
     records))
 
 ;;;###autoload
@@ -496,20 +495,16 @@ addresses better than the traditionally static global scorefile."
           "))"))))
   bbdb/gnus-score-alist)
 
-;;; Posted originally by Colin Rafferty on the <bbdb-info> mailing list
+;;;###autoload
 (defun bbdb/gnus-summary-show-all-recipients (not-elided)
   "Display BBDB records for all recipients of the message."
   (interactive "P")
-  (gnus-summary-select-article)
   (let ((bbdb-display-layout (or (not not-elided)
                                  bbdb-pop-up-display-layout
                                  bbdb-display-layout))
-        (bbdb-auto-notes-alist nil))
-    (bbdb/gnus-pop-up-bbdb-buffer nil)
-    (set-buffer (get-buffer gnus-article-buffer))
-    (gnus-summary-toggle-header 1)
-    (bbdb-show-all-recipients)
-    (gnus-summary-toggle-header -1)))
+        (bbdb-get-only-first-address-p nil))
+    (gnus-summary-select-article)
+    (bbdb/gnus-show-records 'recipients)))
 
 ;;; from Brian Edmonds' gnus-bbdb.el
 ;;;
