@@ -634,7 +634,7 @@ style addresses, or any number of things.
 This function will be called repeatedly until it returns a value EQ to the
 value passed in.  So multiple rewrite rules might apply to a single address."
   :group 'bbdb-hooks
-  :type 'hook)
+  :type 'function)
 
 (defcustom bbdb-canonicalize-redundant-nets-p t
   "*If this is non-nil, redundant network addresses will be ignored.
@@ -1452,8 +1452,8 @@ formatted and inserted into the current buffer.  This is used by
     ;; if we haven't reached the end of functions, we got a hit.
     (when alist
       (if printing
-	  (funcall (cdar alist) addr)
-	(funcall (cdar alist) addr indent)))))
+      (funcall (cdar alist) addr)
+    (funcall (cdar alist) addr indent)))))
 
 (defun bbdb-format-record-name-company (record)
   (let ((name (or (bbdb-record-name record) "???"))
@@ -1654,8 +1654,10 @@ multi-line layout."
          (omit-list   (bbdb-display-layout-get-option layout-spec 'omit))
          (order-list  (bbdb-display-layout-get-option layout-spec 'order))
          (all-fields  (append '(phones addresses net aka)
-                              (mapcar (lambda (r) (car r))
-                                      (bbdb-record-raw-notes record))))
+                  (let ((raw-notes (bbdb-record-raw-notes record)))
+                (if (stringp raw-notes)
+                    '(notes)
+                  (mapcar (lambda (r) (car r)) raw-notes)))))
          format-function field-list)
 
     (if (functionp omit-list)
