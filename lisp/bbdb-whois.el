@@ -1,4 +1,5 @@
 ;;; bbdb-whois.el -- Big Brother gets a little help from Big Brother
+;;; This file is part of the Insidious Big Brother Database (aka BBDB).
 ;;;
 ;;; Copyright (C) 1992, 1993 Roland McGrath
 ;;;
@@ -29,11 +30,12 @@
 	 (or (member text old)
 	     ((, set) (, record) (nconc old (list text))))))))
 
-(defvar bbdb-whois-server (or (and (boundp 'whois-server) whois-server)
+(defcustom bbdb-whois-server (or (and (boundp 'whois-server) whois-server)
 			      "rs.internic.net")
-  "*Server for \\[bbdb-whois] lookups.")
+  "*Server for \\[bbdb-whois] lookups."
+  :group 'bbdb-utilities
+  :type 'string)
 
-;;;###autoload
 (defun bbdb-whois (the-record &optional server)
   (interactive (list (if (string= bbdb-buffer-name (buffer-name))
 			 (bbdb-current-record)
