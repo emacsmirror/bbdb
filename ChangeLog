@@ -1,5 +1,13 @@
 2003-08-05  Waider  <waider@waider.ie>
 
+	* lisp/bbdb.el:
+	* bbdb-default-area-code: fix customize hook to recognize integers
+
+	* texinfo/bbdb.texinfo:
+	* Rewrite doco for bbdb-electric-p to make it a little clearer.
+
+	* ChangeLog: *** empty log message ***
+
 	* testing/Makefile.in: * Use GREP and GREPCONTEXT autoconfs
 
 	* configure.ac:
@@ -9,6 +17,12 @@
 
 	* testing/bbdb-test.el:
 	* Updated to reflect small change in completion logic
+
+2003-07-24  Jochen Küpper  <bbdb@jochen-kuepper.de>
+
+	* bits/bbdb-pgp.el: No error if mailcrypt isn't available.
+	(bbdb/pgp-quiet): Added.
+	(bbdb/pgp-hook-fun): Be quite if bbdb/pgp-quiet is set.
 
 2003-07-24  Robert Fenk  <Robert Fenk>
 
