@@ -1763,6 +1763,7 @@ multi-line layout."
   (let ((first (car (car records))))
     (save-excursion
       (display-buffer (get-buffer-create bbdb-buffer-name))
+      (bbdb-pop-up-bbdb-buffer)
       (set-buffer bbdb-buffer-name)
 
       ;; If append is unset, clear the buffer.
@@ -3046,8 +3047,8 @@ return them."
   ;; Now, do the hook run. Note, if you mess up, it's possible that
   ;; BBDB will get stuck here oscillating between various definitions
   ;; of the canonical address.
-  (while (not (eq net (setq net (run-hook-with-args
-                                 'bbdb-canonicalize-net-hook net)))))
+  (while (not (equal net (setq net (run-hook-with-args
+                                    'bbdb-canonicalize-net-hook net)))))
 
   net)
 
