@@ -298,9 +298,14 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
     (delete-region (point) (or next-marker (point-max)))
     (if (< position (or next-marker (point-max)))
         (goto-char position)
-      (goto-char (- (or next-marker (point-max)) 2))))
-  (save-excursion
-    (run-hooks 'bbdb-list-hook)))
+      (goto-char (- (or next-marker (point-max)) 2)))
+    
+    (save-excursion
+      (run-hooks 'bbdb-list-hook))
+    (if bbdb-gui
+        (bbdb-fontify-buffer (list record-cons
+                                   ;; the record ends here
+                                   (list nil nil next-marker))))))
 
 ;;; Parsing phone numbers
 
@@ -665,23 +670,51 @@ certain commands.\)"
   "Whether the last command was `bbdb-apply-next-command-to-all-records'."
   '(eq last-command 'bbdb-apply-next-command-to-all-records))
 
-(defvar bbdb-add-next-search-results nil)
+
+(defvar bbdb-append-records nil)
 
 ;;;###autoload
-(defun bbdb-add-next-search-results-p ()
-  (let ((p bbdb-add-next-search-results))
-    (setq bbdb-add-next-search-results nil)
-    p))
-
+(defun bbdb-append-records-p ()
+  (cond ((eq t bbdb-append-records))
+        ((numberp bbdb-append-records)
+         (setq bbdb-append-records
+               (1- bbdb-append-records))
+         (when (= 0 bbdb-append-records)
+           (when (not bbdb-silent-running)
+             (message "No further search results will be appended.")
+             (sit-for 2))
+           (setq bbdb-append-records nil))
+         t)
+        (bbdb-append-records
+         (setq bbdb-append-records nil)
+         t)
+        (t nil)))
+  
 ;;;###autoload
-(defun bbdb-add-next-search-results ()
-  "Typing \\<bbdb-mode-map>\\[bbdb-add-next-search-results] \
-in the *BBDB* buffer makes the next search/display command to add
-the records to the currently displayed."
-  (interactive)
+(defun bbdb-append-records (arg)
+  "Typing \\<bbdb-mode-map>\\[bbdb-append-records] \
+in the *BBDB* buffer makes the next search/display command to append
+new records to those in the *BBDB* buffer.
+
+With an prefix arg (C-u) toggle between always append and no append.
+With an prefix arg that is a positive number append will be enabled for that
+many times.
+With any other argument append will be enabled once."
+  (interactive "P")
   (message (substitute-command-keys
-            "\\<bbdb-mode-map>\\[bbdb-add-next-search-results] - "))
-  (setq bbdb-add-next-search-results t))
+            "\\<bbdb-mode-map>\\[bbdb-append-records] - "))
+  (setq bbdb-append-records
+        (cond ((and arg (listp arg))
+               (if (not bbdb-silent-running)
+                   (if (not bbdb-append-records)
+                       (message "Always append records.")
+                     (message "Do not append records.")))
+               (not bbdb-append-records))
+              ((and (numberp arg) (< 1 arg))
+               (if (not bbdb-silent-running)
+                   (message "Append records for the next %d times." arg))
+               arg)
+              (t 'once))))
 
 ;;;###autoload
 (defun bbdb-insert-new-field (name contents)
