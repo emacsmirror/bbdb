@@ -3363,8 +3363,7 @@ When called interactively with a prefix argument, insert string at point."
     (vm-old                     ; the alternative mail reader
      (add-hook 'vm-load-hook 'bbdb-insinuate-vm))
     (vm                        ; newer versions don't have vm-load-hook
-     (progn (eval-after-load "vm" '(bbdb-insinuate-vm))
-            (error "foo!")))
+     (progn (eval-after-load "vm" '(bbdb-insinuate-vm))))
     (message                    ; the gnus mail user agent
      (add-hook 'message-setup-hook 'bbdb-insinuate-message))
     (reportmail                 ; mail notification
