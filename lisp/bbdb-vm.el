@@ -121,10 +121,8 @@ C-g again it will stop scanning."
 
     (if cache
         (setq records (if bbdb-get-only-first-address-p
-                          (if (cadr cache);; stop it from returning '(nil)
-                              (list (cadr cache))
-                            nil)
-                        (cdr cache)))
+                          (car cache)
+                        cache))
       
       (let ((bbdb-update-records-mode (or bbdb/vm-update-records-mode
                                           bbdb-update-records-mode)))

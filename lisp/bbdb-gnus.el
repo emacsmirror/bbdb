@@ -147,12 +147,12 @@ the user confirms the creation."
       (set-buffer (get-buffer gnus-article-buffer))
       (if (and msg-id (not bbdb/gnus-offer-to-create))
           (setq cache (bbdb-message-cache-lookup msg-id)))
+      
       (if cache
           (setq records (if bbdb-get-only-first-address-p
-                          (if (cadr cache);; stop it from returning '(nil)
-                              (list (cadr cache))
-                            nil)
-                          (cdr cache)))
+                            (car cache)
+                          cache))
+        
         (let ((bbdb-update-records-mode (or bbdb/gnus-update-records-mode
                                             bbdb-update-records-mode)))
           (setq records (bbdb-update-records
