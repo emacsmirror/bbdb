@@ -8,6 +8,11 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.23  2000/06/14 14:42:29  waider
+@c * Documented changes in database structure
+@c * Changed web address, email addresses
+@c * Some minor typos corrected & details added
+@c
 @c Revision 1.22  2000/04/16 12:47:00  kuepper
 @c bbdb-print documentation
 @c Fix \bigbf
@@ -61,10 +66,10 @@
 @ifinfo
 This file documents the Insidious Big Brother Database
 
-This is edition $Revision$ of the BBDB User Manual for BBDB version 2.00.03.
+This is edition $Revision$ of the BBDB User Manual for BBDB version 2.2.
 
 Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
-Copyright (c) 1997-1998 Matt Simmons <simmonmt@@acm.org>
+Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
 @end ifinfo
 
 @titlepage
@@ -76,11 +81,11 @@ Copyright (c) 1997-1998 Matt Simmons <simmonmt@@acm.org>
 @page
 Copyright @copyright{} 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
-Copyright @copyright{} 1997-1998 Matt Simmons <simmonmt@@acm.org>
+Copyright @copyright{} 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
 @sp 2
 This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
-version 2.00, $Date$.@refill
+version 2.2, $Date$.@refill
 
 @sp 2
 
@@ -172,6 +177,7 @@ directory:
                 printing utility
      texinfo  - the documentation files for the @b{BBDB}
      utils    - miscellaneous external utility programs
+     misc     - things that don't fall into the above categories
 @end example
 @end ifinfo
 @iftex
@@ -216,7 +222,7 @@ The table below lists the requirements of the various portions of the
 @b{BBDB}.  Please note that the absence of any of the below optional
 packages will not affect core @b{BBDB} functionality.
 
-@multitable {bbdb-r eportmail } {Package needed} {GNU 19.34} {GNU 20.2} {XEmacs} {XEmacs}
+@multitable {bbdb-reportmail } {Package needed} {GNU 19.34} {GNU 20.2} {XEmacs} {XEmacs}
 @item @* BBDB file
 @tab @* Package needed
 @tab @* GNU 19.34
@@ -1466,9 +1472,11 @@ There are BBDB interfaces for the following news readers:
 @subsection Mail Sending Interfaces
 
 @findex bbdb-complete-name
+@vindex bbdb-dwim-net-address-allow-redundancy
 @cindex Name completion
 @cindex Mail address completion
 @cindex Address completion
+@cindex Format of completed address
 When sending mail, the keystroke @kbd{M-TAB} is bound to the
 function @code{bbdb-complete-name}.  This will take the string that
 you have typed (from point back to the preceding colon, comma, or
@@ -1478,10 +1486,14 @@ subsequence of a person's full name or network address; if it
 completes ambiguously, then what you have typed will be replaced
 with the common portion of the matches.  Typing @kbd{M-TAB} again will
 show a list of possible completions.  If it completes unambiguously,
-then an address of the form @w{@code{User Name <email-address>}} will
-be inserted.  The variable @code{bbdb-completion-type} controls
-whether completion is done on real names, or network addresses, or
-both. @refill
+then an address will be inserted.  The variable
+@code{bbdb-completion-type} controls whether completion is done on real
+names, or network addresses, or both. The address inserted is normally
+of the form @w{@code{User Name <email-address>}}; however, if
+@code{User Name} has an address of the form
+@code{<user.name@@somedomain>}, only the @code{<email-address>} portion
+is inserted. This can be overridden by setting
+@code{bbdb-dwim-net-address-allow-redundancy} to @code{t}. @refill
 
 This binding is automatically set by the various insinuation functions
 documented earlier in this manual.  (@xref{Initial Configuration}.)
@@ -2613,7 +2625,7 @@ by @code{bbdb-print-file-name}).  The generated output will be shown, and must
 be @b{manually} saved.
 
 For each record printed, @code{bbdb-print} will look for the presence of the
-@code{tex-name} field.  If this field is found, its value will be printied
+@code{tex-name} field.  If this field is found, its value will be printed
 instead of the @code{name} field for the record in question.  This field is
 intended to allow the storage of names with accents or other characters that
 would be illegal in the address portion of a message.  While other fields have 
@@ -2631,7 +2643,7 @@ by @code{bbdb-print}.  It defaults to:@*
 @center @code{(tex-name aka mail-alias)}
 
 @item bbdb-print-file-name
-@vindex bbd-print-file-name
+@vindex bbdb-print-file-name
 The name of the file where generated TeX output is to be stored.  The default
 is @file{~/bbdb.tex}.
 
@@ -3106,23 +3118,11 @@ for modifications to individual address vectors.
       @code{bbdb-address-set-location}
 @tab  Address identifier
 
-@item Street1
-@tab  String
-@tab  @code{bbdb-address-street1}@*
-      @code{bbdb-address-set-street1}
-@tab  First line of street address.  ``'' if none.
-
-@item Street2
-@tab  String
-@tab  @code{bbdb-address-street2}@*
-      @code{bbdb-address-set-street2}
-@tab  Second line of street address.  ``'' if none.
-
-@item Street3
-@tab  String
-@tab  @code{bbdb-address-street3}@*
-      @code{bbdb-address-set-street3}
-@tab  Third line of street address.  ``'' if none.
+@item Streets
+@tab  List
+@tab  @code{bbdb-address-streets}@*
+      @code{bbdb-address-set-streets}
+@tab  List of street address lines.  @code{nil} if none.
 
 @item City
 @tab  String
@@ -3137,10 +3137,17 @@ for modifications to individual address vectors.
 @tab  State abbreviation
 
 @item Zip
-@tab  Integer
+@tab  Integer (american)
+      List (non-american)
 @tab  @code{bbdb-address-zip}@*
       @code{bbdb-address-set-zip}
 @tab  Zip code
+
+@item Country
+@tab String
+@tab @code{bbdb-address-country}@*
+     @code{bbdb-address-set-country}
+@tab Country
 
 @end multitable
 
@@ -3260,9 +3267,9 @@ Bugs}. for instructions on submitting bug reports.
 (the following version-migration text will move in a future version.  It is in
 this section currently because new users will likely not experience it)
 
-There has been a version change in the @b{BBDB} database file.  The date
-format was changed to make the @b{BBDB} Y2K-compliant, and to allow for easy
-sorting of database records based on dates.
+There has been a version change in the @b{BBDB} database file.  The new
+version supports non-US zip codes, and an additional ``Country'' field
+in addresses.
 
 An automatic version-migration mechanism has been implemented that allows
 older version @file{.bbdb} files to either be migrated to the new version, or
@@ -3278,24 +3285,10 @@ in the @code{.bbdb} buffer, but will be stored internally in the new format.
 When changes need to be made to the @code{.bbdb} buffer, changed records will
 be reverse-migrated from their internal version to that of the disk file.
 
-@subsubheading Initialization Sequence Change
-
-The initialization sequence has changed.  Many of the forms that were required
-in 1.51 for initialization are no longer necessary.  @xref{Initial
-Configuration}.
-
 @node Other Changes,  , Major Changes, Changes
 @subsection Other Changes
 
 @itemize @bullet
-@item XEmacs packaging has been partially implemented.
-@item bbdb-gnus (support for Gnus scoring and Summary buffer rewriting) has
-been integrated
-@item Time-based functions have been introduced
-@item Web-browser functions (bbdb-w3) have been integrated.
-@item mail-abbrevs and mail-extr have been removed
-@item Supercite support (bbdb-sc) has been integrated
-@item And lots more...
 @end itemize
 
 @node The Latest Version, The Future, Changes, Top
@@ -3306,11 +3299,7 @@ sites:
 
 @itemize @bullet
 @item
-WWW: @code{http://www.netcom.com/~simmonmt}
-@item
-WWW: @code{http://people.netscape.com/jwz/bbdb}
-@item
-FTP: @code{ftp.xemacs.org:/pub/bbdb/bbdb.tar.gz}
+WWW: @code{http://bbdb.sourceforge.net/}
 @end itemize
 
 @noindent Development versions of the @b{BBDB} can be found at the following
@@ -3318,10 +3307,8 @@ sites:
 
 @itemize @bullet
 @item
-WWW: @code{http://www.netcom.com/~simmonmt}
-@c @item
-@c Anon-CVS: @code{cvs.xemacs.org}.  Use the following as the value for the CVS
-@c @code{-d} flag:@*:pserver:xemacs@cvs.xemacs.org:/usr/CVSroot
+@item Anon-CVS: @code{cvs.xemacs.org}.  Use the following as the value for the CVS
+@code{-d} flag:@*:pserver:xemacs@@cvs.xemacs.org:/usr/CVSroot
 @end itemize
 
 Users of development versions of the @b{BBDB} should subscribe to the
@@ -3388,20 +3375,6 @@ Bug Description:
 @itemize @bullet
 @item
 Add bbdb/@i{MUA}-delete-sender-record
-
-@c Implemented 10-Apr-1998
-@c
-@c @item
-@c More bindings for @code{*BBDB*} buffer (@code{other-window},
-@c @code{bbdb-create}, @code{bbdb-changed}, @code{bbdb}) courtesy of David
-@c Bakhash.  (@code{<199801192104.QAA04399@@Bulgaria.MIT.edu>}
-@c and @code{<yfqyb0b3jor.fsf@@acm.org>} on @code{info-bbdb}.
-
-@item
-Make completion more consistent so completing an email address gives both the
-name and the net address, as opposed to just completing the net
-address.  See thread starting with
-@code{<ilulnwci761.fsf@@squid.pdc.kth.se>} in @code{info-bbdb}.
 
 @item
 Configurable completion.  Should allow user to specify "complete on
