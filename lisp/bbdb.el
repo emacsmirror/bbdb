@@ -37,6 +37,12 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.60  1998/03/10 07:45:44  simmonmt
+;; Fixed defface standin.  Created widget (bbdb-alist-with-header) for
+;; bbdb-auto-notes-alist customization fix.  Changed defaults for
+;; bbdb-create-hook and bbdb-change-hook to create timestamp and
+;; creation-date fields.  Added autoload for bbdb-srv.
+;;
 ;; Revision 1.59  1998/02/23 07:20:44  simmonmt
 ;; Created deffaces standing macro, added to bbdb-initialize for
 ;; bbdb-print and bbdb-ftp, added autoload for bbdb-com, use native
@@ -83,7 +89,7 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "1.59")
+(defconst bbdb-version "1.90")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
@@ -139,7 +145,7 @@ version.")
     (defmacro defcustom (var value doc &rest args) 
       (` (defvar (, var) (, value) (, doc))))
     (defmacro defface (face spec doc &rest args)
-      nil)
+      (` (make-face (, var))))
     (defmacro define-widget (&rest args)
       nil)))
 
@@ -235,6 +241,20 @@ version.")
 (if (and (or (featurep 'gnuserv) (locate-library "gnuserv"))
 	 (or (featurep 'itimer)  (locate-library "itimer")))
     (put 'bbdb-utilities-server 'custom-loads '("bbdb-srv")))
+
+;; BBDB custom widgets
+
+(define-widget 'bbdb-alist-with-header 'group
+  "My group"
+  :match 'bbdb-alist-with-header-match
+  :value-to-internal (lambda (widget value)
+		       (if value (list (car value) (cdr value))))
+  :value-to-external (lambda (widget value)
+		       (if value (append (list (car value)) (cadr value)))))
+
+(defun bbdb-alist-with-header-match (widget value)
+  (widget-group-match widget
+		      (widget-apply widget :value-to-internal value)))
 
 ;; Customizable variables
 
@@ -460,14 +480,14 @@ with no arguments."
   :group 'bbdb-hooks
   :type 'hook)
 
-(defcustom bbdb-create-hook nil
+(defcustom bbdb-create-hook 'bbdb-creation-date-hook
   "*Hook or hooks invoked each time a new bbdb-record is created.  Invoked
 with one argument, the new record.  This is called *before* the record is 
 added to the database.  Note that bbdb-change-hook will be called as well."
   :group 'bbdb-hooks
   :type 'hook)
 
-(defcustom bbdb-change-hook nil
+(defcustom bbdb-change-hook 'bbdb-timestamp-hook
   "*Hook or hooks invoked each time a bbdb-record is altered.  Invoked with
 one argument, the record.  This is called *before* the bbdb-database buffer
 is modified.  Note that if a new bbdb record is created, both this hook and
@@ -2717,6 +2737,7 @@ passed as arguments to initiate the appropriate insinuations.
     (autoload 'bbdb-insinuate-sc         "bbdb-sc"         bbdbid nil)
     (autoload 'bbdb-snarf                "bbdb-snarf"      bbdbid t)
     (autoload 'bbdb-whois                "bbdb-whois"      bbdbid t)
+    (autoload 'bbdb-srv                  "bbdb-srv"        bbdbid t)
 
     ;;; RMAIL, MHE, and VM interfaces might need these.
     (autoload 'mail-strip-quoted-names "mail-utils")
