@@ -29,19 +29,6 @@
 (require 'mailabbrev)
 
 
-;;; Stuff for completion on label fields
-(defcustom bbdb-field-labels
-  '("Home" "Office" "Mobile" "Other")
-  "*List of labels for fields such as Address and Phone"
-  :group 'bbdb-record-creation
-  :type 'list)
-
-(defcustom bbdb-default-field-label
-  '"Home"
-  "*Default label from bbdb-field-labels"
-  :group 'bbdb-record-creation
-  :type 'list)
-
 (defcustom bbdb-default-country
   '"Emacs" ;; what do you mean, it's not a country?
   "*Default country to use if none is specified."
@@ -996,9 +983,11 @@ function in `bbdb-address-editing-function'."
   (let ((loc
          (or location (bbdb-read-string "Location: "
                                         (or (bbdb-address-location addr)
-                                            bbdb-default-field-label)
+                                            (bbdb-label-completion-default
+                                            "addresses"))
                                         (mapcar (function (lambda(x) (list x)))
-                                                bbdb-field-labels)))))
+                                                (bbdb-label-completion-list
+                                                "addresses"))))))
     (bbdb-address-set-location addr loc))
   (funcall bbdb-address-editing-function addr))
 
@@ -1006,9 +995,10 @@ function in `bbdb-address-editing-function'."
 (defun bbdb-record-edit-phone (phone-number)
   (let ((newl (bbdb-read-string "Location: "
                                 (or (bbdb-phone-location phone-number)
-                                    bbdb-default-field-label)
+                                    (bbdb-label-completion-default "phones"))
                                 (mapcar (function (lambda(x) (list x)))
-                                        bbdb-field-labels)))
+                                        (bbdb-label-completion-list
+                                         "phones"))))
         (newp (let ((bbdb-north-american-phone-numbers-p
                      (= (length phone-number) bbdb-phone-length)))
                 (bbdb-error-retry
@@ -3011,7 +3001,9 @@ C-g again it will stop scanning."
 
     (if (not (or bbdb-silent-running
                  bbdb-gag-messages
-                 (not records)))
+                 (not records)
+                 (> (length records) 1)))
+        ;; maybe this should just be omitted, really.
         (message "Updating of BBDB records finished"))
     records))
 
