@@ -389,7 +389,7 @@ more details."
 (unless (fboundp 'replace-in-string)
   (if (fboundp 'replace-regexp-in-string) ; defined in e21
       (defun replace-in-string (string regexp newtext &optional literal)
-        (replace-regexp-in-string string regexp newtext nil literal))
+        (replace-regexp-in-string regexp newtext string nil literal))
       ;; actually this is `dired-replace-in-string' slightly modified
       (defun replace-in-string (string regexp newtext &optional literal)
         ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.

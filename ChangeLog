@@ -1,3 +1,8 @@
+2001-02-10 21:00:00  ShengHuo ZHU  <zsh@cs.rochester.edu>
+
+	* lisp/bbdb-snarf.el (replace-in-string): Fix the argument order
+	of replace-regexp-in-string.
+
 2001-02-10  Ronan Waide  <waider@waider.ie>
 
 	* bbdb/lisp/bbdb.el:
