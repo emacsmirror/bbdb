@@ -38,6 +38,24 @@
 ;;
 
 (require 'timezone)
+(require 'cl)
+
+(eval-when-compile              ; pacify the compiler.
+ (defvar mail-mode-map nil)
+ (defvar message-mode-map nil)
+ (autoload 'widget-group-match "wid-edit")
+ (autoload 'Electric-pop-up-window "electric")
+ (autoload 'Electric-command-loop "electric")
+ (autoload 'bbdb-migration-query "bbdb-migrate")
+ (autoload 'bbdb-migrate "bbdb-migrate")
+ (autoload 'bbdb-migrate-rewrite-all "bbdb-migrate")
+ (autoload 'bbdb-migrate-update-file-version "bbdb-migrate")
+ (autoload 'bbdb-unmigrate-record "bbdb-migrate")
+ (autoload 'bbdb-redisplay-records "bbdb-com")
+ (autoload 'bbdb-create-internal "bbdb-com")
+ (autoload 'y-or-n-p-with-timeout "timer")
+ (autoload 'mail-position-on-field "sendmail")
+ )
 
 (defconst bbdb-version "2.33")
 (defconst bbdb-version-date "$Date$")
@@ -63,15 +81,6 @@ prompt the users on how to merge records when duplicates are detected.")
   (unless (fboundp 'save-current-buffer)
     (fset 'save-current-buffer 'save-excursion))
   (unless (fboundp 'mapc) (fset 'mapc 'mapcar))
-  ;; I LOVE FSF EMACS 19.34!!!!!
-  ;; these are all defined in cl. we should probably require that instead,
-  ;; but I'm just bugfixin' for now.
-  (if (fboundp 'caar) nil (defun caar (foo) (car (car foo))))
-  (if (fboundp 'cdar) nil (defun cdar (foo) (cdr (car foo))))
-  (if (fboundp 'cadar) nil (defun cadar (foo) (car (cdr (car foo)))))
-  (if (fboundp 'cadr) nil (defun cadr (foo) (car (cdr foo))))
-  (if (fboundp 'caddr) nil (defun caddr (foo) (car (cdr (cdr foo)))))
-  (if (fboundp 'caddar) nil (defun caddar (foo) (car (cdr (cdr (car foo))))))
   )
 
 (unless (fboundp 'with-current-buffer)
@@ -84,26 +93,7 @@ prompt the users on how to merge records when duplicates are detected.")
 (defmacro string> (a b) (list 'not (list 'or (list 'string= a b)
                                          (list 'string< a b))))
 
-(eval-when-compile              ; pacify the compiler
- (defvar bbdb-address-print-formatting-alist) ; "bbdb-print"
- (defvar bbdb-elided-display-name-end) ; "bbdb-com"
- (defvar bbdb-elided-display-fields)   ; "bbdb-com"
- (defvar mail-mode-map)         ; "sendmail"
- (defvar message-mode-map)      ; "message"
- (autoload 'widget-group-match "wid-edit")
- (autoload 'Electric-pop-up-window "electric")
- (autoload 'Electric-command-loop "electric")
- (autoload 'bbdb-migration-query "bbdb-migrate")
- (autoload 'bbdb-migrate "bbdb-migrate")
- (autoload 'bbdb-migrate-rewrite-all "bbdb-migrate")
- (autoload 'bbdb-migrate-update-file-version "bbdb-migrate")
- (autoload 'bbdb-unmigrate-record "bbdb-migrate")
- (autoload 'bbdb-redisplay-records "bbdb-com")
- (autoload 'bbdb-create-internal "bbdb-com")
- (autoload 'y-or-n-p-with-timeout "timer")
- )
-
-
+;; this should really be in bbdb-com
 ;;;###autoload
 (defun bbdb-submit-bug-report ()
   "Submit a bug report, with pertinent information to the BBDB info list."
@@ -286,6 +276,11 @@ prompt the users on how to merge records when duplicates are detected.")
   :group 'bbdb-database
   :type 'file)
 
+;; this should be removed, and the following put in place:
+;; a hierarchical structure of bbdb files, some perhaps read-only,
+;; perhaps caching in the local bbdb. This way you could have, e.g. a
+;; company address book, with each person having access to it, and
+;; then a local address book with personal stuff in it.
 (defcustom bbdb-file-remote nil
   "*The remote file to save the database to.
 When this is non-nil, it should be a file name.
@@ -374,6 +369,8 @@ commands be different."
   :group 'bbdb
   :type 'boolean)
 
+;; these variables both need to be enabled for gnus mailreading to
+;; work right. that's probably a bug, or something.
 (defcustom bbdb/mail-auto-create-p t
   "*If this is t, then VM, MH, and RMAIL will automatically create new bbdb
 records for people you receive mail from.  If this is a function name
@@ -709,6 +706,10 @@ Database initialization function `bbdb-initialize' is run."
 (defvar bbdb-message-cache nil)
 (defvar bbdb-showing-changed-ones nil)
 (defvar bbdb-modified-p nil)
+(defvar bbdb-elided-display nil)
+(defvar bbdb-address-print-formatting-alist) ; "bbdb-print"
+(defvar bbdb-elided-display-name-end) ; "bbdb-com"
+(defvar bbdb-elided-display-fields)   ; "bbdb-com"
 
 (defvar bbdb-debug t)
 (defmacro bbdb-debug (&rest body)
@@ -1324,12 +1325,12 @@ formatted and inserted into the current buffer.  This is used by
 
 (defun bbdb-format-elided-phones (phone)
   "Return a formated phone number for elided display.
-Users might want to override this function." 
+Users might want to override this function."
   (format "%s (%s)" (aref phone 1) (aref phone 0)))
 
 (defun bbdb-format-elided-net (net)
   "Return a formated list of nets for elided display.
-Users might want to override this function." 
+Users might want to override this function."
   net)
 
 (defun bbdb-format-record-elided (record)
@@ -1343,12 +1344,12 @@ Users might want to override this function."
       (end-of-line)
       (delete-region start (point))
       (insert "...")))
-  
+
   (let ((field-list bbdb-elided-display-fields)
         start field contentfun formatfun values value)
     (indent-to bbdb-elided-display-name-end)
     (insert " ")                  ; guarantee one space after name
-    
+
     (while field-list
       (setq field (car field-list)
             contentfun (intern (concat "bbdb-record-"
@@ -1375,7 +1376,7 @@ Users might want to override this function."
                 ((memq field '(name net aka))
                  (put-text-property start (point) 'bbdb-field
                                     (list field value)))
-                (t 
+                (t
                  (put-text-property start (point) 'bbdb-field
                                     (list 'property (list field value)))))
           (setq values (cdr values))
@@ -1399,7 +1400,7 @@ Users might want to override this function."
 
     (setq fields (append fields
                          (mapcar (lambda (r) (car r)) notes)))
-    
+
     (while fields-order
       (setq field (car fields-order)
             fields (cons field (delete field fields))
@@ -1408,7 +1409,7 @@ Users might want to override this function."
     (while fields
       (setq field (car fields)
             start (point))
-      
+
       (cond ((eq field 'phones)
              (let ((phones (and (bbdb-field-shown-p 'phone)
                                 (bbdb-record-phones record)))
@@ -1460,7 +1461,7 @@ Users might want to override this function."
                                    (mapconcat (function identity)
                                               aka ", ")))))
              (put-text-property start (point) 'bbdb-field '(aka)))
-            (t 
+            (t
              (let ((note (and (bbdb-field-shown-p field)
                               (assoc field notes)))
                    p notefun)
@@ -1492,7 +1493,7 @@ Users might want to override this function."
   (let ((name (or (bbdb-record-name record) "???"))
         (company (bbdb-record-company record))
         (start (point)))
-    
+
     (insert name)
     (put-text-property start (point) 'bbdb-field '(name))
 
