@@ -58,7 +58,7 @@
  (require 'sendmail) ; for mail-mode-map
  )
 
-(defconst bbdb-version "2.33")
+(defconst bbdb-version "2.34")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
