@@ -529,13 +529,12 @@ this is nil, it will default to the value of (user-login-name)."
               (list 'regexp :tag "Pattern matching your addresses"
                          (or (user-login-name) "address"))))
 
-(defcustom bbdb-always-add-addresses nil
+(defcustom bbdb-always-add-addresses 'ask
   "*If this is true, then when the Insidious Big Brother Database notices
-a new email address for a person, it will automatically add it to the list
-of addresses.  If it is nil, you will be asked whether to add it.  If it is
-the symbol 'never (really, if it is any non-t, non-nil value which is no
-function name) then new network addresses will never be automatically added
-nor the user will be asked.
+a new email address for a person, it will automatically add it to the list of
+addresses.  If it is 'ask, you will be asked whether to add it.  If it is nil
+then new network addresses will never be automatically added nor the user will
+be asked.
 
 When set to a function name the function should return one of these values.
 
@@ -543,8 +542,10 @@ See also the variable `bbdb-new-nets-always-primary' for control of whether
 the addresses go at the front of the list or the back."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically add new addresses" t)
-                 (const :tag "Ask before adding new addresses" nil)
-                 (const :tag "Never add new addresses" never)))
+                 (const :tag "Ask before adding new addresses" ask)
+                 (const :tag "Never add new addresses" nil)
+                 (const bbdb-ignore-some-messages-hook)
+                 (const bbdb-ignore-most-messages-hook)))
 
 (defcustom bbdb-new-nets-always-primary nil
   "*If this is true, then when the Insidious Big Brother Database adds a new
@@ -3155,13 +3156,13 @@ before the record is created, otherwise it is created without confirmation
         (if (or (null name) (and (stringp name) (string= "" name)))
             (if (string-match "^[^@]+" net)
                 (setq name (bbdb-clean-username (match-string 0 net)))))
-        (setq record (if (or (if prompt-to-create-p
-                                 (null
-                                  (bbdb-invoke-hook-for-value
-                                   prompt-to-create-p)))
-                             (bbdb-y-or-n-p
-                              (format "%s is not in the db.  Add? "
-                                      (or name net))))
+        (setq record (if (or (null prompt-to-create-p)
+                             (if (functionp prompt-to-create-p)
+                                 (bbdb-invoke-hook-for-value
+                                  prompt-to-create-p)
+                               (bbdb-y-or-n-p
+                                (format "%s is not in the db.  Add? "
+                                        (or name net)))))
                          (make-vector bbdb-record-length nil))
               created-p (not (null record)))
         (if record
@@ -3283,11 +3284,11 @@ before the record is created, otherwise it is created without confirmation
                           (setq bbdb-always-add-addresses
                                 (funcall bbdb-always-add-addresses)))
                       (cond
-                       ;; add automatically it
+                       ;; add it automatically
                        ((eq bbdb-always-add-addresses t)
                         t)
                        ;; do not add it
-                       (bbdb-always-add-addresses ; non-t and non-nil = never
+                       ((null bbdb-always-add-addresses)
                         nil)
                        ;; ask the user if it should be added
                        (t
@@ -3312,15 +3313,22 @@ before the record is created, otherwise it is created without confirmation
                                        0 (max 0 (- w (length the-first-bit)
                                                    20)))
                                       "...")))
+                           (bbdb-display-records (list record))
                            (if (bbdb-y-or-n-p (concat the-first-bit
                                                       the-next-bit
                                                       "\"? "))
                                ;; then add the new net
                                t
                              ;; else add a new record with the same name
-                             (if (bbdb-y-or-n-p
-                                  (format "Create a new record for %s? "
-                                          (bbdb-record-name record)))
+                             (if (and create-p
+                                      (or (null prompt-to-create-p)
+                                          (if (functionp prompt-to-create-p)
+                                              (bbdb-invoke-hook-for-value
+                                               prompt-to-create-p)
+                                            (bbdb-y-or-n-p
+                                             (format
+                                              "Create a new record for %s? "
+                                              (bbdb-record-name record))))))
                                  (setq record
                                        (bbdb-create-internal name nil net
                                                              nil nil nil)))

@@ -968,6 +968,10 @@ the current line (this is only meaningful in the \"*BBDB*\" buffer.)   If the
 cursor is in the middle of a multi-line field, such as an address or comments
 section, then the entire field is edited, not just the current line."
   (interactive)
+  ;; when at the end of the line take care of it 
+  (if (and (eolp) (not (bobp)) (not (bbdb-current-field t)))
+      (backward-char 1))
+  
   (let* ((record (bbdb-current-record t))
          (field (bbdb-current-field t))
          need-to-sort)
@@ -1858,7 +1862,8 @@ given address is the address the mail is destined to; this is formatted like
 constituents of the address, as in John.Doe@SomeHost, or the address is
 already in the form \"Name <foo>\" or \"foo (Name)\", in which case the
 address is used as-is. If `bbdb-dwim-net-address-allow-redundancy' is non-nil,
-the name is always included."
+the name is always included.  If `bbdb-dwim-net-address-allow-redundancy' is
+'netonly the name is never included!"
   (or net (setq net (car (bbdb-record-net record))))
   (or net (error "record unhas network addresses"))
   (let* ((override (bbdb-record-getprop record 'mail-name))
@@ -3291,10 +3296,10 @@ standard place."
 (defun bbdb-help ()
   (interactive)
   (message (substitute-command-keys "\\<bbdb-mode-map>\
-new field: \\[bbdb-insert-new-field]  \
-edit field: \\[bbdb-edit-current-field]  \
-delete field: \\[bbdb-delete-current-field-or-record]  \
-mode help: \\[describe-mode]  \
+new field: \\[bbdb-insert-new-field]; \
+edit field: \\[bbdb-edit-current-field]; \
+delete field: \\[bbdb-delete-current-field-or-record]; \
+mode help: \\[describe-mode]; \
 info: \\[bbdb-info]")))
 
 
@@ -3474,7 +3479,11 @@ C-g again it will stop scanning."
 
 (defun bbdb-prompt-for-create ()
   "This function is used by `bbdb-update-records' to ask the user how to
-proceed the processing of records."
+proceed the processing of records.
+
+It is called from `bbdb-annotate-message-sender' (PROMPT-FOR-CREATE arg) and
+returns `t' if the record should be created or `nil' otherwise.  It honors a
+previous answer, e.g. \"!\" add all ..."
   (let ((old-offer-to-create bbdb-offer-to-create)
         event prompt)
     (when bbdb-offer-to-create
@@ -3492,9 +3501,9 @@ proceed the processing of records."
 
       (cond ((eq bbdb-offer-to-create ?y)
              (setq bbdb-offer-to-create old-offer-to-create)
-             nil)
+             t)
             ((eq bbdb-offer-to-create  ?!)
-             nil)
+             t)
             ((or (eq bbdb-offer-to-create  ?n)
                  (eq bbdb-offer-to-create  ? ))
              (setq bbdb-update-records-mode 'next
