@@ -35,6 +35,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.53  1997/12/01 05:00:49  simmonmt
+;; Customized, added sshteingold@cctrading.com's change to time-string
+;; function to use a format string.
+;;
 ;; Revision 1.52  1997/09/28 06:01:05  simmonmt
 ;; Fix to accomodate nil gnus-single-article-buffer
 ;;
@@ -51,13 +55,9 @@
   (the-v18-byte-compiler-sucks-wet-farts-from-dead-pigeons))
 
 (defun bbdb-time-string ()
-  "Returns a string for use as a timestamp.  
-Currently this returns strings like \"13 Mar 92\".  Redefine to taste."
-  (let* ((time (current-time-string))
-	 (day (substring time 8 10))
-	 (mon (substring time 4 7))
-	 (year (substring time 22 24)))
-    (concat day " " mon " " year)))
+  "Returns a string for use as a timestamp.  See `bbdb-time-format'
+for customization details."
+  (format-time-string "%Y-%m-%d"))
 
 (defun bbdb-timestamp-hook (record)
   "For use as a bbdb-change-hook; maintains a notes-field called `timestamp'
@@ -126,7 +126,7 @@ beginning of the message headers."
     done))
 
 
-(defvar bbdb-ignore-most-messages-alist '()
+(defcustom bbdb-ignore-most-messages-alist '()
   "*An alist describing which messages to automatically create BBDB
 records for.  This only works if bbdb/news-auto-create-p or 
 bbdb/mail-auto-create-p (or both) is 'bbdb-ignore-most-messages-hook.
@@ -138,10 +138,14 @@ for example,
 will cause BBDB entries to be made only for messages sent by people at 
 Maximegalon U., or (that's *or*) people posting about time travel.
 
-See also bbdb-ignore-some-messages-alist, which has the opposite effect.")
+See also bbdb-ignore-some-messages-alist, which has the opposite effect."
+  :group 'bbdb-noticing-records
+  :type '(repeat (group
+		  (string :tag "Header name")
+		  (regexp :tag "Regex to match on header value"))))
 
 
-(defvar bbdb-ignore-some-messages-alist '()
+(defcustom bbdb-ignore-some-messages-alist '()
   "*An alist describing which messages *not* to automatically create
 BBDB records for.  This only works if bbdb/news-auto-create-p or 
 bbdb/mail-auto-create-p (or both) is 'bbdb-ignore-some-messages-hook.
@@ -154,7 +158,11 @@ for example,
 will cause BBDB entries to not be made for messages from any mailer daemon,
 or messages sent to or CCed to either of two mailing lists.
 
-See also bbdb-ignore-most-messages-alist, which has the opposite effect.")
+See also bbdb-ignore-most-messages-alist, which has the opposite effect."
+  :group 'bbdb-noticing-records
+  :type '(repeat (group
+		  (string :tag "Header name")
+		  (regexp :tag "Regex to match on header value"))))
 
 
 (defun bbdb-ignore-most-messages-hook (&optional invert-sense)
@@ -197,7 +205,7 @@ match the bbdb-ignore-some-messages-alist (which see)."
 
 ;;; Automatically add to the notes field based on the current message.
 
-(defvar bbdb-auto-notes-alist '()
+(defcustom bbdb-auto-notes-alist '()
   "*An alist which lets you have certain pieces of text automatically added
 to the BBDB record representing the sender of the current message based on
 the subject or other header fields.  This only works if bbdb-notice-hook 
@@ -257,9 +265,15 @@ will be added.
 This works for news as well.  You might want to arrange for this to have
 a different value when in mail as when in news.
 
-See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'.")
+See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'."
+  :group 'bbdb-noticing-records
+  :type '(repeat (group
+		  (string :tag "Header name")
+		  (repeat (group
+			   (regexp :tag "Regexp to match on header value")
+			   (string :tag "String for notes if regexp matches"))))))
 
-(defvar bbdb-auto-notes-ignore nil
+(defcustom bbdb-auto-notes-ignore nil
   "Alist of headers and regexps to ignore in bbdb-auto-notes-hook.
 Each element looks like
 
@@ -272,9 +286,13 @@ For example,
 would exclude the phony `Organization:' headers in GNU mailing-lists
 gatewayed to gnu.* newsgroups.  Note that this exclusion applies only
 to a single field, not to the entire message.  For that, use the variable
-bbdb-auto-notes-ignore-all.")
+bbdb-auto-notes-ignore-all."
+  :group 'bbdb-noticing-records
+  :type '(repeat (group
+		  (string :tag "Header name")
+		  (regexp :tag "Regexp to match on header value"))))
 
-(defvar bbdb-auto-notes-ignore-all nil
+(defcustom bbdb-auto-notes-ignore-all nil
   "Alist of headers and regexps which cause the entire message to be ignored
 in bbdb-auto-notes-hook.  Each element looks like
 
@@ -286,7 +304,11 @@ For example,
 
 would exclude any notes recording for message coming from BLAT.COM. 
 Note that this is different from `bbdb-auto-notes-ignore', which applies
-only to a particular header field, rather than the entire message.")
+only to a particular header field, rather than the entire message."
+  :group 'bbdb-noticing-records
+  :type '(repeat (group
+		  (string :tag "Header name")
+		  (regexp :tag "Regexp to match on header value"))))
 
 
 (defun bbdb-auto-notes-hook (record)
@@ -442,7 +464,7 @@ the variables bbdb-auto-notes-alist and bbdb-auto-notes-ignore."
 ;;; I use this as the value of bbdb-canonicalize-net-hook; it is provided
 ;;; as an example for you to customize.
 
-(defvar bbdb-canonical-hosts
+(defcustom bbdb-canonical-hosts
   (mapconcat 'regexp-quote
 	     '("cs.cmu.edu" "ri.cmu.edu" "edrc.cmu.edu" "andrew.cmu.edu"
 	       "mcom.com" "netscape.com" "cenatls.cena.dgac.fr"
@@ -452,7 +474,9 @@ the variables bbdb-auto-notes-alist and bbdb-auto-notes-ignore."
   "Certain sites have a single mail-host; for example, all mail originating
 at hosts whose names end in \".cs.cmu.edu\" can (and probably should) be
 addressed to \"user@cs.cmu.edu\" instead.  This variable lists other hosts
-which behave the same way.")
+which behave the same way."
+  :group 'bbdb
+  :type '(regexp :tag "Regexp matching sites"))
 
 (defmacro bbdb-match-substring (string match)
   (list 'substring string
