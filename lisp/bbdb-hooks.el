@@ -87,24 +87,28 @@ which is the current time string."
 (defun bbdb-header-start ()
   "Returns a marker at the beginning of the header block of the current
 message.  This will not necessarily be in the current buffer."
-  (cond ((memq major-mode '(vm-presentation-mode vm-mode vm-summary-mode))
-     (if vm-mail-buffer (set-buffer vm-mail-buffer))
-     (vm-start-of (car vm-message-pointer)))
-    ((memq major-mode '(rmail-mode rmail-summary-mode))
-     (if (and (boundp 'rmail-buffer) rmail-buffer)
-         (set-buffer rmail-buffer))
-     (point-min-marker))
-    ((memq major-mode
-           '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
-     (set-buffer gnus-article-buffer)
-     (point-min-marker))
-    ;; MH-E clause added by knabe.
-    ((eq major-mode 'mh-folder-mode)
-     (mh-show)
-     (set-buffer mh-show-buffer)
-     (point-min-marker))
-    (t (point-min-marker))
-    ))
+  (cond ((memq major-mode
+	       '(gnus-group-mode gnus-subject-mode gnus-article-mode))
+	 (set-buffer gnus-original-article-buffer)
+	 (point-min-marker))
+        ((memq major-mode '(vm-presentation-mode vm-mode vm-summary-mode))
+         (if vm-mail-buffer (set-buffer vm-mail-buffer))
+         (vm-start-of (car vm-message-pointer)))
+        ((memq major-mode '(rmail-mode rmail-summary-mode))
+         (if (and (boundp 'rmail-buffer) rmail-buffer)
+             (set-buffer rmail-buffer))
+         (point-min-marker))
+        ((memq major-mode
+               '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
+         (set-buffer gnus-article-buffer)
+         (point-min-marker))
+        ;; MH-E clause added by knabe.
+        ((eq major-mode 'mh-folder-mode)
+         (mh-show)
+         (set-buffer mh-show-buffer)
+         (point-min-marker))
+        (t (point-min-marker))
+        ))
 
 
 ;;;###autoload
