@@ -1320,7 +1320,7 @@ The result looks like this:
                  zip city, state
                  country"
   (setq indent (or indent 14))
-  (let ((fmt (format " %%%ds: " indent))
+  (let (;(fmt (format " %%%ds: " indent))
         (indent (+ 3 indent)))
     ;(insert (format fmt (bbdb-address-location addr)))
     (bbdb-format-streets addr indent)
@@ -1356,7 +1356,7 @@ The result looks like this:
                  city, state  zip
                  country"
   (setq indent (or indent 14))
-  (let ((fmt (format " %%%ds: " indent))
+  (let (;(fmt (format " %%%ds: " indent))
         (indent (+ 3 indent)))
 ;    (insert (format fmt (bbdb-address-location addr)))
     (bbdb-format-streets addr indent)
@@ -1521,7 +1521,7 @@ formatted and inserted into the current buffer.  This is used by
                                     (list 'phone phone 'field-name))
                  (setq start (point))
                  (insert (bbdb-phone-string phone) "\n")
-                 (put-text-property start (+ start (length loc)) 'bbdb-field
+                 (put-text-property start (point) 'bbdb-field
                                     (list 'phone phone
                                           (bbdb-phone-location phone)))
                  (setq phones (cdr phones))))
@@ -1538,7 +1538,7 @@ formatted and inserted into the current buffer.  This is used by
                                     (list 'address addr 'field-name))
                  (setq start (point))
                  (bbdb-format-address addr nil indent)
-                 (put-text-property start (+ start (length loc)) 'bbdb-field
+                 (put-text-property start (point) 'bbdb-field
                                     (list 'address addr 
                                           (bbdb-address-location addr)))
                  (setq addrs (cdr addrs))))
