@@ -321,8 +321,14 @@ as of GNU Emacs 20.7"
              (bbdb-set-extent-property extent 'data 'bbdb))))))
 
 
-(defvar bbdb-user-menu-commands nil
-  "User defined menu entries which should be appended to the BBDB menu." )
+(defcustom bbdb-user-menu-commands nil
+  "User defined menu entries which should be appended to the BBDB menu.
+This should be a list of menu entries.
+When set to a fucntion the function gets called with two arguments the
+RECORD and the FIELD and it should either return nil or a list of menu
+entries."
+  :group 'bbdb-database
+  :type 'sexp)
 
 (defun build-bbdb-finger-menu (record)
   (let ((addrs (bbdb-record-finger-host record)))
@@ -444,8 +450,15 @@ as of GNU Emacs 20.7"
         (list (build-bbdb-insert-field-menu record)))
     (if field
         (cons "-----" (build-bbdb-field-menu record field)))
-    bbdb-user-menu-commands)))
-
+    (if bbdb-user-menu-commands
+        (let ((menu (if (functionp bbdb-user-menu-commands)
+                        (funcall bbdb-user-menu-commands record field)
+                      bbdb-user-menu-commands)))
+          (if menu
+              (append ["-----"]
+                      ["User Defined Commands"]
+                      ["-----"]
+                      menu)))))))
 
 (eval-and-compile
   (if (fboundp 'popup-menu)
