@@ -454,19 +454,18 @@ bbdb-create-internal instead."
         (list 'signal ''wrong-type-argument
               (list 'list (list 'quote predicate) place))))))
 
-
 (defun bbdb-create-internal (name company net addrs phones notes)
   "Adds a record to the database; this function does a fair amount of
 error-checking on the passed in values, so it's safe to call this from
 other programs.
 
 NAME is a string, the name of the person to add.  An error is signalled
- if that name is already in use.
+ if that name is already in use and bbdb-no-duplicates-p is t.
 COMPANY is a string or nil.
 NET is a comma-separated list of email addresses, or a list of strings.
  An error is signalled if that name is already in use.
 ADDRS is a list of address objects.  An address is a vector of the form
-   [\"location\" \"line1\" \"line2\" \"line3\" \"City\" \"State\" zip \"Country\"]
+   [\"location\" (\"line1\" \"line2\" ... ) \"State\" zip \"Country\"]
  where `zip' is nil, an integer, or a cons.
 PHONES is a list of phone-number objects.  A phone-number is a vector of
  the form
@@ -1319,7 +1318,7 @@ omit backwards."
 
 ;;; Fixing up bogus entries
 
-(defcustom bbdb-refile-notes-generate-alist '((creation-date . bbdb-refile-notes-string-least))
+(defcustom bbdb-refile-notes-generate-alist '((creation-date . bbdb-refile-notes-string-least) (timestamp . bbdb-refile-notes-string-most))
   "*An alist defining specific merging function, based on notes field."
   :group 'bbdb-noticing-records
   :type '(repeat (cons
@@ -1355,6 +1354,12 @@ that function will be used instead."
       string1
     string2))
 
+(defun bbdb-refile-notes-string-most (string1 string2)
+  "Returns the string that is not lessp."
+  (if (string-lessp string1 string2)
+      string2
+    string1))
+
 (defun bbdb-merge-lists! (l1 l2 cmp &optional mod)
   "Merge two lists l1 l2 (modifies l1) only adds elements from l2
 if cmp returns false for all elements of l1.  If optional mod
@@ -1382,7 +1387,7 @@ is provided it is applied to each element of l1 and l2 prior to cmp"
 (defun bbdb-merge-records (old-record new-record)
 "Merge the contents of old-record into new-record, old-record
 remains unchanged.  For name and company it queries about which to use
-if they differ.  All other fields are concatinated.  Idealy this would
+if they differ.  All other fields are concatenated.  Idealy this would
 be better about checking for duplicate entries in other fields, as
 well as possibly querying about differing values.
 
