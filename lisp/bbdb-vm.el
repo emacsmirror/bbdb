@@ -22,6 +22,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.62  2000/08/21 06:38:16  fenk
+;; Removed the faulty autoload.
+;;
 ;; Revision 1.61  2000/08/18 14:04:39  fenk
 ;; `bbdb/vm-get-only-first-from-p' was renamed to `bbdb/vm-get-first-from-p'
 ;; which is more self explanatory.
@@ -374,7 +377,6 @@ before the @."
 	  (nconc folder-list (list (cons email-regexp folder))))))))
 
 
-;;;###autoload
 (defcustom bbdb/vm-snarf-all-headers
   bbdb/vm-get-from-headers
   "*List of headers to look for new email-addresses by `bbdb/vm-snarf-all'."
