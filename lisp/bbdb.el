@@ -2717,11 +2717,11 @@ before the record is created, otherwise it is created without confirmation
                   ;; not quiet about mismatches
                   ((and old-name bbdb-use-alternate-names
                         ;; dedupe
-                        (not (member old-name (bbdb-record-aka record))))
-                   (if (not bbdb-silent-running)
-                       (bbdb-y-or-n-p
-                        (format "Make \"%s\" an alternate for \"%s\"? "
-                                name old-name)))
+                        (not (member old-name (bbdb-record-aka record)))
+                        (if (not bbdb-silent-running)
+                            (bbdb-y-or-n-p
+                             (format "Make \"%s\" an alternate for \"%s\"? "
+                                     name old-name))))
                    (setq change-p 'sort)
                    (bbdb-record-set-aka
                     record (cons name (bbdb-record-aka record)))
