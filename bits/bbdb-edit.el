@@ -1,5 +1,5 @@
 ;;; bbdb-edit.el --- BBDB field edit
-;; Copyright (C) 1999, 2000 Shenghuo ZHU
+;; Copyright (C) 1999, 2000, 2001 Shenghuo ZHU
 
 ;; Author: Shenghuo ZHU <zsh@cs.rochester.edu>
 ;; Created: Fri Aug 27 17:45:25 EDT 1999
@@ -38,7 +38,9 @@
    ((eq field 'AKA) (bbdb-record-aka record))
    ((eq field 'address) (bbdb-record-addresses record))
    ((eq field 'phone) (bbdb-record-phones record))
-   (t (bbdb-split (or (bbdb-record-getprop record field) "") ","))))
+   (t (bbdb-split (or (bbdb-record-getprop record field) "")
+		  (or (get field 'field-separator)
+		      bbdb-notes-default-separator)))))
 
 (defun bbdb-field-edit-put-values (record field values)
   (if values
@@ -48,7 +50,9 @@
        ((eq field 'address) (bbdb-record-set-addresses record values))
        ((eq field 'phone) (bbdb-record-set-phones record values))
        (t (bbdb-record-putprop record field 
-			       (mapconcat 'identity values ","))))
+			       (bbdb-join values
+					  (or (get field 'field-separator)
+					      bbdb-notes-default-separator)))))
     (if (memq field '(net AKA address))
 	(bbdb-record-store-field-internal record field nil)
       (bbdb-record-putprop record field nil)))
