@@ -874,16 +874,16 @@ that holds the number of slots."
 
 
 (defsubst bbdb-string-trim (string)
-  "Lose leading and trailing whitespace.  Also remove some properties
+  "Lose leading and trailing whitespace.  Also remove all properties
 from string."
   (if (string-match "\\`[ \t\n]+" string)
       (setq string (substring string (match-end 0))))
   (if (string-match "[ \t\n]+\\'" string)
       (setq string (substring string 0 (match-beginning 0))))
-  (remove-text-properties 0 (length string) '(face        nil mouse-face    nil
-					      tm-callback nil tm-data       nil
-					      highlight   nil gnus-callback nil
-					      gnus-data   nil) string)
+  ;; This is not ideologically blasphemous.  It is a bad function to
+  ;; use on regions of a buffer, but since this is our string, we can
+  ;; do whatever we want with it. --Colin
+  (set-text-properties 0 (length string) nil string)
   string)
 
 
@@ -1990,7 +1990,7 @@ The keybindings, more precisely:
 (defcustom bbdb-save-db-timeout nil
   "*If non-nil, then when bbdb-save-db is asking you whether to save the db,
 it will time out to `yes' after this many seconds.  This only works if the
-function y-or-n-p-with-timeout is defined (meaning XEmacs.)"
+function y-or-n-p-with-timeout is defined."
   :group 'bbdb-save
   :type '(choice (const :tag "Don't time out" nil)
 		 (integer :tag "Time out after this many seconds" 5)))
