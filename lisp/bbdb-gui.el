@@ -45,22 +45,25 @@
       (fset 'bbdb-highlight-headers-x-face 'highlight-headers-x-face)
     (fset 'bbdb-highlight-headers-x-face 'ignore))
   (if (fboundp 'highlight-headers-x-face-to-pixmap)
-      (fset 'bbdb-highlight-headers-x-face-to-pixmap 'highlight-headers-x-face-to-pixmap)
+      (fset 'bbdb-highlight-headers-x-face-to-pixmap
+            'highlight-headers-x-face-to-pixmap)
     (fset 'bbdb-highlight-headers-x-face-to-pixmap 'ignore)))
 
 
-(if (string-match "XEmacs\\|Lucid" emacs-version)
+(if (featurep 'xemacs)
     (progn
       (define-key bbdb-mode-map 'button3 'bbdb-menu)
-      (define-key bbdb-mode-map 'button2 (lambda (e)
-                                           (interactive "e")
-                                           (mouse-set-point e)
-                                           (bbdb-toggle-records-display-layout 0 ))))
+      (define-key bbdb-mode-map 'button2
+        (lambda (e)
+          (interactive "e")
+          (mouse-set-point e)
+          (bbdb-toggle-records-display-layout nil))))
   (define-key bbdb-mode-map [mouse-3] 'bbdb-menu)
-  (define-key bbdb-mode-map [mouse-2] (lambda (e)
-                                        (interactive "e")
-                                        (mouse-set-point e)
-                                        (bbdb-toggle-records-display-layout 0))))
+  (define-key bbdb-mode-map [mouse-2]
+    (lambda (e)
+      (interactive "e")
+      (mouse-set-point e)
+      (bbdb-toggle-records-display-layout nil))))
 
 (eval-and-compile
   (if (fboundp 'find-face)
@@ -73,7 +76,7 @@
     (face-differs-from-default-p (make-face 'bbdb-name))
     (set-face-underline-p 'bbdb-name t))
 
-(condition-case data
+(condition-case nil
     (or (bbdb-find-face 'bbdb-company)
         (face-differs-from-default-p (make-face 'bbdb-company))
         (make-face-italic 'bbdb-company)) ;; this can fail on emacs
@@ -103,6 +106,12 @@
     (defun bbdb-list-extents()
       (let ((o (overlay-lists))) (nconc (car o) (cdr o)))))
 
+  (if (fboundp 'mapcar-extents)
+      (defmacro bbdb-extents-in (s e) 
+        (list 'mapcar-extents ''identity nil nil s e))
+    (defmacro bbdb-extents-in (s e)
+      (list 'overlays-in s e)))
+  
   (if (fboundp 'set-extent-property)
       (fset 'bbdb-set-extent-property 'set-extent-property)
     (defun bbdb-set-extent-property( e p v )
@@ -163,25 +172,31 @@
 
 
 ;;;###autoload
-(defun bbdb-fontify-buffer ()
+(defun bbdb-fontify-buffer (&optional records)
+  (interactive)
+  (if (not bbdb-silent-running)
+      (message "Fontifying ..."))
   (save-excursion
     (set-buffer bbdb-buffer-name)
     (if (featurep 'scrollbar)
         (bbdb-set-specifier scrollbar-height (cons (current-buffer) 0)))
-    ;; first delete existing extents
-    (mapcar (function (lambda(o)
-                        (if o  ;; may start with nil
-                            (if (eq (bbdb-extent-property o 'data) 'bbdb)
-                                (bbdb-delete-extent o)))))
-            (bbdb-list-extents))
-    (let ((rest bbdb-records)
+
+    (let ((rest (or records bbdb-records))
           record face start end elided-p p e)
+      
       (while rest
         (setq record (car (car rest))
               elided-p (eq (nth 1 (car rest)) t)
               face (and (not elided-p) (bbdb-record-getprop record 'face))
               start (marker-position (nth 2 (car rest)))
               end (1- (or (nth 2 (car (cdr rest))) (point-max))))
+
+        (mapcar (function (lambda(o)
+                            (if o  ;; may start with nil
+                                (if (eq (bbdb-extent-property o 'data) 'bbdb)
+                                    (bbdb-delete-extent o)))))
+                (bbdb-extents-in start end))
+
         (bbdb-set-extent-property (setq e (bbdb-make-extent start end))
                                   'highlight t)
         (bbdb-set-extent-property e 'data 'bbdb)
@@ -190,7 +205,7 @@
         ;; notice that you're on a more specific overlay. This is
         ;; bogus, like most GNU Emacs GUI stuff.
         (bbdb-set-extent-property e 'priority 3)
-        ;; Temp workaround to make company highlighting work properly [Bon
+        ;; workaround to make company highlighting work properly on
         ;; records that have no name field.  Need to account for the
         ;; "???" string that is dumped in the name field at display time.
         (setq p (+ start (if (bbdb-record-name record)
@@ -231,7 +246,12 @@
           (bbdb-set-extent-face e 'bbdb-field-value)
           (bbdb-set-extent-property e 'priority 2)
           (bbdb-set-extent-property e 'highlight t))
-        (setq rest (cdr rest))))))
+        
+        (setq rest (cdr rest))
+        (if (null (caar rest))
+            (setq rest nil)))))
+  (if (not bbdb-silent-running)
+      (message "Fontifying done")))
 
 ;;; share the xface cache data with VM if it's around
 (defvar vm-xface-cache (make-vector 29 0))
