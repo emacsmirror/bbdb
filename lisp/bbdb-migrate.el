@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.13  2000/07/10 17:00:12  sds
+;; revert the last patch (`mapc' is more efficient than `mapcar')
+;;
 ;; Revision 1.12  2000/07/09 09:20:11  waider
 ;; GNUmacs doesn't have "mapc".
 ;;
@@ -123,7 +126,7 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
   "Migrate the BBDB from the version on disk (the car of
 `bbdb-file-format-migration') to the current version (in
 `bbdb-file-format')."
-  (mapcar (bbdb-migrate-versions-lambda (car bbdb-file-format-migration))
+  (mapc (bbdb-migrate-versions-lambda (car bbdb-file-format-migration))
         records)
   records)
 
@@ -168,11 +171,11 @@ modified, and SET is the function to be used to set the field to be
 modified.  FUNCTION will be applied to the result of GET, and its
 results will be saved with SET."
   (byte-compile `(lambda (rec)
-                  ,@(mapcar (lambda (ch)
-                              `(,(cadr ch) rec
-                                (,(caddr ch)
-                                 (,(car ch) rec))))
-                            changes)
+                  ,@(mapc (lambda (ch)
+                            `(,(cadr ch) rec
+                              (,(caddr ch)
+                               (,(car ch) rec))))
+                          changes)
                   rec)))
 
 (defun bbdb-migrate-versions-lambda (v0 &optional v1)
@@ -189,7 +192,7 @@ V1 defaults to `bbdb-file-format'."
   "Change date formats in timestamp and creation-date fields from
 \"dd mmm yy\" to \"yyyy-mm-dd\".  Assumes the notes are passed in as an
 argument."
-  (mapcar (lambda (rr)
+  (mapc (lambda (rr)
           (when (memq (car rr) '(creation-date timestamp))
             (bbdb-migrate-change-dates-change-field rr)))
         rec)
@@ -257,7 +260,7 @@ argument."
   "Change date formats is timestamp and creation-date fields from
 \"yyyy-mm-dd\" to \"dd mmm yy\".  Assumes the notes list is passed in
 as an argument."
-  (mapcar (lambda (rr)
+  (mapc (lambda (rr)
           (when (memq (car rr) '(creation-date timestamp))
             (bbdb-unmigrate-change-dates-change-field rr)))
         rec)
