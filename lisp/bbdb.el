@@ -113,6 +113,7 @@ prompt the users on how to merge records when duplicates are detected.")
   "The Insidious Big Brother Database."
   :group 'news
   :group 'mail)
+
 (put 'bbdb 'custom-loads '("bbdb-hooks" "bbdb-com"))
 
 (defgroup bbdb-hooks nil
@@ -151,12 +152,26 @@ prompt the users on how to merge records when duplicates are detected.")
 (defgroup bbdb-mua-specific-gnus nil
   "Gnus-specific BBDB customizations"
   :group 'bbdb-mua-specific)
+
 (put 'bbdb-mua-specific-gnus 'custom-loads '("bbdb-gnus"))
 
 (defgroup bbdb-mua-specific-gnus-scoring nil
   "Gnus-specific scoring BBDB customizations"
   :group 'bbdb-mua-specific-gnus)
+
 (put 'bbdb-mua-specific-gnus-scoring 'custom-loads '("bbdb-gnus"))
+
+(defgroup bbdb-mua-specific-gnus-splitting nil
+  "Gnus-specific splitting BBDB customizations"
+  :group 'bbdb-mua-specific-gnus)
+
+(put 'bbdb-mua-specific-gnus-splitting 'custom-loads '("bbdb-gnus"))
+
+(defgroup bbdb-mua-specific-vm nil
+  "VM-specific BBDB customizations"
+  :group 'bbdb-mua-specific)
+
+(put 'bbdb-mua-specific-vm 'custom-loads '("bbdb-vm"))
 
 (defgroup bbdb-phone-dialing nil
   "Customizations for phone number dialing"
@@ -453,7 +468,7 @@ be asked that question the very first time the message is selected."
   "*If this is true, bbdb will suppress all its informational messages and
 queries. Be very very certain you want to set this, because it will suppress
 prompting to alter record names, assign names to addresses, etc."
-  :group 'bbdb-noticing-records
+  :group 'bbdb
   :type '(choice (const :tag "Run silently" t)
                  (const :tag "Disable silent running" nil)))
 
@@ -1450,7 +1465,7 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 \162\166\145\171\40\117\163\167\141\154\144\40\141\143\164\145\144\40\141\154\
 \157\156\145" "\111\40\153\156\157\167\40\145\166\145\162\171\164\150\151\156\
 \147\40\141\142\157\165\164\40\171\157\165" "\111\40\163\141\167\40\171\157\
-\165\40\144\151\144\40\151\164"]))
+\165\40\144\157\40\151\164"]))
       (message (aref v (% (logand 255 (random)) (length v))))
       (message " "))))
 
