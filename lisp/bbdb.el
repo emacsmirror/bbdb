@@ -1123,7 +1123,7 @@ present).  Returns a string containing the date in the new format."
 (defconst bbdb-buffer-name "*BBDB*")
 
 
-(defcustom bbdb-display-layout-alist 
+(defcustom bbdb-display-layout-alist
   '((one-line   (order     . (phones mail-alias net notes))
                 (name-end  . 24)
                 (toggle    . t))
@@ -1138,12 +1138,12 @@ Currently there are three different layout types, which are `one-line',
 for the layout.  Valid options are:
 
                            ------- Availability --------
-    Format                  one-line        multi-line  
+    Format                  one-line        multi-line
 --------------------------------------------------------
- (toggle . BOOL)                 +               +      
- (order . FIELD-LIST)            +               +      
- (omit . FIELD-LIST)             +               +      
- (name-end . INTEGER)            +               -      
+ (toggle . BOOL)                 +               +
+ (order . FIELD-LIST)            +               +
+ (omit . FIELD-LIST)             +               +
+ (name-end . INTEGER)            +               -
  (indention . INTEGER)           -               +
 
 - toggle: controls if this layout is included when toggeling the display
@@ -1160,46 +1160,46 @@ full-multi-line and pop-up-multi-line and supporting the same layout
 options."
   :group 'bbdb
   :type `(repeat
-	  (cons :tag "Layout Definition"
-		(choice :tag "Layout type"
-			(const one-line)
-			(const multi-line)
-			(const full-multi-line)
-			(symbol))
-		(set :tag "Properties" 
-		     (cons :tag "Order" 
-			   (const :tag "List of fields to order by" order)
-			   (repeat (choice (const phone)
-					   (const address)
-					   (const net)
-					   (const AKA)
-					   (const notes)
-					   (symbol :tag "other")
-					   (const :tag "Remaining fields" t))))
-		     (choice :tag "Omit" 
-			     :value (omit . nil)
-			     (cons :tag "List of fields to omit"
-				   (const :tag "Fields not to display" omit) 
-				   (repeat (choice (const phone)
-						   (const address)
-						   (const net)
-						   (const AKA)
-						   (const notes)
-						   (symbol :tag "other"))))
-			     (const :tag "Exclude all fields except those listed in the order property" t))
-		     (cons :tag "Indentation" 
-			   :value (indention . 14) 
-			   (const :tag "Level of indentation for multi-line layout"
-				  indention)
-			   (number :tag "Column"))
-		     (cons :tag "End of name field" 
-			   :value (name-end . 24) 
-			   (const :tag "The column where the name should end in a one-line layout"
-				  name-end) 
-			   (number :tag "Column"))
-		     (cons :tag "Toggle" 
-			   (const :tag "The layout is included when toggling display layout" toggle) 
-			   boolean)))))
+      (cons :tag "Layout Definition"
+        (choice :tag "Layout type"
+            (const one-line)
+            (const multi-line)
+            (const full-multi-line)
+            (symbol))
+        (set :tag "Properties"
+             (cons :tag "Order"
+               (const :tag "List of fields to order by" order)
+               (repeat (choice (const phone)
+                       (const address)
+                       (const net)
+                       (const AKA)
+                       (const notes)
+                       (symbol :tag "other")
+                       (const :tag "Remaining fields" t))))
+             (choice :tag "Omit"
+                 :value (omit . nil)
+                 (cons :tag "List of fields to omit"
+                   (const :tag "Fields not to display" omit)
+                   (repeat (choice (const phone)
+                           (const address)
+                           (const net)
+                           (const AKA)
+                           (const notes)
+                           (symbol :tag "other"))))
+                 (const :tag "Exclude all fields except those listed in the order property" t))
+             (cons :tag "Indentation"
+               :value (indention . 14)
+               (const :tag "Level of indentation for multi-line layout"
+                  indention)
+               (number :tag "Column"))
+             (cons :tag "End of name field"
+               :value (name-end . 24)
+               (const :tag "The column where the name should end in a one-line layout"
+                  name-end)
+               (number :tag "Column"))
+             (cons :tag "Toggle"
+               (const :tag "The layout is included when toggling display layout" toggle)
+               boolean)))))
 (defcustom bbdb-display-layout nil
   "*The default display layout."
   :group 'bbdb
@@ -1257,9 +1257,9 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 (defun bbdb-elided-display-sanity-setup ()
   (interactive)
   ;; if bbdb-elided-display is set then inform the user and do some sanity
-  ;; setup for the new layout variables 
+  ;; setup for the new layout variables
   (when bbdb-elided-display
-    (when (eq t bbdb-elided-display) 
+    (when (eq t bbdb-elided-display)
       (setq bbdb-display-layout 'one-line)
       (bbdb-warn "Use the variable `bbdb-display-layout' instead of `bbdb-elided-display'!"))
     (when (listp bbdb-elided-display)
@@ -1270,9 +1270,9 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
              (setcdr l (cons (cons 'omit bbdb-elided-display) (cdr l)))))
       (bbdb-warn "Use variable `bbdb-display-layout' and `bbdb-display-layout-alist' instead of `bbdb-elided-display'!"))
     (setq bbdb-elided-display nil))
-  
+
   (when bbdb-pop-up-elided-display
-    (when (eq t bbdb-pop-up-elided-display) 
+    (when (eq t bbdb-pop-up-elided-display)
       (setq bbdb-pop-up-display-layout 'one-line)
       (bbdb-warn "Use the variable `bbdb-pop-up-display-layout' instead of `bbdb-pop-up-elided-display'!"))
     (when (listp bbdb-pop-up-elided-display)
@@ -1430,7 +1430,7 @@ formatted and inserted into the current buffer.  This is used by
   (let ((name (or (bbdb-record-name record) "???"))
         (company (bbdb-record-company record))
         (start (point)))
-    
+
     (insert name)
     (put-text-property start (point) 'bbdb-field '(name))
 
@@ -1464,7 +1464,7 @@ formatted and inserted into the current buffer.  This is used by
   (let ((name-end (or (bbdb-display-layout-get-option layout 'name-end)
                       40))
         start end)
-    (save-excursion 
+    (save-excursion
       (setq end (point))
       (beginning-of-line)
       (setq start (point)))
@@ -1522,7 +1522,7 @@ formatted and inserted into the current buffer.  This is used by
          (indent (or (bbdb-display-layout-get-option layout 'indention) 14))
          (fmt (format " %%%ds: " indent))
          start field)
-    
+
     (if (stringp notes)
         (setq notes (list (cons 'notes notes))))
 
@@ -1633,7 +1633,7 @@ multi-line layout."
         (setq omit-list (funcall omit-list record layout)))
     (if (functionp order-list)
         (setq order-list (funcall order-list record layout)))
-    
+
     ;; first omit unwanted records
     (when (and omit-list (or (not order-list) (memq t order-list)))
       (if (not (listp omit-list))
@@ -1643,7 +1643,7 @@ multi-line layout."
         (while omit-list
           (setq all-fields (delete (car omit-list) all-fields)
                 omit-list (cdr omit-list)))))
-  
+
     ;; then order them
     (if (not order-list)
         (setq field-list all-fields)
@@ -1658,8 +1658,8 @@ multi-line layout."
               (setq field-list (append all-fields field-list))
             (setq field-list (cons (car order-list) field-list)))
           (setq order-list (cdr order-list)))))
-        
-    ;; call the actual format function 
+
+    ;; call the actual format function
     (setq format-function
           (intern (format "bbdb-format-record-layout-%s" layout)))
     (if (functionp format-function)
@@ -1688,7 +1688,7 @@ multi-line layout."
       nil
 
     (bbdb-elided-display-sanity-setup)
-    
+
     ;; add layout and a marker to the local list of records
     (setq layout (or layout bbdb-display-layout))
     (setq records (mapcar (lambda (x)
@@ -1699,13 +1699,13 @@ multi-line layout."
         (temp-buffer-setup-hook nil)
         (temp-buffer-show-hook nil)
         (first (car (car records))))
-    
+
     (with-output-to-temp-buffer bbdb-buffer-name
       (set-buffer bbdb-buffer-name)
 
       ;; If append is unset, clear the buffer.
       (unless append (bbdb-undisplay-records))
-      
+
       ;; If we're appending these records to the ones already displayed,
       ;; then first remove any duplicates, and then sort them.
       (if append
@@ -2581,7 +2581,7 @@ previous field.
 \\[bbdb-next-record], \\[bbdb-prev-record]\t Move to the next or the previous \
 displayed record, respectively.
 \\[bbdb-create]\t Create a new record.
-\\[bbdb-elide-record]\t Toggle whether the current record is displayed in a \
+\\[bbdb-toggle-records-display-layout]\t Toggle whether the current record is displayed in a \
 one-line\n\t listing, or a full multi-line listing.
 \\[bbdb-apply-next-command-to-all-records]\\[bbdb-elide-record]\t Do that \
 for all displayed records.
@@ -3215,7 +3215,7 @@ before the record is created, otherwise it is created without confirmation
                   (message "noticed %s's address \"%s\""
                            (bbdb-record-name record) net)
                 (message "noticed naked address \"%s\"" net))))
-        
+
         (if created-p (bbdb-invoke-hook 'bbdb-create-hook record))
         (if change-p (bbdb-change-record record (eq change-p 'sort)))
         (bbdb-invoke-hook 'bbdb-notice-hook record)
@@ -3341,27 +3341,30 @@ When called interactively with a prefix argument, insert string at point."
 
 (defvar bbdb-init-forms
   '((Gnus                       ; Gnus 3.14 or older
-     gnus-Startup-hook bbdb-insinuate-gnus)
+     (add-hook 'gnus-Startup-hook 'bbdb-insinuate-gnus))
     (gnus                       ; Gnus 3.15 or newer
-     gnus-startup-hook bbdb-insinuate-gnus)
+     (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus))
     (mh-e                       ; MH-E
-     mh-folder-mode-hook bbdb-insinuate-mh)
+     (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh))
     (rmail                      ; RMAIL
-     rmail-mode-hook bbdb-insinuate-rmail)
+     (add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail))
     (sendmail                   ; the standard mail user agent
-     mail-setup-hook bbdb-insinuate-sendmail)
-    (vm                         ; the alternative mail reader
-     vm-load-hook bbdb-insinuate-vm)
+     (add-hook 'mail-setup-hook 'bbdb-insinuate-sendmail))
+    (vm-old                     ; the alternative mail reader
+     (add-hook 'vm-load-hook 'bbdb-insinuate-vm))
+    (vm                        ; newer versions don't have vm-load-hook
+     (progn (eval-after-load "vm" '(bbdb-insinuate-vm))
+            (error "foo!")))
     (message                    ; the gnus mail user agent
-     message-setup-hook bbdb-insinuate-message)
+     (add-hook 'message-setup-hook 'bbdb-insinuate-message))
     (reportmail                 ; mail notification
-     reportmail-load-hook bbdb-insinuate-reportmail)
+     (add-hook 'reportmail-load-hook 'bbdb-insinuate-reportmail))
     (sc                         ; message citation
-     sc-load-hook bbdb-insinuate-sc)
+     (add-hook 'sc-load-hook 'bbdb-insinuate-sc))
     (supercite                  ; same
-     sc-load-hook bbdb-insinuate-sc)
+     (add-hook 'sc-load-hook 'bbdb-insinuate-sc))
     (w3                         ; WWW browser
-     w3-load-hook bbdb-insinuate-w3))
+     (add-hook 'w3-load-hook 'bbdb-insinuate-w3)))
   "The alist which maps features to insinuationn forms.")
 
 ;;;###autoload
@@ -3406,8 +3409,8 @@ passed as arguments to initiate the appropriate insinuations.
       (setq to-insinuate (cdr to-insinuate))
       (if init
           (if (or (featurep feature) (locate-library (symbol-name feature)))
-              (add-hook (cadr init) (caddr init))
-              (bbdb-warn "cannot locate feature `%s'" feature))
+              (eval (cadr init))
+            (bbdb-warn "cannot locate feature `%s'" feature))
           (bbdb-warn "don't know how to insinuate `%s'" feature))))
 
   ;; RMAIL, MHE, and VM interfaces might need these.
@@ -3519,7 +3522,7 @@ This variable has no effect if set outside of customize."
 (provide 'bbdb)  ; provide before loading things which might require
 
 ;; make it obsolete everywhere else, but not for the compatibility code in
-;; this file  
+;; this file
 (make-obsolete-variable
  'bbdb-elided-display
  'bbdb-display-layout)
