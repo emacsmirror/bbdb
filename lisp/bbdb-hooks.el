@@ -250,7 +250,7 @@ to the BBDB record representing the sender of the current message based on
 the subject or other header fields.  This only works if `bbdb-notice-hook'
 contains `bbdb-auto-notes-hook'.  The format of this alist is
 
-   (( HEADER-NAME
+   ((HEADER-NAME [ADDRESS-CLASS-LIST]
        (REGEXP . STRING) ... )
       ... )
 for example,
@@ -262,6 +262,14 @@ will cause the text \"VM mailing list\" to be added to the notes field of
 the record corresponding to anyone you get mail from via one of the VM
 mailing lists.  If, that is, `bbdb/mail-auto-create-p' is set such that the
 record would have been created, or the record already existed.
+
+A ADDRESS-CLASS-LIST is optional and by default actions will be performed only
+for records of authors of a message.  However, by giving an list of classes
+specified in `bbdb-get-addresses-headers'.  Actions will then only be
+performed if the currently processed email is of a class listed in
+ADDRESS-CLASS-LIST.  ADDRESS-CLASS-LIST might also be an alist with elements
+of the form (CLASS . HEADER) which allows actions only when the current
+address matches one of the elemets.
 
 The format of elements of this list may also be
        (REGEXP FIELD-NAME STRING)
@@ -310,7 +318,10 @@ See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'."
           (bbdb-alist-with-header
            (string :tag "Header name")
            (repeat (choice
-                    (const nil)
+                    (cons :tag "Address Class"
+                          (repeat (choice
+                                   (const authors)
+                                   (const recipients))))
                     (cons :tag "Value Pair"
                           (regexp :tag "Regexp to match on header value")
                           (string :tag "String for notes if regexp matches"))
@@ -377,11 +388,11 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
   ;; cached for any other message, but that's probably not the right thing.
   (unless bbdb-readonly-p
    (let ((rest bbdb-auto-notes-alist)
-         ignore
          (ignore-all bbdb-auto-notes-ignore-all)
          (case-fold-search t)
          (b (current-buffer))
          (marker (bbdb-header-start))
+         ignore
          field pairs fieldval  ; do all bindings here for speed
          regexp string notes-field-name notes
          replace-p)
@@ -415,6 +426,21 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
                                         ; (REGEXP FIELD-NAME STRING REPLACE-P)
                 fieldval (bbdb-extract-field-value field)) ; e.g., Subject line
           (when fieldval
+            ;; we perform the auto notes stuff only for authors of a message
+            ;; or if explicitly requested 
+            (if (or (symbolp (caar pairs)) (listp (caar pairs)))
+                (if (or (memq bbdb-update-address-class (car pairs))
+                        (and (assoc bbdb-update-address-class (car pairs))
+                             (string= bbdb-update-address-header
+                                      (cdr (assoc bbdb-update-address-class
+                                                  (car pairs))))))
+                    (setq pairs (cdr pairs))
+                  (setq pairs nil))
+              (if (not (and (eq 'authors bbdb-update-address-class)
+                            (string-match "From" bbdb-update-address-header)))
+                  (setq pairs nil)))
+
+            ;; now handle the remaining pairs
             (while pairs
               (setq regexp (car (car pairs))
                     string (cdr (car pairs)))
@@ -464,19 +490,20 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
                     (if replace-p
                         ;; replace old contents of field with STRING
                         (progn
-                          (if (eq notes-field-name 'notes)
-                              (message "Replacing with note \"%s\"" string)
+                          (when (not bbdb-silent-running)
+                            (if (eq notes-field-name 'notes)
+                                (message "Replacing with note \"%s\"" string)
                               (message "Replacing field \"%s\" with \"%s\""
-                                       notes-field-name string))
-                          (bbdb-record-putprop record notes-field-name
-                                               string)
+                                       notes-field-name string)))
+                          (bbdb-record-putprop record notes-field-name string)
                           (bbdb-maybe-update-display record))
                         ;; add STRING to old contents, don't replace
+                      (when (not bbdb-silent-running)
                         (if (eq notes-field-name 'notes)
                             (message "Adding note \"%s\"" string)
-                            (message "Adding \"%s\" to field \"%s\""
-                                     string notes-field-name))
-                        (bbdb-annotate-notes record string notes-field-name))))
+                          (message "Adding \"%s\" to field \"%s\""
+                                   string notes-field-name)))
+                      (bbdb-annotate-notes record string notes-field-name))))
               (setq pairs (cdr pairs))))
           (setq rest (cdr rest))))))
     (set-buffer b))))
