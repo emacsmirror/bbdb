@@ -2,6 +2,29 @@
 (if (not (featurep 'bbdb-autoloads))
     (progn
 
+;;;### (autoloads (bbdb/gnus-score bbdb/gnus-summary-get-author) "bbdb-gnus" "lisp/bbdb-gnus.el")
+
+(autoload 'bbdb/gnus-summary-get-author "bbdb-gnus" "\
+Given a GNUS message header, returns the appropriate piece of
+information to identify the author in a GNUS summary line, depending on
+the settings of the various configuration variables.  See the
+documentation for the following variables for more details:
+  `bbdb/gnus-summary-mark-known-posters'
+  `bbdb/gnus-summary-known-poster-mark'
+  `bbdb/gnus-summary-prefer-bbdb-data'
+  `bbdb/gnus-summary-prefer-real-names'
+This function is meant to be used with the user function defined in
+  `bbdb/gnus-summary-user-format-letter'" nil nil)
+
+(autoload 'bbdb/gnus-score "bbdb-gnus" "\
+This returns a score alist for GNUS.  A score pair will be made for
+every member of the net field in records which also have a gnus-score
+field.  This allows the BBDB to serve as a supplemental global score
+file, with the advantage that it can keep up with multiple and changing
+addresses better than the traditionally static global scorefile." nil nil)
+
+;;;***
+
 ;;;### (autoloads (bbdb-whois) "bbdb-whois" "bbdb/bbdb-whois.el")
 
 (autoload 'bbdb-whois "bbdb-whois" nil t nil)
@@ -127,8 +150,9 @@ Call this function to hook BBDB into W3." nil nil)
 (autoload 'sample-bbdb-canonicalize-net-hook "bbdb-hooks" bbdbid nil)
 (autoload 'bbdb-creation-date-hook	     "bbdb-hooks" bbdbid nil)
 
-(autoload 'bbdb-fontify-buffer	"bbdb-xemacs" bbdbid nil)
-(autoload 'bbdb-menu		"bbdb-xemacs" bbdbid t)
+(autoload 'bbdb-fontify-buffer                 "bbdb-xemacs" bbdbid nil)
+(autoload 'bbdb-menu                           "bbdb-xemacs" bbdbid t)
+(autoload 'bbdb-xemacs-display-completion-list "bbdb-xemacs" bbdbid nil)
 
 (makunbound 'bbdbid)
 
