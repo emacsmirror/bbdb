@@ -1,3 +1,9 @@
+2001-08-01  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-unelide-record),
+	(bbdb-elide-record-internal):  Modified for more convenient
+	toggeling of the omitted display mode.
+
 2001-07-31  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-gui.el (build-bbdb-menu): Added an "(Un)Elide All
