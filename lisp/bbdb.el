@@ -37,6 +37,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.56  1997/11/02 07:45:31  simmonmt
+;; Added bbdb-warn and code to avoid it for XEmacs users.  Reformatted
+;; autoloads (again).  Autoloads for sc.
+;;
 ;; Revision 1.55  1997/10/26 05:25:00  simmonmt
 ;; New autoloads.  Override bbdb-display-completion-list for XEmacs users
 ;;
@@ -55,7 +59,7 @@
 ;;
 ;;
 
-(defconst bbdb-version "1.55unoff")
+(defconst bbdb-version "1.56unoff")
 (defconst bbdb-version-date "$Date$")
 (defconst bbdb-file-format 2)
 
@@ -1582,7 +1586,7 @@ The keybindings, more precisely:
 			     (bbdb-redisplay-records))))
 	      (set-buffer b)))))))
 
-(defun bbdb-annotate-notes (bbdb-record annotation &optional fieldname)
+(defun bbdb-annotate-notes (bbdb-record annotation &optional fieldname replace)
   (or bbdb-record (error "unperson"))
   (setq annotation (bbdb-string-trim annotation))
   (if (memq fieldname '(name address addresses phone phones net aka AKA))
@@ -1597,7 +1601,7 @@ The keybindings, more precisely:
     (let ((notes (bbdb-string-trim
 		   (or (bbdb-record-getprop bbdb-record fieldname) ""))))
       (bbdb-record-putprop bbdb-record fieldname
-			   (if (string= notes "")
+			   (if (or replace (string= notes ""))
 			       annotation
 			       (concat notes
 				       (if (eq fieldname 'company) "; "
@@ -2245,21 +2249,20 @@ the window will be split vertically rather than horizontally."
 (autoload 'bbdb-read-addresses-with-completion	"bbdb-com" bbdbid)
 (autoload 'bbdb-record-edit-property		"bbdb-com" bbdbid t)
 
-(autoload 'bbdb/vm-show-sender          "bbdb-vm"    bbdbid t)
-(autoload 'bbdb/vm-annotate-sender      "bbdb-vm"    bbdbid t)
-(autoload 'bbdb/vm-update-record        "bbdb-vm"    bbdbid t)
-(autoload 'bbdb/rmail-show-sender       "bbdb-rmail" bbdbid t)
-(autoload 'bbdb/rmail-annotate-sender   "bbdb-rmail" bbdbid t)
-(autoload 'bbdb/rmail-update-record     "bbdb-rmail" bbdbid t)
-(autoload 'bbdb/mh-show-sender          "bbdb-mhe"   bbdbid t)
-(autoload 'bbdb/mh-annotate-sender      "bbdb-mhe"   bbdbid t)
-(autoload 'bbdb/mh-update-record        "bbdb-mhe"   bbdbid t)
-(autoload 'bbdb/gnus-show-sender        "bbdb-gnus"  bbdbid t)
-(autoload 'bbdb/gnus-annotate-sender    "bbdb-gnus"  bbdbid t)
-(autoload 'bbdb/gnus-update-record      "bbdb-gnus"  bbdbid t)
-(autoload 'bbdb/gnus-lines-and-from     "bbdb-gnus"  bbdbid nil)
-(autoload 'bbdb/gnus-summary-get-author "bbdb-gnus"  bbdbid nil)
-(autoload 'bbdb/gnus-score              "bbdb-gnus"  bbdbid nil)
+(autoload 'bbdb/vm-show-sender              "bbdb-vm"    bbdbid t)
+(autoload 'bbdb/vm-annotate-sender          "bbdb-vm"    bbdbid t)
+(autoload 'bbdb/vm-update-record            "bbdb-vm"    bbdbid t)
+(autoload 'bbdb/rmail-show-sender           "bbdb-rmail" bbdbid t)
+(autoload 'bbdb/rmail-annotate-sender       "bbdb-rmail" bbdbid t)
+(autoload 'bbdb/rmail-update-record         "bbdb-rmail" bbdbid t)
+(autoload 'bbdb/mh-show-sender              "bbdb-mhe"   bbdbid t)
+(autoload 'bbdb/mh-annotate-sender          "bbdb-mhe"   bbdbid t)
+(autoload 'bbdb/mh-update-record            "bbdb-mhe"   bbdbid t)
+(autoload 'bbdb/gnus-show-sender            "bbdb-gnus"  bbdbid t)
+(autoload 'bbdb/gnus-annotate-sender        "bbdb-gnus"  bbdbid t)
+(autoload 'bbdb/gnus-update-record          "bbdb-gnus"  bbdbid t)
+(autoload 'bbdb/gnus-lines-and-from         "bbdb-gnus"  bbdbid nil)
+(autoload 'bbdb/gnus-score                  "bbdb-gnus"  bbdbid nil)
 
 (autoload 'bbdb-extract-field-value          "bbdb-hooks" bbdbid nil)
 (autoload 'bbdb-timestamp-hook               "bbdb-hooks" bbdbid nil)
@@ -2273,9 +2276,11 @@ the window will be split vertically rather than horizontally."
 (autoload 'bbdb-menu                           "bbdb-xemacs" bbdbid t)
 (autoload 'bbdb-xemacs-display-completion-list "bbdb-xemacs" bbdbid nil)
 
-(autoload 'bbdb-www "bbdb-w3"               bbdbid nil)
+(autoload 'bbdb-www               "bbdb-w3" bbdbid nil)
 (autoload 'bbdb-www-grab-homepage "bbdb-w3" bbdbid nil)
-(autoload 'bbdb-insinuate-w3 "bbdb-w3"      bbdbid nil)
+(autoload 'bbdb-insinuate-w3      "bbdb-w3" bbdbid nil)
+
+(autoload 'bbdb-insinuate-sc      "bbdb-sc" bbdbid nil)
 
 (autoload 'bbdb-snarf "bbdb-snarf" bbdbid t)
 
@@ -2300,6 +2305,15 @@ the window will be split vertically rather than horizontally."
 (defmacro safe-require (thing)
   (list 'condition-case nil (list 'require thing) '(file-error nil)))
 
+;; Wrappers for things that change for different Emacsen.  Note: This
+;; is for things that get redefined that don't belong elsewhere.  Some
+;; functions that get redefined live elsewhere in the source because
+;; it makes sense to put them there.
+
+(defun bbdb-warn (&rest args)
+  (beep 1)
+  (apply 'message args))
+	
 (if (featurep 'rmail) (safe-require 'bbdb-rmail))
 (if (featurep 'gnus)  (safe-require 'bbdb-gnus))
 (if (featurep 'vm)    (safe-require 'bbdb-vm))
@@ -2310,6 +2324,10 @@ the window will be split vertically rather than horizontally."
        (bbdb-add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
        (define-key bbdb-mode-map 'button3 'bbdb-menu)
 
+       ;; Above
+       (fset 'bbdb-warn 'warn)
+       
+       ;; bbdb-com.el
        (fset 'bbdb-display-completion-list 'bbdb-xemacs-display-completion-list)
        ))
 
