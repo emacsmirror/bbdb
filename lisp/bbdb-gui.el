@@ -184,7 +184,7 @@
     (let ((rest (or records bbdb-records))
           record face
           start end  s e 
-          elided-p
+          multi-line-p
           property
           extent)
       
