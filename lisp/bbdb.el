@@ -37,6 +37,11 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.54  1997/10/12 00:04:42  simmonmt
+;; Added documentation and keymap definition for bbdb-www.  Added
+;; autoloads for bbdb-www (and friends), bbdb-snarf, and
+;; bbdb-insinuate-message
+;;
 ;; Revision 1.53  1997/10/06 01:12:49  simmonmt
 ;; Version number format changes
 ;;
@@ -47,7 +52,7 @@
 ;;
 ;;
 
-(defconst bbdb-version "1.53unoff")
+(defconst bbdb-version "1.54unoff")
 (defconst bbdb-version-date "$Date$")
 (defconst bbdb-file-format 2)
 
@@ -992,6 +997,8 @@ a list of strings (the new way of doing things.)  Returns the new list."
   (bbdb-record-set-net record (bbdb-split (bbdb-record-net record) ",")))
 
 (defun bbdb-split (string separators)
+  "Splits a string into a list of strings, splitting on the characters in
+separators.  Returns the list."
   (let (result
 	(not-separators (concat "^" separators)))
     (save-excursion
@@ -1504,6 +1511,8 @@ deleting it\n\t from the database.  This is often a useful thing to do before \
 using\n\t one of the `*' commands.
 \\[bbdb-info]\t enters the Info node (online documentation) for BBDB.
 \\[bbdb-help]\t displays a one-line command-summary in the echo-area.
+\\[bbdb-www]\t visits Web sites listed in the `www' field(s) of the current \
+record.
 
 In send-mail mode, \\<mail-mode-map>\\[bbdb-complete-name] does completion \
 across the set of names and network \naddresses in the database.
@@ -2187,6 +2196,7 @@ the window will be split vertically rather than horizontally."
   (define-key bbdb-mode-map "?"	     'bbdb-help)
   (define-key bbdb-mode-map "q"	     'bbdb-bury-buffer)
   (define-key bbdb-mode-map "\^X\^T" 'bbdb-transpose-fields)
+  (define-key bbdb-mode-map "W"      'bbdb-www)
   )
 
 (defvar bbdbid "Insidious Big Brother Database autoload")
@@ -2205,10 +2215,11 @@ the window will be split vertically rather than horizontally."
 (autoload 'bbdb-info	"bbdb-com" bbdbid t)
 (autoload 'bbdb-help	"bbdb-com" bbdbid t)
 
-(autoload 'bbdb-insinuate-vm    "bbdb-vm"    "Hook BBDB into VM")
-(autoload 'bbdb-insinuate-rmail "bbdb-rmail" "Hook BBDB into RMAIL")
-(autoload 'bbdb-insinuate-mh    "bbdb-mhe"   "Hook BBDB into MH-E")
-(autoload 'bbdb-insinuate-gnus  "bbdb-gnus"  "Hook BBDB into GNUS")
+(autoload 'bbdb-insinuate-vm      "bbdb-vm"    "Hook BBDB into VM")
+(autoload 'bbdb-insinuate-rmail   "bbdb-rmail" "Hook BBDB into RMAIL")
+(autoload 'bbdb-insinuate-mh      "bbdb-mhe"   "Hook BBDB into MH-E")
+(autoload 'bbdb-insinuate-gnus    "bbdb-gnus"  "Hook BBDB into GNUS")
+(autoload 'bbdb-insinuate-message "bbdb-gnus"  "Hook BBDB into message")
 
 (autoload 'bbdb-apply-next-command-to-all-records "bbdb-com" bbdbid t)
 
@@ -2255,6 +2266,12 @@ the window will be split vertically rather than horizontally."
 
 (autoload 'bbdb-fontify-buffer	"bbdb-xemacs" bbdbid nil)
 (autoload 'bbdb-menu		"bbdb-xemacs" bbdbid t)
+
+(autoload 'bbdb-www "bbdb-w3"               bbdbid nil)
+(autoload 'bbdb-www-grab-homepage "bbdb-w3" bbdbid nil)
+(autoload 'bbdb-insinuate-w3 "bbdb-w3"      bbdbid nil)
+
+(autoload 'bbdb-snarf "bbdb-snarf" bbdbid t)
 
 (makunbound 'bbdbid)
 
