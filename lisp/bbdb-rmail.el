@@ -141,10 +141,10 @@ Leaves original message, deleted, before the undigestified messages."
   (setq bbdb-message-cache nil)
   (bbdb-orig-undigestify-rmail-message))
 
-(defun bbdb-orig-rmail-expunge ()
-  "This becomes the original rmail-expunge function.")
-(defun bbdb-orig-undigestify-rmail-message ()
-  "This becomes the original rmail-expunge function.")
+;(defun bbdb-orig-rmail-expunge ()
+;  "This becomes the original rmail-expunge function.")
+;(defun bbdb-orig-undigestify-rmail-message ()
+;  "This becomes the original rmail-expunge function.")
 
 ;;;###autoload
 (defun bbdb-insinuate-rmail ()
