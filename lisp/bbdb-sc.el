@@ -196,6 +196,7 @@ Custom."
 
 ;; insert our hooks - call me from your Emacs initialization file
 ;;;###autoload
+(defvar attribution nil) ;; dammit, supercite!
 (defun bbdb-insinuate-sc ()
   "Call this function to hook BBDB into Supercite."
 

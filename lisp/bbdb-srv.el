@@ -68,6 +68,14 @@
 (require 'bbdb-hooks)
 
 
+(eval-when-compile
+  (require 'mail-utils) ;; for mail-strip-quoted-names
+  (require 'bbdb-gui) ;; for extents macros
+  (if (featurep 'xemacs)
+      ()
+    (fset 'set-keymap-name 'ignore)
+    (fset 'frame-lowest-window 'ignore)))
+
 ;; newer version of gnuserv requires gnuserv-compat when using FSF emacs
 ;; but you might be using an older version, and we can't tell until you
 ;; crash it...
@@ -104,7 +112,7 @@ message, and then run either `bbdb/news-auto-create-p' or
 
 (defvar bbdb/srv-pending-headers nil)
 (defvar bbdb/srv-pending-map
-  (and (fboundp 'set-extent-property)
+  (and (fboundp 'bbdb-set-extent-property)
        (condition-case nil
        (let ((m (make-sparse-keymap)))
          (set-keymap-name m 'bbdb/srv-pending-map)
@@ -150,7 +158,7 @@ the various hooks (like `bbdb-notice-hook' and `bbdb/news-auto-create-p')."
     (unwind-protect
         (progn
           (if (fboundp 'frame-lowest-window)
-          (select-window (frame-lowest-window)))
+              (select-window (frame-lowest-window)))
           (bbdb-pop-up-bbdb-buffer))
       (select-window w))
     (setq w (get-buffer-window bbdb-buffer-name))
@@ -174,10 +182,10 @@ the various hooks (like `bbdb-notice-hook' and `bbdb/news-auto-create-p')."
            (let ((p (point))
              e)
          (insert from)
-         (setq e (make-extent p (point)))
-         (set-extent-face e 'bold)
-         (set-extent-property e 'highlight t)
-         (set-extent-property e 'keymap bbdb/srv-pending-map)
+         (setq e (bbdb-make-extent p (point)))
+         (bbdb-set-extent-face e 'bold)
+         (bbdb-set-extent-property e 'highlight t)
+         (bbdb-set-extent-property e 'keymap bbdb/srv-pending-map)
          )
            (insert "\n\n\t\t\tClick to add to BBDB.")
            ))))))

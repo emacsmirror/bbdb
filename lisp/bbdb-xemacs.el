@@ -26,6 +26,11 @@
 (or (string-match "XEmacs\\|Lucid" emacs-version)
     (error "This file only works in XEmacs."))
 
+;; this makes no sense, long-term, but.
+(eval-when-compile
+  (or (featurep 'xemacs)
+      (fset 'load-sound-file 'ignore)))
+
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-gui) ;; load in the menu/font stuff
