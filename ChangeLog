@@ -1,5 +1,8 @@
 2002-04-18  Robert Fenk  <Robert.Fenk@gmx.de>
 
+	* lisp/bbdb-gui.el (build-bbdb-insert-field-menu): Added record to
+	the arguments for bbdb-insert-new-field.
+
 	* lisp/bbdb-com.el (bbdb-read-new-record): Added completion for
 	labels.
 
