@@ -1,3 +1,44 @@
+Sun Feb 22 20:58:00 1998  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 1.59unoff released
+	* lisp/bbdb.el: Created defface stand-in macro
+	* lisp/bbdb.el (bbdb-initialize): Reword
+	* lisp/bbdb.el (bbdb-initialize): Add keybinding for bbdb-print
+	* lisp/bbdb.el (bbdb-initialize): Add autoloads for
+	  bbdb-show-all-recipients (bbdb-com), bbdb-ftp, bbdb-print
+	* lisp/bbdb.el (bbdb-initialize): Use bbdb-add-hook if none in Emacs
+	* lisp/bbdb-ftp.el: Changed comment - can use EFS
+	* lisp/bbdb-gnus.el: Changed GNUS/Gnus stuff around to reflect docs
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-author-in-bbdb): Now uses
+	  `bbdb-message-marker-field' as documented
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus): Use `add-hook', not
+	  `bbdb-add-hook'
+	* lisp/bbdb-hooks.el: Use add-hook, not bbdb-add-hook
+	* lisp/bbdb-mhe.el: Use add-hook, not bbdb-add-hook
+	* lisp/bbdb-rmail.el: Use add-hook, not bbdb-add-hook
+	* lisp/bbdb-vm.el: Use add-hook, not bbdb-add-hook
+	* lisp/bbdb-xemacs.el: Use add-hook, not bbdb-add-hook
+	* lisp/bbdb-print.el: Moved key binding to bbdb.el
+	* lisp/bbdb-print.el: Changed default of `bbdb-print-elide'
+	* lisp/bbdb-print.el (bbdb-print-alist-widget): Fixed problem with 
+	  nil `bbdb-default-area-code'
+	* lisp/bbdb-sc.el: Fixed intro comments
+	* lisp/bbdb-sc.el: Use add-hook, not bbdb-add-hook
+	* Makefile: Alphabetized MUA directory variables, added OTHERDIR
+	  variable
+	* lisp/Makefile: Support for OTHERDIR, rearranged flags to Emacs
+	  so we can use bbdb-split-string (19.34 doesn't have split-string)
+	* texinfo/bbdb.texinfo: Almost finished doc rewrite
+	* misc/bbdb_gnus-summary-get-author.fig: Created
+
+Fri Feb 20 19:31:00 1998  Christopher Kline <ckline@media.mit.edu>
+
+        * texinfo/bbdb.texinfo: Documentation for BBDB-Reportmail
+
+Thu Feb 19 13:41:17 1998  Sam Steingold <sds@usa.net>
+
+	* lisp/bbdb.el (bbdb-version): Return a string if non-interactive
+	  
 Mon Jan  5 20:40:03 1998  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 1.58unoff released
