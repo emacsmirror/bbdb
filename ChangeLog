@@ -1,4 +1,15 @@
-2001-02-02  Robert Fenk  <fenk@forwiss.de>
+2001-02-03  Robert.Fenk@gmx.de
+
+	* lisp/bbdb.el (bbdb-message-cache-lookup), (bbdb-encache-message): 
+	Replaced the unreadable macros by a function in order to use it
+	also for bbdb-vm.el.
+	(bbdb-decache-message): new function to remove an element from
+	the cache.
+	(bbdb-annotate-message-sender): Added creation of a new "duplicate"
+	record when the given email address does not belong to the
+	existing one.
+
+2001-02-02  Robert.Fenk@gmx.de
 
 	* lisp/bbdb-com.el (bbdb-find-duplicates): Fixes records without a
 	name and adds additional messages in order to understand the
@@ -36,7 +47,7 @@
 	* utils/Makefile.in: new file.
 	* utils/.cvsignore: new file.
 
-2001-02-01  Robert Fenk  <fenk@forwiss.de>
+2001-02-01  Robert.Fenk@gmx.de
 
 	* lisp/bbdb-com.el (bbdb-mail-abbrev-expand-hook): honor the
 	pop-up settings, e.g. bbdb-pop-up-target-lines
@@ -47,7 +58,7 @@
 	* lisp/bbdb-vm.el (bbdb/vm-pop-up-bbdb-buffer): Fixed the pop-up
 	behaviour. 
 
-2001-01-30  Robert Fenk  <fenk@forwiss.de>
+2001-01-30  Robert.Fenk@gmx.de
 
 	* lisp/bbdb-com.el (bbdb-complete-name): Fixes completion problem
 	slipped into with revision 1.89
