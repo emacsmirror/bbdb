@@ -1233,20 +1233,26 @@ phone number; the order of field types is fixed.)@refill
 previous displayed record, respectively. @refill
 
 @item t
-@findex bbdb-elide-record
-(@code{bbdb-elide-record}) Toggles whether the current record is displayed
-in a one-line listing, or a full multi-line listing.  With a numeric argument
-of 0, the current record will unconditionally be made elided; with any
-other argument, the current record will unconditionally be shown
-expanded. @refill
+@findex bbdb-toggle-records-display-layout
+(@code{bbdb-toggle-records-display-layout}) Toggles the display layout of a
+record.  With a numeric argument
+of 0, the current record will be made displayed in one line layout; with any
+other argument, the current record will be shown in multi-line layout. @refill
 
 If @kbd{*t} is used instead of simply @kbd{t}, then the state of all
 records will be changed instead of just the one at point.  In this case,
 a numeric argument of 0 means that all records will unconditionally be
-made elided; any other numeric argument means that all of the records
+made one-line layout; any other numeric argument means that all of the records
 will unconditionally be shown expanded; and no numeric argument means
 that the records are made to be in the opposite state of the record
 under point. @refill
+
+@item T
+@findex bbdb-display-record-completely
+(@code{bbdb-display-record-completely})
+Show all the fields of the current record.
+The display layout `full-multi-line' is used for this.
+@refill
 
 @item o
 @findex bbdb-omit-record
@@ -1428,6 +1434,17 @@ Begin a new database search.  This search will be
 limited to the net address, company, notes, or name fields,
 respectively, of database records.  @xref{Basic Searching}. for more
 details.
+
+@item *
+@findex bbdb-append-records
+@code{bbdb-append-records} will make the next display/search
+command to append its results to the BBDB buffer instead of replacing its
+content. 
+
+With an prefix arg (C-u) toggle between always append and no append.
+With an prefix arg that is a positive number append will be enabled for that
+many times.
+With any other argument append will be enabled once."@refill
 
 @end table
 
@@ -2272,24 +2289,6 @@ tastefully. @refill
 Desired number of lines in a @b{VM/MH/RMAIL/GNUS} pop-up @b{BBDB} window,
 default 5. @refill
 
-@item bbdb-elided-display-fields
-@vindex bbdb-elided-display-fields
-A the list of fields which should be displayed in elided display.
-E.g. set this to @code{'(phones net addresses)} in order to get the list of
-phone numbers, net addresses and addresses listed.
-
-You may use any valid BBDB field and write your own functions for formating
-them.  The formating functions should be named according to the following
-pattern @code{bbdb-format-popup-<field>}.  They should take one argument which
-is the raw field content and return a string.
-@refill
-
-@item bbdb-elided-display-name-end
-@vindex bbdb-elided-display-name-end
-Set this to the column where name and company should end in elided
-display.
-@refill
-
 @item bbdb-completion-type
 @vindex bbdb-completion-type
 @cindex Completion
@@ -2389,35 +2388,6 @@ selected, but only the first time.  Likewise, if selecting a message
 would generate a question (whether to add an address, change the
 name, etc) you will only be asked that question the very first time
 the message is selected. @refill
-
-@item bbdb-elided-display
-@vindex bbdb-elided-display
-Default: @code{nil}.  Set this to @code{t} to make the bbdb-display commands
-default to displaying one line per record instead of a full listing.
-Set this to a list of some of the symbols @code{'(address phone net
-notes)} to select those fields to be left out of the listing (you can't
-leave out the name field). @refill
-
-This is the default state for @w{@kbd{M-x bbdb}} and friends.  You can have a
-different default for when the @b{BBDB} buffer is automatically updated by the
-mail and news interfaces by setting the variable
-@code{bbdb-pop-up-elided-display}.  If that variable is unbound, this
-variable will be consulted instead.@refill
-
-@item bbdb-pop-up-elided-display
-@vindex bbdb-pop-up-elided-display
-Default: unbound.  Set this to @code{t} if to make the pop-up @b{BBDB} buffer
-default to displaying one line per record instead of a full listing.
-Set this to a list of some of the symbols @code{'(address phone net
-notes)} to select those fields to be left out of the listing (you can't
-leave out the name field). @refill
-
-The default state for @w{@kbd{M-x bbdb}} and friends is controlled by the
-variable @code{bbdb-elided-display}; this variable is the default for
-when the @b{BBDB} buffer is automatically updated by the mail and news
-interfaces.  If bbdb-pop-up-elided-display is unbound, then
-bbdb-elided-display the former will be consulted instead by mail and
-news.@refill
 
 @item bbdb-offer-save
 @vindex bbdb-offer-save
