@@ -1,3 +1,42 @@
+2002-01-18  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-gnus.el: removed binding of unused variabe `error'.
+
+	* lisp/bbdb-snarf.el
+	(bbdb-extract-address-component-regexps): Fixed regexp.
+	(bbdb-rfc822-addresses): Fixed autoload string.
+
+	* lisp/bbdb.el (bbdb-display-records-1): enable appending of records.
+	(bbdb-search-intertwingle): Search also for records when no name
+	was given, but just a net.
+	(bbdb-mode-map): bbdb-add-next-search-results bound to +
+
+	* lisp/bbdb-com.el: eval-and-compile otherwise the fsets do not
+	get evaluated on.
+	(bbdb-redisplay-one-record): Try to preserve the position during
+	redisplay.
+	(bbdb-add-next-search-results):
+	(bbdb-add-next-search-results-p):
+	(bbdb-add-next-search-results): A prefix command (like "*") bound
+	to "+" which forces the next display command to add its content to
+	the BBDB buffer rather than replacing it.
+	(bbdb-yank-addresses): removed the dependency on
+	`bbdb-case-fold-search' since completions from the bbdb-hashtable
+	are always lower case.
+	(bbdb-complete-name): fixed cycling when the
+	current completion is equal to one of the nets.
+	Added code for C-u M-TAB which lists all possible nets of current
+	completed addess.  Fixed some special cases by rewriting some too
+	complex parts of the code.  Thanks to the new testing code.
+	When will this function finnaly do exactly what it should do?
+	(bbdb-define-all-aliases-mode): new variable controling special
+	aliases, i.e. alias<NUMBER> & alias*.
+	(bbdb-define-all-aliases): Clear abbrev-table before defining
+	abbreves and modified to honor new aliases-mode.  Automatice
+	rebuilt of aliases if necessary (XEmacs only sofar)
+	(bbdb-add-or-remove-mail-alias): after adding or removing an
+	alias, redefine them.
+
 2002-01-15  Waider  <waider@waider.ie>
 
 	* lisp/bbdb.el: 
@@ -71,19 +110,12 @@
 2002-01-04  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
-	Replaced the call of bbdb-clean-username bt a call to
+	Replaced the call of bbdb-clean-username by a call to
 	mail-extract-address-components in order to handle addresses of
 	the form "Lastname, Firstname" and "Firstname Lastname, Jr" in the
 	right way.
 	(bbdb-test/bbdb-extract-address-components): New test function to
 	check if everything is working as it should.
-
-2002-01-03  Robert Fenk  <Robert.Fenk@gmx.de>
-
-	* lisp/bbdb-com.el (bbdb-complete-name): fixed cycling when the
-	current completion is equal to one of the nets.
-	Added code for C-u M-TAB which lists all possible nets of current
-	completed addess. 
 
 2002-01-01  Waider  <waider@waider.ie>
 
