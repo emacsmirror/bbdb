@@ -384,4 +384,190 @@ more details."
   ;; return
   new-record)
 
+;;----------------------------------------------------------------------------
+;; Emacs 20.3 seems to miss the function replace-in-string?
+(if (not (functionp 'replace-in-string))
+    ;; actually this is dired-replace-in-string slightly modified 
+    (defun replace-in-string (string regexp newtext &optional literal)
+      ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.
+      ;; NEWTEXT is taken literally---no \\DIGIT escapes will be recognized.
+      (let ((result "") (start 0) mb me)
+	(while (string-match regexp string start)
+	  (setq mb (match-beginning 0)
+		me (match-end 0)
+		result (concat result (substring string start mb) newtext)
+		start me))
+	(concat result (substring string start)))))
+
+(defcustom bbdb-snarf-nice-real-name-regexp "[._,\t\n ]+"
+  "*Regexp matching string which `bbdb-wash-address' will replaced by
+a space."
+  :group 'bbdb-noticing-records
+  :type 'string)
+  
+(defun bbdb-snarf-nice-real-name (str)
+  "Removes unwanted characters form STR in order to get a nice full name.
+Remove any unwanted characters specifyed by `bbdb-wash-address-regexp',
+capitalize words and change order of names when separated by comma." 
+  (if str
+      (progn
+	(if (string-match "^\\([^,]+\\)\\s-*,\\s-*\\([^,]+\\)$" str)
+	    (setq str (concat (match-string 2 str) " "
+			      (match-string 1 str))))
+	(capitalize (replace-in-string str
+				       bbdb-snarf-nice-real-name-regexp
+				       " ")))
+    nil))
+
+(defcustom bbdb-extract-address-component-regexps
+	'(;; "'surname, firstname'" <address>  from Outlookers
+	  ("\"'\\([^\"]*\\)'\"\\s-*<\\([^>]+\\)>"
+	   (bbdb-snarf-nice-real-name (match-string 1 adstring)) 2)
+	  ;; "name" <address>
+	  ("\"\\([^\"]*\\)\"\\s-*<\\([^>]+\\)>"
+	   1 2)
+	  ;; name <address>
+	  ("\\(\\b[^<\",]*\\b\\)\\s-*<\\([^>]+\\)>"
+	   1 2)
+	  ;; name <address>
+	  ("<\\([^>]+\\)>" nil 2)
+	  ;; address (name)
+	  ("\\(\\b[^<\",()]+\\b\\)\\s-*(\\([^)]+\\))"
+	   2 1)
+	  ;; user@host
+	  ("\\b\\(\\([0-9a-z._-]+\\)@[0-9a-z._-]+\\)\\b"
+	   nil 1)
+	  ;; local address
+	  ("\\b\\([0-9a-z._-]+\\)\\b"
+	   nil 1)
+	  )
+	"*List of regexps matching headers.
+Each list element should have the form (REGEXP FULLNAME ADDRESS), where 
+REGEXP matches the address while the actual address components should
+be a parenthesized expression.
+
+FULLNAME is a default string for addresses without full name or a
+number denoting parenthesized expression.
+ADDRESS is a number denoting the parenthesized expression matching the
+address.
+
+If FULLNAME or ADDRESS is a list it will be evaluated to return a
+string or nil.  If its a function it will be called with the remaining
+address-string as argument."
+	:group 'bbdb-noticing-records
+	:type 'list)
+
+(defcustom bbdb-extract-address-component-ignore-regexp
+  "\\(\\(undisclosed\\|unlisted\\)[^,]*recipients\\)\\|no To-header on input"
+  "*A regexp matching addresses which should be ignored."
+  :group 'bbdb-noticing-records
+  :type 'string)
+
+(defcustom bbdb-extract-address-component-handler 'message
+  "*Specifies how `bbdb-extract-address-components' reports errors.
+
+A value of nil means ignore unparsable stuff and 'warn will report
+a warning, 'message will report a message in the minibuffer and all
+other value will fire a error.
+
+When set to a function it will be called with the remaining string in
+order to extract the address components and return the rest and the
+components as list or to do what ever it wants, e.g. send a complain
+to the author ... 
+
+To skip known unpareable stuff you rather should set the variable
+`bbdb-extract-address-component-ignore-regexp' instead of disabling
+this handler."
+  :group 'bbdb-noticing-records)
+
+;;;###autoload
+(defun bbdb-extract-address-components (adstring)
+  "Return a list of address components found in ADSTRING.
+If extracting fails one probably has to adjust the variable
+`bbdb-extract-address-component-regexps'."
+  (let ((case-fold-search t)
+	(fnadlist nil)
+	adcom-regexp
+	nomatch)
+
+    ;; Do some string cleanup and trimming
+    (setq adstring (replace-in-string adstring "[\n\t]" " "))
+    (setq adstring (replace-in-string adstring "  " " "))
+
+    ;; scan the string
+    (while (not (string= "" adstring))
+      (setq adcom-regexp bbdb-extract-address-component-regexps
+	    nomatch t)
+      (while adcom-regexp
+	(let ((regexp (caar adcom-regexp))
+	      (fn (cadar adcom-regexp))
+	      (ad (caddar adcom-regexp)))
+	  (cond ((string-match
+		  (concat "^[^,]*\\("
+			  bbdb-extract-address-component-ignore-regexp
+			  "\\)[^,]*\\(,\\|$\\)")
+		  adstring)
+		 (setq adstring (substring adstring (match-end 0))
+		       adcom-regexp nil
+		       nomatch nil))
+		((string-match (concat "^\\s-*" regexp "\\s-*\\(,\\|$\\)")
+			       adstring)
+
+		 (add-to-list 'fnadlist
+			      (list (cond ((numberp fn)
+					   (match-string fn adstring))
+					  ((listp fn)
+					   (save-match-data (eval fn)))
+					  ((functionp fn)
+					   (save-match-data
+					     (funcall fn adstring)))
+					  (t fn))
+				    (cond ((numberp ad)
+					   (match-string ad adstring))
+					  ((listp ad)
+					   (save-match-data (eval ad)))
+					  ((functionp ad)
+					   (save-match-data
+					     (funcall ad adstring)))
+					  (t ad))))
+		 (setq adstring (substring adstring (match-end 0))
+		       adcom-regexp nil
+		       nomatch nil)))
+	  (setq adcom-regexp (cdr adcom-regexp))))
+
+      ;; Now handle problems
+      (if nomatch
+	  (cond ((equal bbdb-extract-address-component-handler nil))
+		((equal bbdb-extract-address-component-handler 'warn)
+		 (warn "Cannot extract an address component at \"%s\".
+See `bbdb-extract-address-component-handler' for more information."
+		       adstring))
+		((equal bbdb-extract-address-component-handler 'message)
+		 (message "Cannot extract an address component at \"%s\"."
+			  adstring))
+		((functionp bbdb-extract-address-component-handler)
+		 (let ((result
+			(funcall bbdb-extract-address-component-handler
+				 adstring)))
+		   (if (and (listp result) (= 3 (length result))
+			    (stringp (car result))
+			    (stringp (cadr result))
+			    (stringp (caddr result)))
+		       (progn (add-to-list 'fnadlist (cdr result))
+			      (setq adstring (car result)
+				    nomatch nil)))))
+		(t
+		 (error "Cannot extract an address component at \"%30s\""
+			adstring))))
+
+      ;; ignore the bad junk 
+      (if nomatch
+	  (if (string-match "^[^,]*," adstring)
+	      (setq adstring (substring adstring (match-end 0)))
+	    (setq adstring ""))))
+
+    (delete '(nil nil) (nreverse fnadlist))))
+
+;;----------------------------------------------------------------------------
+
 (provide 'bbdb-snarf)
