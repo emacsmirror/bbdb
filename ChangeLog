@@ -1,3 +1,9 @@
+2001-04-19  Robert Fenk  <fenk@forwiss.de>
+
+	* texinfo/bbdb.texinfo: Added missing docs for the variables
+	bbdb-pop-up-elided-display-name-end and 
+	bbdb-pop-up-elided-display-fields 
+
 2001-04-16  Waider  <waider@waider.ie>
 
 	* configure.in Makefile.in lisp/Makefile.in tex/Makefile.in 
