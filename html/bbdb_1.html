@@ -1,6 +1,6 @@
 <HTML>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<!-- Created on January, 25  2001 by texi2html 1.64 -->
+<!-- Created on March, 4  2001 by texi2html 1.64 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,6 +97,10 @@ field (<SAMP>`company'</SAMP> or <SAMP>`notes,'</SAMP> for example); </UL>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="bbdb_3.html#SEC95">Concept Index</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="bbdb_4.html#SEC96">Variable Index</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 </TABLE>
+
+<br>
+&nbsp;--&nbsp;The&nbsp;Detailed&nbsp;Node&nbsp;Listing&nbsp;---
+<br>
 
 <br>
 Installation
@@ -422,14 +426,18 @@ packages will not affect core <B>BBDB</B> functionality.
 </TR></TABLE>
 <P>
 
-<BR> <B>NOTES:</B>
+<BR> 
+<B>NOTES:</B>
 <OL>
-<LI>The three year old GNUS mail/newsreader should still
+<LI>
+The three year old GNUS mail/newsreader should still
 work.  Please keep in mind that you have a relatively recent Emacs (GNU
 19.34 or later, XEmacs 19.15 or later), you are probably using Gnus.
-<LI>As of this writing, Reportmail is available as
+<LI>
+As of this writing, Reportmail is available as
 part of the <CODE>edit-utils</CODE> package.
-<LI>As of this writing, <CODE>browse-url</CODE> is
+<LI>
+As of this writing, <CODE>browse-url</CODE> is
 available as part of the <CODE>mail-lib</CODE> package.
 </OL>
 <P>
@@ -651,56 +659,56 @@ available for you:
 <DD>This option sets the root of the XEmacs package directory.  By default,
 <TT>`/usr/local/lib/xemacs/site-packages'</TT> is used.
 <DT><B><CODE>--with-symlinks</CODE></B>
-<DD>If this option is used, the <TT>`lisp'</TT> and <TT>`info'</TT> directories will
-be installed as links to the source ones.  Otherwise, they will be
-copied to the appropriate place.
+<DD>If this option is used, the installation will be done by making symbolic
+links to the sources instead of copying the files.
 <DT><B><CODE>--with-linkpath=PATH</CODE></B>
-<DD>Without this variable, the <TT>`lisp'</TT> and <TT>`info'</TT> directories will
-be linked in with the output of <CODE>pwd</CODE> as the source directory.  If
-something else should be used as the source directory, you should pass
-the 'something else' to <CODE>--with-linkpath</CODE>.  If, for example,
-<CODE>pwd</CODE> returns <TT>`/p/local/elisp/bbdb'</TT>, the <TT>`lisp'</TT>,
-<TT>`info'</TT> and <TT>`etc'</TT> (which will include the files distributed in
-<TT>`tex'</TT> and <TT>`utils'</TT>) directories will be linked in from
-<TT>`/p/local/elisp/bbdb/{lisp,info,etc}'</TT>.  If, however, you prefer
-that they be linked in from <TT>`/usr/local/elisp/bbdb/...'</TT>, say
+<DD>Without this option, the installation process uses the output of
+<CODE>pwd</CODE> to determine the current directory.  If something else should
+be used, you should provide an alternate name for the BBDB toplevel
+directory by using <CODE>--with-linkpath</CODE>.  If, for example, <CODE>pwd</CODE>
+returns <TT>`/p/local/elisp/bbdb'</TT>, but you prefer to use
+<TT>`/usr/local/elisp/bbdb/...'</TT> for the links, usr this:
 <CODE>configure --with-linkpath=/usr/local/elisp/bbdb</CODE>.  This option is
 ignored if <CODE>--with-symlinks</CODE> is not used.
 </DL>
 <P>
 
-To perform the installation, use the command <CODE>make install-pkg</CODE>.
+To perform the (un)installation, use the command <CODE>make (un)install-pkg</CODE>.
 This will compile the <TT>`lisp/auto-autoloads.el'</TT> file and will
-install the source and documentation files at the appropriate places.
-The final installation tree will take the following form:
+install the appropriate files to the appropriate places.  The final
+installation tree will take the following form:
 </P><P>
 
 <DL COMPACT>
-<DT><CODE>$PACKAGEROOT/</CODE>
+<DT><CODE>$(PACKAGEDIR)/</CODE>
 <DD><DL COMPACT>
+<DT><CODE>lisp/</CODE>
+<DD><DL COMPACT>
+<DT><CODE>bbdb/</CODE>
+<DD>   <I><B>BBDB</B> lisp source files.  This directory contains a copy of all
+<CODE>.el</CODE> and <CODE>.elc</CODE> files from the <TT>`lisp'</TT> source directory,
+or is a symbolic link to it.</I>
+</DL>
+<DT><CODE>info/</CODE>
+<DD><DL COMPACT>
+<DT><CODE>bbdb.info*</CODE>
+<DD>   <I><B>BBDB</B> documentation files.  These are either copies of the info
+files from the <TT>`texinfo'</TT> source directory, or are symbolic links to
+them.</I>
+</DL>
 <DT><CODE>etc/</CODE>
 <DD><DL COMPACT>
 <DT><CODE>bbdb/</CODE>
 <DD><DL COMPACT>
 <DT><CODE>tex/</CODE>
-<DD>    <I>support files for bbdb-print, copied from the <TT>`tex'</TT> directory
-    in the source distribution</I>
+<DD>    <I><B>BBDB</B> support files for bbdb-print.  This directory contains a
+copy of the appropriate files from the <TT>`tex'</TT> source directory, or
+is a symbolic link to it.</I>
 <DT><CODE>utils/</CODE>
-<DD>    <I>miscellaneous utilities, copied from the <TT>`utils'</TT> directory in
-    the source distribution</I>
+<DD>    <I><B>BBDB</B> miscellaneous utilities.  This directory contains a copy
+of the appropriate files from the <TT>`utils'</TT> source directory, or is a
+symbolic link to it.</I>
 </DL>
-</DL>
-<DT><CODE>info/</CODE>
-<DD><DL COMPACT>
-<DT><CODE>bbdb/</CODE>
-<DD>   <I><B>BBDB</B> documentation files, copied from the <TT>`info'</TT> directory
-   in the source distribution</I>
-</DL>
-<DT><CODE>lisp/</CODE>
-<DD><DL COMPACT>
-<DT><CODE>bbdb/</CODE>
-<DD>   <I><B>BBDB</B> lisp source files, copied from the <TT>`lisp'</TT> directory
-   in the source distribution</I>
 </DL>
 </DL>
 </DL>
@@ -2396,9 +2404,11 @@ In the following examples, assume the following:
 </P><P>
 
 <OL>
-<LI>Message: <CODE>From: Jamie &#60;jwz@netscape.com&#62;</CODE><BR>
+<LI>
+Message: <CODE>From: Jamie &#60;jwz@netscape.com&#62;</CODE><BR>
 <B>BBDB</B>: No record
-<LI>Message: <CODE>From: Matt &#60;simmonmt@acm.org&#62;</CODE><BR>
+<LI>
+Message: <CODE>From: Matt &#60;simmonmt@acm.org&#62;</CODE><BR>
 <B>BBDB</B>: Name: <SAMP>`Matthew'</SAMP>, Net: <SAMP>`simmonmt@purdue.edu'</SAMP>
 </OL>
 <P>
@@ -2415,6 +2425,9 @@ In the following examples, assume the following:
 </TD><TD> @center <CODE>t</CODE>
 </TR>
 <TR><TD>Printed in Summary buffer for</TD>
+</TD><TD>
+</TD><TD>
+</TD><TD>
 </TR>
 <TR><TD>@center Case 1</TD>
 </TD><TD> @center Jamie
@@ -2938,9 +2951,51 @@ I am punting). <P>
 You can have both styles of phone number in your database by providing a
 prefix argument to the <CODE>bbdb-insert-new-field</CODE> command. </P><P>
 
-<DT><CODE>bbdb-electric-p</CODE>
+<DT><CODE>bbdb-check-zip-codes-p</CODE>
 <DD><A NAME="IDX133"></A>
 <A NAME="IDX134"></A>
+<A NAME="IDX135"></A>
+<A NAME="IDX136"></A>
+<A NAME="IDX137"></A>
+<A NAME="IDX138"></A>
+<A NAME="IDX139"></A>
+<A NAME="IDX140"></A>
+Whether syntax-checking of zip codes should be enforced.  Default:
+<CODE>t</CODE>.  If this is true, you can't enter invalid zip codes.  A zip
+code is valid if it matches one of the regular expressions in the
+variable <CODE>bbdb-legal-zip-codes</CODE>. <P>
+
+<DT><CODE>bbdb-address-formatting-alist</CODE>
+<DD><A NAME="IDX141"></A>
+<A NAME="IDX142"></A>
+<A NAME="IDX143"></A>
+<A NAME="IDX144"></A>
+Controls the display of addresses in the buffer.  Each entry in this
+list consists of an identifying function and a formatting function.
+The identifying function must accept an address and return <CODE>t</CODE> if
+the associated formatting function is to be used.  The formatting
+function must insert the formatted address in the current buffer.
+Identifying functions usually base their decision on the zip code
+format or on the country name.  The default entries will format an
+address using continental style if the zip code matches
+<CODE>bbdb-continental-zip-regexp</CODE>.  If the zip code does not match,
+addresses are formatted in US style.
+<P>
+
+<DT><CODE>bbdb-continental-zip-regexp</CODE>
+<DD><A NAME="IDX145"></A>
+<A NAME="IDX146"></A>
+<A NAME="IDX147"></A>
+Decides whether an address should be formatted using US or European
+style.  If the zip code of an address matches the regular expression,
+the European style is used.  This works only if the expression
+<CODE>(bbdb-address-is-continental . bbdb-format-address-continental)</CODE>
+is part of <CODE>bbdb-address-formatting-alist</CODE>.
+<P>
+
+<DT><CODE>bbdb-electric-p</CODE>
+<DD><A NAME="IDX148"></A>
+<A NAME="IDX149"></A>
 Whether bbdb mode should be <I>"electric"</I> like <CODE>electric-buffer-list</CODE>.
 Default: <CODE>t</CODE>.  Basically this means that when you type space after
 <KBD>M-x bbdb</KBD>, your window configuration will be restored to what it was
@@ -2952,7 +3007,7 @@ macros and incremental search don't work.  (This is not a bug in BBDB,
 but in <TT>`electric.el'</TT>.)</P><P>
 
 <DT><CODE>bbdb-case-fold-search</CODE>
-<DD><A NAME="IDX135"></A>
+<DD><A NAME="IDX150"></A>
 Default: the same as <CODE>case-fold-search</CODE>.  <CODE>case-fold-search</CODE> is
 bound to this by <KBD>M-x bbdb</KBD> and related commands.  This variable lets
 the case-sensitivity of <KBD>^S</KBD> and of the bbdb searching commands be
@@ -2960,7 +3015,7 @@ different.
 <P>
 
 <DT><CODE>bbdb/mail-auto-create-p</CODE>
-<DD><A NAME="IDX136"></A>
+<DD><A NAME="IDX151"></A>
 If this is <CODE>t</CODE> (the default), then <B>VM</B>, <B>MH</B>, and <B>RMAIL</B>
 will automatically create new bbdb records for people you receive mail
 from.  If this variable is a function name or lambda expression, then it
@@ -2973,8 +3028,8 @@ particular subject.  See the variables
 <CODE>bbdb-ignore-some-messages-alist</CODE> (See section <A HREF="bbdb_1.html#SEC62">1.7.3 Predefined Hooks</A>.) <P>
 
 <DT><CODE>bbdb/news-auto-create-p</CODE>
-<DD><A NAME="IDX137"></A>
-<A NAME="IDX138"></A>
+<DD><A NAME="IDX152"></A>
+<A NAME="IDX153"></A>
 If this is <CODE>t</CODE> (default: <CODE>nil</CODE>), then <B>GNUS</B> will
 automatically create new <B>BBDB</B> records for people you read messages
 by.  If this is a function name or lambda expression, then it is called
@@ -2996,7 +3051,7 @@ like <TABLE><tr><td>&nbsp;</td><td class=example><pre>(setq gnus-select-group-ho
 </pre></td></tr></table></P><P>
 
 <DT><CODE>bbdb-quiet-about-name-mismatches</CODE>
-<DD><A NAME="IDX139"></A>
+<DD><A NAME="IDX154"></A>
 If this is false (the default), then <B>BBDB</B> will prompt you when it notices a
 name change, that is, when the "real name" in a message doesn't correspond
 to a record already in the database with the same network address.  As in,
@@ -3008,9 +3063,9 @@ displaying the name mismatch.
 <P>
 
 <DT><CODE>bbdb-use-alternate-names</CODE>
-<DD><A NAME="IDX140"></A>
-<A NAME="IDX141"></A>
-<A NAME="IDX142"></A>
+<DD><A NAME="IDX155"></A>
+<A NAME="IDX156"></A>
+<A NAME="IDX157"></A>
 If this is false, then the <B>BBDB</B> will not use the <B>AKA</B> field.
 Otherwise (the default) then the mail and news interfaces will ask you
 if you want to add an alternate name when a name-change is noticed, and
@@ -3020,7 +3075,7 @@ not be asked any questions about alternate names.
 <P>
 
 <DT><CODE>bbdb-readonly-p</CODE>
-<DD><A NAME="IDX143"></A>
+<DD><A NAME="IDX158"></A>
 If this is true (default: <CODE>nil</CODE>), then nothing will attempt to change the
 database implicitly, and you will be prevented from doing it
 explicitly.  If you have more than one emacs running at the same time,
@@ -3028,7 +3083,7 @@ you might want to arrange for this to be set to <CODE>t</CODE> in all but one of
 them. <P>
 
 <DT><CODE>bbdb-auto-revert-p</CODE>
-<DD><A NAME="IDX144"></A>
+<DD><A NAME="IDX159"></A>
 If this variable is true (default: <CODE>nil</CODE>) and the <B>BBDB</B> file is noticed to
 have changed on disk, it will be automatically reverted without
 prompting you first.  Otherwise you will be asked.  (But if the file has
@@ -3036,15 +3091,15 @@ changed and you have made changes in memory as well, you will always be
 asked.) <P>
 
 <DT><CODE>bbdb-notice-auto-save-file</CODE>
-<DD><A NAME="IDX145"></A>
-<A NAME="IDX146"></A>
+<DD><A NAME="IDX160"></A>
+<A NAME="IDX161"></A>
 If this is true (default: <CODE>nil</CODE>), then the <B>BBDB</B> will notice when its
 auto-save file is newer than the file is was read from, and will offer
 to revert. <P>
 
 <DT><CODE>bbdb-use-pop-up</CODE>
-<DD><A NAME="IDX147"></A>
-<A NAME="IDX148"></A>
+<DD><A NAME="IDX162"></A>
+<A NAME="IDX163"></A>
 If true (the default), display a continuously-updating <B>BBDB</B>
 window while in <B>VM</B>, <B>MH</B>, <B>RMAIL</B>, or <B>GNUS</B>.
 Each time a new message is selected, the record corresponding to
@@ -3064,16 +3119,16 @@ stacked horizontally instead of vertically, if there is room to do that
 tastefully. </P><P>
 
 <DT><CODE>bbdb-pop-up-target-lines</CODE>
-<DD><A NAME="IDX149"></A>
+<DD><A NAME="IDX164"></A>
 Desired number of lines in a <B>VM/MH/RMAIL/GNUS</B> pop-up <B>BBDB</B> window,
 default 5. <P>
 
 <DT><CODE>bbdb-completion-type</CODE>
-<DD><A NAME="IDX150"></A>
-<A NAME="IDX151"></A>
-<A NAME="IDX152"></A>
-<A NAME="IDX153"></A>
-<A NAME="IDX154"></A>
+<DD><A NAME="IDX165"></A>
+<A NAME="IDX166"></A>
+<A NAME="IDX167"></A>
+<A NAME="IDX168"></A>
+<A NAME="IDX169"></A>
 Controls the behavior of the <CODE>bbdb-complete-name</CODE> command.  If <CODE>nil</CODE>
 (the default), completion is done across the set of all full-names and
 user-ids in the database; if the symbol <CODE>name</CODE>, completion is
@@ -3085,7 +3140,7 @@ in the list of addresses for a given user).  If it is
 names. <P>
 
 <DT><CODE>bbdb-user-mail-names</CODE>
-<DD><A NAME="IDX155"></A>
+<DD><A NAME="IDX170"></A>
 A regular expression identifying the addresses that belong to you.  If a
 message from an address matching this is seen, the <B>BBDB</B> record for the
 <SAMP>`To:'</SAMP> line will be shown instead of the one for the <SAMP>`From:'</SAMP>
@@ -3093,7 +3148,7 @@ line.  If this is <CODE>nil</CODE>, it will default to the value of
 <CODE>(user-login-name)</CODE>. <P>
 
 <DT><CODE>bbdb-always-add-addresses</CODE>
-<DD><A NAME="IDX156"></A>
+<DD><A NAME="IDX171"></A>
 If this is <CODE>t</CODE>, then whenever the Insidious Big Brother Database
 notices a new email address corresponding to a person who is in the
 database, it will add it to the database.  If this is <CODE>nil</CODE> (the
@@ -3103,7 +3158,7 @@ the symbol <CODE>never</CODE> (really if it is not <CODE>t</CODE> and not <CODE>
 then new network addresses will never be automatically added. <P>
 
 <DT><CODE>bbdb-new-nets-always-primary</CODE>
-<DD><A NAME="IDX157"></A>
+<DD><A NAME="IDX172"></A>
 If this is <CODE>t</CODE>, then when the Insidious Big Brother Database adds a new
 address to a record, it will always add it to the front of the list of
 addresses, making it the primary address.  If this is <CODE>nil</CODE> (the default),
@@ -3112,7 +3167,7 @@ it is not <CODE>t</CODE> and not <CODE>nil</CODE>) then new network addresses wi
 always be added to the end of the list. <P>
 
 <DT><CODE>bbdb-canonicalize-redundant-nets-p</CODE>
-<DD><A NAME="IDX158"></A>
+<DD><A NAME="IDX173"></A>
 If this is non-<CODE>nil</CODE>, redundant network addresses will be ignored.
 If a record has an address of the form <CODE>foo@baz.com</CODE>, setting this
 to <CODE>t</CODE> will cause subsequently-noticed addresses
@@ -3127,7 +3182,7 @@ performed before any database access.)
 <P>
 
 <DT><CODE>bbdb-message-caching-enabled</CODE>
-<DD><A NAME="IDX159"></A>
+<DD><A NAME="IDX174"></A>
 Whether caching of the message-&#62;bbdb-record association should be
 used for the interfaces which support it (<B>VM</B>, <B>MH</B>, and
 <B>RMAIL</B>).  This can speed things up a lot.  One implication of
@@ -3139,7 +3194,7 @@ name, etc) you will only be asked that question the very first time
 the message is selected. <P>
 
 <DT><CODE>bbdb-elided-display</CODE>
-<DD><A NAME="IDX160"></A>
+<DD><A NAME="IDX175"></A>
 Default: <CODE>nil</CODE>.  Set this to <CODE>t</CODE> to make the bbdb-display commands
 default to displaying one line per record instead of a full listing.
 Set this to a list of some of the symbols <CODE>'(address phone net
@@ -3153,7 +3208,7 @@ mail and news interfaces by setting the variable
 variable will be consulted instead.</P><P>
 
 <DT><CODE>bbdb-pop-up-elided-display</CODE>
-<DD><A NAME="IDX161"></A>
+<DD><A NAME="IDX176"></A>
 Default: unbound.  Set this to <CODE>t</CODE> if to make the pop-up <B>BBDB</B> buffer
 default to displaying one line per record instead of a full listing.
 Set this to a list of some of the symbols <CODE>'(address phone net
@@ -3168,7 +3223,7 @@ bbdb-elided-display the former will be consulted instead by mail and
 news.</P><P>
 
 <DT><CODE>bbdb-offer-save</CODE>
-<DD><A NAME="IDX162"></A>
+<DD><A NAME="IDX177"></A>
 If <CODE>t</CODE> (the default), then certain actions will cause the <B>BBDB</B> to
 ask you whether you wish to save the database.  If <CODE>nil</CODE>, then the
 offer to save will never be made.  If not <CODE>t</CODE> and not <CODE>nil</CODE>, then
@@ -3204,31 +3259,31 @@ hooks described below are called with arguments.
 
 <DL COMPACT>
 <DT><CODE>bbdb-list-hook</CODE>
-<DD><A NAME="IDX163"></A>
+<DD><A NAME="IDX178"></A>
 Hook or hooks invoked after the bbdb-list-buffer is filled in.  Invoked
 with no arguments. <P>
 
 <DT><CODE>bbdb-create-hook</CODE>
-<DD><A NAME="IDX164"></A>
+<DD><A NAME="IDX179"></A>
 Hook or hooks invoked each time a new bbdb-record is created.  Invoked
 with one argument, the new record.  This is called <EM>before</EM> the record is
 added to the database.  Note that <CODE>bbdb-change-hook</CODE> will be called as
 well. <P>
 
 <DT><CODE>bbdb-change-hook</CODE>
-<DD><A NAME="IDX165"></A>
+<DD><A NAME="IDX180"></A>
 Hook or hooks invoked each time a bbdb-record is altered.  Invoked with
 one argument, the record.  This is called <EM>before</EM> the database buffer
 is modified.  Note that if a new bbdb record is created, both this hook and
 <CODE>bbdb-create-hook</CODE> will be called. <P>
 
 <DT><CODE>bbdb-mode-hook</CODE>
-<DD><A NAME="IDX166"></A>
+<DD><A NAME="IDX181"></A>
 Hook or hooks invoked when the <SAMP>`*BBDB*'</SAMP> buffer is created.
 <P>
 
 <DT><CODE>bbdb-notice-hook</CODE>
-<DD><A NAME="IDX167"></A>
+<DD><A NAME="IDX182"></A>
 Hook or hooks invoked each time a bbdb-record is "noticed," that
 is, each time it is displayed by the news or mail interfaces.
 Invoked with one argument, the new record.  The record need not have
@@ -3250,7 +3305,7 @@ When debugging the value of this hook, it is a good idea to set
 caching-enabled to <CODE>nil</CODE>. </P><P>
 
 <DT><CODE>bbdb-after-read-db-hook</CODE>
-<DD><A NAME="IDX168"></A>
+<DD><A NAME="IDX183"></A>
 Hook or hooks invoked (with no arguments) just after the Insidious Big
 Brother Database is read in.  Note that this can be called more than once if
 the <B>BBDB</B> is reverted.  One possible use for this is to rename the
@@ -3265,7 +3320,7 @@ it from showing up in the buffer list.
 </P><P>
 
 <DT><CODE>bbdb-load-hook</CODE>
-<DD><A NAME="IDX169"></A>
+<DD><A NAME="IDX184"></A>
 Hook or hooks invoked (with no arguments) when the Insidious Big Brother
 Database code is first loaded.  WARNING:  Slow functions should not be
 put on this hook, as the <B>BBDB</B> code will, if not loaded before, be
@@ -3274,14 +3329,14 @@ functions.  Slow functions should be put on <CODE>bbdb-initialize-hook</CODE>.
 <P>
 
 <DT><CODE>bbdb-initialize-hook</CODE>
-<DD><A NAME="IDX170"></A>
-<A NAME="IDX171"></A>
+<DD><A NAME="IDX185"></A>
+<A NAME="IDX186"></A>
 Hook or hooks invoked (with no arguments) when the
 <CODE>bbdb-initialize</CODE> function is called.
 <P>
 
 <DT><CODE>bbdb-canonicalize-net-hook</CODE>
-<DD><A NAME="IDX172"></A>
+<DD><A NAME="IDX187"></A>
 If this is non-<CODE>nil</CODE>, it should be a function of one argument: a
 network address string.  (Note that, unlike the other hook-variables
 described above, this may not be a list of functions.)  Whenever the
@@ -3319,8 +3374,8 @@ file <TT>`bbdb-hooks.el'</TT>: the function
 <CODE>sample-bbdb-canonicalize-net-hook</CODE>.</DL>
 <P>
 
-<A NAME="IDX173"></A>
-<A NAME="IDX174"></A>
+<A NAME="IDX188"></A>
+<A NAME="IDX189"></A>
 The <CODE>bbdb-canonicalize-net-hook</CODE> is powerful in that it allows
 arbitrary rewriting of addresses, however, in many cases that is
 overkill.  The function <CODE>bbdb-delete-redundant-nets</CODE> can be
@@ -3354,8 +3409,8 @@ address <CODE>user@bar.com</CODE> is already known.)</P><P>
 <!--docid::SEC62::-->
 <P>
 
-<A NAME="IDX175"></A>
-<A NAME="IDX176"></A>
+<A NAME="IDX190"></A>
+<A NAME="IDX191"></A>
 If the variable <CODE>bbdb-change-hook</CODE> is set to the symbol
 <CODE>bbdb-timestamp-hook</CODE> (the default), then every record in the
 database will have a field named <SAMP>`timestamp'</SAMP>, which will always
@@ -3363,7 +3418,7 @@ contain the date and time at which this record was created or last
 modified.
 </P><P>
 
-<A NAME="IDX177"></A>
+<A NAME="IDX192"></A>
 If the variable <CODE>bbdb-create-hook</CODE> is set to the symbol
 <CODE>bbdb-creation-date-hook</CODE> (the default), then every record in the
 database will have a field named <SAMP>`creation-date'</SAMP>, which will
@@ -3371,9 +3426,9 @@ contain the date and time at which this record was added to the
 database.
 </P><P>
 
-<A NAME="IDX178"></A>
-<A NAME="IDX179"></A>
-<A NAME="IDX180"></A>
+<A NAME="IDX193"></A>
+<A NAME="IDX194"></A>
+<A NAME="IDX195"></A>
 If the variable <CODE>bbdb/mail-auto-create-p</CODE> is set to the symbol
 <CODE>bbdb-ignore-most-messages-hook</CODE>, then the variable
 <CODE>bbdb-ignore-most-messages-alist</CODE> will determine which messages
@@ -3402,10 +3457,10 @@ is legal, but
 is not.
 </P><P>
 
-<A NAME="IDX181"></A>
-<A NAME="IDX182"></A>
-<A NAME="IDX183"></A>
-<A NAME="IDX184"></A>
+<A NAME="IDX196"></A>
+<A NAME="IDX197"></A>
+<A NAME="IDX198"></A>
+<A NAME="IDX199"></A>
 If the variable <CODE>bbdb/mail-auto-create-p</CODE> is set to the symbol
 <CODE>bbdb-ignore-some-messages-hook</CODE>, then the variable
 <CODE>bbdb-ignore-some-messages-alist</CODE> will determine which messages
@@ -3427,9 +3482,9 @@ The variable <CODE>bbdb/news-auto-create-p</CODE> may be set to either of the
 above-mentioned functions as well, to get this behavior for netnews
 messages instead of mail messages.</P><P>
 
-<A NAME="IDX185"></A>
-<A NAME="IDX186"></A>
-<A NAME="IDX187"></A>
+<A NAME="IDX200"></A>
+<A NAME="IDX201"></A>
+<A NAME="IDX202"></A>
 If the variable <CODE>bbdb-notice-hook</CODE> is set to the symbol
 <CODE>bbdb-auto-notes-hook</CODE>, then the variable <CODE>bbdb-auto-notes-alist</CODE>
 may be used to automatically add text to the notes fields of the records
@@ -3563,7 +3618,7 @@ the face data on multiple lines, the entry in the <SAMP>`*BBDB*'</SAMP> will
 be just one line.
 </P><P>
 
-<A NAME="IDX188"></A>
+<A NAME="IDX203"></A>
 <CODE>bbdb-auto-notes-ignore</CODE> is an alist of headers and regexps to
 ignore in <CODE>bbdb-auto-notes-hook</CODE>.  Each element looks like </P><P>
 
@@ -3582,7 +3637,7 @@ applies only to a single field, not to the entire message.  For that,
 use the variable <CODE>bbdb-auto-notes-ignore-all</CODE>.
 </P><P>
 
-<A NAME="IDX189"></A>
+<A NAME="IDX204"></A>
 <CODE>bbdb-auto-notes-ignore-all</CODE> is an alist of headers and regexps
 which cause the entire message to be ignored in <CODE>bbdb-auto-notes-hook</CODE>.
 Each element looks like </P><P>
@@ -3699,7 +3754,7 @@ the fields therein):
 
 <DL COMPACT>
 <DT><CODE>bbdb-print-elide</CODE>
-<DD><A NAME="IDX190"></A>
+<DD><A NAME="IDX205"></A>
 This variable should be set to a list of the fields that are not to be printed
 by <CODE>bbdb-print</CODE>.  It defaults to:<BR>
 <center>
@@ -3708,13 +3763,13 @@ by <CODE>bbdb-print</CODE>.  It defaults to:<BR>
 <P>
 
 <DT><CODE>bbdb-print-file-name</CODE>
-<DD><A NAME="IDX191"></A>
+<DD><A NAME="IDX206"></A>
 The name of the file where generated TeX output is to be stored.  The default
 is <TT>`~/bbdb.tex'</TT>.
 <P>
 
 <DT><CODE>bbdb-print-require</CODE>
-<DD><A NAME="IDX192"></A>
+<DD><A NAME="IDX207"></A>
 The fields required for printing a record.  This allows, for example, only
 records with phone numbers to be printed.  The value of the value of the
 variable will be evaluated once for each record, and the record will be
@@ -3753,7 +3808,7 @@ The default value is:<BR>
 <P>
 
 <DT><CODE>bbdb-print-alist</CODE>
-<DD><A NAME="IDX193"></A>
+<DD><A NAME="IDX208"></A>
 Formatting options for all formats of <CODE>bbdb-print</CODE>.  The value is an
 alist of the form<BR>
 <center>
@@ -3864,7 +3919,7 @@ Where <VAR>AREA-CODE</VAR> is the value of <CODE>bbdb-default-area-code</CODE> o
 </P><P>
 
 <DT><CODE>bbdb-print-brief-alist</CODE>
-<DD><A NAME="IDX194"></A>
+<DD><A NAME="IDX209"></A>
 Extra options for the <CODE>bbdb-print</CODE> brief format.  The value(s) of
 this variable can either supplement or override the values in
 <CODE>bbdb-print-alist</CODE>.  The format and possible values of this variable are
@@ -3880,7 +3935,7 @@ The default value is
 </pre></td></tr></table></P><P>
 
 <DT><CODE>bbdb-print-full-alist</CODE>
-<DD><A NAME="IDX195"></A>
+<DD><A NAME="IDX210"></A>
 Extra options for the <CODE>bbdb-print</CODE> non-brief format.  The value(s) of
 this variable can either supplement or override the values in
 <CODE>bbdb-print-alist</CODE>.  The format and possible values of this variable are
@@ -3894,13 +3949,13 @@ The default value is
 </pre></td></tr></table></P><P>
 
 <DT><CODE>bbdb-print-prolog</CODE>
-<DD><A NAME="IDX196"></A>
+<DD><A NAME="IDX211"></A>
 TeX statements to include at the beginning of the <CODE>bbdb-print</CODE> output
 file.
 <P>
 
 <DT><CODE>bbdb-print-epilog</CODE>
-<DD><A NAME="IDX197"></A>
+<DD><A NAME="IDX212"></A>
 TeX statements to include at the end of the <CODE>bbdb-print</CODE> output file.
 <P>
 
@@ -4039,7 +4094,7 @@ The following variables can be used to customize the behavior of
 </P><P>
 
 <DL COMPACT>
-<A NAME="IDX198"></A>
+<A NAME="IDX213"></A>
 <DT><CODE>bbdb/srv-auto-create-p</CODE>
 <DD>This variable is similar to <CODE>bbdb/news-auto-create-p</CODE> and
 <CODE>bbdb/mail-auto-create-p</CODE>.  That is, when headers are passed in to
@@ -4069,7 +4124,7 @@ passed headers.
 </DL>
 <P>
 
-<A NAME="IDX199"></A>
+<A NAME="IDX214"></A>
 <DT><CODE>bbdb/srv/display-delay</CODE>
 <DD><CODE>bbdb-srv</CODE> pauses between displaying the records corresponding to
 each passed set of headers.  This variable controls the length of time
@@ -4787,7 +4842,8 @@ The future consists of Bugs and Features.
 <P>
 
 <OL>
-<LI><B><KBD>M-TAB</KBD> conflicts with ispell.</B>  Workaround: The binding
+<LI>
+<B><KBD>M-TAB</KBD> conflicts with ispell.</B>  Workaround: The binding
 installed by the <B>BBDB</B> for address completion/expansion conflicts with
 that used by ispell.  The suggested workarounds are to rebind the ispell
 key (the <B>BBDB</B> binding is not configurable at this time), to manually
@@ -4801,20 +4857,23 @@ example of such a rebinding, supplied by Kai Groﬂjohan:
   (add-hook 'message-mode-hook 'my-message-mode-keys)
 </pre></td></tr></table></P><P>
 
-<LI><B><B>BBDB</B> and abbrev expansion is inconsistent.</B>  Workaround:
+<LI>
+<B><B>BBDB</B> and abbrev expansion is inconsistent.</B>  Workaround:
 Currently, <KBD>M-TAB</KBD> must be used to expand/complete against <B>BBDB</B>
 names and net addresses, and <KBD>TAB</KBD> must be used to expand abbrevs (the
 values in the <CODE>mail-alias</CODE> field).  Unification is planned for a
 future version.
 <P>
 
-<LI><B>The <CODE>*BBDB*</CODE> buffer does not always come up when the first
+<LI>
+<B>The <CODE>*BBDB*</CODE> buffer does not always come up when the first
 article in a Gnus Summary Buffer is selected.</B>  Workaround:  Pressing
 <KBD>g</KBD> to reload the article.  This will cause the <CODE>*BBDB*</CODE> buffer
 to be displayed.
 <P>
 
-<LI><B>Expansion will fail when the name to be expanded is a subset of
+<LI>
+<B>Expansion will fail when the name to be expanded is a subset of
 the name for another record.</B>  For example, if you have entries for
 <SAMP>`John'</SAMP> and <SAMP>`Johnathan'</SAMP>, you will not be able to expand the
 name for <SAMP>`John'</SAMP>.  Workaround:  Use the net address for the subset
@@ -5117,7 +5176,8 @@ may be removed without warning at any time thereafter.
 </P><P>
 
 <OL>
-<LI><CODE>advertized-bbdb-delete-current-field-or-record</CODE><BR>
+<LI>
+<CODE>advertized-bbdb-delete-current-field-or-record</CODE><BR>
 Support for this function will be removed for version 2.2.  It is
 recommended that all code depending on this variable be switched to use
 <CODE>bbdb-delete-current-field-or-record</CODE>.  The two functions have the
@@ -5125,7 +5185,8 @@ same calling conventions and effects.  This EOL statement was added for
 version 2.1.
 <P>
 
-<LI>Support for the GNUS (not Gnus) newsreader<BR>
+<LI>
+Support for the GNUS (not Gnus) newsreader<BR>
 The GNUS-specific parts of the <B>BBDB</B> will be actively removed for the
 2.2 release.  No further maintenance and/or bugfixes are planned for
 GNUS code at this time.  This EOL statement was added for version 2.1.
@@ -5205,7 +5266,7 @@ first place.
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-by <I>Ronan Waide</I> on <I>January, 25  2001</I>
+by <I>Ronan Waide</I> on <I>March, 4  2001</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 
