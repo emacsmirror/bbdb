@@ -1760,12 +1760,9 @@ multi-line layout."
                             (list x layout (make-marker)))
                           records)))
 
-  (let ((b (current-buffer))
-        (temp-buffer-setup-hook nil)
-        (temp-buffer-show-hook nil)
-        (first (car (car records))))
-
-    (with-output-to-temp-buffer bbdb-buffer-name
+  (let ((first (car (car records))))
+    (save-excursion
+      (display-buffer (get-buffer-create bbdb-buffer-name))
       (set-buffer bbdb-buffer-name)
 
       ;; If append is unset, clear the buffer.
@@ -1827,8 +1824,7 @@ multi-line layout."
     (save-excursion (run-hooks 'bbdb-list-hook))
     (if bbdb-gui (bbdb-fontify-buffer))
     (set-buffer-modified-p nil)
-    (setq buffer-read-only t)
-    (set-buffer b)))
+    (setq buffer-read-only t)))
 
 (defun bbdb-undisplay-records ()
   (let ((bbdb-display-buffer (get-buffer bbdb-buffer-name)))
@@ -2973,6 +2969,7 @@ If not present or when the records have been modified return nil."
   "Cache the BBDB-RECORDS for a message identified by MESSAGE-KEY and
 return them."
   (and bbdb-message-caching-enabled
+       (car bbdb-records)
        (add-to-list 'bbdb-message-cache (cons message-key bbdb-records))
        (notice-buffer-with-cache (current-buffer)))
   bbdb-records)
