@@ -36,11 +36,10 @@
 
 (defconst digit "[0-9]")
 (defvar bbdb-snarf-phone-regexp
-  (concat 
-   "\\(" "(" digit digit digit ")" "[-\\. ]?"
-   "\\|" digit digit digit "[-\\. ]" "\\)?"
-   digit digit digit "[-\\. ]" digit digit digit digit
-   "\\(" " *" "\\(x\\|ext\\.?\\) *" digit "+" "\\)?"
+  (concat
+   "\\(([2-9][0-9][0-9])[-\\. ]?\\|[2-9][0-9][0-9][-\\. ]\\)?"
+   "[0-9][0-9][0-9][-\\. ][0-9][0-9][0-9][0-9]"
+   "\\( *\\(x\\|ext\\.?\\) *[0-9]+\\)?"
    )
   "regexp to match phones.")
 (defvar bbdb-snarf-zip-regexp
@@ -123,21 +122,31 @@ patches to internationalize these assumptions are welcome.
 
 \\[bbdb-snarf] is similar to \\[bbdb-whois-sentinel], but less specialized."
   (interactive "d")
+  (bbdb-snarf-region
+   (progn (goto-char where) (forward-paragraph -1) (point))
+   (progn (forward-paragraph 1) (point))))
+
+(defun bbdb-snarf-region (begin end)
+  "snarf up a bbdb record in the current region.  See `bbdb-snarf' for
+more details."
+  (interactive "r")
+  
   (save-excursion
     (let
 	((buf (get-buffer-create " *BBDB snarf*"))
-	 (text (buffer-substring
-		(progn (goto-char where) (forward-paragraph -1) (point))
-		(progn (forward-paragraph 1) (point))))
+	 (text (buffer-substring begin end))
 	 phones nets web city state zip name address-lines 
 	 address-vector notes)
       (set-buffer buf)
       (erase-buffer)
       (insert text)
 
-      ;; toss indentation
+      ;; toss beginning and trailing space
       (goto-char (point-min))
       (while (re-search-forward "^[ \t]+" (point-max) t)
+	(replace-match ""))
+      (goto-char (point-min))
+      (while (re-search-forward "\\s +$" (point-max) t)
 	(replace-match ""))
 
       ;; first, pick out phone numbers
@@ -168,7 +177,7 @@ patches to internationalize these assumptions are welcome.
 
       ;; next e-mail
       (goto-char (point-min))
-      (while (re-search-forward "[^ \t\n]+@[^ \t\n]+" (point-max) t)
+      (while (re-search-forward "[^ \t\n<]+@[^ \t\n>]+" (point-max) t)
 	(setq nets (append nets (list (match-string 0))))
 	(replace-match ""))
 
@@ -176,9 +185,14 @@ patches to internationalize these assumptions are welcome.
 
       ;; name
       (goto-char (point-min))
-      (forward-line 1)
-      (setq name (buffer-substring (point-min) (1- (point))))
-      (delete-region (point-min) (point))
+      (let (namebegin)
+	;; This check is horribly english-centric (I think)
+	(while (/= (char-syntax (char-after (point))) ?w)
+	  (forward-line 1))
+	(setq namebegin (point))
+	(re-search-forward "\\(\\sw\\|[ -\.,]\\)*\\sw" nil t)
+	(setq name (match-string 0))
+	(delete-region (match-beginning 0) (match-end 0)))
       
       ;; address
       (goto-char (point-min))
