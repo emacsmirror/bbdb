@@ -1,3 +1,29 @@
+2003-03-13  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-display-records-1): removed call to
+	bbdb-pop-up-bbdb-buffer to avoid problems with special-display-*,
+	still we are not back to the old behavior, i.e. if calling BBDB
+	from an frame without *BBDB* buffer while other frames are
+	displaying it we will not get it on the current frame, but that is
+	how it used to be. 
+
+2003-03-11  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-frob-mode-line): show the BBDB buffer name.
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-show-all-recipients):
+	Throwing away old code and use bbdb/gnus-update-records now.
+	(bbdb/gnus-update-records): Do not toggle headers to gain access
+	to the hidden headers, since gnus-fetch-field is doing this for us.
+
+2003-03-10  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-multiple-buffers): Yet another new variable.
+	Enables the creation of multiple *BBDB* buffers.  
+	(bbdb-pop-up-bbdb-buffer): if bbdb-multiple-buffers is enabled
+	created new *BBDB: <BUFNAME>* buffer and set it up correctly.
+	This is a hack, really!
+
 2003-03-07  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): use
@@ -13,7 +39,6 @@
 	is the right thing to do! Fix from Matt Armstrong.
 	(bbdb-display-records-1): call bbdb-pop-up-buffer to ensure we get
 	a buffer in the current frame. 
-
 
 	* lisp/bbdb-vm.el (bbdb/vm-set-auto-folder-alist): added missing
 	local vars to avoid cluttering global namespace.
@@ -1482,7 +1507,7 @@
 	for button2
 
 	* lisp/bbdb-vm.el (bbdb/vm-pop-up-bbdb-buffer): Fixed the pop-up
-	behaviour.
+	behavior.
 
 2001-01-30  Robert.Fenk@gmx.de
 
@@ -1798,7 +1823,7 @@
 2000-09-11  Waider  <waider@stepstone.ie>
 
 	* lisp/bbdb-vm.el:
-	Reinstated 2.00.06 behaviour of creating a record if necessary
+	Reinstated 2.00.06 behavior of creating a record if necessary
 	  when : is pressed
 	Added new function, bbdb/vm-show-all-recipients, to do the
 	  necessary fandango to show recipients for the current
