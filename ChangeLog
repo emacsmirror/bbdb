@@ -1,3 +1,12 @@
+2004-10-10  Alex Schroeder  <alex@gnu.org>
+
+	* texinfo/bbdb.texinfo (Database Fields): New entry for the
+	concept index: mail-alias definition.
+	(Mail Sending Interfaces): New entry for the concept index:
+	mail-alias usage.  New subheading: Mailing Lists and Mail Aliases.
+	(Known Bugs): New section on using M-x bbdb-submit-bug-report
+	replacing the old bug reporting section.
+
 2004-05-28  Robert Widhopf-Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb.el (bbdb-record-set-net): added a hack to detect that
