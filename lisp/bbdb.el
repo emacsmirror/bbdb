@@ -1050,14 +1050,14 @@ If the note is absent, returns a zero length string."
   :group 'bbdb-record-creation
   :type '(repeat string))
 
-(defun bbdb-label-completion-list( field )
+(defun bbdb-label-completion-list (field)
   "Figure out a completion list for the specified FIELD."
   (if (boundp (intern (format "bbdb-%s-label-list" field)))
       (eval (intern (format "bbdb-%s-label-list" field)))
     ;; special-case out the ones it doesn't make sense for here?
     bbdb-default-label-list))
 
-(defun bbdb-label-completion-default( field )
+(defun bbdb-label-completion-default (field)
   "Figure out a default from the completion list for FIELD"
   (if (boundp (intern (format "bbdb-default-%s-label" field)))
       (eval (intern (format "bbdb-default-%s-label" field)))
@@ -1065,14 +1065,14 @@ If the note is absent, returns a zero length string."
 
 ;; These are so you can accumulate e.g. mail aliases or company names
 ;; and have BBDB offer completion on them.
-(defun bbdb-data-completion-list( field )
+(defun bbdb-data-completion-list (field)
   "Figure out a completion list for the specified FIELD."
   (if (boundp (intern (format "bbdb-%s-data-list" field)))
       (eval (intern (format "bbdb-%s-data-list" field)))
     ;; special-case out the ones it doesn't make sense for here?
     bbdb-default-label-list))
 
-(defun bbdb-data-completion-default( field )
+(defun bbdb-data-completion-default (field)
   "Figure out a default from the completion list for FIELD"
   (if (boundp (intern (format "bbdb-default-%s-data" field)))
       (eval (intern (format "bbdb-default-%s-data" field)))
@@ -2847,6 +2847,10 @@ function `y-or-n-p-with-timeout' is defined."
   (if (string-match "[@%!]" string)  ; ain't no user name!  It's an address!
       (bbdb-string-trim string)
    (let ((case-fold-search t))
+     ;; swap Lastname, Firstname
+     (when (string-match "^\\([^,]+\\)\\s-*,\\s-*\\([^,]+\\)$" string)
+       (setq string (concat (match-string 2 string) " "
+                            (match-string 1 string))))
      ;; Take off leading and trailing non-alpha chars \(quotes, parens,
      ;; digits, etc) and things which look like phone extensions \(like
      ;; "x1234" and "ext. 1234". \)
@@ -2858,8 +2862,9 @@ function `y-or-n-p-with-timeout' is defined."
              "\\(\\W+\\([Xx]\\|[Ee]xt\\.?\\)\\W*[-0-9]+\\|[^a-z]+\\)\\'"
              string)
        (setq string (substring string 0 (match-beginning 0))))
-     ;; replace tabs, multiple spaces, dots, and underscores with a single space.
-     ;; but don't replace ". " with " " because that could be an initial.
+     ;; replace tabs, multiple spaces, dots, and underscores with a single
+     ;; space, but don't replace ". " with " " because that could be an
+     ;; initial.
      (while (string-match "\\(\t\\|  +\\|\\(\\.\\)[^ \t_]\\|_+\\)" string)
        (setq string (concat (substring string 0
                                        (or (match-beginning 2)
