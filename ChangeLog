@@ -1,3 +1,9 @@
+2002-12-24  Alex Schroeder  <alex@emacswiki.org>
+
+	* lisp/bbdb-com.el (bbdb-complete-name): Handle the case where the
+	only exact match does not have a net field, instead of looping
+	forever.
+
 2002-12-22  Alex Schroeder  <alex@emacswiki.org>
 
 	* lisp/bbdb-com.el (bbdb-display-record-with-layout): New.
