@@ -332,15 +332,19 @@ is nil...\)"
 
 ;;; Parsing other things
 
-(defvar bbdb-expand-mail-aliases t
-  "If non-nil, expand mail aliases in `bbdb-complete-name'.")
+(defcustom bbdb-expand-mail-aliases t
+  "If non-nil, expand mail aliases in `bbdb-complete-name'."
+  :group 'bbdb-record-use
+  :type 'boolean)
 
-(defvar bbdb-check-zip-codes-p t
+(defcustom bbdb-check-zip-codes-p t
   "If non-nil, require legal zip codes when entering an address.
 The format of legal zip codes is determined by the variable
-`bbdb-legal-zip-codes'.")
+`bbdb-legal-zip-codes'."
+  :group 'bbdb-record-creation
+  :type 'boolean)
 
-(defvar bbdb-legal-zip-codes
+(defcustom bbdb-legal-zip-codes
   '(;; empty string
     "^$"
     ;; Matches 1 to 6 digits.
@@ -359,7 +363,9 @@ The format of legal zip codes is determined by the variable
     ;; (result is ("SE" (133 36)))
     "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+\\)[ \t\n]+\\([0-9]+\\)[ \t\n]*$")
   "List of regexps that match legal zip codes.
-Wether this is used at all depends on the variable `bbdb-check-zip-codes-p'.")
+Whether this is used at all depends on the variable `bbdb-check-zip-codes-p'."
+  :group 'bbdb-record-creation
+  :type '(repeat regexp))
 
 (defun bbdb-parse-zip-string (string)
   "Check wether STRING is a legal zip code.
@@ -937,11 +943,13 @@ Country:         country"
     (bbdb-address-set-country addr country)
     nil))
 
-(defvar bbdb-address-editing-function 'bbdb-address-edit-default
+(defcustom bbdb-address-editing-function 'bbdb-address-edit-default
   "Function to use for address editing.
 The function must accept a BBDB address as parameter and allow the
 user to edit it.  This variable is called from `bbdb-record-edit-address'.
-The default value is the symbol `bbdb-address-edit-default'.")
+The default value is the symbol `bbdb-address-edit-default'."
+  :group 'bbdb-record-creation
+  :type 'function)
 
 (defun bbdb-record-edit-address (addr &optional location)
   "Edit an address ADDR.
