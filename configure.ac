@@ -73,7 +73,6 @@ BBDB_ARG_SUBST([VMDIR],   [vm-dir],   [DIR], [set the location of VM   to DIR],
 
 # Various MTAs
 # Default RMAIL & Gnus to on
-enable_rmail=rmail
 enable_gnus=gnus
 AC_ARG_ENABLE([vm],
               AC_HELP_STRING([--enable-vm],
@@ -82,12 +81,12 @@ AC_ARG_ENABLE([vm],
 
 AC_ARG_ENABLE(rmail,
               AC_HELP_STRING([--enable-rmail],
-                             [enable RMAIL hooks [no]]),
+                             [enable RMAIL hooks [[no]]]),
               [BBDB_RMAIL=rmail], [BBDB_RMAIL=])
 
 AC_ARG_ENABLE(gnus,
 			  AC_HELP_STRING([--enable-gnus],
-                             [enable GNUS hooks [yes]]),
+                             [enable GNUS hooks [[yes]]]),
               [BBDB_GNUS=gnus], [BBDB_GNUS=])
 
 AC_ARG_ENABLE(mhe,
