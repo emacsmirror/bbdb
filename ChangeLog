@@ -1,3 +1,19 @@
+2002-01-29  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-sc.el (bbdb/sc-consult-attr): Fixed to really use
+	recipient when logged in user sent this.
+
+	* lisp/bbdb-com.el (bbdb-phones): Prompt indicates inverted search now.
+	(bbdb-update-records): No useless "Updating of BBDB records
+	finished" message any more.
+
+	* lisp/bbdb.el (bbdb-display-layout-alist): Fixed the docs, typos
+	and default values.
+
+	* lisp/bbdb-gui.el (bbdb-fontify-buffer): Fixed fontification to
+	use text-properties (bbdb-field) rather than regexps, which fixes  
+	indentations problems with non standard indentation.
+
 2002-01-22  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-delete-current-record): honor the
