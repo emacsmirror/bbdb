@@ -22,6 +22,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.53  1997/10/06 01:03:34  simmonmt
+;; Jamie Zawinski <jwz@netscape.com>'s comment change about the new area
+;; codes that aren't restricted to [012] in the second digit.
+;;
 ;; Revision 1.52  1997/09/28 05:57:13  simmonmt
 ;; Fixed area code parsing for new US area codes.  Patches integrated:
 ;; use of message-mail for sending mail, finger-host record for fingering
@@ -286,9 +290,7 @@ will be signalled if unparsable.  All of these are unambigously parsable:
   1234                      ->   (0 0 0 1234)
 
 Note that \"4151212123\" is ambiguous; it could be interpreted either as
-\"(415) 121-2123\" or as \"415-1212 x123\".  (However, all area codes have
-either 0, 1, or 2 as their second digit, and no exchange begins with 0, 
-so this function can sometimes use that to disambiguate.)
+\"(415) 121-2123\" or as \"415-1212 x123\".
 
 \(And uh, oh yeah, this does little if bbdb-north-american-phone-numbers-p
 is nil...\)"
