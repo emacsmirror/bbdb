@@ -71,19 +71,20 @@ They are stored in `sound-alist' as touchtone0 to touchtone11."
   (interactive)
   (let (files
         (nr 0))
-    (condition-case error
+    (condition-case nil
         (setq files
               (directory-files bbdb-sounds-directory t
                                (if (and system-type
-                                        (string-match "windows"
-                                                      (format "%s" system-type)))
+                                        (string-match
+                                         "windows"
+                                         (format "%s" system-type)))
                                    "touchtone.*\\.wav"
                                  "touchtone.*\\.au")))
       (error
        ;; It is not a fatal error if we can't find the touchtones; it
        ;; just prevents a particular, possibly little-used feature
        ;; from working.
-       (bbdb-warn "Can't find any touchtone sounds")
+       (bbdb-warn "Cannot find any touchtone sounds")
        (setq files nil)))
 
     (if (not files)
