@@ -30,18 +30,17 @@
 ;;; |  volume list, and if you're using BBDB, you really should be on it.    |
 ;;; |                                                                        |
 ;;; |  When joining these lists or reporting bugs, please mention which      |
-;;; |  version you have.                                                     |
+;;; |  version you have. The preferred method of reporting bugs is to use    |
+;;; |  bbdb-submit-bug-report, which will include all useful version         |
+;;; |  information plus state information about how you have BBDB set up.    |
 ;;;  ------------------------------------------------------------------------
-
-;;
-;; $Id$
-;;
+;;;
+;;; $Id$
 
 (require 'timezone)
 (require 'cl)
 
 (eval-when-compile              ; pacify the compiler.
- (autoload 'message-mode-map "message")
  (autoload 'widget-group-match "wid-edit")
  (autoload 'Electric-pop-up-window "electric")
  (autoload 'Electric-command-loop "electric")
@@ -53,8 +52,10 @@
  (autoload 'bbdb-redisplay-records "bbdb-com")
  (autoload 'bbdb-create-internal "bbdb-com")
  (autoload 'y-or-n-p-with-timeout "timer")
- (autoload 'mail-mode-map "sendmail")
  (autoload 'mail-position-on-field "sendmail")
+ ;; autoload doesn't work for these
+ (require 'message) ; for message-mode-map
+ (require 'sendmail) ; for mail-mode-map
  )
 
 (defconst bbdb-version "2.33")
@@ -92,6 +93,11 @@ prompt the users on how to merge records when duplicates are detected.")
 
 (defmacro string> (a b) (list 'not (list 'or (list 'string= a b)
                                          (list 'string< a b))))
+
+(eval-when-compile
+  (if (fboundp 'set-keymap-prompt)
+      ()
+    (defmacro set-keymap-prompt(&rest args)())))
 
 ;; this should really be in bbdb-com
 ;;;###autoload
@@ -1904,7 +1910,7 @@ multi-line layout."
 \162\166\145\171\40\117\163\167\141\154\144\40\141\143\164\145\144\40\141\154\
 \157\156\145" "\101\114\114\40\131\117\125\122\40\102\101\123\105\40\101\122\
 \105\40\102\105\114\117\116\107\40\124\117\40\125\123" "\127\141\162\40\151\
-\163\40\120\145\141\143\145" "\106\162\145\145\144\157\155\40\151\163\40\123
+\163\40\120\145\141\143\145" "\106\162\145\145\144\157\155\40\151\163\40\123\
 \154\141\166\145\162\171" "\111\147\156\157\162\141\156\143\145\40\151\163\40\
 \123\164\162\145\156\147\164\150" "\120\162\157\154\145\163\40\141\156\144\40\
 \141\156\151\155\141\154\163\40\141\162\145\40\146\162\145\145"]))
