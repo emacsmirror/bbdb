@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.53  1997/12/01 05:02:28  simmonmt
+;; Soren Dayton's fix to correct tilde printing
+;;
 ;; Revision 1.52  1997/10/06 01:05:28  simmonmt
 ;; New version of bbdb-print from Boris Goldowsky <boris@gnu.ai.mit.edu>
 ;;
@@ -454,10 +457,15 @@ TeX to process as an accent."
 	(while (not (eobp))
 	  (cond ((looking-at "[<>=]+") 
 		 (replace-match "$\\&$"))
-		((and (looking-at "[#$%&~_]")
+		((and (looking-at "[#$%&_]")
 		      (not (eq ?\\ (char-after (1- (point))))))
 		 (insert "\\")
 		 (forward-char 1))
+		((and (looking-at "~")
+		      (not (eq ?\\ (char-after (1- (point))))))
+		 (insert "\\")
+		 (forward-char 1)
+		 (insert "{}"))
 		((and (looking-at "[{}]")
 		      (not (eq ?\\ (char-after (1- (point))))))
 		 (insert "$\\")
