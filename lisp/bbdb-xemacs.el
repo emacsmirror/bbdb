@@ -72,6 +72,8 @@
 	(setq p (+ start (length (bbdb-record-name record))))
 	(if (bbdb-record-company record)
 	    (setq p (+ p 3 (length (bbdb-record-company record)))))
+	(if (and elided-p (> p (+ start bbdb-pop-up-elided-display-name-end)))
+	    (setq p (+ start 3 bbdb-pop-up-elided-display-name-end)))
 	(goto-char start)
 	(if (search-forward " - " p t)
 	    (progn
