@@ -149,7 +149,7 @@ in this message."
            (let ((addrs (bbdb/vm-get-from msg bbdb/vm-get-only-first-from-p))
                  (bbdb-records (bbdb-records))
                  rec
-                 (create-p offer-to-create))
+                 (create-p t))
              (mapc (lambda (address)
                      (condition-case nil
                          (setq rec
