@@ -1,3 +1,8 @@
+2000-07-13  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb.el (bbdb-write-file-hooks): new variable
+	(bbdb-records): use it
+
 2000-07-05  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb-migrate.el: rewrote migration in a modular way
