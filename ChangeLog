@@ -1,3 +1,15 @@
+2001-02-08  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb.el (bbdb-annotate-message-sender):
+	Applied bugfix for adding new net addresses, which was broken by
+	the new featue of creating a new record if the address does not
+	belong to the existing record.
+	(bbdb-display-records): 
+	(bbdb-display-records-1): 
+	run the hooks 'bbdb-list-hook in bbdb-display-records-1, instead
+	of bbdb-display-records, in order to call them also for electric
+	display.
+	
 2001-02-07  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-com.el:
@@ -8,7 +20,7 @@
 
 2001-02-07  Robert Fenk  <fenk@forwiss.de>
 
-	* lisp/bbdb-com.el (bbdb-complete-name): Fxed bug which showed
+	* lisp/bbdb-com.el (bbdb-complete-name): Fixed bug which showed
 	its effect only with GNU Emacs.
 	(bbdb-add-or-remove-mail-alias): Better prompt.
 
