@@ -22,6 +22,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.56  1997/12/01 04:54:52  simmonmt
+;; Added sshteingold@cctrading.com's date-based database-manipulation
+;; functions.  Customized variables.
+;;
 ;; Revision 1.55  1997/10/26 04:47:03  simmonmt
 ;; Fix name completion bug (original fix by Marco Walther
 ;; <Marco.Walther@mch.sni.de>, mangled beyond recognition by Matt Simmons
@@ -217,6 +221,13 @@ the database was last last saved."
   "Prompts for and displays a single record (this is faster than searching.)"
   (interactive (list (bbdb-completing-read-record "Display record of: ")))
   (bbdb-display-records (list record)))
+
+(defun bbdb-display-some (function)
+  "Display records according to FUNCTION.  FUNCTION is called with one
+argument, the record, and should return nil if the record is not to be
+displayed.  If the record is to be displayed, it (the record) should
+be returned."
+  (bbdb-display-records (delq nil (mapcar function (bbdb-records)))))
 
 ;;; fancy redisplay
 
@@ -1619,9 +1630,9 @@ CALLBACK and DATA are discarded."
 (defun bbdb-complete-clicked-name (event extent user-data)
   "Find the record for a name clicked in a completion buffer.
 Currently only used by XEmacs."
-   (let ((buffer (first user-data))
- 	(beg (second user-data))
- 	(end (third user-data)))
+   (let ((buffer (nth 0 user-data))
+ 	(beg (nth 1 user-data))
+ 	(end (nth 2 user-data)))
      (bbdb-complete-name-cleanup)
      (set-buffer buffer)
      (goto-char beg)
@@ -1783,8 +1794,10 @@ Completion behaviour can be controlled with 'bbdb-completion-type'."
 
 ;;; interface to mail-abbrevs.el.
 
-(defvar bbdb-define-all-aliases-field 'mail-alias
-  "*The field which bbdb-define-all-aliases searches for.")
+(defcustom bbdb-define-all-aliases-field 'mail-alias
+  "*The field which bbdb-define-all-aliases searches for."
+  :group 'bbdb
+  :type 'symbol)
 
 (defun bbdb-define-all-aliases ()
   "Define mail aliases for some of the records in the database.
@@ -1848,19 +1861,29 @@ of all of those people."
 
 ;;; Sound
 
-(defvar bbdb-dial-local-prefix nil
+(defcustom bbdb-dial-local-prefix nil
   "*If this is non-nil, it should be a string of digits which your phone
 system requires before making local calls (for example, if your phone system
-requires you to dial 9 before making outside calls.)")
+requires you to dial 9 before making outside calls.)"
+  :group 'bbdb-phone-dialing
+  :type '(choice (const :tag "No digits required" nil)
+		 (integer :tag "Dial this first" 9)))
 
-(defvar bbdb-dial-long-distance-prefix nil
+(defcustom bbdb-dial-long-distance-prefix nil
   "*If this is non-nil, it should be a string of digits which your phone
 system requires before making a long distance call (one not in your local
-area code).  For example, in some areas you must dial 1 before an area code.")
+area code).  For example, in some areas you must dial 1 before an area code."
+  :group 'bbdb-phone-dialing
+  :type '(choice (const :tag "No digits required" nil)
+		 (integer :tag "Dial this first" 1)))
 
 
-(defvar bbdb-sound-player "/usr/demo/SOUND/play")
-(defvar bbdb-sound-files
+(defcustom bbdb-sound-player "/usr/demo/SOUND/play"
+  "The program to be used to play the sounds for the touch-tone digits."
+  :group 'bbdb-phone-dialing
+  :type 'file)
+
+(defcustom bbdb-sound-files
   '["/usr/demo/SOUND/sounds/touchtone.0.au"
     "/usr/demo/SOUND/sounds/touchtone.1.au"
     "/usr/demo/SOUND/sounds/touchtone.2.au"
@@ -1870,7 +1893,11 @@ area code).  For example, in some areas you must dial 1 before an area code.")
     "/usr/demo/SOUND/sounds/touchtone.6.au"
     "/usr/demo/SOUND/sounds/touchtone.7.au"
     "/usr/demo/SOUND/sounds/touchtone.8.au"
-    "/usr/demo/SOUND/sounds/touchtone.9.au"])
+    "/usr/demo/SOUND/sounds/touchtone.9.au"]
+  "A vector of ten sound files to be used for dialing.  They
+correspond to the 0, 1, 2, ... 9 digits, respectively."
+  :group 'bbdb-phone-dialing
+  :type 'vector)
 
 (defun bbdb-dial (phone force-area-code)
   "On a Sun SparcStation, play the appropriate tones on the builtin 
@@ -1927,7 +1954,10 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
 ;;; Finger, based on code by Sam Cramer <cramer@sun.com>.
 ;;; Note that process-death bugs in 18.57 may make this eat up all the cpu...
 
-(defvar bbdb-finger-buffer-name "*finger*")
+(defcustom bbdb-finger-buffer-name "*finger*"
+  "The buffer into which finger output should be directed."
+  :group 'bbdb-finger
+  :type 'string)
 
 (defun bbdb-finger-internal (address)
   (message "Fingering %s..." address)
@@ -1974,8 +2004,10 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
       (goto-char (point-max))
       (message "Finger done."))))
 
-(defvar bbdb-finger-host-field 'finger-host
-  "*The field for special net addresses used by \"\\[bbdb-finger]\".")
+(defcustom bbdb-finger-host-field 'finger-host
+  "*The field for special net addresses used by \"\\[bbdb-finger]\"."
+  :group 'bbdb-finger
+  :type 'symbol)
 
 (defun bbdb-record-finger-host (record)
   (let ((finger-host (and bbdb-finger-host-field
@@ -2042,11 +2074,82 @@ field `finger-host' (default value of `bbdb-finger-host-field')."
 	(bbdb-finger-internal (car addrs))))))
 
 
+;;; Time-based functions
+(defun bbdb-kill-older (date &optional compare function)
+  "*Apply FUNCTION to all records with timestamps older than DATE.  The
+comparison is done with COMPARE.  If FUNCTION is not specified, the
+selected records are deleted.  If COMPARE is not specified,
+`string-lessp' is used.
+
+Example:
+  (bbdb-kill-older \"1997-01-01\")
+will delete all records with timestamps older than Jan 1 1997.
+
+Notes:  1. Records without timestamp fields will be ignored
+        2. DATE must be in yyyy-mm-dd format."
+  (interactive "sKill records with timestamp older than (yyyy-mm-dd): \n")
+  (let ((records (bbdb-records)) timestamp
+	(fun (or function 'bbdb-delete-record-internal))
+	(cmp (or compare 'string-lessp)))
+    (while records
+      (if (and (setq timestamp (bbdb-record-getprop (car records) 'timestamp))
+	       (funcall cmp timestamp date))
+	  (funcall fun (car records)))
+      (setq records (cdr records)))))
+
+(defmacro bbdb-compare-records (cmpval field compare)
+  "Builds a lambda comparison function that takes one argument, REC.
+REC is returned if
+         (COMPARE VALUE CMPVAL)
+is true, where VALUE is the value of the FIELD field of REC."
+  (list 'lambda '(rec)
+	(list 'let (list (list 'val (list 'bbdb-record-getprop 'rec field)))
+	      (list 'if (list 'and 'val (list compare 'val cmpval))
+		    'rec 'nil))))
+
+;;;###autoload
+(defun bbdb-timestamp-older (date)
+  "*Display records with timestamp older than DATE.  DATE must be in
+yyyy-mm-dd format."
+  (interactive "sOlder than date (yyyy-mm-dd): ")
+  (bbdb-display-some (bbdb-compare-records date 'timestamp string<)))
+
+;;;###autoload
+(defun bbdb-timestamp-newer (date)
+  "*Display records with timestamp newer than DATE.  DATE must be in
+yyyy-mm-dd format."
+  (interactive "sNewer than date (yyyy-mm-dd): ")
+  (bbdb-display-some (bbdb-compare-records date 'timestamp string>)))
+
+;;;###autoload
+(defun bbdb-creation-older (date)
+  "*Display records with creation-date older than DATE.  DATE must be
+in yyyy-mm-dd format."
+  (interactive "sOlder than date (yyyy-mm-dd): ")
+  (bbdb-display-some (bbdb-compare-records date 'creation-date string<)))
+
+;;;###autoload
+(defun bbdb-creation-newer (date)
+  "*Display records with creation-date newer than DATE.  DATE must be
+in yyyy-mm-dd format."
+  (interactive "sNewer than date (yyyy-mm-dd): ")
+  (bbdb-display-some (bbdb-compare-records date 'creation-date string>)))
+
+;;;###autoload
+(defun bbdb-creation-no-change ()
+  "*Display records that have the same timestamp and creation-date."
+  (interactive)
+  (bbdb-display-some
+   (bbdb-compare-records (bbdb-record-getprop rec 'timestamp)
+			 'creation-date string=)))
+
 ;;; Help and documentation
 
-(defvar bbdb-info-file nil
+(defcustom bbdb-info-file nil
   "*Set this to the location of the bbdb info file, if it's not in the
-standard place.")
+standard place."
+  :group 'bbdb
+  :type 'file)
 
 (defvar Info-directory) ; v18
 (defun bbdb-info ()
