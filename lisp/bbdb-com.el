@@ -271,8 +271,8 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
 
 ;;; Parsing phone numbers
 
-(defconst bbdb-phone-area-regexp "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*\\([2-9][0-9][0-9]\\)[ \t]*)?[- \t]*")
-(defconst bbdb-phone-main-regexp "\\([1-9][0-9][0-9]\\)[ \t]*-?[ \t]*\\([0-9][0-9][0-9][0-9]\\)[ \t]*")
+(defconst bbdb-phone-area-regexp "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*\\([2-9][0-9][0-9]\\)[ \t]*)?[- /\.\t]*")
+(defconst bbdb-phone-main-regexp "\\([2-9][0-9][0-9]\\)[ \t]*-?[ \.\t]*\\([0-9][0-9][0-9][0-9]\\)[ \t]*")
 (defconst bbdb-phone-ext-regexp  "x?[ \t]*\\([0-9]+\\)[ \t]*")
 
 (defconst bbdb-phone-regexp-1 (concat "^[ \t]*" bbdb-phone-area-regexp bbdb-phone-main-regexp bbdb-phone-ext-regexp "$"))
@@ -1666,6 +1666,7 @@ the name is always included."
                   (cond ((featurep 'mh-e) 'mh)
                         ((featurep 'vm) 'vm)
                         ((featurep 'message) 'message)
+                        ((featurep 'mew) 'mew)
                         ((featurep 'compose-mail) 'compose-mail)
                         (t 'mail)))))
     (cond
@@ -1686,6 +1687,9 @@ the name is always included."
        (message-mail to subj))
       ((or (eq type 'mail) (eq type 'rmail))
        (mail nil to subj))
+      ((eq type 'mew)
+       (or (fboundp 'mew-send) (load-library "mew"))
+       (mew-send to nil subj))
       ((eq type 'compose-mail)
        (compose-mail to subj))
       (t
@@ -1899,19 +1903,23 @@ if omit-records is non-nil it should be a list of records to dis-allow
 completion with."
   (let ((records (bbdb-remove-memq-duplicates
                   (bbdb-completing-read-record prompt omit-records))))
-    (if (eq (length records) 1)
-        (car records)
-        (let ((count (length records))
-              prompts result)
-          (bbdb-display-records records)
-          (while (> count 0)
-            (setq prompts (cons (list (number-to-string count) count) prompts)
-                  count (1- count)))
-          (setq result
-                (completing-read (format "Which duplicate record (1-%s): "
-                                         (length records))
-                                 prompts nil t "1"))
-          (nth (1- (string-to-number result)) records)))))
+    (cond
+     ((eq (length records) 1)
+      (car records))
+     ((> (length records) 1)
+      (let ((count (length records))
+            prompts result)
+        (bbdb-display-records records)
+        (while (> count 0)
+          (setq prompts (cons (list (number-to-string count) count) prompts)
+                count (1- count)))
+        (setq result
+              (completing-read (format "Which duplicate record (1-%s): "
+                                       (length records))
+                               prompts nil t "1"))
+        (nth (1- (string-to-number result)) records)))
+     (t
+      nil))))
 
 (defvar bbdb-read-addresses-with-completion-map
   (let ((map (copy-keymap minibuffer-local-completion-map)))
@@ -2116,15 +2124,15 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                   ;; replace with new mail address
                   (delete-region beg end)
                   (insert (bbdb-dwim-net-address rec this-addr))
-                  (throw 'bbdb-cycling-exit t))))))
+                  (throw 'bbdb-cycling-exit t)))))
 
-      ;; FALL THROUGH
-      ;; Check mail aliases
-      (if (and bbdb-expand-mail-aliases (expand-abbrev))
-          ()
-        (when bbdb-complete-name-hooks
-          (message "completion for \"%s\" unfound." pattern)
-          (ding)))) ;; no matches, sorry!
+          ;; FALL THROUGH
+          ;; Check mail aliases
+          (if (and bbdb-expand-mail-aliases (expand-abbrev))
+              ()
+            (when bbdb-complete-name-hooks
+              (message "completion for \"%s\" unfound." pattern)
+              (ding))))) ;; no matches, sorry!
 
      ;; Perfect match for a single record
      ((and only-one-p (string= completion pattern))
