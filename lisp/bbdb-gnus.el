@@ -28,10 +28,16 @@
 
 (eval-and-compile
   (require 'bbdb-com)
-  (require 'gnus-win)
-  (require 'gnus-sum)
-  (require 'gnus-art)
   (require 'rfc822))
+
+;; Cater for older emacs (19.34) with default Gnus installation.
+(eval-and-compile
+  (condition-case error
+      (progn
+        (require 'gnus-win)
+        (require 'gnus-sum)
+        (require 'gnus-art))
+    (error nil)))
 
 ;;; Compiler hushing
 ;;; Some of these are probably obsolete variables for older versions
@@ -62,7 +68,7 @@ The headers to search can be configured by `bbdb-get-addresses-headers'."
       (while headers
         (setq header (mail-fetch-field (car headers)))
         (when header
-          (setq adlist (bbdb-extract-address-components header))
+          (setq adlist (funcall bbdb-extract-address-components-func header))
           (while adlist
             (setq fn (caar adlist)
                   ad (cadar adlist))
