@@ -50,15 +50,16 @@
 nil if the database was read in and is to be written in the current
 version.")
 
-(defvar bbdb-no-duplicates-p '()
-  "Should BBDB allow entries with duplicate names.  This may lead to
-confusion when doing completion.  If 't it will prompt the users on how
-to merge records when duplicates are detected.")
+(defvar bbdb-no-duplicates-p nil
+  "Should BBDB allow entries with duplicate names.
+This may lead to confusion when doing completion.  If non-nil, it will
+prompt the users on how to merge records when duplicates are detected.")
 
 (eval-and-compile
   (if (fboundp 'unless) nil
     (defmacro unless (bool &rest forms) `(if ,bool nil ,@forms))
-    (defmacro when (bool &rest forms) `(if ,bool (progn ,@forms)))))
+    (defmacro when (bool &rest forms) `(if ,bool (progn ,@forms))))
+  (unless (fboundp 'mapc) (fset 'mapc 'mapcar)))
 
 ;; This nonsense is to get the definition of defsubst loaded in when this file
 ;; is loaded,without necessarily forcing the compiler to be loaded if we're
@@ -1009,7 +1010,7 @@ This is a possible identifying function for
   "Insert street subfields of address ADDR in current buffer.
 This may be used by formatting functions listed in
 `bbdb-address-formatting-alist'."
-  (mapcar (lambda(str)
+  (mapc (lambda(str)
           (indent-to 17)
           (insert str "\n"))
         (bbdb-address-streets addr)))
