@@ -1,5 +1,8 @@
 2001-01-24  Sam Steingold  <sds@gnu.org>
 
+	* lisp/bbdb-snarf.el (replace-in-string): Emacs 21 has
+	`replace-regexp-in-string' - use it!
+
 	* lisp/bbdb-merge.el (bbdb-merge-file): bugfix:
 	the parameter for `match-fun' is `rec', not `r'
 
