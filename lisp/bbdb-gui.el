@@ -78,7 +78,7 @@
     (let ((o (overlay-lists)))(append (car o) (cdr o)))))
 
 (if (fboundp 'set-extent-property)
-    (fset bbdb-set-extent-property 'set-extent-property)
+    (fset 'bbdb-set-extent-property 'set-extent-property)
   (defun bbdb-set-extent-property( e p v )
     (if (eq 'highlight p)
         (if v
