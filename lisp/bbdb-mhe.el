@@ -5,7 +5,7 @@
 ;;; Interface to mh-e version 3.7 or later (modeled after bbdb-rmail).
 ;;; Created  5-Mar-91;
 ;;; Modified: 28-Jul-94 by Fritz Knabe <knabe@ecrc.de>
-;;;			   Jack Repenning <jackr@dblues.wpd.sgi.com>
+;;;                        Jack Repenning <jackr@dblues.wpd.sgi.com>
 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -25,6 +25,11 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.56  2001/03/17 17:21:48  fenk
+;; * lisp/bbdb-mhe.el:
+;; * lisp/bbdb-rmail.el: uses the new caching functions + some
+;; 	other minor changes
+;;
 ;; Revision 1.55  2000/10/27 18:32:06  fenk
 ;; The new variable `bbdb/prompt-for-create-p' can be set to `t' in
 ;; order to force VM, Gnus, MHE, RMAIL to ask the user before adding a
@@ -41,27 +46,29 @@
 ;;
 ;;
 
-(require 'bbdb)
-;; We advise several mh-e functions
-(require 'mh-e)
-(eval-and-compile
+(eval-and-compile 
+  (require 'bbdb)
+  (require 'bbdb-com)
+  (require 'mail-utils)
+  ;; We advise several mh-e functions
+  (require 'mh-e)
   (if (fboundp 'mh-version)
-      (require 'mh-comp)))		; For mh-e 4.x
-(require 'advice)
+      (require 'mh-comp))              ; For mh-e 4.x
+  (require 'advice))
 
 (defmacro bbdb/mh-cache-key (message)
   "Return a (numeric) key for MESSAGE"
   (`(let* ((attrs (file-attributes (, message)))
-	   (status-time (nth 6 attrs))
-	   (status-time-2 (cdr status-time)))
+           (status-time (nth 6 attrs))
+           (status-time-2 (cdr status-time)))
       (logxor (nth 10 attrs)
-	      (car status-time)
-	      ;; We need the following test because XEmacs returns the
-	      ;; status time as a dotted pair, whereas FSF and Epoch
-	      ;; return it as list.
-	      (if (integerp status-time-2)
-		  status-time-2
-		(car status-time-2))))))
+              (car status-time)
+              ;; We need the following test because XEmacs returns the
+              ;; status time as a dotted pair, whereas FSF and Epoch
+              ;; return it as list.
+              (if (integerp status-time-2)
+                  status-time-2
+                (car status-time-2))))))
 
 ;;;###autoload
 (defun bbdb/mh-update-record (&optional offer-to-create)
@@ -72,30 +79,29 @@ the user confirms the creation."
   (save-excursion
     (and mh-show-buffer (set-buffer mh-show-buffer))
     (if bbdb-use-pop-up
-	(bbdb/mh-pop-up-bbdb-buffer offer-to-create)
+        (bbdb/mh-pop-up-bbdb-buffer offer-to-create)
       (let ((msg (bbdb/mh-cache-key buffer-file-name)))
-	(if (eq msg 0) (setq msg nil))	; 0 could mean trouble; be safe.
-	(or (bbdb-message-cache-lookup msg nil) ; nil = current-buffer
-	    (let ((from (bbdb/mh-get-field "^From[ \t]*:"))
-		  name net)
-	      (if (or (string= "" from)
-		      (string-match (bbdb-user-mail-names)
-				    (mail-strip-quoted-names from)))
-		  ;; if logged-in user sent this, use recipients.
-		  (progn
-		    (setq from (bbdb/mh-get-field "^To[ \t]*:"))
-		    (if (or (string= "" from)
-			    (string-match (bbdb-user-mail-names)
-					  (mail-strip-quoted-names from)))
-			(setq from nil))))
-	      (if from
-		  (bbdb-encache-message msg
-		    (bbdb-annotate-message-sender from t
-		      (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
-			  offer-to-create)
-		      (or (bbdb-invoke-hook-for-value
-			   bbdb/prompt-for-create-p)
-			  offer-to-create))))))))))
+        (if (eq msg 0) (setq msg nil))  ; 0 could mean trouble; be safe.
+        (or (bbdb-message-cache-lookup msg)
+            (let ((from (bbdb/mh-get-field "^From[ \t]*:")))
+              (if (or (string= "" from)
+                      (string-match (bbdb-user-mail-names)
+                                    (mail-strip-quoted-names from)))
+                  ;; if logged-in user sent this, use recipients.
+                  (progn
+                    (setq from (bbdb/mh-get-field "^To[ \t]*:"))
+                    (if (or (string= "" from)
+                            (string-match (bbdb-user-mail-names)
+                                          (mail-strip-quoted-names from)))
+                        (setq from nil))))
+              (if from
+                  (bbdb-encache-message msg
+                    (bbdb-annotate-message-sender from t
+                      (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
+                          offer-to-create)
+                      (or (bbdb-invoke-hook-for-value
+                           bbdb/prompt-for-create-p)
+                          offer-to-create))))))))))
 
 
 ;;;###autoload
@@ -104,11 +110,11 @@ the user confirms the creation."
 corresponding to the sender of this message.  If REPLACE is non-nil,
 replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
-			 (error "The Insidious Big Brother Database is read-only.")
-			 (read-string "Comments: "))))
+                         (error "The Insidious Big Brother Database is read-only.")
+                         (read-string "Comments: "))))
   (mh-show)
   (let ((b (current-buffer))
-	(p (point)))
+        (p (point)))
     (set-buffer mh-show-buffer)
     (bbdb-annotate-notes (bbdb/mh-update-record t) string 'notes replace)
     (set-buffer b)
@@ -121,13 +127,13 @@ of the BBDB record corresponding to the sender of this message."
   (interactive "P")
   (mh-show)
   (let ((b (current-buffer))
-	(p (point)))
+        (p (point)))
     (set-buffer mh-show-buffer)
     (let (bbdb-electric-p (record (or (bbdb/mh-update-record t) (error ""))))
       (bbdb-display-records (list record))
       (if arg
-	  (bbdb-record-edit-property record nil t)
-	(bbdb-record-edit-notes record t)))
+          (bbdb-record-edit-property record nil t)
+        (bbdb-record-edit-notes record t)))
     (set-buffer b)
     (goto-char p)))
 
@@ -139,12 +145,12 @@ This buffer will be in bbdb-mode, with associated keybindings."
   (interactive)
   (mh-show)
   (let ((b (current-buffer))
-	(p (point)))
+        (p (point)))
     (set-buffer mh-show-buffer)
     (let ((record (bbdb/mh-update-record t)))
       (if record
-	  (bbdb-display-records (list record))
-	(error "unperson")))
+          (bbdb-display-records (list record))
+        (error "unperson")))
     (set-buffer b)
     (goto-char p)))
 
@@ -155,14 +161,14 @@ displaying the record corresponding to the sender of the current message."
   (bbdb-pop-up-bbdb-buffer
     (function (lambda (w)
       (let ((b (current-buffer)))
-	(set-buffer (window-buffer w))
-	(prog1 (eq major-mode 'mh-folder-mode)
-	  (set-buffer b))))))
+        (set-buffer (window-buffer w))
+        (prog1 (eq major-mode 'mh-folder-mode)
+          (set-buffer b))))))
   (let ((bbdb-gag-messages t)
-	(bbdb-use-pop-up nil)
-	(bbdb-electric-p nil))
+        (bbdb-use-pop-up nil)
+        (bbdb-electric-p nil))
     (let ((record (bbdb/mh-update-record offer-to-create))
-	  (bbdb-elided-display (bbdb-pop-up-elided-display)))
+          (bbdb-elided-display (bbdb-pop-up-elided-display)))
       (bbdb-display-records (if record (list record) nil))
       record)))
 
@@ -176,45 +182,45 @@ displaying the record corresponding to the sender of the current message."
   (let ((case-fold-search nil))
     (goto-char (point-min))
     (cond ((not (re-search-forward field nil t)) "")
-	  ((looking-at "[\t ]*$") "")
-	  (t (re-search-forward "[\t ]*\\([^\t \n].*\\)$" nil t)
-	   (let ((field (buffer-substring (match-beginning 1) (match-end 1)))
-		 (end-of-match (point)))
-	     (forward-line)
-	     (while (looking-at "[ \t]") (forward-line 1))
-	     (backward-char 1)
-	     (if (<= (point) end-of-match)
-		 field
-		 (format "%s%s" field
-			 (buffer-substring end-of-match (point)))))))))
+          ((looking-at "[\t ]*$") "")
+          (t (re-search-forward "[\t ]*\\([^\t \n].*\\)$" nil t)
+           (let ((field (buffer-substring (match-beginning 1) (match-end 1)))
+                 (end-of-match (point)))
+             (forward-line)
+             (while (looking-at "[ \t]") (forward-line 1))
+             (backward-char 1)
+             (if (<= (point) end-of-match)
+                 field
+                 (format "%s%s" field
+                         (buffer-substring end-of-match (point)))))))))
 
 (defadvice mh-process-commands (after mh-bbdb-process act)
   (bbdb-offer-save))
 
 (defadvice mh-send (before mh-bbdb-send act)
   (interactive (list
-		(bbdb-read-addresses-with-completion "To: ")
-		(bbdb-read-addresses-with-completion "Cc: ")
-		(read-string "Subject: "))))
+                (bbdb-read-addresses-with-completion "To: ")
+                (bbdb-read-addresses-with-completion "Cc: ")
+                (read-string "Subject: "))))
 
 (defadvice mh-send-other-window (before mh-bbdb-send-other act)
   (interactive (list
-		(bbdb-read-addresses-with-completion "To: ")
-		(bbdb-read-addresses-with-completion "Cc: ")
-		(read-string "Subject: "))))
+                (bbdb-read-addresses-with-completion "To: ")
+                (bbdb-read-addresses-with-completion "Cc: ")
+                (read-string "Subject: "))))
 
 (defadvice mh-forward (before mh-bbdb-forward act)
   (interactive (list (bbdb-read-addresses-with-completion "To: ")
-		     (bbdb-read-addresses-with-completion "Cc: ")
-		     (if current-prefix-arg
-			 (mh-read-seq-default "Forward" t)
-		       (mh-get-msg-num t)))))
+                     (bbdb-read-addresses-with-completion "Cc: ")
+                     (if current-prefix-arg
+                         (mh-read-seq-default "Forward" t)
+                       (mh-get-msg-num t)))))
 
 (defadvice mh-redistribute (before mh-bbdb-redist act)
   (interactive (list
-		(bbdb-read-addresses-with-completion "Redist-To: ")
-		(bbdb-read-addresses-with-completion "Redist-Cc: ")
-		(mh-get-msg-num t))))
+                (bbdb-read-addresses-with-completion "Redist-To: ")
+                (bbdb-read-addresses-with-completion "Redist-Cc: ")
+                (mh-get-msg-num t))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mail from bbdb-mode using mh

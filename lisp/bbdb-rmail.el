@@ -22,6 +22,11 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.56  2001/03/17 17:21:48  fenk
+;; * lisp/bbdb-mhe.el:
+;; * lisp/bbdb-rmail.el: uses the new caching functions + some
+;; 	other minor changes
+;;
 ;; Revision 1.55  2000/10/27 18:32:06  fenk
 ;; The new variable `bbdb/prompt-for-create-p' can be set to `t' in
 ;; order to force VM, Gnus, MHE, RMAIL to ask the user before adding a
@@ -38,10 +43,13 @@
 ;;
 ;;
 
-(require 'bbdb)
-(require 'rmail)
-;(require 'rmailsum)   ; not provided, dammit!
-(if (not (fboundp 'rmail-make-summary-line)) (load-library "rmailsum"))
+(eval-and-compile 
+  (require 'bbdb)
+  (require 'bbdb-com)
+  (require 'rmail)
+  ;(require 'rmailsum)   ; not provided, dammit!
+  (defvar rmail-buffer nil)
+  (if (not (fboundp 'rmail-make-summary-line)) (load-library "rmailsum")))
 
 ;;;###autoload
 (defun bbdb/rmail-update-record (&optional offer-to-create)
@@ -52,25 +60,26 @@ the user confirms the creation."
   (if bbdb-use-pop-up
       (bbdb/rmail-pop-up-bbdb-buffer offer-to-create)
     (if (and (boundp 'rmail-buffer) rmail-buffer)
-	(set-buffer rmail-buffer))
+        (set-buffer rmail-buffer))
     (if rmail-current-message
-      (or (bbdb-message-cache-lookup rmail-current-message nil)
-	(save-excursion
-         (let ((from (mail-fetch-field "from"))
-	       name net)
-	  (if (or (null from)
-		  (string-match (bbdb-user-mail-names)
-				(mail-strip-quoted-names from)))
-	      ;; if logged-in user sent this, use recipients.
-	      (setq from (or (mail-fetch-field "to") from)))
-	  (if from
-	      (bbdb-encache-message rmail-current-message
-		(bbdb-annotate-message-sender from t
-	          (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
-		      offer-to-create)
-		  (or (bbdb-invoke-hook-for-value
-		       bbdb/prompt-for-create-p)
-		      offer-to-create))))))))))
+        (or (bbdb-message-cache-lookup rmail-current-message)
+            (save-excursion
+              (let ((from (mail-fetch-field "from")))
+                (if (or (null from)
+                        (string-match (bbdb-user-mail-names)
+                                      (mail-strip-quoted-names from)))
+                    ;; if logged-in user sent this, use recipients.
+                    (setq from (or (mail-fetch-field "to") from)))
+                (if from
+                    (bbdb-encache-message
+                     rmail-current-message
+                     (bbdb-annotate-message-sender
+                      from t
+                      (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
+                          offer-to-create)
+                      (or (bbdb-invoke-hook-for-value
+                           bbdb/prompt-for-create-p)
+                          offer-to-create))))))))))
 
 ;;;###autoload
 (defun bbdb/rmail-annotate-sender (string &optional replace)
@@ -78,8 +87,8 @@ the user confirms the creation."
 corresponding to the sender of this message.  If REPLACE is non-nil,
 replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
-			 (error "The Insidious Big Brother Database is read-only.")
-			 (read-string "Comments: "))))
+                         (error "The Insidious Big Brother Database is read-only.")
+                         (read-string "Comments: "))))
   (if (and (boundp 'rmail-buffer) rmail-buffer)
       (set-buffer rmail-buffer))
   (bbdb-annotate-notes (bbdb/rmail-update-record t) string 'notes replace))
@@ -91,7 +100,7 @@ of the BBDB record corresponding to the sender of this message."
   (let ((record (or (bbdb/rmail-update-record t) (error ""))))
     (bbdb-display-records (list record))
     (if arg
-	(bbdb-record-edit-property record nil t)
+        (bbdb-record-edit-property record nil t)
       (bbdb-record-edit-notes record t))))
 
 
@@ -104,8 +113,8 @@ This buffer will be in bbdb-mode, with associated keybindings."
       (set-buffer rmail-buffer))
   (let ((record (bbdb/rmail-update-record t)))
     (if record
-	(bbdb-display-records (list record))
-	(error "unperson"))))
+        (bbdb-display-records (list record))
+        (error "unperson"))))
 
 
 (defun bbdb/rmail-pop-up-bbdb-buffer (&optional offer-to-create)
@@ -114,15 +123,15 @@ displaying the record corresponding to the sender of the current message."
   (bbdb-pop-up-bbdb-buffer
     (function (lambda (w)
       (let ((b (current-buffer)))
-	(set-buffer (window-buffer w))
-	(prog1 (eq major-mode 'rmail-mode)
-	  (set-buffer b))))))
+        (set-buffer (window-buffer w))
+        (prog1 (eq major-mode 'rmail-mode)
+          (set-buffer b))))))
   (let ((bbdb-gag-messages t)
-	(bbdb-use-pop-up nil)
-	(bbdb-electric-p nil))
+        (bbdb-use-pop-up nil)
+        (bbdb-electric-p nil))
     (let ((record (bbdb/rmail-update-record offer-to-create))
-	  (bbdb-elided-display (bbdb-pop-up-elided-display))
-	  (b (current-buffer)))
+          (bbdb-elided-display (bbdb-pop-up-elided-display))
+          (b (current-buffer)))
       (bbdb-display-records (if record (list record) nil))
       (set-buffer b)
       record)))
@@ -139,6 +148,11 @@ Leaves original message, deleted, before the undigestified messages."
   (interactive)
   (setq bbdb-message-cache nil)
   (bbdb-orig-undigestify-rmail-message))
+
+(defun bbdb-orig-rmail-expunge ()
+  "This becomes the original rmail-expunge function.")
+(defun bbdb-orig-undigestify-rmail-message ()
+  "This becomes the original rmail-expunge function.")
 
 ;;;###autoload
 (defun bbdb-insinuate-rmail ()
@@ -163,7 +177,7 @@ Leaves original message, deleted, before the undigestified messages."
       (load (nth 1 (symbol-function 'undigestify-rmail-message))))
   (or (fboundp 'bbdb-orig-undigestify-rmail-message)
       (fset 'bbdb-orig-undigestify-rmail-message
-	    (symbol-function 'undigestify-rmail-message)))
+            (symbol-function 'undigestify-rmail-message)))
   (fset 'undigestify-rmail-message 'bbdb/undigestify-rmail-message)
   )
 
