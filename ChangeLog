@@ -1,3 +1,20 @@
+2002-01-04  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
+	Replaced the call of bbdb-clean-username bt a call to
+	mail-extract-address-components in order to handle addresses of
+	the form "Lastname, Fistname" and "Firstnam Lastname, Jr" in the
+	right way.
+	(bbdb-test/bbdb-extract-address-components): New test function to
+	check if everything is working as it should.
+
+2002-01-03  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-complete-name): fixed cycling when the
+	current completion is equal to one of the nets.
+	Added code for C-u M-TAB which lists all possible nets of current
+	completed addess. 
+
 2001-12-26  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-com.el (bbdb-complete-name):
