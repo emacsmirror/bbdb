@@ -1,3 +1,43 @@
+Sun Nov  2 01:32:23 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 1.56unoff released 
+	* lisp/bbdb-sc.el: Added
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus): Commented back in score 
+	  hook addition, can now set up format functions one at a time
+	  (latter based on function from Christoph Wedler)
+	* lisp/bbdb-gnus.el (bbdb/gnus-score-default-internal): Added to
+	  automagically catch changes to `bbdb/gnus-score-default'.
+	* lisp/bbdb-gnus.el (bbdb/gnus-annotate-sender): Now takes REPLACE 
+	  argument.
+	* lisp/bbdb-vm.el (bbdb/vm-annotate-sender): Ditto
+	* lisp/bbdb-mhe.el (bbdb/mh-annotate-sender): Ditto
+	* lisp/bbdb-rmail.el (bbdb/rmail-annotate-sender): Ditto
+	* lisp/auto-autoloads.el: Support for bbdb-sc, housekeeping for others.
+	* Makefile (install-pkg): Bug fix.
+	* texinfo/bbdb.texinfo: More rewriting, documentation for the
+	  Summary Buffer stuff in bbdb-gnus.el
+
+Tue Oct 28 16:08:54 1997  Christoph Wedler  <wedler@fmi.uni-passau.de>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-define-format-functions): New
+ 	  variable.
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus): Use it.  Only define user
+	  functions the first time.  Use `bbdb-warn' instead `error'.
+	* lisp/bbdb.el (bbdb-warn): New function.  Use it.
+
+Sun Oct 26 20:47:20 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/auto-autoloads.el: Remove summary buffer autoloads
+	* lisp/bbdb-gnus.el: Variable aliases for backward compatibility
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-user-format-letter): Add
+	  more descriptive documentation.
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-in-bbdb-format-letter): Added
+	* lisp/bbdb-gnus.el (bbdb/gnus-lines-and-from): Variable name change
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-author-in-bbdb): Added
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus): Commented out score
+	  insinuation, add %ub summary line code creation
+	* lisp/bbdb.el: Remove summary buffer autoloads
+
 Sun Oct 26 00:14:36 1997  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 1.55unoff released
@@ -126,7 +166,7 @@ Sun Oct  5 19:51:21 1997  Jamie Zawinski <jwz@netscape.com>
 	* lisp/bbdb-srv.el (bbdb/srv-handle-headers): Make sure *BBDB* is
 	  bottommost buffer
 
-Sun Oct  5 19:51:20 1997  Christopher Kline <ckline@media.mit.edu>
+Sun Oct  5 19:51:20 1997  Seth Golub  <seth@cs.wustl.edu>
 	* utils/bbdb-areacode-split.pl: New utility
 	
 Sun Oct  5 19:51:19 1997  Matt Simmons  <simmonmt@acm.org>

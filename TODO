@@ -1,5 +1,7 @@
 $Id$
 
+Fix gnus scoring so it rebuilds when gnus-score disappears
+
 Features
 ========
 
@@ -118,7 +120,7 @@ STATUS: Investigatory
 REASON: I integrated the ones that looked most important at first
         glance.  Will glance at the rest later.  "The rest" is:
            bbdb-filters-0.2.sh.gz   bbdb-query.el
-           bbdb-frame.el            bbdb-sc.el 
+           bbdb-frame.el            
            bbdb-letter-1.0.tar.gz   country.el
            bbdb-plz.el              country-info.el
 ---------------------------------------------------------------------------------
@@ -149,7 +151,8 @@ Add documentation of bbdb-reportmail.el
 Add documentation of Soren Dayton's message for bbdb-send-mail-internal
            ...    of Christopher Kline's bbdb-reportmail.el
            ...    of Christopher Kline's bbdb-unlazy-lock.pl
-           ...    of the heap of code from gnus-bbdb
+           ...    of the Gnus Summary Buffer stuff from gnus-bbdb
+           ...    of bbdb-sc.el
 Changes to bbdb-print.el
 bbdb-snarf, bbbd-w3, message-mode stuff
 Add documentation bbdb-srv
