@@ -29,8 +29,18 @@
 ;; compiler whinage. Some of this is legacy stuff that would probably
 ;; be better deleted.
 (defvar scrollbar-height nil)
-(or (fboundp 'set-specifier)
-    (fset 'set-specifier 'ignore))
+(eval-when-compile
+  (or (fboundp 'set-specifier)
+      (fset 'set-specifier 'ignore))
+  (or (fboundp 'make-glyph)
+      (fset 'make-glyph 'ignore))
+  (or (fboundp 'set-glyph-face)
+      (fset 'set-glyph-face 'ignore))
+  (or (fboundp 'highlight-headers-x-face)
+      (fset 'highlight-headers-x-face 'ignore))
+  (or (fboundp 'highlight-headers-x-face-to-pixmap)
+      (fset 'highlight-headers-x-face-to-pixmap 'ignore)))
+
 
 (if (string-match "XEmacs\\|Lucid" emacs-version)
     (progn
@@ -82,7 +92,7 @@
     (fset 'bbdb-delete-extent 'delete-overlay))
 
   (if (fboundp 'mapcar-extents)
-      (defun bbdb-list-extents() (mapcar-extents 'identity))
+      (defmacro bbdb-list-extents() `(mapcar-extents 'identity))
     (defun bbdb-list-extents()
       (let ((o (overlay-lists))) (nconc (car o) (cdr o)))))
 

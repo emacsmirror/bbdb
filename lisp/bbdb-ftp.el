@@ -23,32 +23,6 @@
 
 ;; $Date$ by $Author$
 ;; $Revision$
-;;
-;; $Log$
-;; Revision 1.58  2000/07/20 21:40:40  sds
-;; * lisp/bbdb-com.el (bbdb-finger): use `bbdb-get-record'
-;; * lisp/bbdb-whois.el (bbdb-whois): use `bbdb-get-record'
-;; * lisp/bbdb-ftp.el (bbdb-ftp): use `bbdb-get-record'
-;;
-;; Revision 1.57  2000/07/13 17:07:00  sds
-;; minor doc fixes to comply with the standards
-;;
-;; Revision 1.56  2000/04/13 00:12:02  waider
-;; * Thomas's duplicates patch
-;;
-;; Revision 1.55  1998/04/11 07:21:39  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back
-;;
-;; Revision 1.54  1998/02/23 07:00:18  simmonmt
-;; Intro rewrite to say that EFS is also OK as a prereq
-;;
-;; Revision 1.53  1998/01/06 04:52:15  simmonmt
-;; Customized variables (into utilities-ftp group).  Added provide.
-;;
-;; Revision 1.52  1997/09/28 05:59:18  simmonmt
-;; Added check for EFS (there must be a better way that what I did, but I
-;; really don't want to be reduced to checking version strings.
-;;
 
 ;;; This file adds the ability to define ftp-sites in a BBDB, much the same
 ;;; way one adds a regular person's name to the BBDB.  It also defines the
@@ -110,9 +84,9 @@
   "Expands into an accessor function for slots in the notes alist."
   (let ((fn-name (intern (concat "bbdb-record-" (symbol-name slot)))))
     (list 'defun fn-name (list 'record)
-	  (list 'cdr
-		(list 'assoc (list 'quote slot)
-		      (list 'bbdb-record-raw-notes 'record))))))
+      (list 'cdr
+        (list 'assoc (list 'quote slot)
+              (list 'bbdb-record-raw-notes 'record))))))
 
 (defun-bbdb-raw-notes-accessor ftp-dir)
 (defun-bbdb-raw-notes-accessor ftp-user)
@@ -120,23 +94,23 @@
 (defun bbdb-record-ftp-site (record)
   "Acessor Function. Returns the ftp-site field of the BBDB record or nil."
   (let* ((name (bbdb-record-name record))
-	 (ftp-pfx-regexp (concat bbdb-ftp-site-name-designator-prefix " *"))
-	 (ftp-site
-	  (and (string-match ftp-pfx-regexp name)
-	       (substring name (match-end 0)))))
+     (ftp-pfx-regexp (concat bbdb-ftp-site-name-designator-prefix " *"))
+     (ftp-site
+      (and (string-match ftp-pfx-regexp name)
+           (substring name (match-end 0)))))
     ftp-site))
 
 (defun remove-leading-whitespace (string)
   "Remove any spaces or tabs from only the start of the string."
   (let ((space-char-code (string-to-char " "))
-	(tab-char-code   ?\t)
-	(index 0))
+    (tab-char-code   ?\t)
+    (index 0))
     (if string
-	(progn
-	  (while (or (char-equal (elt string index) space-char-code)
-		     (char-equal (elt string index) tab-char-code))
-	    (setq index (+ index 1)))
-	  (substring string index))
+    (progn
+      (while (or (char-equal (elt string index) space-char-code)
+             (char-equal (elt string index) tab-char-code))
+        (setq index (+ index 1)))
+      (substring string index))
       nil)))
 
 ;;;###autoload
@@ -175,31 +149,31 @@ collisions."
        (setq site (bbdb-read-string "Ftp Site: "))
        (setq site (concat bbdb-ftp-site-name-designator-prefix site))
        (if (and bbdb-no-duplicates-p
-		(bbdb-gethash (downcase site)))
-	    (error "%s is already in the database" site))))
+        (bbdb-gethash (downcase site)))
+        (error "%s is already in the database" site))))
     (let* ((dir  (bbdb-read-string "Ftp Directory: "
-				   bbdb-default-ftp-dir))
-	   (user  (bbdb-read-string "Ftp Username: "
-				    bbdb-default-ftp-user))
-	   (company (bbdb-read-string "Company: "))
-	   (notes (bbdb-read-string "Additional Comments: "))
-	   (names  (bbdb-divide-name site))
-	   (firstname (car names))
-	   (lastname (nth 1 names)))
+                   bbdb-default-ftp-dir))
+       (user  (bbdb-read-string "Ftp Username: "
+                    bbdb-default-ftp-user))
+       (company (bbdb-read-string "Company: "))
+       (notes (bbdb-read-string "Additional Comments: "))
+       (names  (bbdb-divide-name site))
+       (firstname (car names))
+       (lastname (nth 1 names)))
       (if (string= user bbdb-default-ftp-user) (setq user nil))
       (if (string= company "") (setq company nil))
       (if (or (string= dir bbdb-default-ftp-dir) (string= dir ""))
-	  (setq dir nil))
+      (setq dir nil))
       (if (string= notes "")   (setq notes nil))
 
       (let ((record
-	     (vector firstname lastname nil company nil nil nil
-		     (append
-		      (if notes (list (cons 'notes notes)) nil)
-		      (if dir   (list (cons 'ftp-dir dir)) nil)
-		      (if user  (list (cons 'ftp-user user)) nil))
-		     (make-vector bbdb-cache-length nil))))
-	record))))
+         (vector firstname lastname nil company nil nil nil
+             (append
+              (if notes (list (cons 'notes notes)) nil)
+              (if dir   (list (cons 'ftp-dir dir)) nil)
+              (if user  (list (cons 'ftp-user user)) nil))
+             (make-vector bbdb-cache-length nil))))
+    record))))
 
 ;;;###autoload
 (defun bbdb-create-ftp-site (record)

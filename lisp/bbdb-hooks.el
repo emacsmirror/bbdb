@@ -36,17 +36,19 @@
 ;;
 
 (require 'bbdb)
+(require 'bbdb-com)
+
+(eval-when-compile
+  (condition-case() (require 'gnus) (error nil))
+  (condition-case () (require 'vm) (error nil))
+  (autoload 'mh-show "mh-e")
+  (require 'bbdb-vm)
+  (require 'bbdb-gnus)
+  (require 'bbdb-rmail))
 
 (defvar rmail-buffer)
 (defvar mh-show-buffer)
 
-(defmacro the-v18-byte-compiler-sucks-wet-farts-from-dead-pigeons ()
-  ;; no such thing as eval-when, no way to conditionally require something
-  ;; at compile time (except this!! <evil laughter> )
-  (condition-case () (require 'vm) (error nil))
-  nil)
-(defun Nukem-til-they-glow ()
-  (the-v18-byte-compiler-sucks-wet-farts-from-dead-pigeons))
 
 (defvar bbdb-time-internal-format "%Y-%m-%d"
   "The internal date format.")
@@ -418,7 +420,7 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
             (setq ignore-all (cdr ignore-all))))
 
         (unless ignore          ; ignore-all matched
-         (while rest ; while their still are clauses in the auto-notes alist
+         (while rest ; while there are still clauses in the auto-notes alist
           (goto-char marker)
           (setq field (car (car rest))  ; name of header, e.g., "Subject"
                 pairs (cdr (car rest))  ; (REGEXP . STRING) or
@@ -427,7 +429,7 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
                 fieldval (bbdb-extract-field-value field)) ; e.g., Subject line
           (when fieldval
             ;; we perform the auto notes stuff only for authors of a message
-            ;; or if explicitly requested 
+            ;; or if explicitly requested
             (if (or (symbolp (caar pairs)) (listp (caar pairs)))
                 (if (or (memq bbdb-update-address-class (car pairs))
                         (and (assoc bbdb-update-address-class (car pairs))

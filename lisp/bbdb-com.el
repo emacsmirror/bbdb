@@ -34,6 +34,32 @@
        (quote mailabbrev)
      (quote mail-abbrevs))))
 
+;; compiler placating.
+;; not sure this is necessary, but best not to break things
+(eval-and-compile
+  (or (boundp 'auto-fill-function)
+      (fset 'auto-fill-function 'auto-fill-hook)))
+
+(eval-when-compile
+  (autoload 'mh-send "mh-e")
+  (autoload 'vm-session-initialization "vm-startup.el")
+  (autoload 'vm-mail-internal "vm-reply.el")
+  (autoload 'mew-send "mew")
+  (autoload 'bbdb-header-start "bbdb-hooks")
+  (autoload 'bbdb-extract-field-value "bbdb-hooks")
+  (autoload 'Info-goto-node "info")
+  ;; this is very unpleasant, but saves me doing a lot of rewriting
+  ;; for now. a big cleanup will happen for the next release, maybe.
+  ;; NB if emacs 21 or older emacsen or even things you bolt on have
+  ;; any of these functions, bad things will happen. Again, FITNR.
+  (if (featurep 'xemacs)
+      ()
+    (fset 'extent-string 'ignore)
+    (fset 'play-sound 'ignore)
+    (fset 'next-event 'ignore)
+    (fset 'display-message 'ignore)
+    (fset 'event-to-character 'ignore))
+  )
 
 (defcustom bbdb-default-country
   '"Emacs" ;; what do you mean, it's not a country?
@@ -2133,7 +2159,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                              (bbdb-record-net rec)))
                     (delete-region beg end)
                     (switch-to-buffer standard-output))
-                ;; use next address 
+                ;; use next address
                 (let* ((addrs (bbdb-record-net rec))
                        (this-addr (or (cadr (member (cadar addr) addrs))
                                       (nth 0 addrs))))
@@ -2198,10 +2224,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
         (insert (bbdb-dwim-net-address (car match-recs) the-net))
 
         ;; if we're past fill-column, wrap at the previous comma.
-        (if (and
-             (if (boundp 'auto-fill-function) ; the GNU Emacs name.
-                 auto-fill-function
-               auto-fill-hook)
+        (if (and auto-fill-function
              (>= (current-column) fill-column))
             (let ((p (point))
                   bol)
@@ -2500,6 +2523,11 @@ modem or the like."
   "Whether to use the modem for dialing."
   :group 'bbdb-phone-dialing
   :type 'string)
+
+(defcustom bbdb-sound-volume 0
+  "Volume to play touchtones at."
+  :group 'bbdb-phone-dialing
+  :type 'number)
 
 (defun bbdb-dial-number (phone-string)
   "Play the touchtone corresponding to the numbers in string."

@@ -384,13 +384,15 @@ more details."
   new-record)
 
 ;;----------------------------------------------------------------------------
-;; Emacs 20.3 seems to miss the function replace-in-string?
-(unless (fboundp 'replace-in-string)
-  (if (fboundp 'replace-regexp-in-string) ; defined in e21
-      (defun replace-in-string (string regexp newtext &optional literal)
-        (replace-regexp-in-string regexp newtext string nil literal))
+(eval-and-compile
+  (if (fboundp 'replace-in-string)
+      (fset 'bbdb-replace-in-string 'replace-in-string)
+    (if (fboundp 'replace-regexp-in-string) ; defined in e21
+        (fset 'bbdb-replace-regexp-in-string 'replace-regexp-in-string)
       ;; actually this is `dired-replace-in-string' slightly modified
-      (defun replace-in-string (string regexp newtext &optional literal)
+      ;; We're not defining the whole thing, just enough for our purposes.
+      (defun bbdb-replace-regexp-in-string (regexp newtext string &optional
+                                                   fixedcase literal)
         ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.
         ;; NEWTEXT is taken literally---no \\DIGIT escapes will be recognized.
         (let ((result "") (start 0) mb me)
@@ -399,7 +401,11 @@ more details."
                   me (match-end 0)
                   result (concat result (substring string start mb) newtext)
                   start me))
-          (concat result (substring string start))))))
+          (concat result (substring string start)))))
+    (defun bbdb-replace-in-string (string regexp newtext &optional literal)
+      (bbdb-replace-regexp-in-string regexp newtext string nil literal))))
+
+
 
 (defcustom bbdb-extract-address-components-func
   'bbdb-extract-address-components
@@ -493,9 +499,9 @@ If extracting fails one probably has to adjust the variable
     nomatch)
 
     ;; Do some string cleanup and trimming
-    (setq adstring (replace-in-string adstring "[\n\t]" " "))
-    (setq adstring (replace-in-string adstring "  " " "))
-    (setq adstring (replace-in-string adstring "^ +" ""))
+    (setq adstring (bbdb-replace-in-string adstring "[\n\t]" " "))
+    (setq adstring (bbdb-replace-in-string adstring "  " " "))
+    (setq adstring (bbdb-replace-in-string adstring "^ +" ""))
 
     ;; scan the string
     (while (not (string= "" adstring))
@@ -639,7 +645,7 @@ version doesn't support multiple addresses."
             (setq errors (1+ errors)))
           (setq test-cases (cdr test-cases))))
       (setq extr-functions (cdr extr-functions)))
-    
+
     (if (> errors 0)
         (error "There have been %d errors in bbdb-extract-address-components."
                errors)
