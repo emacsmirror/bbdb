@@ -1519,6 +1519,7 @@ weights more than 100 will be in the end."
   :group 'bbdb-noticing-records
   :type 'list)
 
+;;;###autoload
 (defun bbdb-sort-notes (rec)
   "Sort the notes in the record according to `bbdb-notes-sort-order'.
 Can be used in `bbdb-change-hook'."
@@ -1527,6 +1528,7 @@ Can be used in `bbdb-change-hook'."
      rec (sort (bbdb-record-raw-notes rec)
 	       (lambda (aa bb) (< (kk aa) (kk bb)))))))
 
+;;;###autoload
 (defun bbdb-sort-phones (rec)
   "Sort the phones in the record according to the location.
 Can be used in `bbdb-change-hook'."
@@ -1534,6 +1536,7 @@ Can be used in `bbdb-change-hook'."
    rec (sort (bbdb-record-phones rec)
 	     (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
 
+;;;###autoload
 (defun bbdb-sort-addresses (rec)
   "Sort the addresses in the record according to the location.
 Can be used in `bbdb-change-hook'."
