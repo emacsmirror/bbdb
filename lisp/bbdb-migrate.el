@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.14  2000/07/11 21:28:44  sds
+;; (bbdb-migrate-record-lambda): `mapcar', not `mapc' here!
+;;
 ;; Revision 1.13  2000/07/10 17:00:12  sds
 ;; revert the last patch (`mapc' is more efficient than `mapcar')
 ;;
@@ -171,11 +174,11 @@ modified, and SET is the function to be used to set the field to be
 modified.  FUNCTION will be applied to the result of GET, and its
 results will be saved with SET."
   (byte-compile `(lambda (rec)
-                  ,@(mapc (lambda (ch)
-                            `(,(cadr ch) rec
-                              (,(caddr ch)
-                               (,(car ch) rec))))
-                          changes)
+                  ,@(mapcar (lambda (ch)
+                              `(,(cadr ch) rec
+                                (,(caddr ch)
+                                 (,(car ch) rec))))
+                            changes)
                   rec)))
 
 (defun bbdb-migrate-versions-lambda (v0 &optional v1)
