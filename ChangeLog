@@ -1,3 +1,11 @@
+2001-03-23  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-vm.el (bbdb/vm-update-records): 
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): 
+	* lisp/bbdb-com.el (bbdb-update-records): honor the right
+	offer-to-create flag and removed the faulty *-auto-create-p which
+	was added by the last commit.
+
 2001-03-22  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-vm.el (bbdb/vm-show-records): bbdb/mail-auto-create-p
