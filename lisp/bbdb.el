@@ -1635,7 +1635,7 @@ the raw field content and return a string."
                            (let ((n-rec (car recs)))
                              (if (string= (downcase name)
                                           (downcase (bbdb-record-name n-rec)))
-                                 (setq answer (append recs n-rec)))
+                                 (setq answer (append recs (list n-rec))))
                              (setq recs (cdr recs))))
                          answer)))
         (net-recs  (if (stringp net) (bbdb-gethash (downcase net))
