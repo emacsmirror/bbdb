@@ -622,6 +622,12 @@ NOTES is a string, or an alist associating symbols with strings."
                (mapcar (lambda (addr) ;; foreach address...
                 (let ((L (list 'address addr)))
                   (nconc
+				   ;; XXX This block of code is dependant on how your
+				   ;; addresses are formatted. So, if you define a new
+				   ;; address format, this needs to be fixed. Ideally,
+				   ;; the address format would have an accompanying
+				   ;; function to tell you how many lines per address,
+				   ;; or something.
 				   ;; count street lines
 				   (apply 'nconc (mapcar (lambda(street)
 										   (unless (string= "" street) 
@@ -629,15 +635,16 @@ NOTES is a string, or an alist associating symbols with strings."
 										 (bbdb-address-streets addr)))
 
 				   ;; these are all on the same line
-				   (if (or (string= "" (bbdb-address-city addr))
-						   (string= "" (bbdb-address-state addr))
-						   (string= "" (bbdb-address-zip-string addr)))
+				   (if (and (string= "" (bbdb-address-city addr))
+							(string= "" (bbdb-address-state addr))
+							(string= "" (bbdb-address-zip-string addr)))
 					   nil (list L))
 
 				   ;; separate line for country
                    (if (string= "" (bbdb-address-country addr))
                        nil (list L)))))
-                   (bbdb-record-addresses record))))
+					   (bbdb-record-addresses record))))
+
            (if (and (bbdb-record-net record)
                 (bbdb-field-shown-p 'net))
                (list (list 'net record)))
