@@ -2995,7 +2995,7 @@ proceed the processing of records."
         (while (not event)
           (setq event (read-key-sequence prompt))
           (if (featurep 'xemacs)
-              (setq event (char-int (event-to-character event)))
+              (setq event (char-int (event-to-character (aref event 0))))
             (setq event (if (stringp event) (aref event 0)))))
           
         (setq bbdb-offer-to-create event))
