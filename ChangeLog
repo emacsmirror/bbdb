@@ -1,3 +1,41 @@
+2000-09-11  Waider  <waider@stepstone.ie>
+
+	* lisp/bbdb-vm.el:
+	  Reinstated 2.00.06 behaviour of creating a record if necessary
+	    when : is pressed
+	  Added new function, bbdb/vm-show-all-recipients, to do the
+	    necessary fandango to show recipients for the current
+	    message. Map it to something in vm-mode-map if you wish to use
+	    it. I'd suggest "'". 
+
+2000-09-08  sds  <sds@klortho>
+
+	* lisp/bbdb.el (bbdbq-mk): new function to create `subliminal'
+          messages. Also, two new messages.
+
+2000-09-08  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el:
+	Daniel Pittman's patch does indeed override Alex's!
+
+2000-09-07  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-snarf.el:
+	Daniel Pittman's autoload patch. May make Alex's patch obsolete.
+
+	* lisp/bbdb.el:
+	Alex Coventry's patch to fix compile-vs-runtime autoloads
+
+2000-09-03  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el:
+	Default completed name to an empty string to avoid error
+
+2000-08-29  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-vm.el:
+	Check if vm-summary-uninteresting-senders is a string before using it
+
 2000-08-28  Waider  <waider@stepstone.ie>
 
 	* lisp/Makefile:
