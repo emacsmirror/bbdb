@@ -1,3 +1,8 @@
+2001-03-21  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-com.el (bbdb-prompt-for-create): fix a bug with GNU
+	Emacs.
+
 2001-03-19  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-com.el (bbdb-update-records): honors now
