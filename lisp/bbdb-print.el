@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.63  2000/05/29 22:47:50  waider
+;; *** empty log message ***
+;;
 ;; Revision 1.62  2000/04/15 17:11:49  kuepper
 ;; Adopt TeX-output of streets to new file-format v5.
 ;;
@@ -471,7 +474,7 @@ The result looks like this:
           (mapconcat (function (lambda(str) 
                                  (if (= 0 (length (bbdb-string-trim str)))
                                      ()
-                                   (concat str"\\\\\n"))))
+                                   (concat str "\\\\\n"))))
                      (bbdb-address-streets addr)
                      "")
 	  (let ((c (bbdb-address-city addr))

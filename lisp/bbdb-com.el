@@ -332,8 +332,8 @@ is nil...\)"
     ;; Matches 1 to 6 digits.
     ((string-match "^[ \t\n]*[0-9][0-9]?[0-9]?[0-9]?[0-9]?[0-9]?[ \t\n]*$" string)
      (string-to-int string))
-    ;; Matches 5 digits and 4 digits.
-    ((string-match "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]\\)[ \t\n]*$" string)
+    ;; Matches 5 digits and 3 or 4 digits.
+    ((string-match "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]?\\)[ \t\n]*$" string)
      (list (bbdb-subint string 1) (bbdb-subint string 2)))
     ;; Match zip codes for Canada, UK, etc. (result is ("LL47" "U4B")).
     ((string-match
@@ -358,7 +358,7 @@ is nil...\)"
            (list (bbdb-subint string 2)
              (bbdb-subint string 3))))
     ;; Add some error messages
-    ((string-match "-[^-]-" string)
+    ((string-match "-[^-]+-" string)
      (error "too many dashes in zip code."))
     ((< (length string) 3)
      (error "not enough digits in zip code."))
@@ -911,18 +911,13 @@ City:            city
 State:           state
 Zip Code:        zip
 Country:         country"
-  (let* ((stn 0)
-         (str nil)
-         (crd
-          (while (not
-                  (string= ""
-                           (setq st (bbdb-read-string
-                                     (format "Street, line %d: " (+ 1 stn))
-                                     (nth stn
-                                          (bbdb-address-streets addr))))))
-            (setq str (append str (list st)))
-            (setq stn (+ 1 stn))))
-
+  (let* ((str (let ((l) (s) (n 0))
+		(while (not (string= "" (setq s (bbdb-read-string
+						 (format "Street, line %d: " (+ 1 n))
+						 (nth n (bbdb-address-streets addr))))))
+		  (setq l (append l (list s)))
+		  (setq n (1+ n)))
+		l))
      (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
      (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
      (zip (bbdb-error-retry

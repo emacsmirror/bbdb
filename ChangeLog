@@ -1,3 +1,20 @@
+2000-05-26  Alex Schroeder  <alex@gnu.org>
+
+	* lisp/bbdb-com.el (bbdb-parse-zip-string): Match brazilian zip
+	codes as well.
+
+2000-05-25  Alex Schroeder  <alex@gnu.org>
+
+	* lisp/bbdb-migrate.el (bbdb-unmigrate-record): Fixed a paren typo
+	and tried to work some more on the backmigration code from 5 -> 4.
+
+	* lisp/bbdb-com.el (bbdb-address-edit-default): Fixed assignment
+	to free variable.  Rewrote street input.
+	* lisp/bbdb.el (bbdb-format-address-continental): Fixed assignment
+	to free variable.
+	(bbdb-format-address-default): Fixed assignment
+	to free variable.
+
 2000-05-02  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el, lisp/bbdb-com.el: define `unless' and `when' if
