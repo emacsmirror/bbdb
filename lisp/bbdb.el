@@ -374,20 +374,6 @@ commands be different."
   :group 'bbdb
   :type 'boolean)
 
-(defcustom bbdb/prompt-for-create-p nil
-  "*If this is t, then VM, Gnus, MH, and RMAIL will prompt you before
-automatically creating new bbdb records for people you read messages from.
-
-If this is a function name or lambda, then it is called with no arguments to
-decide whether an entry should be automatically created.  You can use this to,
-for example, not create records for messages which have reached you through a
-particular mailing list, or to only create records automatically if the mail
-has a particular subject."
-  :group 'bbdb-noticing-records
-  :type '(choice (const :tag "Prompt before creating a record" t)
-                 (const :tag "Do not prompt" nil)
-                 (function :tag "Prompt with function" bbdb-)))
-
 (defcustom bbdb/mail-auto-create-p t
   "*If this is t, then VM, MH, and RMAIL will automatically create new bbdb
 records for people you receive mail from.  If this is a function name
@@ -398,6 +384,7 @@ particular mailing list, or to only create records automatically if
 the mail has a particular subject."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
+                 (const :tag "Prompt before creating" pompt) 
                  (const :tag "Do not automatically create" nil)
                  (function :tag "Create with function" bbdb-)))
 
@@ -413,6 +400,7 @@ nil from your `gnus-select-group-hook' (for Gnus - use
 gnus-Select-group-hook for GNUS) instead."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
+                 (const :tag "Prompt before creating" pompt) 
                  (const :tag "Do not automatically create" nil)
                  (function :tag "Create with function" bbdb-)))
 
@@ -771,6 +759,7 @@ Database initialization function `bbdb-initialize' is run."
 return the value of funcalling it with the rest of the arguments."
   (cond ((eq hook nil) nil)
         ((eq hook t) t)
+        ((symbolp hook) hook)
         (t (apply hook args))))
 
 (defmacro bbdb-defstruct (conc-name &rest slots)
