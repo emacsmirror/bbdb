@@ -1,5 +1,17 @@
 2002-01-18  Robert Fenk  <Robert.Fenk@gmx.de>
 
+	* lisp/bbdb-gui.el (bbdb-fontify-buffer): is now more efficent
+	when redisplaying records. button2 work now again as intended.
+
+	* lisp/bbdb.el: Removed the old elide code stuff.
+	(bbdb-display-records-1): see bbdb-fontify-buffer.
+	
+	* lisp/bbdb-com.el (bbdb-append-records-p):
+	(bbdb-append-records): (prefix) command (like "*") bound
+	to "+" which forces the display/search command to add its content to
+	the BBDB buffer rather than replacing it.
+	Appending can be once, always or a given number of times. 
+
 	* lisp/bbdb-gnus.el: removed binding of unused variabe `error'.
 
 	* lisp/bbdb-snarf.el
@@ -15,11 +27,6 @@
 	get evaluated on.
 	(bbdb-redisplay-one-record): Try to preserve the position during
 	redisplay.
-	(bbdb-add-next-search-results):
-	(bbdb-add-next-search-results-p):
-	(bbdb-add-next-search-results): A prefix command (like "*") bound
-	to "+" which forces the next display command to add its content to
-	the BBDB buffer rather than replacing it.
 	(bbdb-completion-check-record): removed the dependency on
 	`bbdb-case-fold-search' since completions from the bbdb-hashtable
 	are always lower case.
