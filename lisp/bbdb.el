@@ -2648,7 +2648,7 @@ before the record is created, otherwise it is created without confirmation
                     t)
                    (bbdb-always-add-addresses ; non-t and non-nil = never
                     nil)
-                   (create-p
+                   (t
                     (and
                      (not (equal net "???"))
                      (let ((the-first-bit

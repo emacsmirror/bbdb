@@ -1,8 +1,5 @@
 2000-08-18  Robert Fenk  <fenk@forwiss.de>
 
-	* lisp/bbdb.el (bbdb-annotate-message-sender): the user will be
-	asked for adding new addresses to net only if `create-p' is `t'.
-
 	* texinfo/bbdb.texinfo (VM Features): Documentation of new VM
 	features.
 
