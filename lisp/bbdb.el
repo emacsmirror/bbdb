@@ -1639,7 +1639,8 @@ the raw field content and return a string."
                          (while recs
                            (let ((n-rec (car recs)))
                              (if (string= (downcase name)
-                                          (downcase (bbdb-record-name n-rec)))
+                                          (downcase
+                                           (or (bbdb-record-name n-rec) "")))
                                  (setq answer (append recs (list n-rec))))
                              (setq recs (cdr recs))))
                          answer)))
