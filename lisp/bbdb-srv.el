@@ -23,6 +23,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.54  1998/03/10 07:38:23  simmonmt
+;; buffer-disable-undo doesn't always return the argument
+;;
 ;; Revision 1.53  1998/01/06 06:16:21  simmonmt
 ;; Rearranged copyright and customized variables
 ;;
@@ -122,7 +125,8 @@ the various hooks (like `bbdb-notice-hook' and `bbdb/news-auto-create-p')."
 		      (progn
 			(setq buf (get-buffer-create buf))
 			(set-buffer buf)
-			(buffer-disable-undo buf))))
+			(buffer-disable-undo buf)
+			buf)))
       (erase-buffer)
       (insert headers "\n\n")
       (setq from (mail-fetch-field "from"))
