@@ -39,15 +39,20 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "2.1")
+(defconst bbdb-version "2.2")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
-(defconst bbdb-file-format 4)
+(defconst bbdb-file-format 5)
 (defvar bbdb-file-format-migration nil
   "A cons of two elements: the version read, and the version to write.
 nil if the database was read in and is to be written in the current
 version.")
+
+(defvar bbdb-no-duplicates-p '()
+  "Should BBDB allow entries with duplicate names.  This may lead to
+confusion when doing completion.  If 't it will prompt the users on how
+to merge records when duplicates are detected.")
 
 ;; This nonsense is to get the definition of defsubst loaded in when this file
 ;; is loaded,without necessarily forcing the compiler to be loaded if we're 
@@ -659,11 +664,11 @@ that holds the number of slots."
   location area exchange suffix extension
   )
 
-;; Build reading and setting functions for location, street1, street2,
-;; street3, city, state, zip and country.  These are for accessing the
-;; elements of the individual address forms.
+;; Build reading and setting functions for location, street, city,
+;; state, zip and country.  These are for accessing the elements of
+;; the individual address forms.
 (bbdb-defstruct bbdb-address-
-  location street1 street2 street3 city state zip country
+  location streets city state zip country
   )
 
 ;; Build reading and setting functions for namecache (the full name of
@@ -931,11 +936,15 @@ lines, then the minibuffer is enlarged to fit it while editing."
      (save-window-excursion
       (if (and (boundp 'epoch::version) epoch::version)
 	  nil  ; this breaks epoch...
-	(let ((w (selected-window)))
-	  (select-window (minibuffer-window))
-	  (enlarge-window (max 0 (- n (window-height))))
-	  (sit-for 0) ; avoid redisplay glitch
-	  (select-window w)))
+	(let ((w (selected-window))
+	      (mini (minibuffer-window)))
+	  (if (eq mini (next-window mini 't (window-frame mini)))
+	      nil ;; Can't enlarge if only window in frame...
+	    (select-window mini)
+	    (enlarge-window (max 0 (- n (window-height))))
+	    (sit-for 0) ; avoid redisplay glitch
+	    (select-window w)
+	    )))
       (bbdb-string-trim
 	(read-string prompt default))))))
 
@@ -986,12 +995,12 @@ This is a possible identifying function for
   "Insert street subfields of address ADDR in current buffer.
 This may be used by formatting functions listed in 
 `bbdb-address-formatting-alist'."
-  (if (= 0 (length (setq str (bbdb-address-street1 addr)))) nil
-    (indent-to 17) (insert str "\n"))
-  (if (= 0 (length (setq str (bbdb-address-street2 addr)))) nil
-    (indent-to 17) (insert str "\n"))
-  (if (= 0 (length (setq str (bbdb-address-street3 addr)))) nil
-    (indent-to 17) (insert str "\n")))
+  (mapcar (function (lambda(str) 
+					  (if (= 0 (length (bbdb-string-trim str)))
+						  ()
+						(indent-to 17) 
+						(insert str "\n"))))
+		  (bbdb-address-streets addr)))
 
 (defun bbdb-format-address-continental (addr)
   "Insert formated continental address ADDR in current buffer.
@@ -1001,9 +1010,9 @@ This function is a possible formatting function for
 `bbdb-address-formatting-alist'.
 
 The result looks like this:
-       location: street1
-                 street2
-                 street3
+       location: street
+                 street
+                 ...
                  zip city, state
                  country"
   (insert (format " %14s: " (bbdb-address-location addr)))
@@ -1033,9 +1042,9 @@ This function is a possible formatting function for
 `bbdb-address-formatting-alist'.
 
 The result looks like this:
-       location: street1
-                 street2
-                 street3
+       location: street
+                 street
+                 ...
                  city, state  zip
                  country"
   (insert (format " %14s: " (bbdb-address-location addr)))
@@ -1343,7 +1352,7 @@ bbdb-elided-display will be consulted instead by mail and news.")
 	  (catch 'Blow-off-the-error
 	    (setq bbdb-electric-completed-normally nil)
 	    (unwind-protect
-		 (progn
+		(progn
 		   (catch 'electric-bbdb-list-select
 		     (Electric-command-loop 'electric-bbdb-list-select
 					    "-> " t))
@@ -1425,37 +1434,95 @@ bbdb-elided-display will be consulted instead by mail and news.")
 (defun bbdb-changed-records ()
   (bbdb-with-db-buffer (bbdb-records nil t) bbdb-changed-records))
 
+(defmacro bbdb-build-name (f l) 
+  (list 'downcase 
+	(list 'if (list 'and f l)
+	      (list 'concat f " " l)
+	      (list 'or f l "")))
+  )
+
+(defun bbdb-remove! (e l)
+  (if (null l) l
+    (let ((ret l)
+	  (n   (cdr l)))
+      (while n
+	(if (eq e (car n)) 
+	    (setcdr l (cdr n)) ; skip n
+	  (setq l n))          ; keep n
+	(setq n (cdr n))
+	)
+      (if (eq e (car ret)) (cdr ret)
+	ret)
+      ))
+  )
+
+(defun bbdb-remove-memq-duplicates (l)
+  (let (ret tail)
+    (setq ret (cons '() '())
+	  tail ret)
+    (while l
+      (if (not (memq (car l) ret))
+	  (setq tail (setcdr tail (cons (car l) '()))))
+      (setq l (cdr l)))
+    (cdr ret)
+    )
+)
+
 (defmacro bbdb-gethash (name &optional ht)
   (list 'symbol-value
 	(list 'intern-soft name
 	      (or ht '(bbdb-hashtable)))))
 
 (defmacro bbdb-puthash (name record &optional ht)
-  (list 'set (list 'intern name
-		   (or ht '(bbdb-hashtable)))
-	record))
+  (list 'let (list (list 'sym (list 'intern name (or ht '(bbdb-hashtable)))))
+	(list 'set 'sym (list 'cons record 
+			      '(and (boundp sym) (symbol-value sym))))
+	)
+  )
 
-(defmacro bbdb-remhash (name &optional ht)
+(defmacro bbdb-remhash (name record &optional ht)
   (list 'let (list (list 's (list 'intern-soft name
 				  (or ht '(bbdb-hashtable)))))
-	'(and s (set s nil))))
-
+	(list 'and 's (list 'set 's (list 'bbdb-remove! record 
+					  (list 'symbol-value 's))))))
 
 (defsubst bbdb-search-simple (name net)
   "name is a string; net is a string or list of strings."
   (if (eq 0 (length name)) (setq name nil))
   (if (eq 0 (length net)) (setq net nil))
   (bbdb-records t) ; make sure db is parsed; don't check disk (faster)
-  (or (and name (bbdb-gethash (downcase name)))
-      (and net
-	   (if (stringp net)
-	       (bbdb-gethash (downcase net))
-	     (let ((answer nil))
-	       (while (and net (null answer))
-		 (setq answer (bbdb-gethash (downcase (car net)))
-		       net (cdr net)))
-	       answer)))))
+  (let ((name-recs (and name
+			(bbdb-gethash (downcase name))))
+	(net-recs  (if (stringp net) (bbdb-gethash (downcase net))
+		     (let (answer)
+		       (while (and net (null answer))
+			 (setq answer (bbdb-gethash (downcase (car net)))
+			       net (cdr net)))
+		       answer)))
+	ret)
+    (if (not (and name-recs net-recs))
+	(or (and name-recs (car name-recs))
+	    (and net-recs (car net-recs)))
 
+      (while name-recs
+	(let ((name-rec (car name-recs))
+	      (nets     net-recs))
+	  (while nets
+	    (if (eq (car nets) name-rec)
+		(setq nets      '() 
+		      name-recs '()
+		      ret name-rec)
+	      (setq nets (cdr nets))
+	      )
+	    )
+	  (if name-recs (setq name-recs (cdr name-recs))
+	    name-rec)
+	  )
+	)
+      ret
+      )
+    )
+  )
 
 (defun bbdb-net-convert (record)
   "Given a record whose net field is a comma-separated string, convert it to
@@ -1490,25 +1557,21 @@ separators.  Returns the list."
 (defsubst bbdb-hash-record (record)
   "Insert the record in the appropriate hashtables.  This must be called 
 while the .bbdb buffer is selected."
-  (let ((name (bbdb-record-name-1 record))  ; faster version
+  (let ((name    (bbdb-record-name-1  record))  ; faster version
 	(company (bbdb-record-company record))
-	(aka (bbdb-record-aka record))
-	(net (bbdb-record-net record)))
-    (if (not (= 0 (length name))) ; could be nil or ""
-	(bbdb-puthash (downcase name) record bbdb-hashtable))
-    ;; #### we don't do hash collision detection on company names, so this
-    ;;      is a potentially dangerous thing to do I guess.  But it's useful.
-    ;;      This makes completion possible on company fields of records that
-    ;;      have a company but no name.
-    (if (and (= 0 (length name))
-	     (not (= 0 (length company))))
+	(aka     (bbdb-record-aka     record))
+	(net     (bbdb-record-net     record)))
+    (if (> (length name) 0)
+	(bbdb-puthash (downcase name)    record bbdb-hashtable))
+    (if (> (length company) 0)
 	(bbdb-puthash (downcase company) record bbdb-hashtable))
     (while aka
       (bbdb-puthash (downcase (car aka)) record bbdb-hashtable)
       (setq aka (cdr aka)))
     (while net
       (bbdb-puthash (downcase (car net)) record bbdb-hashtable)
-      (setq net (cdr net)))))
+      (setq net (cdr net)))
+    ))
 
 
 ;;; Reading the BBDB
@@ -1725,36 +1788,45 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
     (forward-line 1))
   (widen)
   (bbdb-debug (message "Parsing BBDB... (frobnicating...)"))
-  (let ((rest records)
+  (setq bbdb-records records)
+  (let* ((head (cons '() records))
+	 (rest head)
 	record)
-    (while rest
-      (setq record (car rest))
+    (while (cdr rest)
+      (setq record (car (cdr rest)))
       ;; yow, are we stack-driven yet??  Damn byte-compiler...
       ;; Make a cache.  Put it in the record.  Put a marker in the cache.
       ;; Add record to hash tables.
       (bbdb-cache-set-marker
        (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
        (point-marker))
-      (bbdb-debug
-       (let ((name (bbdb-record-name record))
-	     tmp)
-	 (if (and name
-		  (setq tmp (bbdb-gethash (setq name (downcase name))
-					  bbdb-hashtable)))
-	     (signal 'error (list "duplicate bbdb entries" record tmp)))))
-      (bbdb-hash-record record)
       (forward-line 1)
-      (setq rest (cdr rest))
+
+      (if bbdb-no-duplicates-p
+	  ;; warn the user that there is a duplicate...
+	  (let* ((name (bbdb-record-name record))
+		 (tmp  (and name (bbdb-gethash (downcase name) 
+					       bbdb-hashtable))))
+	    (if tmp (message "Duplicate BBDB record encountered: %s" name))
+	    )
+	)
+
+	(bbdb-hash-record record)
+	(setq rest (cdr rest))
+
       (bbdb-debug
-       (if (and rest (not (looking-at "[\[]")))
+       (if (and (cdr rest) (not (looking-at "[\[]")))
 	   (error "bbdb corrupted: junk between records at %s" (point))))
-      ))
+      )
+    ;; In case we removed some of the leading entries...
+    (setq bbdb-records (cdr head))
+    )
   ;; all done.
-  (setq bbdb-records records)
   (setq bbdb-end-marker (point-marker))
   (run-hooks 'bbdb-after-read-db-hook)
   (bbdb-debug (message "Parsing BBDB... (frobnicating...done)"))
-  records)
+  bbdb-records
+)
 
 (defmacro bbdb-user-mail-names ()
   "Returns a regexp matching the address of the logged-in user"
@@ -1789,17 +1861,21 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 		     (if (cdr tail)
 			 (bbdb-record-marker (car (cdr tail)))
 			 bbdb-end-marker))
-      (if (bbdb-record-name record)
-	  (let ((name (downcase (bbdb-record-name record))))
-	    (bbdb-remhash name bbdb-hashtable)))
-      (let ((nets (bbdb-record-net record)))
+      (let ((name    (bbdb-record-name    record))
+	    (company (bbdb-record-company record))
+	    (aka     (bbdb-record-aka     record))
+	    (nets    (bbdb-record-net     record)))
+	(if (> (length name) 0)
+	    (bbdb-remhash (downcase name) record bbdb-hashtable))
+	(if (> (length company) 0)
+	    (bbdb-remhash (downcase company) record bbdb-hashtable))
 	(while nets
-	  (bbdb-remhash (downcase (car nets)) bbdb-hashtable)
-	  (setq nets (cdr nets))))
-      (let ((aka (bbdb-record-aka record)))
+	  (bbdb-remhash (downcase (car nets)) record bbdb-hashtable)
+	  (setq nets (cdr nets)))
 	(while aka
-	  (bbdb-remhash (downcase (car aka)) bbdb-hashtable)
-	  (setq aka (cdr aka))))
+	  (bbdb-remhash (downcase (car aka)) record bbdb-hashtable)
+	  (setq aka (cdr aka)))
+	)
       (bbdb-record-set-sortkey record nil)
       (setq bbdb-modified-p t))))
 
@@ -2517,7 +2593,7 @@ before the record is created, otherwise it is created without confirmation
 						old-name))
 			 (bbdb-record-set-aka record
 			   (cons old-name (bbdb-record-aka record)))
-		       (bbdb-remhash (downcase old-name))))
+		       (bbdb-remhash (downcase old-name) record)))
 		 (bbdb-record-set-namecache record nil)
 		 (bbdb-record-set-firstname record fname)
 		 (bbdb-record-set-lastname record lname)
@@ -3004,6 +3080,7 @@ passed as arguments to initiate the appropriate insinuations.
 (defun bbdb-insinuate-sendmail ()
   "Call this function to hook BBDB into sendmail (that is, M-x mail)."
   (define-key mail-mode-map "\M-\t" 'bbdb-complete-name)
+  (define-key mail-mode-map [(meta tab)] 'bbdb-complete-name)
   )
 
 
