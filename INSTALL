@@ -1,0 +1,60 @@
+To compile and install the BBDB:
+
+  1) Configure the compilation process
+       Edit the Makefile, setting (if necessary) the paths to the Mail
+       and News reader(s), the XEmacs package installation paths (if
+       applicable), and the miscellaneous (but still important) build
+       tool names and paths.
+
+  2) Build the BBDB
+       To build the BBDB with support for all of the supported mail
+       and news programs (gnus, mh-e, rmail, and vm), issue the
+       command 'make all'.  (The BBDB also supports send-mail mode -
+       support for it is automatically compiled in, regardless of the
+       build options supplied) To build with support only for gnus,
+       mh-e, rmail, and/or vm, issue the 'make' command with one or
+       more of the following arguments: 'gnus', 'mh-e', 'rmail',
+       and/or 'vm'.  To build the BBDB without support for any mail
+       program (except for send-mail mode), issue the command
+       'make bbdb'.
+
+  3) Install the BBDB
+       The three most typical installations are outlined below:
+
+        a) In-place.
+             i)   Follow steps 1 and 2
+             ii)  Add the lisp subdirectory to the Emacs load-path
+             iii) Add the tex subdirectory to the TeX
+                  search path (can be done by adding the complete path
+                  to the tex subdirectory to the environment variable
+                  TEXINPUTS)
+             iv)  Add the texinfo directory to the Info search path.
+        b) "Normal".
+             i)   Follow steps 1 and 2.
+             ii)  Copy the .el and .elc files from the lisp
+                  subdirectory to a directory on the Emacs load-path
+                  (or make a new directory, copy the files to it, and
+                  add the new directory to the load-path).
+             iii) Copy the .tex files from the tex subdirectory to a
+                  directory on the TeX search path (or make a new
+                  directory, copy the files to it, and add the new
+                  directory to the TeX search path.
+             iv)  Copy the .info and .info-* files from the texinfo
+                  subdirectory to a directory on the Info search path
+                  (or make a new directory, copy the files to it, and
+                  add the new directory to the Info search path)
+        c) XEmacs Package
+             NOTE: This installation option is only available to users 
+                   running XEmacs 20.4 or higher.  At the time of this 
+                   writing, this includes only XEmacs beta testers.
+             i)    Follow steps 1 and 2, making sure to set the
+                   appropriate variables in the XEmacs package
+                   section.
+             ii)   Issue the 'make install-pkg' command.
+
+For information on post-installation BBDB configuration and setup, see 
+the info file.
+
+Questions, Comments, Suggestions, and Bug Reports may be directed to
+the BBDB mailing list at info-bbdb@xemacs.org.  To subscribe, send
+mail to info-bbdb-request@xemacs.org, with 'subscribe' as the subject.
