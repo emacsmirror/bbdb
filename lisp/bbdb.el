@@ -85,6 +85,7 @@ prompt the users on how to merge records when duplicates are detected.")
 ;; I LOVE FSF EMACS 19.34!!!!!
 (if (fboundp 'caar) nil (defun caar (foo) (car (car foo))))
 (if (fboundp 'cdar) nil (defun cdar (foo) (cdr (car foo))))
+(if (fboundp 'cadar) nil (defun cadar (foo) (car (cdr (car foo)))))
 (if (fboundp 'cadr) nil (defun cadr (foo) (car (cdr foo))))
 (if (fboundp 'caddr) nil (defun caddr (foo) (car (cdr (cdr foo)))))
 
@@ -1268,7 +1269,7 @@ present).  Returns a string containing the date in the new format."
 
 (defcustom bbdb-elided-display nil
   "*Display BBDB records in full or in brief.
-Set this to T to make the `bbdb-display-records' commands default to
+Set this to t to make the `bbdb-display-records' commands default to
 displaying one line per record instead of a full listing.  Set this to a
 list of some of the symbols '(address phone net notes) to select those
 fields to be left out of the listing (you can't leave out the name field).
@@ -1344,6 +1345,8 @@ the raw field content and return a string."
         (first (car (car records))))
     (with-output-to-temp-buffer bbdb-buffer-name
       (set-buffer bbdb-buffer-name)
+      ;; If append is unset, clear the buffer.
+      (unless append (bbdb-undisplay-records))
       ;; If we're appending these records to the ones already displayed,
       ;; then first remove any duplicates, and then sort them.
       (if append
@@ -1406,7 +1409,9 @@ the raw field content and return a string."
     (setq bbdb-showing-changed-ones nil
           mode-line-modified nil
           bbdb-records nil
-          buffer-read-only t)
+          buffer-read-only nil)
+    (erase-buffer)
+    (setq buffer-read-only t)
     (set-buffer-modified-p nil)))
 
 ;;; Electric display stuff
@@ -2909,7 +2914,7 @@ When called interactively with a prefix argument, insert string at point."
     (vm                         ; the alternative mail reader
      vm-load-hook bbdb-insinuate-vm)
     (message                    ; the gnus mail user agent
-     message-load-hook bbdb-insinuate-message)
+     message-setup-hook bbdb-insinuate-message)
     (reportmail                 ; mail notification
      reportmail-load-hook bbdb-insinuate-reportmail)
     (sc                         ; message citation
