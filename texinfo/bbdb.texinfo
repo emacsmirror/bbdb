@@ -2200,10 +2200,11 @@ is part of @code{bbdb-address-formatting-alist}.
 @vindex bbdb-electric-p
 @cindex Electric display
 Whether bbdb mode should be @i{``electric''} like @code{electric-buffer-list}.
-Default: @code{t}.  Basically this means that when you type space after
-@w{@kbd{M-x bbdb}}, your window configuration will be restored to what it was
-before you invoked the db list.  (The @code{bbdb-mode} commands still work as
-well.) @refill
+Default: @code{t}.  What this means is that the BBDB buffer which pops
+up when you use it can be disposed of by pressing the space bar, at
+which point your window configuration will be restored to what it was
+before you invoked the db list.  (The @code{bbdb-mode} commands still
+work as well.) @refill
 
 There are some problems with electric modes; for example, keyboard
 macros and incremental search don't work.  (This is not a bug in BBDB,
