@@ -421,7 +421,7 @@ capitalize words and change order of names when separated by a comma."
        (bbdb-snarf-nice-real-name (match-string 1 adstring)) 2)
       ;; "name" <address>
       ("\"\\([^\"]*\\)\"\\s-*<\\([^>]+\\)>"
-       1 2)
+       (bbdb-snarf-nice-real-name (match-string 1 adstring)) 2)
       ;; name <address>
       ("\\(\\b[^<\",]*\\b\\)\\s-*<\\([^>]+\\)>"
        1 2)
