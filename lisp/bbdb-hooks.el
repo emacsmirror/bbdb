@@ -39,11 +39,17 @@
 (require 'bbdb-com)
 
 (eval-when-compile
-  (condition-case() (require 'gnus) (error nil))
-  (condition-case () (require 'vm) (error nil))
+  (condition-case()
+      (progn
+        (require 'gnus)
+        (require 'bbdb-gnus))
+    (error nil))
+  (condition-case ()
+      (progn
+        (require 'vm)
+        (require 'bbdb-vm))
+    (error nil))
   (autoload 'mh-show "mh-e")
-  (require 'bbdb-vm)
-  (require 'bbdb-gnus)
   (require 'bbdb-rmail))
 
 (defvar rmail-buffer)
