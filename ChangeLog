@@ -1,3 +1,12 @@
+2003-03-15  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-display-records-1): erase buffer when
+	appending, since we are redisplaying the records, not just one
+	(with-output-to-temp-buffer was doing that before ...) 
+	(bbdb-multiple-buffers-default): Default/example function for *BBDB*
+	buffer name generation for Gnus, VM, and compositions.
+	(bbdb-pop-up-bbdb-buffer): code move to bbdb-multiple-buffers-default
+
 2003-03-13  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-gnus.el:
