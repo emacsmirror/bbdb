@@ -377,8 +377,9 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
 ;;; format for people who are using north american numbers.
 
 
-(defconst bbdb-phone-area-regexp "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*\\([2-9][0-9][0-9]\\)[ \t]*)?[- /\.\t]*")
-(defconst bbdb-phone-main-regexp "\\([2-9][0-9][0-9]\\)[ \t]*-?[ \.\t]*\\([0-9][0-9][0-9][0-9]\\)[ \t]*")
+(defconst bbdb-phone-area-regexp "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*\\([2-9][0-9][0-9]\\)[ \t]*)?[-./ \t]*")
+(defconst bbdb-phone-main-regexp "\\([1-9][0-9][0-9]\\)[ \t]*[-.]?[ \t]*\\([0-9][0-9][0-9][0-9]\\)[ \t]*")
+
 (defconst bbdb-phone-ext-regexp  "x?[ \t]*\\([0-9]+\\)[ \t]*")
 
 (defconst bbdb-phone-regexp-1 (concat "^[ \t]*" bbdb-phone-area-regexp bbdb-phone-main-regexp bbdb-phone-ext-regexp "$"))
