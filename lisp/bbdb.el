@@ -33,7 +33,18 @@
 ;;; |  version you have.                                                     |
 ;;;  ------------------------------------------------------------------------
 
-(defconst bbdb-version "1.51; 21-may-96.")
+;;
+;; $Id$
+;;
+;; $Log$
+;; Revision 1.52  1997/09/28 05:54:24  simmonmt
+;; Began to fix some obsolete functions to shut up the compiler,
+;; integrated some patches (see ChangeLog) to allow use of message-mail
+;; for sending mail and nil names.
+;;
+;;
+
+(defconst bbdb-version "1.52unoff; 27-Sep-1997.")
 (defconst bbdb-file-format 2)
 
 ;; This nonsense is to get the definition of defsubst loaded in when this file
@@ -171,7 +182,7 @@ new network addresses will always be added at the end of the list.")
 
 (defvar bbdb-send-mail-style nil
   "*Specifies which package should be used to send mail.
-Should be 'vm, 'mh, 'mail (or nil, meaning guess.)")
+Should be 'vm, 'mh, 'mail, or 'message (or nil, meaning guess.)")
 
 (defvar bbdb-offer-save t
   "*If t, then certain actions will cause the BBDB to ask you whether
@@ -312,8 +323,8 @@ Database code is first loaded.")
       (cond ((and bbdb-force-dialog-boxes
 		  (fboundp 'yes-or-no-p-dialog-box))
 	     (if (and (fboundp 'raise-screen)
-		      (not (screen-visible-p (selected-screen))))
-		 (raise-screen (selected-screen)))
+		      (not (frame-visible-p (selected-frame))))
+		 (raise-frame (selected-frame)))
 	     (yes-or-no-p-dialog-box prompt))
 	    (t
 	     (y-or-n-p prompt)))
@@ -1894,7 +1905,7 @@ before the record is created, otherwise it is created without confirmation
 	nil
       ;; otherwise, the db is writable, and we may create a record.
       (setq record (if (or (null prompt-to-create-p)
-			   (bbdb-y-or-n-p (format "%s is not in the db; rectify? " name)))
+			   (bbdb-y-or-n-p (format "%s is not in the db; rectify? " (or name net))))
 		       (make-vector bbdb-record-length nil))
 	    created-p (not (null record)))
       (if record
