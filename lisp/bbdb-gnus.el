@@ -195,7 +195,7 @@ See `bbdb/gnus-lines-and-from' for GNUS users, or
 the information from the BBDB in the summary buffer (using
 `bbdb/gnus-summary-get-author').  This format code is meant to replace
 codes that insert sender names or addresses (like %A or %n). Unless
-you've alread got other code using user format B, you might as well
+you've already got other code using user format B, you might as well
 stick with the default.  Additionally, if the value of this variable
 is nil, no format function will be installed for
 `bbdb/gnus-summary-get-author'.  See also
@@ -435,6 +435,20 @@ addresses better than the traditionally static global scorefile."
 		   (bbdb-records) "")
 		  "))"))))
   bbdb/gnus-score-alist)
+
+;;; Posted originally by Colin Rafferty on the Å´bbdb-infoÅª mailing list
+(defun bbdb/gnus-summary-show-all-recipients (not-elided)
+  "Display BBDB records for all recipients of the message."
+  (interactive "P")
+  (gnus-summary-select-article)
+  (let ((bbdb-elided-display (or (not not-elided)
+                                 (and (boundp 'bbdb-pop-up-elided-display)
+                                      bbdb-pop-up-elided-display)))
+        (bbdb-auto-notes-alist nil))
+    (bbdb/gnus-pop-up-bbdb-buffer nil)
+    (set-buffer gnus-article-buffer)
+    (bbdb-show-all-recipients)
+    ))
 
 ;;
 ;; Insinuation
