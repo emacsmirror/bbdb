@@ -7,12 +7,13 @@
 <!-- $Revision$ -->
 <body>
 
-<h1 align="center"><img src="images/headright.gif" alt="head">
+<h1 align="center"
+><img src="images/headright.gif" alt="head" width="50" height="25">
 The Insidious Big Brother Database
-<img src="images/headleft.gif" alt="head"></h1>
+<img src="images/headleft.gif" alt="head" width="50" height="25"></h1>
 
 <p align="center">Quicklinks:
-<a href="#get">get the bbdb</a>
+  <a href="#get">get the bbdb</a>
 | <a href="#lists">mailing lists</a>
 | <a href="#links">links</a>
 | <a href="#manual">manual</a>
@@ -42,14 +43,14 @@ through the use of records in the BBDB.</p>
 <h2>Requirements:</h2>
 
 <h3>Supported versions of Emacs</h3>
-<ul>
-  <li><a href="http://www.gnu.org/">Gnu</a> <a
-	  href="ftp://ftp.gnu.org/pub/emacs/">Emacs</a> versions 19.34 and
-	  above</li>
-	  
-  <li><a href="http://www.xemacs.org/">XEmacs</a> versions 19.16 and
-	  above</li>
-</ul>
+
+<dl>
+ <dt><strong><a href="http://www.gnu.org/">Gnu</a>
+   <a href="http://www.emacs.org/">Emacs</a></strong>
+  <dd>versions 19.34 and above</dd>
+ <dt><strong><a href="http://www.xemacs.org/">XEmacs</a></strong>
+  <dd>versions 19.16 and above</dd>
+</dl>
 
 <h3>Supported Mail and News readers</h3>
 
@@ -61,9 +62,9 @@ however, been optimized for use with one.</p>
   <li>MH-e</li>
   <li>Rmail</li>
   <li>UNIX <a href="http://www.netscape.com/">Netscape</a> Mail
-	  (via bbdb-srv)</li>
+   (via bbdb-srv)</li>
   <li>UNIX <a href="http://www.netscape.com/">Netscape</a> News
-	  (via bbdb-srv)</li>
+   (via bbdb-srv)</li>
 </ul>
 
 <h2><a name="get">Getting the BBDB</a></h2>
@@ -91,20 +92,21 @@ updates to documentation. The code should be solid, though, since it's
 my live copy of BBDB.</p>
 
 <h3>Compilation notes:</h3>
+
 <ol>
+ <li>Compilation is known to work with Solaris make and with GNU
+  make.  If you discover compilation problems with other
+  versions of make, please submit a bug report to <a
+  href="mailto:bbdb-info@lists.sourceforge.net"
+  >bbdb-info@lists.sourceforge.net</a>.
+  The make binary shipped with IRIX 6.2 is known not to work
+  with BBDB version 2.00. Also, some of the test targets don't
+  work with GNU make, since MAKEFLAGS doesn't include "-".
 
-  <li>Compilation is known to work with Solaris make and with GNU
-	  make.  If you discover compilation problems with other
-	  versions of make, please submit a bug report to <a
-	  href="mailto:bbdb-info@lists.sourceforge.net">bbdb-info@lists.sourceforge.net</a>.
-	  The make binary shipped with IRIX 6.2 is known not to work
-	  with BBDB version 2.00. Also, some of the test targets don't
-	  work with GNU make, since MAKEFLAGS doesn't include "-".
-
-  <li>Texinfo 3.11 (or later) is required to compile the texinfo
-	  documentation.  It is available at <a
-	  href="ftp://ftp.gnu.org/pub/gnu">the GNU FTP site</a>.
-	  Precompiled info files are included in the tarball.
+ <li>Texinfo 3.11 (or later) is required to compile the texinfo
+  documentation.  It is available at <a
+  href="ftp://ftp.gnu.org/pub/gnu">the GNU FTP site</a>.
+  Precompiled info files are included in the tarball.
 </ol>
 
 <h2>CVS tree</h2>
@@ -157,29 +159,32 @@ To retrieve version 2.00.06, use the following argument:<br>
 <h2><a name="manual">Manual</a></h2>
 
 <p><a href="bbdb.html">This</a> is a HTML version of the texinfo manual
-that accompanies BBDB generated <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html"><I>texi2html</I></A>.</p>
+that accompanies BBDB generated <a
+href="http://www.mathematik.uni-kl.de/~obachman/Texi2html"
+><code>texi2html</code></a>.</p>
 
 <h2><a name="get">Mailing Lists</a></h2>
 
 <p>There are two mailing lists for the BBDB:</p>
 
 <dl>
-  <dt><strong>bbdb-info</strong></dt>
-  <dd>General discussion about the BBDB, both for users and
-	  developers. Some of it was archived at
-	  Xemacs.org, but was very old (June 1996) and I've asked them to
-	  remove it - it'll reappear here soon for posterity. The archive
-	  for mails up to end of April 2000 can be found
-	  at <a href="http://www.mail-archive.com/bbdb-info%40xemacs.org/">http://www.mail-archive.com/bbdb-info%40xemacs.org/</a>. Since
-	  April 2000 mails are archived at
-	  <a href="http://www.mail-archive.com/bbdb-info%40lists.sourceforge.net/">http://www.mail-archive.com/bbdb-info%40lists.sourceforge.net/</a>.
-	  
-	  <p>SourceForge has built-in archiving which didn't initially
-	  seem to be working, but is apparently okay now.</p>
-	  
-  <dt><strong>bbdb-announce</strong></dt>
+ <dt><strong>bbdb-info</strong></dt>
+  <dd>General discussion about the BBDB, both for users and developers.
+   Some of it was archived at Xemacs.org, but was very old (June 1996) and
+   I've asked them to remove it - it'll reappear here soon for posterity.
+   The archive for mails up to end of April 2000 can be found at
+   <a href="http://www.mail-archive.com/bbdb-info%40xemacs.org/"
+   >http://www.mail-archive.com/bbdb-info%40xemacs.org/</a>.
+   Since April 2000 mails are archived at
+   <a href="http://www.mail-archive.com/bbdb-info%40lists.sourceforge.net/"
+   >http://www.mail-archive.com/bbdb-info%40lists.sourceforge.net/</a>.
+
+  <p>SourceForge has built-in archiving which didn't initially
+  seem to be working, but is apparently okay now.</p>
+
+ <dt><strong>bbdb-announce</strong></dt>
   <dd>Announcements of new BBDB versions.  This list is moderated, and
-	  has very low volume.</dd>
+   has very low volume.</dd>
 </dl>
 
 To subscribe to either mailing list, send mail to
@@ -201,29 +206,29 @@ the 2.00.06 release. Also, check to see if patches are in CVS before you
 try to apply them.</p>
 
 <ul>
-  <li>My <a href="http://www.waider.ie/hacks/emacs/bbdb-abuse.html">own page</a> currently
-	  containing a half-hearted attempt at a "smart"
-	  <code>bbdb-snarf</code>.</li>
-	  
-  <li><a href="http://hammer.prohosting.com/~gumbart/">Alex
-	  Schroeder</a> has done some work on <a
-	  href="http://hammer.prohosting.com/~gumbart/emacs.html#12">de-americanising
-	  the address formats</a> and <a
-	  href="http://hammer.prohosting.com/~gumbart/bbdb-funcs.html">some
-	  other stuff</a>. This is now in the CVS tree.</li>
+ <li>My <a href="http://www.waider.ie/hacks/emacs/bbdb-abuse.html"
+  >own page</a> currently containing a half-hearted attempt at a
+  "smart" <code>bbdb-snarf</code>.</li>
 
-  <li><a href="http://www.Jochen-Kuepper.de">Jochen
-	  K&uuml;pper</a> has done some work on
-	  <code>bbdb-print</code>, which is now in CVS.</li>
+ <li><a href="http://hammer.prohosting.com/~gumbart/">Alex
+  Schroeder</a> has done some work on <a
+  href="http://hammer.prohosting.com/~gumbart/emacs.html#12">de-americanising
+  the address formats</a> and <a
+  href="http://hammer.prohosting.com/~gumbart/bbdb-funcs.html">some
+  other stuff</a>. This is now in the CVS tree.</li>
 
-  <li><a href="mailto:Thomas.DeWeese@Kodak.com?subject=BBDB">Thomas
-	  DeWeese</a> has created a <a
-	  href="patches/multi-record.patch">patch</a> to support multiple
-	  records with the same name. This is in CVS.</li>
+ <li><a href="http://www.Jochen-Kuepper.de">Jochen
+  K&uuml;pper</a> has done some work on
+  <code>bbdb-print</code>, which is now in CVS.</li>
 
-  <li>The <code>bits</code> subdirectory in the source tree contains
-	  random bits and pieces that I've collected but not
-	  integrated.</li>
+ <li><a href="mailto:Thomas.DeWeese@Kodak.com?subject=BBDB">Thomas
+  DeWeese</a> has created a <a
+  href="patches/multi-record.patch">patch</a> to support multiple
+  records with the same name. This is in CVS.</li>
+
+ <li>The <code>bits</code> subdirectory in the source tree contains
+  random bits and pieces that I've collected but not
+  integrated.</li>
 </ul>
 
 <hr>
