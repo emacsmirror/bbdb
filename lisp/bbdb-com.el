@@ -3380,7 +3380,10 @@ C-g again it will stop scanning."
       (condition-case nil
           (progn
             (setq hits
-                  (cond ((eq bbdb-update-records-mode 'annotating)
+                  (cond ((null (cadr bbdb-address))
+                         ;; ignore emtpy addrs, e.g. (??? nil)
+                         nil)
+                        ((eq bbdb-update-records-mode 'annotating)
                          (list;; search might return a list
                           (bbdb-annotate-message-sender
                            bbdb-address t
