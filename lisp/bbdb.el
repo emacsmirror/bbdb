@@ -3118,8 +3118,8 @@ passed as arguments to initiate the appropriate insinuations.
 
 ;; Hook in GUI hacks
 ;; Do not simply require this, as it needs bbdb.el to be loaded first.
-;(or (eq window-system nil)
-;    (add-hook 'bbdb-load-hook '(lambda()(require 'bbdb-gui))))
+(or (eq window-system nil)
+    (add-hook 'bbdb-load-hook '(lambda()(require 'bbdb-gui))))
 
 (provide 'bbdb)  ; provide before loading things which might require
 
