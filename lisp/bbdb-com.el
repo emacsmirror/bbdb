@@ -2879,6 +2879,7 @@ C-g again it will stop scanning."
            (if (listp bbdb-update-records-mode)
                (eval bbdb-update-records-mode)
              bbdb-update-records-mode)))
+        (addrslen (length addrs))
         records hits)
     
     (while addrs
@@ -2903,12 +2904,15 @@ C-g again it will stop scanning."
                   processed-addresses (+ processed-addresses 1))
             
             (when (and (not bbdb-silent-running)
+                       (not bbdb-gag-messages)
                        (not (eq bbdb-offer-to-create 'quit))
                        (= 0 (% processed-addresses 5)))
-              (message
-               "Hit C-g to stop BBDB from %s.  %d of %d addresses processed."
-               bbdb-update-records-mode processed-addresses (length addrs))
-              (sit-for 0)))
+               (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." 
+                                   bbdb-update-records-mode processed-addresses addrslen)))
+                 (if nil;(featurep 'xemacs)
+                     (display-message 'progress mess)
+                   (message mess)))
+               (sit-for 0)))
         
         ;; o.k. there was a quit signal so how should we proceed now?
         (quit (cond ((eq bbdb-update-records-mode 'annotating)
@@ -2932,7 +2936,9 @@ C-g again it will stop scanning."
     ;; to reflect the order of the records as they appear in the headers.
     (setq records (nreverse records))
 
-    (if (not bbdb-silent-running)
+    (if (not (or bbdb-silent-running
+                 bbdb-gag-messages
+                 (not records)))
         (message "Updating of BBDB records finished"))
     records))
 
