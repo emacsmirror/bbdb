@@ -1,3 +1,9 @@
+2001-02-07  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-com.el (bbdb-complete-name): Fxed bug which showed
+	its effect only with GNU Emacs.
+	(bbdb-add-or-remove-mail-alias): Better prompt.
+
 2001-02-05  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/Makefile.in (bbdb-hooks.elc): removed need to load VM.
