@@ -1568,14 +1568,14 @@ Briefly, the forms for these functions are:
 
 @table @b
 @item Gnus
-@code{(setq gnus-Startup-hook 'bbdb-insinuate-gnus)} @i{for Gnus 3.14 or older}@*
-@code{(setq gnus-startup-hook 'bbdb-insinuate-gnus)} @i{for Gnus 3.15 or newer}
+@code{(add-hook 'gnus-Startup-hook 'bbdb-insinuate-gnus)} @i{for Gnus 3.14 or older}@*
+@code{(add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus)} @i{for Gnus 3.15 or newer}
 @item MH-E
-@code{(setq mh-folder-mode-hook 'bbdb-insinuate-mh)}
+@code{(add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh)}
 @item RMAIL
-@code{(setq rmail-mode-hook 'bbdb-insinuate-rmail)}
+@code{(add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail)}
 @item sendmail
-@code{(setq mail-setup-hook 'bbdb-insinuate-sendmail)}
+@code{(add-hook 'mail-setup-hook 'bbdb-insinuate-sendmail)}
 @item VM
 @code{(bbdb-insinuate-vm)} @i{Add to @file{~/.vm} file}
 @end table
@@ -3654,9 +3654,9 @@ name (@samp{John} in this example).
 
 It is commonly known that there are no bugs in the @b{BBDB}. Bugs found
 in defiance of this rule should be submitted to the @code{bbdb-info}
-mailing list.  To assist the developers, please include the version
-numbers of the various programs used when the bug occurred.  An example
-report follows.
+mailing list (@pxref{Mailing Lists}).  To assist the developers, please
+include the version numbers of the various programs used when the bug
+occurred.  An example report follows.
 
 @example
 BBDB Version:
