@@ -1847,6 +1847,7 @@ Can be used in `bbdb-change-hook'."
   "*Non-nil means always use full name when sending mail, even if same as net."
   :group 'bbdb
   :type '(choice (const :tag "Disallow redundancy" nil)
+                 (const :tag "Return only the net" 'netonly)
                  (const :tag "Allow redundancy" t)))
 
 ;;;###autoload
@@ -1876,7 +1877,9 @@ the name is always included."
         (while (setq i (string-match "[\\\"]" name i))
           (setq name (concat (substring name 0 i) "\\" (substring name i))
                 i (+ i 2))))
-    (cond ((or (null name)
+    (cond ((eq 'netonly bbdb-dwim-net-address-allow-redundancy)
+           net)
+          ((or (null name)
                (if (not bbdb-dwim-net-address-allow-redundancy)
                    (cond ((and fn ln)
                           (or (string-match
