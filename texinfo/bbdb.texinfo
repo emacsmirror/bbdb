@@ -23,7 +23,7 @@ Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
-Copyright (c) 2000-2002 The BBDB Development Team
+Copyright (c) 2000-2004 The BBDB Development Team
 @end ifinfo
 
 @titlepage
@@ -37,7 +37,7 @@ Copyright @copyright{} 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright @copyright{} 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
-Copyright @copyright{} 2000-2002 The BBDB Development Team
+Copyright @copyright{} 2000-2004 The BBDB Development Team
 
 @sp 2
 This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
@@ -2904,11 +2904,11 @@ The following variables govern the printing of records (and of the printing of
 the fields therein):
 
 @table @code
-@item bbdb-print-elide
-@vindex bbdb-print-elide
+@item bbdb-print-omit-fields
+@vindex bbdb-print-omit-fields
 This variable should be set to a list of the fields that are not to be printed
 by @code{bbdb-print}.  It defaults to:@*
-@center @code{(tex-name aka mail-alias)}
+@center @code{(omit tex-name aka mail-alias)}
 
 @item bbdb-print-file-name
 @vindex bbdb-print-file-name
