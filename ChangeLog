@@ -1,4 +1,13 @@
-2001-03-23 Waider  <waider@waider.ie>
+2001-03-25  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-rmail.el:
+	  Fix some bugs related to new message caching functions.
+
+2001-03-23  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el (bbdb-display-completion-list): 
+	  Make completion on GNU Emacs remove what you've typed before
+	  inserting the completion data.
 
 	* lisp/bbdb.el (bbdb-search-simple):
 	  Fix silly bug with list-walking (Daniel Pittman)
