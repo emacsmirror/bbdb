@@ -1,3 +1,7 @@
+2003-01-31  Alex Schroeder  <alex@emacswiki.org>
+
+	* lisp/bbdb.el (bbdb-resort-database): Make interactive.
+
 2003-01-30  Greg Troxel <gdt@ir.bbn.com>
 
 	* bbdb-com.el, bbdb.el:
