@@ -1,3 +1,12 @@
+2002-11-02  Dave Love  <fx@gnu.org>
+
+	* lisp/bbdb.el (bbdb-have-re-char-classes): New constant.
+	(bbdb-clean-username): Use it.
+	(bbdb-buffer): Don't bind coding-system-for-read -- rely on coding
+	cookie.
+	(bbdb-records, parse-bbdb-internal): Write coding cookie.
+	(bbdb-write-file-hook-fn): Insert coding cookie if necessary.
+
 2002-10-30  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-vm.el (bbdb/vm-set-auto-folder-alist): Some fixes for

@@ -164,6 +164,10 @@ prompt the users on how to merge records when duplicates are detected.")
     (defmacro define-widget (&rest args)
       nil)))
 
+(defconst bbdb-have-re-char-classes (string-match "[[:alpha:]]" "x")
+    "Non-nil if this Emacs supports regexp character classes.
+E.g. `[[:alnum:]]'.")
+
 ;; Custom groups
 
 (defgroup bbdb nil
@@ -1114,9 +1118,7 @@ If the note is absent, returns a zero length string."
                (file-newer-than-file-p bbdb-file-remote bbdb-file))
       (let ((coding-system-for-write bbdb-file-coding-system))
     (copy-file bbdb-file-remote bbdb-file t t)))
-    (setq bbdb-buffer
-          (let ((coding-system-for-read bbdb-file-coding-system))
-        (find-file-noselect bbdb-file 'nowarn)))))
+    (setq bbdb-buffer (find-file-noselect bbdb-file 'nowarn))))
 
 (defmacro bbdb-with-db-buffer (&rest body)
   (cons 'with-current-buffer
@@ -2131,7 +2133,8 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
       (cond ((= (point-min) (point-max)) ; special-case empty db
              ;; this doesn't need to be insert-before-markers because
              ;; there are no db-markers in this buffer.
-             (insert (format ";;; file-version: %d\n" bbdb-file-format))
+             (insert (format ";; -*-coding: %s;-*-\n;;; file-version: %d\n"
+                 bbdb-file-coding-system bbdb-file-format))
              (bbdb-flush-all-caches)
              (setq bbdb-end-marker (point-marker))
              ;;(run-hooks 'bbdb-after-read-db-hook) ; run this?
@@ -2206,8 +2209,9 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
                 (goto-char 1))
             ;; remember, this goes before the begin-marker of the first
             ;; record in the database!
-            (insert-before-markers (format ";;; file-version: %d\n"
-                                           bbdb-file-format)))
+            (insert-before-markers
+         (format ";; -*-coding: %s;-*-\n;;; file-version: %d\n"
+             bbdb-file-coding-system bbdb-file-format)))
           (set-buffer-modified-p modp)))
     (cond ((< v bbdb-file-format)
            (if bbdb-file-format-migration
@@ -2351,6 +2355,14 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
   ;; this is premature as the file isn't actually written yet; but it's just
   ;; for the benefit of the mode-line of the *BBDB* buffer, and there isn't
   ;; an after-write-file-hook, so it'll do.
+  (save-restriction
+    (widen)
+    (goto-char (point-min))
+    ;; Fixme: probably this should check any existing cookie for
+    ;; consistency with bbdb-file-coding-system.
+    (unless (looking-at ";; *-\\*-coding:")
+      (insert-before-markers (format ";; -*-coding: %s;-*-\n"
+                     bbdb-file-coding-system))))
   (setq bbdb-modified-p nil
         bbdb-changed-records nil)
   (let ((buf (get-buffer bbdb-buffer-name)))
@@ -2829,7 +2841,10 @@ function `y-or-n-p-with-timeout' is defined."
      ;; "x1234" and "ext. 1234". \)
      ;; This doesn't work all the time because some of our friends in
      ;; northern europe have brackets in their names...
-     (if (string-match "\\`[^a-z]+" string)
+     (if (string-match (if bbdb-have-re-char-classes
+               "\\`[^[:alpha:]]+"
+             "\\`[^a-z]+")
+               string)
          (setq string (substring string (match-end 0))))
      (while (string-match
              "\\(\\W+\\([Xx]\\|[Ee]xt\\.?\\)\\W*[-0-9]+\\|[^a-z]+\\)\\'"
