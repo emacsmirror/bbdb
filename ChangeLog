@@ -1,3 +1,56 @@
+Sat Oct 11 19:19:27 1997  Matt Simmons  <simmonmt@acm.org>
+
+	* bbdb.el: BBDB 1.54unoff released
+	* lisp/Makefile: Changed VM, GNUS, and MHE definitions so they can 
+	  be blank if the packages are in load-path.  Added bbdb-snarf and 
+	  bbdb-w3.  Made bbdb-srv and bbdb-reportmail skipping messages more
+	  informative.  Added check for itimer for bbdb-srv.
+	* lisp/bbdb-w3.el (bbdb-insinuate-w3): Created from bare add-hook
+	  statement found in David's version.  Add this to w3-mode-hook
+	  (yes, that's singular, not plural)
+	* lisp/bbdb-w3.el (bbdb-www): Modified to use
+	  browse-url-browser-function instead of having two functions, one 
+	  for netscape and one for w3.
+	* lisp/bbdb-snarf.el: Fixed area code pattern to use [2-9] instead 
+	  of [0-9] for first digit.
+	* lisp/auto-autoloads.el: Autoloads for bbdb-snarf, bbdb-www,
+	  changed package dir from `bbdb-1.52' to `bbdb', autoload for
+	  bbdb-insinuate-message.
+	* lisp/bbdb.el: Added autoloads for bbdb-insinuate-message,
+	  bbdb-www, bbdb-www-grab-homepage, bbdb-insinuate-w3, bbdb-snarf.
+	* lisp/bbdb.el (bbdb-mode): Documentation for bbdb-www `w' keystroke
+	* lisp/bbdb.el (bbdb-mode-map): bbdb-www invocation
+	* lisp/bbdb.el (bbdb-split): Documented.
+	* lisp/bbdb-gnus.el (bbdb-insinuate-message): Use it.  Sets the
+	  M-t binding for message-mode.  This isn't in bbdb-insinuate-gnus 
+	  because some like to use message-mode before loading gnus.  Add
+	  it to `message-setup-hook', _not_ `message-load-hook'.
+
+Sat Oct 11 19:01:00 1997  David Carlton <carlton@math.mit.edu>
+
+	* lisp/bbdb-w3.el: Added to bbdb distribution.  I don't know who
+	  the original author is, but David mailed it to me.
+	  
+Sat Oct 11 19:00:00 1997  John Heidemann <johnh@isi.edu>
+
+	* lisp/bbdb-snarf.el: Added to bbdb distribution.  Grabs text from 
+	  paragraph around point and makes a bbdb record out of it.  See
+	  the source for docs until I get around to adding to the texinfo
+	  file.
+
+Sat Oct 11 18:50:52 1997  Kees de Bruin <kees_de_bruin@tasking.nl>
+
+	* lisp/bbdb-vm.el (bbdb/vm-alternate-full-name): make VM use the
+	  canonicalized net address instead of the default address.
+	* lisp/bbdb-com.el (bbdb-sendmail-internal): Still more
+ 	  message-mode fixes.  Default to message-mode if neither mh-e nor
+ 	  vm are in `features'.  If message-mode is to be used and it's not
+ 	  loaded, autoload it.
+
+Thu Oct  9 06:37:00 1997  Matt Simmons <simmonmt@acm.org>
+        * lisp/Makefile: Check for itimer before building bbdb-srv.
+          Complain nicely when check fails.
+
 Sun Oct  5 20:16:00 1997  Matt Simmons <simmonmt@acm.org>
 	* bbdb.el: BBDB 1.53unoff released
 

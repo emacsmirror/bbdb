@@ -4,13 +4,8 @@ Patches
 =======
 
 ---------------------------------------------------------------------------------
-PURPOSE: convert free-form text to BBDB records
+PURPOSE: automatically grab information about a person from their sig
 
-CANDIDATE: bbdb-snarf.el
-   AUTHOR: John Heidemann <johnh@ISI.EDU>
-           http://www.isi.edu/~johnh/
-    WHERE: <199708050543.WAA16969@dash.isi.edu> Mon, 04 Aug 1997 22:43:06 -0700
-           <199708062026.NAA29354@dash.isi.edu> Wed, 06 Aug 1997 13:26:45 -0700
 CANDIDATE: bbdb-extract-field-value
    AUTHOR: Graham Clark <gcla@dcs.ed.ac.uk>
     WHERE: <6282.199706161624@havra.dcs.ed.ac.uk> Mon, 16 Jun 1997 17:24:49 +0100
@@ -18,22 +13,14 @@ CANDIDATE: bbdb-update-from-body
    AUTHOR: Adrian Aichner <aichner@ecf.teradyne.com>
     WHERE: <rxsiuzebpgp.fsf@midnight.ecf.teradyne.com>
 
-STATUS: Investigatory
-  WHEN: 27-Sep-1997
-REASON: Waiting to determine which is better, or if they're similar
-        enough that they should be merged, or if they're different
-        enough that they should all be included
----------------------------------------------------------------------------------
-PURPOSE: a whole bunch of patches from the BBDB addons page
-
-CANDIDATE: lots
-   AUTHOR: various
-    WHERE: http://www.forwiss.uni-erlangen.de/~jws/bbdb/index.html
-
 STATUS: Pending
- SINCE: 5-Oct-1997
- ADDED: 28-Sep-1997
-REASON: This is an amazingly slow site - I'm now getting a stunning 4 bytes/sec
+ SINCE: 11-Oct-1997
+ ADDED: 27-Sep-1997
+REASON: Included John Heidemann <johnh@isi.edu>'s bbdb-snarf, since it 
+        seemed to do a better job at finding things.  One of the above 
+        (likely Adrian's) will be integrated.  What I'll likely do is
+        have bbdb-snarf attack the sig.  Then we'll look at the from
+        header and ask if the addresses are different.
 ---------------------------------------------------------------------------------
 PURPOSE: Take birthdays from the BBDB, add them to calendar
 
@@ -44,7 +31,7 @@ CANDIDATE: bbdb/calendary-birthdays
 STATUS: Pending
  SINCE: 5-Oct-1997
  ADDED: 28-Sep-1997
-REASON: Hopefully will be in 1.54unoff
+REASON: Hopefully will be in 1.55unoff
 ---------------------------------------------------------------------------------
 PURPOSE: Make mail aliases file for other mailers
 
@@ -55,7 +42,7 @@ CANDIDATE: bbdb-mail-alias-file
 STATUS: Pending
  SINCE: 5-Oct-1997
  ADDED: 28-Sep-1997
-REASON: Hopefully in 1.54unoff
+REASON: Hopefully in 1.55unoff
 ---------------------------------------------------------------------------------
 PURPOSE: Alternate record sorting (first name, last name or company)
 
@@ -66,7 +53,7 @@ CANDIDATE: bbdb-sort-by
 STATUS: Pending
  SINCE: 5-Oct-1997
  ADDED: 28-Sep-1997
-REASON: Hopefully in 1.54unoff
+REASON: Hopefully in 1.55unoff
 ---------------------------------------------------------------------------------
 PURPOSE: a file o' patches from Boris Goldowsky
 
@@ -93,17 +80,6 @@ STATUS: Pending
  ADDED: 28-Sep-1997
 REASON: Need sleep
 ---------------------------------------------------------------------------------
-PURPOSE: allowing null (VM|GNUS|MHE)DIR variables in Makefile if they
-         will be found in their default directories
-
-CANDIDATE: <unnamed>
-   AUTHOR: Boris Goldowsky <boris@gnu.ai.mit.edu>
-    WHERE: my laptop
-
-STATUS: Investigatory
- SINCE: 5-Oct-1997
- ADDED: 5-Oct-1997
-REASON: Because
 
 MAYBE?
 ======
@@ -133,6 +109,7 @@ Add documentation of Christoph Wedler's finger-host
            ...    of Christopher Kline's bbdb-reportmail.el
            ...    of Christopher Kline's bbdb-unlazy-lock.pl
 Changes to bbdb-print.el
+bbdb-snarf, bbbd-w3, message-mode stuff
 
 In a util directory
 ===================
