@@ -759,8 +759,8 @@ Database initialization function `bbdb-initialize' is run."
 return the value of funcalling it with the rest of the arguments."
   (cond ((eq hook nil) nil)
         ((eq hook t) t)
-        ((symbolp hook) hook)
-        (t (apply hook args))))
+        ((functionp hook) (apply hook args))
+        (t hook)))
 
 (defmacro bbdb-defstruct (conc-name &rest slots)
   "Make two functions, one for each slot.  The functions are:
