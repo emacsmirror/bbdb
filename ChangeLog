@@ -1,3 +1,27 @@
+2000-06-14  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el:
+	Fixed bbdb-current-field properly. Note that if you define a new
+	address formatting function, this code may not work correctly.
+
+	* lisp/bbdb-vm.el:
+	Trying another way to get the from field, since the Presentation
+	buffer hack seems to be somewhat unusable.
+
+	* lisp/bbdb.el:
+	Fixed docstring for bbdb-quiet-about-name-mismatches
+
+	* texinfo/bbdb.texinfo:
+	Documented changes in database structure
+	Changed web address, email addresses
+	Some minor typos corrected & details added
+
+	* Makefile:
+	Added CVS revision discards to tarball exclude list.
+
+	* lisp/bbdb-merge.el:
+	made notes merging use bbdb-merge-strings.
+
 2000-05-26  Alex Schroeder  <alex@gnu.org>
 
 	* lisp/bbdb-com.el (bbdb-parse-zip-string): Match brazilian zip
@@ -29,6 +53,45 @@
 	simultaneously, allow multiple URLs for the same record instead.
 	(bbdb-www-grab-homepage): add the URL if there is such a fields
 	already.
+
+2000-05-01  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-merge.el:
+	"API" is a little more settled, also a little more obvious.
+	Making use of more of the existing functions in bbdb-com
+
+	* html/index.html:
+	Tweaked layout and added a CVS revision tag.
+
+	* Initial creation of the bits/ and html/ trees.
+
+2000-04-21  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el: * documentation corrections
+	Added timestamp compare to bbdb-refile-notes-generate-alist
+
+	* lisp/bbdb-merge.el:
+	Refined so it works a little better, particularly with merging
+	timestamps 
+	Added bbdb-merge-file, so you can now import another bbdb and
+	merge it.
+
+2000-04-19  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-merge.el:
+	First cut at merging with a view towards syncing, as opposed to
+	simply cramming everything together a la refile.
+
+2000-04-17  Waider  <waider@waider.ie>
+
+	* bbdb/lisp/bbdb-migrate.el:
+	omitted bracket on unmigrate for v5->v4
+
+2000-04-16  kuepper  <kuepper@gonzo.waider.ie>
+
+	* tex/bbdb-print-brief.tex, texinfo/bbdb.texinfo, tex/bbdb-print.tex
+	bbdb-print documentation
+	Fix \bigbf
 
 2000-04-16  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
 
