@@ -430,11 +430,13 @@ name change, that is, when the \"real name\" in a message doesn't correspond
 to a record already in the database with the same network address.  As in,
 \"John Smith <jqs@frob.com>\" versus \"John Q. Smith <jqs@frob.com>\".
 Normally you will be asked if you want to change it.
-If set to a number it is the nuber of seconds to sit for while displaying the
-mismatch message."
+If set to a number it is the number of seconds to sit for while
+displaying the mismatch message."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Prompt for name changes" nil)
-                 (const :tag "Do not prompt for name changes" t)))
+                 (const :tag "Do not prompt for name changes" t)
+		 (integer :tag 
+			  "Instead of prompting, warn for this many seconds")))
 
 (defcustom bbdb-use-alternate-names t
   "*If this is true, then when bbdb notices a name change, it will ask you
