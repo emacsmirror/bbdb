@@ -22,6 +22,12 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.55  1997/10/26 04:47:03  simmonmt
+;; Fix name completion bug (original fix by Marco Walther
+;; <Marco.Walther@mch.sni.de>, mangled beyond recognition by Matt Simmons
+;; <simmonmt@acm.org>
+;; Docs for bbdb-finger by Christoph Wedler  <wedler@fmi.uni-passau.de>
+;;
 ;; Revision 1.54  1997/10/11 23:53:42  simmonmt
 ;; Message-mode fixes from Kees de Bruin <kees_de_bruin@tasking.nl>
 ;;
@@ -1605,6 +1611,25 @@ Otherwise, a valid response is forced."
 	      bbdb-complete-name-saved-window-config))
 	(setq bbdb-complete-name-saved-window-config nil))))
 
+(defun bbdb-display-completion-list (list &optional callback data)
+  "Wrapper for display-completion-list.
+CALLBACK and DATA are discarded."
+  (display-completion-list list))
+
+(defun bbdb-complete-clicked-name (event extent user-data)
+  "Find the record for a name clicked in a completion buffer.
+Currently only used by XEmacs."
+   (let ((buffer (first user-data))
+ 	(beg (second user-data))
+ 	(end (third user-data)))
+     (bbdb-complete-name-cleanup)
+     (set-buffer buffer)
+     (goto-char beg)
+     (delete-region beg end)
+     (insert (extent-string extent))
+     (bbdb-complete-name beg)))
+
+  
 (defun bbdb-complete-name (&optional start-pos)
   "Complete the user full-name or net-address before point (up to the 
 preceeding newline, colon, or comma).  If what has been typed is unique,
@@ -1740,8 +1765,11 @@ Completion behaviour can be controlled with 'bbdb-completion-type'."
 	       (if (not (get-buffer-window "*Completions*"))
 		   (setq bbdb-complete-name-saved-window-config
 			 (current-window-configuration)))
-	       (with-output-to-temp-buffer "*Completions*"
-		 (display-completion-list list))
+	       (let ((arg (list (current-buffer)
+				(set-marker (make-marker) beg)
+				(set-marker (make-marker) end))))
+		 (with-output-to-temp-buffer "*Completions*"
+		   (bbdb-display-completion-list list 'bbdb-complete-clicked-name arg)))
 	       (or (eq (selected-window) (minibuffer-window))
 		   (message "Making completion list...done"))))))))
 
@@ -1971,7 +1999,10 @@ with \"\\[bbdb-apply-next-command-to-all-records]\" \(as in \
 \"\\[bbdb-apply-next-command-to-all-records]\\[bbdb-finger]\" instead of \
 simply \"\\[bbdb-finger]\"\), meaning to finger all of 
 the users currently listed in the *BBDB* buffer instead of just the one
-at point.  The numeric prefix argument has the same interpretation."
+at point.  The numeric prefix argument has the same interpretation.
+
+You can define a special network address to \"finger\" by defining a
+field `finger-host' (default value of `bbdb-finger-host-field')."
   (interactive (list (if (string= bbdb-buffer-name (buffer-name))
 			 (if (bbdb-do-all-records-p)
 			     (mapcar 'car bbdb-records)
