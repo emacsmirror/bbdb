@@ -2083,6 +2083,46 @@ I am punting). @refill
 You can have both styles of phone number in your database by providing a
 prefix argument to the @code{bbdb-insert-new-field} command. @refill
 
+@item bbdb-check-zip-codes-p
+@vindex bbdb-check-zip-codes-p
+@vindex bbdb-legal-zip-codes
+@cindex Zip code checking 
+@cindex Checking zip codes
+@cindex Invalid zip codes
+@cindex Not a valid zip code
+@cindex List of valid zip codes
+@cindex Valid zip codes
+Whether syntax-checking of zip codes should be enforced.  Default:
+@code{t}.  If this is true, you can't enter invalid zip codes.  A zip
+code is valid if it matches one of the regular expressions in the
+variable @code{bbdb-legal-zip-codes}. @refill
+
+@item bbdb-address-formatting-alist
+@vindex bbdb-address-formatting-alist
+@cindex Formatting addresses
+@cindex Display of addresses
+@cindex Address display
+Controls the display of addresses in the buffer.  Each entry in this
+list consists of an identifying function and a formatting function.
+The identifying function must accept an address and return @code{t} if
+the associated formatting function is to be used.  The formatting
+function must insert the formatted address in the current buffer.
+Identifying functions usually base their decision on the zip code
+format or on the country name.  The default entries will format an
+address using continental style if the zip code matches
+@code{bbdb-continental-zip-regexp}.  If the zip code does not match,
+addresses are formatted in US style.
+
+@item bbdb-continental-zip-regexp
+@vindex bbdb-continental-zip-regexp
+@cindex Continental addresses
+@cindex European addresses
+Decides whether an address should be formatted using US or European
+style.  If the zip code of an address matches the regular expression,
+the European style is used.  This works only if the expression
+@code{(bbdb-address-is-continental . bbdb-format-address-continental)}
+is part of @code{bbdb-address-formatting-alist}.
+
 @item bbdb-electric-p
 @vindex bbdb-electric-p
 @cindex Electric display
