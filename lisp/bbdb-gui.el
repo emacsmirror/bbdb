@@ -195,9 +195,10 @@
         (if (> end (point-max)) (setq end (point-max)))
         
         (mapcar (function (lambda(o)
-                            (if o  ;; may start with nil
-                                (if (eq (bbdb-extent-property o 'data) 'bbdb)
-                                    (bbdb-delete-extent o)))))
+                            (if (and o  
+                                     (eq (bbdb-extent-property o 'data)
+                                         'bbdb))
+                                (bbdb-delete-extent o))))
                 (bbdb-extents-in start end))
 
         
@@ -233,24 +234,22 @@
         (bbdb-set-extent-property e 'priority 2)
         (bbdb-set-extent-property e 'highlight t)
         (if face (bbdb-hack-x-face face e))
-        (forward-line 1)
-        (while (< (point) end)
-          (skip-chars-forward " \t")
-          (setq p (point))
-          (and (looking-at "[^:\n]+:")
-               (progn
-                 (setq e (bbdb-make-extent p (match-end 0)))
-                 (bbdb-set-extent-face e 'bbdb-field-name)
-                 (bbdb-set-extent-property e 'priority 2)
-                 (bbdb-set-extent-property e 'data 'bbdb)))
-          (while (progn (forward-line 1)
-                        (looking-at "^\\(\t\t \\|                 \\)")))
-          (setq e (bbdb-make-extent p (1- (point))))
-          (bbdb-set-extent-property e 'data 'bbdb)
-          (bbdb-set-extent-face e 'bbdb-field-value)
-          (bbdb-set-extent-property e 'priority 2)
-          (bbdb-set-extent-property e 'highlight t))
-        
+        (goto-char start)
+        (while (and p (< (point) end))
+          (setq p (next-single-property-change (point) 'bbdb-field))
+          (when p 
+            (goto-char p)
+            (when (looking-at "[^:\n]+:")
+              (setq e (bbdb-make-extent p (match-end 0)))
+              (bbdb-set-extent-face e 'bbdb-field-name)
+              (bbdb-set-extent-property e 'priority 2)
+              (bbdb-set-extent-property e 'data 'bbdb))
+            (setq e (bbdb-make-extent p (1- (point))))
+            (bbdb-set-extent-property e 'data 'bbdb)
+            (bbdb-set-extent-face e 'bbdb-field-value)
+            (bbdb-set-extent-property e 'priority 2)
+            (bbdb-set-extent-property e 'highlight t)))
+          
         (setq rest (cdr rest))
         (if (null (caar rest))
             (setq rest nil)))))
@@ -276,7 +275,7 @@ as of GNU Emacs 20.7"
 
        ;; ripped pretty much verbatim from VM; X Faces for recent XEmacsen.
        ((string-match "^21\\." emacs-version) ;; XXX how far back can I go?
-        (condition-case data
+        (condition-case nil
             (let* ((h (concat "X-Face: " (car face))) ;; from vm-display-xface
                    (g (intern h vm-xface-cache)))
               (if (bbdb-find-face 'vm-xface) ;; use the same face as VM
@@ -500,7 +499,7 @@ as of GNU Emacs 20.7"
      (save-excursion
        (let ((extent (or (bbdb-extent-at (point) (current-buffer) 'highlight)
                          (error "")))
-             record field face)
+             record field)
          (or (eq (bbdb-extent-property extent 'data) 'bbdb)
              (error "not a bbdb extent"))
          (bbdb-highlight-extent extent t)
