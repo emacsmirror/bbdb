@@ -34,7 +34,7 @@
 ;;; BBDB. If the from header in the mail to which you are replying
 ;;; only contains the e-mail address, the personal name is lookup in
 ;;; BBDB. You need Supercite to make this code work. The attribution
-;;; os is stored under the key attribution (unless you've changed
+;;; os is stored under the key `attribution' (unless you've changed
 ;;; bbdb/sc-attribution-field).
 
 ;;; To use enable this code you will have to the "sc-consult" to your
@@ -54,7 +54,7 @@
 ;;;        '(("sc-from-address" ((".*" . (bbdb/sc-consult-attr
 ;;;				       (sc-mail-field "sc-from-address")))))))
 ;;;
-;;; And finally we set the sc-mail-glom-variable to enable the
+;;; And finally we set the sc-mail-glom-frame to enable the
 ;;; fetching of the name of person when there is only an e-mail
 ;;; address in the original mail:
 ;;; 
@@ -72,6 +72,9 @@
 
 ;;;
 ; $Log$
+; Revision 1.9  1998/02/23 07:22:00  simmonmt
+; Fixed intro comments.  Use add-hook, not bbdb-add-hook
+;
 ; Revision 1.8  1998/01/06 06:12:32  simmonmt
 ; Customized variables, removed autoloads, and added provide of bbdb-sc
 ;
@@ -219,8 +222,8 @@ Custom."
 (defun bbdb-insinuate-sc ()
   "Call this function to hook BBDB into Supercite."
   
-  (bbdb-add-hook 'sc-post-hook 'bbdb/sc-set-attr)
-  (bbdb-add-hook 'sc-attribs-postselect-hook 
+  (add-hook 'sc-post-hook 'bbdb/sc-set-attr)
+  (add-hook 'sc-attribs-postselect-hook 
 		 (function (lambda()
 			     (setq bbdb/sc-last-attribution 
 				   (if sc-downcase-p 
