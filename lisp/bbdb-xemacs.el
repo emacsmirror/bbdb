@@ -69,13 +69,9 @@
 	      end (1- (or (nth 2 (car (cdr rest))) (point-max))))
 	(set-extent-property (setq e (make-extent start end)) 'highlight t)
 	(set-extent-property e 'data 'bbdb)
-	(goto-char start)
-	(if elided-p
-	    (progn
-	      (move-to-column 48)
-	      (skip-chars-backward " \t"))
-	  (end-of-line))
-	(setq p (point))
+	(setq p (+ start (length (bbdb-record-name record))))
+	(if (bbdb-record-company record)
+	    (setq p (+ p 3 (length (bbdb-record-company record)))))
 	(goto-char start)
 	(if (search-forward " - " p t)
 	    (progn
