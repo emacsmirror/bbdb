@@ -1,5 +1,12 @@
 2003-03-13  Robert Fenk  <Robert.Fenk@gmx.de>
 
+	* lisp/bbdb-gnus.el:
+	* lisp/bbdb-hooks.el:
+	* lisp/bbdb.el: Droped support for GNUS versions <= 3.14
+
+	* lisp/bbdb-hooks.el (bbdb-header-start): There is no
+	gnus-subject-mode, its called gnus-summary-mode.
+
 	* lisp/bbdb.el (bbdb-display-records-1): removed call to
 	bbdb-pop-up-bbdb-buffer to avoid problems with special-display-*,
 	still we are not back to the old behavior, i.e. if calling BBDB
@@ -22,7 +29,6 @@
 	Enables the creation of multiple *BBDB* buffers.  
 	(bbdb-pop-up-bbdb-buffer): if bbdb-multiple-buffers is enabled
 	created new *BBDB: <BUFNAME>* buffer and set it up correctly.
-	This is a hack, really!
 
 2003-03-07  Robert Fenk  <Robert.Fenk@gmx.de>
 
