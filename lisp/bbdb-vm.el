@@ -303,14 +303,21 @@ configuration of what is being displayed."
           (bbdb-electric-p nil)
           (records (bbdb/vm-update-records offer-to-create))
           (bbdb-elided-display (bbdb-pop-up-elided-display)))
-      (when (and records bbdb-use-pop-up)
-        (bbdb-pop-up-bbdb-buffer
-           (function (lambda (w)
-             (let ((b (current-buffer)))
-               (set-buffer (window-buffer w))
-               (prog1 (eq major-mode 'vm-mode)
-               (set-buffer b))))))
-        (bbdb-display-records records)))))
+      (if (and bbdb-use-pop-up records)
+          (progn
+            (bbdb-pop-up-bbdb-buffer
+             (function (lambda (w)
+                         (let ((b (current-buffer)))
+                           (set-buffer (window-buffer w))
+                           (prog1 (eq major-mode 'vm-mode)
+                             (set-buffer b))))))
+            (sit-for 0) ;; fix for VM windowing problem
+            ))
+
+      ;; Always update the records, if there are any.
+      (if records
+          (bbdb-display-records records)
+        (bbdb-undisplay-records)))))
 
 ;; By Alastair Burt <burt@dfki.uni-kl.de>
 ;; vm 5.40 and newer support a new summary format, %U<letter>, to call
