@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.11  2000/07/05 21:43:35  sds
+;; rewrote migration in a modular way
+;;
 ;; Revision 1.10  2000/06/30 19:12:36  sds
 ;; (bbdb-migrate): re-wrote using `mapcar' instead of `append'
 ;; this is linear instead of quadratic and avoids much consing
@@ -94,7 +97,6 @@ in your current format.  Please note that if you elect the latter option,
 any changes made to your data using features intended for the newer
 versions will be lost.  For your convenience, a list of file format
 changes introduced after version %d is shown below:\n\n" ondisk ondisk))
-
       (while newfeatures
 	(if (> (caar newfeatures) ondisk)
 	  (insert-string (concat (if first (setq first nil) "\n\n")
@@ -118,115 +120,43 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
   "Migrate the BBDB from the version on disk (the car of
 `bbdb-file-format-migration') to the current version (in
 `bbdb-file-format')."
-  (cond
-   ;; Version 2 -> 3
-   ((= (car bbdb-file-format-migration) 2)
-    (mapcar (lambda (rec)
-              (bbdb-migrate-record
-               rec
-               '((bbdb-record-raw-notes
-                  bbdb-record-set-raw-notes
-                  bbdb-migrate-change-dates))))
-            records))
-   ;; Version 3 -> 4
-   ((= (car bbdb-file-format-migration) 3)
-    (mapcar (lambda (rec)
-              ;; Take the address-list, ie. the 5th field, and add the empty
-              ;; string to each address.  This is the new country field.
-              (aset rec 5 (mapcar (lambda (addr) (vconcat addr [""]))
-                                  (aref rec 5)))
-              rec)
-            records))
-   ;; Version 4 -> 5
-   ((= (car bbdb-file-format-migration) 4)
-    (mapcar (lambda (rec)
-              ;; Do address changes
-              (aset rec 5 (mapcar
-                           (lambda (addr)
-                             (vector (aref addr 0) ; tag
-                                     (delete "" ; nuke empties
-                                             (list (aref addr 1) ; street1
-                                                   (aref addr 2) ; street2
-                                                   (aref addr 3)));street3
-                                     (aref addr 4) ; city
-                                     (aref addr 5) ; state
-                                     (aref addr 6) ; zip
-                                     (aref addr 7))) ; country
-                           (aref rec 5)))
-              rec)
-            records))
-
-   ;; Unknown Version
-   (t (error (format "BBDB Cannot migrate from unknown version %d"
-					 (car bbdb-file-format-migration))))))
+  (mapc (bbdb-migrate-versions-lambda (car bbdb-file-format-migration))
+        records)
+  records)
 
 ;;;###autoload
 (defun bbdb-unmigrate-record (record)
   "Reverse-migrate a single record from the current version (in
 `bbdb-file-format') to the version to be saved (the cdr of
 `bbdb-file-format-migration')."
-  (cond
-   ;; Version 5 -> 4
-   ((= (cdr bbdb-file-format-migration) 4)
-    ;; Take all the old addresses, ie. the 5th field, and for each
-    ;; address, render the third element (a list of streets) as three
-    ;; vector elements (v4-style address). If there's more than 3
-    ;; lines, everything remaining gets crammed into the third, using
-    ;; commas to separate the bits. If there's less, fill out with nil.
-    (let ((old-addr-list (aref record 5))
-	  (new-addr-list))
-      (while old-addr-list
-	(let* ((old-addr (car old-addr-list))
-	       (new-addr)
-	       (streets (aref old-addr 1)))
-	  (setq new-addr (vector (aref old-addr 0) ;; tag
-				 (nth 0 streets)
-				 (nth 1 streets)
-				 (if (> (length streets) 3)
-				     (let ((more-streets) (i 4))
-				       (while (<= i (length streets))
-					 (add-to-list 'more-streets (nth i streets)))
-				       (mapconcat 'concat more-streets ", "))
-				   (nth 3 streets))
-				 (aref old-addr 2) ;; city
-				 (aref old-addr 3) ;; state
-				 (aref old-addr 4) ;; zip
-				 (aref old-addr 5))) ;; country
-	  (setq old-addr-list (cdr old-addr-list))
-	  (setq new-addr-list (append new-addr-list (list new-addr)))))
-      (aset record 5 new-addr-list)))
+  (funcall (bbdb-migrate-versions-lambda bbdb-file-format
+                                         (car bbdb-file-format-migration))
+           record)
+  record)
 
-   ;; Version 4 -> 3
-   ((= (cdr bbdb-file-format-migration) 3)
-    ;; Take all the old addresses, ie. the 5th field, and for each
-    ;; address, copy all but the last string to the new address.  This
-    ;; was the country of version 4.  Some version 4 zip codes will be
-    ;; illegal version 3 (as used in 2.00.06) zip codes.  This problem
-    ;; has not been solved.
-    (let ((old-addr-list (aref record 5))
-	  (new-addr-list))
-      (while old-addr-list
-	(let* ((old-addr (car old-addr-list))
-	       (len (1- (length old-addr)))
-	       (new-addr (make-vector len nil))
-	       (i 0))
-	  (setq old-addr-list (cdr old-addr-list))
-	  (while (< i len)
-	    (aset new-addr i (aref old-addr i))
-	    (setq i (1+ i)))
-	  (setq new-addr-list (append new-addr-list (list new-addr)))))
-      (aset record 5 new-addr-list)))
-   ;; Version 3 -> 2
-   ((= (cdr bbdb-file-format-migration) 2)
-    (bbdb-migrate-record record '((bbdb-record-raw-notes
-								   bbdb-record-set-raw-notes
-								   bbdb-unmigrate-change-dates))))
-   (t (error (format "BBDB Cannot unmigrate to unknown version %d"
-					 (car bbdb-file-format-migration))))))
+(defconst bbdb-migration-spec
+  '((2 (bbdb-record-raw-notes bbdb-record-set-raw-notes
+        bbdb-migrate-change-dates))
+    (3 (bbdb-record-addresses bbdb-record-set-addresses
+        bbdb-migrate-add-country-field))
+    (4 (bbdb-record-addresses bbdb-record-set-addresses
+        bbdb-migrate-streets-to-list)))
+  "The alist of (version . migration-spec-list).
+See `bbdb-migrate-record-lambda' for details.")
 
-(defun bbdb-migrate-record (rec changes)
-  "Perform changes on a single database record (passed in REC).
-CHANGES is a function containing entries of the form
+(defconst bbdb-unmigration-spec
+  '((2 (bbdb-record-raw-notes bbdb-record-set-raw-notes
+        bbdb-unmigrate-change-dates))
+    (3 (bbdb-record-addresses bbdb-record-set-addresses
+        bbdb-unmigrate-add-country-field))
+    (4 (bbdb-record-addresses bbdb-record-set-addresses
+        bbdb-unmigrate-streets-to-list)))
+  "The alist of (version . migration-spec-list).
+See `bbdb-migrate-record-lambda' for details.")
+
+(defun bbdb-migrate-record-lambda (changes)
+  "Return a function which will migrate a single record.
+CHANGES is a `migration-spec-list' containing entries of the form
 
         (GET SET FUNCTION)
 
@@ -234,36 +164,37 @@ where GET is the function to be used to retrieve the field to be
 modified, and SET is the function to be used to set the field to be
 modified.  FUNCTION will be applied to the result of GET, and its
 results will be saved with SET."
+  (byte-compile `(lambda (rec)
+                  ,@(mapcar (lambda (ch)
+                              `(,(cadr ch) rec
+                                (,(caddr ch)
+                                 (,(car ch) rec))))
+                            changes)
+                  rec)))
 
-;  (message "bbdb-migrate-record %s %s" (prin1-to-string rec)
-;	   (prin1-to-string changes))
-  (let (a b)
-    (while changes
-      ;; Whee!!!
-      (setq a (eval (list (nth 0 (car changes)) rec)))
-      (setq b (eval (list (nth 2 (car changes)) (quote a))))
-      (eval (list (nth 1 (car changes)) rec (quote b)))
-      (setq changes (cdr changes))))
-  rec)
+(defun bbdb-migrate-versions-lambda (v0 &optional v1)
+  "Return the function to migrate from V0 to V1.
+V1 defaults to `bbdb-file-format'."
+  (setq v1 (or v1 bbdb-file-format))
+  (let ((vv v0) spec)
+    (while (/= vv v1)
+      (setq spec (append spec (cdr (assoc vv bbdb-migration-spec)))
+            vv (if (< v0 v1) (1+ vv) (1- vv))))
+    (bbdb-migrate-record-lambda spec)))
 
 (defun bbdb-migrate-change-dates (rec)
   "Change date formats in timestamp and creation-date fields from
 \"dd mmm yy\" to \"yyyy-mm-dd\".  Assumes the notes are passed in as an
 argument."
-
-  (cond ((listp rec)
-	 (let ((recptr rec))
-	   (while recptr
-	     (if (memq (caar recptr) '(creation-date timestamp))
-		 (setcar recptr (bbdb-migrate-change-dates-change-field
-			     (car recptr))))
-	     (setq recptr (cdr recptr))))))
+  (mapc (lambda (rr)
+          (when (memq (car rr) '(creation-date timestamp))
+            (bbdb-migrate-change-dates-change-field rr)))
+        rec)
   rec)
 
 (defun bbdb-migrate-change-dates-change-field (field)
   "Migrate the date field (the cdr of FIELD) from \"dd mmm yy\" to
 \"yyyy-mm-dd\"."
-
   (let ((date (cdr field))
 	parsed)
     ;; Verify and extract - this is fairly hideous
@@ -323,20 +254,66 @@ argument."
   "Change date formats is timestamp and creation-date fields from
 \"yyyy-mm-dd\" to \"dd mmm yy\".  Assumes the notes list is passed in
 as an argument."
-
-  (cond ((listp rec)
-	 (let ((recptr rec))
-	   (while recptr
-	     (if (memq (caar recptr) '(creation-date timestamp))
-		 (setcar recptr (bbdb-unmigrate-change-dates-change-field
-			     (car recptr))))
-	     (setq recptr (cdr recptr)))))
-	(t rec)))
+  (mapc (lambda (rr)
+          (when (memq (car rr) '(creation-date timestamp))
+            (bbdb-unmigrate-change-dates-change-field rr)))
+        rec)
+  rec)
 
 (defun bbdb-unmigrate-change-dates-change-field (field)
   "Unmigrate the date field (the cdr of FIELD) from \"yyyy-mm-dd\" to
 \"yyyy-mm-dd\"."
   (cons (car field) (bbdb-time-convert (cdr field) "%e %b %y")))
+
+(defun bbdb-migrate-add-country-field (addrl)
+  "Add a courntry field to each address in the address list."
+  (mapcar (lambda (addr) (vconcat addr [""])) addrl))
+
+(defun bbdb-unmigrate-add-country-field (addrl)
+  "Remove the courntry field from each address in the address list."
+  ;; Some version 4 zip codes will be illegal version 3 (as used in
+  ;; 2.00.06) zip codes.  This problem has not been solved.
+  (mapcar (lambda (addr)
+            (let* ((len (1- (length addr)))
+                   (new-addr (make-vector len nil))
+                   (ii 0))
+              (while (< ii len)
+                (aset new-addr ii (aref addr ii))
+                (setq ii (1+ ii)))))
+          addrl))
+
+(defun bbdb-migrate-streets-to-list (addrl)
+  "Convert the streets to a list."
+  (mapcar (lambda (addr)
+            (vector (aref addr 0) ; tag
+                    (delete "" ; nuke empties
+                            (list (aref addr 1) ; street1
+                                  (aref addr 2) ; street2
+                                  (aref addr 3)));street3
+                    (aref addr 4) ; city
+                    (aref addr 5) ; state
+                    (aref addr 6) ; zip
+                    (aref addr 7))) ; country
+          addrl))
+
+(defun bbdb-unmigrate-streets-to-list (addrl)
+  "Convert the street list to the street[1-3] format."
+  ;; Take all the old addresses, ie. the 5th field, and for each
+  ;; address, render the third element (a list of streets) as three
+  ;; vector elements (v4-style address). If there's more than 3
+  ;; lines, everything remaining gets crammed into the third, using
+  ;; commas to separate the bits. If there's less, fill out with nil.
+  (mapcar (lambda (addr)
+            (let ((streets (aref addr 1)))
+              (vector (aref addr 0) ; tag
+                      (or (nth 0 streets) "")
+                      (or (nth 1 streets) "")
+                      (mapconcat 'identity (cddr streets) ", ")
+                      (aref addr 2) ; city
+                      (aref addr 3) ; state
+                      (aref addr 4) ; zip
+                      (aref addr 5)))) ; country
+          addrl))
 
 ;;;###autoload
 (defun bbdb-migrate-rewrite-all (message-p &optional records)

@@ -1,5 +1,16 @@
 2000-07-05  Sam Steingold  <sds@gnu.org>
 
+	* lisp/bbdb-migrate.el: rewrote migration in a modular way
+	(bbdb-[un]migration-spec): new consts
+	(bbdb-migrate-record-lambda): replaces `bbdb-migrate-record'
+	(bbdb-migrate-versions-lambda): new function
+	(bbdb-migrate, bbdb-unmigrate-record): use it
+	(bbdb-[un]migrate-change-dates): use mapcar
+	(bbdb-[un]migrate-add-country-field,
+	bbdb-[un]migrate-streets-to-list): new functions
+
+2000-07-05  Sam Steingold  <sds@gnu.org>
+
 	* lisp/bbdb.el (parse-bbdb-internal): bind, not setq the version.
 
 2000-07-03  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
