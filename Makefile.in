@@ -12,7 +12,7 @@ EMACS = @EMACS@ -no-site-file -no-init-file
 SUBDIRS = lisp texinfo tex utils
 
 TARFILES = ChangeLog INSTALL Makefile README                        \
-           aclocal.m4 configure configure.in install-sh Makefile.in \
+           aclocal.m4 configure configure.ac install-sh Makefile.in \
            bits lisp misc tex texinfo utils
 
 syntax:

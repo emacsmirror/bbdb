@@ -1,3 +1,6 @@
+2001-06-05 Waider <waider@waider.ie>
+    * Makefile.in: Fixed tarball build to work with new autoconf stuff
+
 2001-06-05  Didier Verna  <didier@xemacs.org>
 
 	* aclocal.m4: upgrade to Autoconf 2.50.
