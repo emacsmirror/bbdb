@@ -1,3 +1,10 @@
+2001-09-04  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-annotate-message-sender): alling of
+	bbdb-create-hook functions moved to the end of function
+	(bbdb-display-layout-alist): replaced by the nice version
+	provieded by Alex Schroeder <alex@gnu.org>
+
 2001-08-31  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-hooks.el (bbdb-auto-notes-alist): applied posted
