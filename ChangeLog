@@ -1,3 +1,9 @@
+2002-03-13  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-complete-name): Create a popup buffer
+	before displaying records in order to make sure it has the right
+	size.
+
 2002-03-12  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-snarf.el (bbdb-snarf-region): use the function 
