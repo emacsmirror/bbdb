@@ -1,6 +1,11 @@
 $Id$
 
-Fix gnus scoring so it rebuilds when gnus-score disappears
+* Fix gnus scoring so it rebuilds when gnus-score disappears
+* Rewrite bbdb-compare-records with backquote
+* Keyword arguments for bbdb-initialize
+* Trim auto-autoloads (only need bbdb-initialize?)
+* Multiline note fields
+* Rewrite bbdb-ftp
 
 Features
 ========
