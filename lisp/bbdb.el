@@ -291,8 +291,8 @@ to a record already in the database with the same network address.  As in,
 \"John Smith <jqs@frob.com>\" versus \"John Q. Smith <jqs@frob.com>\".
 Normally you will be asked if you want to change it."
   :group 'bbdb-noticing-records
-  :type '(choice (const :tag "Prompt for name changes" t)
-		 (const :tag "Do not prompt for name changes" nil)))
+  :type '(choice (const :tag "Prompt for name changes" nil)
+				 (const :tag "Do not prompt for name changes" t)))
 
 (defcustom bbdb-use-alternate-names t
   "*If this is true, then when bbdb notices a name change, it will ask you
