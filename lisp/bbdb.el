@@ -746,9 +746,11 @@ Database initialization function `bbdb-initialize' is run."
 ;; emacs-mule would be better) with both Emacs 21 and XEmacs.  Emacs
 ;; 22 will really need utf-8-emacs.
 (defconst bbdb-file-coding-system (if (fboundp 'coding-system-p)
-                      (if (coding-system-p 'utf-8-emacs)
-                      'utf-8-emacs
-                    'iso-2022-7bit))
+                      (cond ((coding-system-p 'utf-8-emacs)
+			     'utf-8-emacs)
+			    ((coding-system-p 'mule-utf-8)
+			     'mule-utf-8)
+			    (t 'iso-2022-7bit)))
   "Coding system used for reading and writing `bbdb-file'.
 This should not be changed by users.")
 
