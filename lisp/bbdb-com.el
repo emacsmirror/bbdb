@@ -1801,8 +1801,8 @@ composition buffer.)"
           (while (and nets (not ok))
             (setq ok (string= sym (downcase (car nets)))
                   nets (cdr nets))))
-        (when (memq bbdb-completion-type
-                    '(primary primary-or-name name-or-primary))
+        (when (and nets (memq bbdb-completion-type
+                    '(primary primary-or-name name-or-primary)))
           (setq ok (string= sym (downcase (car nets)))))))
     ok))
 
@@ -2003,12 +2003,12 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
               the-net (cadr the-net))
         (if (not rec)
             (setq rec (bbdb-search-simple name the-net)))
-        (when rec 
+        (when rec
           (setq nets (bbdb-record-net rec))
           (delete-region beg end)
           (if current-prefix-arg
               (let ((standard-output (get-buffer-create "*Completions*")))
-                ;; a previously existing buffer has to be cleaned first 
+                ;; a previously existing buffer has to be cleaned first
                 (save-excursion (set-buffer standard-output)
                                 (setq buffer-read-only nil)
                                 (erase-buffer))
@@ -2295,7 +2295,7 @@ The new alias will only be added if it isn't there yet."
      ""))
         "*If this is non-nil, it should be a alist with elements of the form
   (PREFIX-REGEXP . REPLACEMENT)
-e.g. matching prefix which your local phone system (in company) has. 
+e.g. matching prefix which your local phone system (in company) has.
 The first matching one will be replaced by is REPLACEMENT in order to use the
 shorter number for dialing.  This might reduce cost by using a intern
 telephone system."
@@ -2363,7 +2363,7 @@ modem or the like."
         (position 0)
         (modem-command bbdb-modem-dial)
         number)
-    
+
     (while (< position length)
       (setq number (aref phone-string position))
       (setq number
@@ -2387,11 +2387,11 @@ modem or the like."
                  (sit-for 0)))
         (if (numberp number)
             (if bbdb-modem-dial
-                ;; "," is a pause 
+                ;; "," is a pause
                 (setq modem-command (concat modem-command ","))
               (sit-for number))))
       (setq position (1+ position)))
-    
+
     (if bbdb-modem-dial
         (with-temp-buffer
           (insert modem-command ";\r\n")
