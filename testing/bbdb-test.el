@@ -6,6 +6,11 @@
 ;; verifies that the changes you've just made haven't killed some
 ;; other part of BBDB.
 ;;
+;; Use the function bbdb-test/switch-to-test-bbdb to use the BBDB with the
+;; default test cases and exit-recursive-edit to come back to the original
+;; BBDB.  Eventually this should happen automatically, but it is nice to edit
+;; the test BBDB also manually. 
+;;
 ;; Authors: Waider & Robert Fenk
 ;;
 ;; This stuff doesn't get included in the tarball.
@@ -52,7 +57,14 @@ When it does not existm, create one an setup the key bindings."
       (erase-buffer)
       (pop-to-buffer buf)
       buf)))
-  
+
+(defun bbdb-test/kill-current-bbdb ()
+  (bbdb-save-db)
+  (if bbdb-buffer
+      (kill-buffer bbdb-buffer))
+  (if (get-file-buffer old-bbdb-file)
+      (kill-buffer (get-file-buffer old-bbdb-file))))
+
 (defun bbdb-test/switch-to-test-bbdb ()
   "Edit the test BBDB"
   (interactive)
@@ -60,11 +72,7 @@ When it does not existm, create one an setup the key bindings."
         (bbdb-file (expand-file-name bbdb-test/bbdb-file)))
 
     ;; cleanup for normal BBDB
-    (bbdb-save-db)
-    (if bbdb-buffer
-        (kill-buffer bbdb-buffer))
-    (if (get-file-buffer old-bbdb-file)
-        (kill-buffer (get-file-buffer old-bbdb-file)))
+    (bbdb-test/kill-current-bbdb)
 
     ;; now care for test BBDB
     (condition-case err
@@ -74,10 +82,12 @@ When it does not existm, create one an setup the key bindings."
                    (abbreviate-file-name bbdb-file))
           (recursive-edit))
       (error
+       (bbdb-test/kill-current-bbdb)
        (message "Returned to BBDB %s due to %s"
 		(abbreviate-file-name old-bbdb-file)
                 err))
       (quit
+       (bbdb-test/kill-current-bbdb)
        (message "Returned to BBDB %s due to %s"
 		(abbreviate-file-name old-bbdb-file)
                 err)))))
