@@ -38,22 +38,17 @@ dnl directory just for that file.
 dnl AC_ CONFIG_AUX_DIR
 dnl The following macro is incompatible with the current Automake, but we
 dnl don't use it for now.
+AC_CONFIG_FILES([Makefile
+                 lisp/Makefile
+                 texinfo/Makefile
+                 tex/Makefile
+                 utils/Makefile])
+
 dnl Make sure we don't accidentally try to configure a testing directory if
 dnl one doesn't exist.
 if [[ -d testing ]]
 then
-  AC_CONFIG_FILES([Makefile
-                   lisp/Makefile
-                   texinfo/Makefile
-                   tex/Makefile
-                   utils/Makefile
-                   testing/Makefile])
-else
-  AC_CONFIG_FILES([Makefile
-                   lisp/Makefile
-                   texinfo/Makefile
-                   tex/Makefile
-                   utils/Makefile])
+  AC_CONFIG_FILES([testing/Makefile])
 fi
 
 dnl Common system utilities checking:
