@@ -33,21 +33,21 @@
 ;; MIGRATE XXX
 (eval-and-compile
   (if (fboundp 'set-specifier)
-      (fset 'bbdb-set-specifier 'set-specifier)
-    (fset 'bbdb-set-specifier 'ignore))
+      (defalias 'bbdb-set-specifier 'set-specifier)
+    (defalias 'bbdb-set-specifier 'ignore))
   (if (fboundp 'make-glyph)
-      (fset 'bbdb-make-glyph 'make-glyph)
-    (fset 'bbdb-make-glyph 'ignore))
+      (defalias 'bbdb-make-glyph 'make-glyph)
+    (defalias 'bbdb-make-glyph 'ignore))
   (if (fboundp 'set-glyph-face)
-      (fset 'bbdb-set-glyph-face 'set-glyph-face)
-    (fset 'bbdb-set-glyph-face 'ignore))
+      (defalias 'bbdb-set-glyph-face 'set-glyph-face)
+    (defalias 'bbdb-set-glyph-face 'ignore))
   (if (fboundp 'highlight-headers-x-face)
-      (fset 'bbdb-highlight-headers-x-face 'highlight-headers-x-face)
-    (fset 'bbdb-highlight-headers-x-face 'ignore))
+      (defalias 'bbdb-highlight-headers-x-face 'highlight-headers-x-face)
+    (defalias 'bbdb-highlight-headers-x-face 'ignore))
   (if (fboundp 'highlight-headers-x-face-to-pixmap)
-      (fset 'bbdb-highlight-headers-x-face-to-pixmap
+      (defalias 'bbdb-highlight-headers-x-face-to-pixmap
             'highlight-headers-x-face-to-pixmap)
-    (fset 'bbdb-highlight-headers-x-face-to-pixmap 'ignore)))
+    (defalias 'bbdb-highlight-headers-x-face-to-pixmap 'ignore)))
 
 
 (if (featurep 'xemacs)
@@ -67,10 +67,11 @@
 
 (eval-and-compile
   (if (fboundp 'find-face)
-      (fset 'bbdb-find-face 'find-face)
+      (defalias 'bbdb-find-face 'find-face)
     (if (fboundp 'internal-find-face) ;; GRR.
-        (fset 'bbdb-find-face 'internal-find-face)
-      (fset 'bbdb-find-face 'ignore)))) ; noop - you probably don't HAVE faces.
+	;; This should be facep in Emacs 21
+        (defalias 'bbdb-find-face 'internal-find-face)
+      (defalias 'bbdb-find-face 'ignore)))) ; noop - you probably don't HAVE faces.
 
 (or (bbdb-find-face 'bbdb-name)
     (face-differs-from-default-p (make-face 'bbdb-name))
@@ -94,12 +95,12 @@
 ;;; change bbdb-foo-extents below to vm-foo-extents, etc.
 (eval-and-compile
   (if (fboundp 'make-extent)
-      (fset 'bbdb-make-extent 'make-extent)
-    (fset 'bbdb-make-extent 'make-overlay))
+      (defalias 'bbdb-make-extent 'make-extent)
+    (defalias 'bbdb-make-extent 'make-overlay))
 
   (if (fboundp 'delete-extent)
-      (fset 'bbdb-delete-extent 'delete-extent)
-    (fset 'bbdb-delete-extent 'delete-overlay))
+      (defalias 'bbdb-delete-extent 'delete-extent)
+    (defalias 'bbdb-delete-extent 'delete-overlay))
 
   (if (fboundp 'mapcar-extents)
       (defmacro bbdb-list-extents() `(mapcar-extents 'identity))
@@ -113,7 +114,7 @@
       (list 'overlays-in s e)))
 
   (if (fboundp 'set-extent-property)
-      (fset 'bbdb-set-extent-property 'set-extent-property)
+      (defalias 'bbdb-set-extent-property 'set-extent-property)
     (defun bbdb-set-extent-property( e p v )
       (if (eq 'highlight p)
           (if v
@@ -122,11 +123,11 @@
       (overlay-put e p v)))
 
   (if (fboundp 'extent-property)
-      (fset 'bbdb-extent-property 'extent-property)
-    (fset 'bbdb-extent-property 'overlay-get))
+      (defalias 'bbdb-extent-property 'extent-property)
+    (defalias 'bbdb-extent-property 'overlay-get))
 
   (if (fboundp 'extent-at)
-      (fset 'bbdb-extent-at 'extent-at)
+      (defalias 'bbdb-extent-at 'extent-at)
     (defun bbdb-extent-at (pos buf tag) "NOT FULL XEMACS IMPLEMENTATION"
       (let ((o (overlays-at pos))
             minpri retval)
@@ -141,36 +142,37 @@
         retval)))
 
   (if (fboundp 'highlight-extent)
-      (fset 'bbdb-highlight-extent 'highlight-extent)
-    (fset 'bbdb-highlight-extent 'ignore)) ; XXX noop
+      (defalias 'bbdb-highlight-extent 'highlight-extent)
+    (defalias 'bbdb-highlight-extent 'ignore)) ; XXX noop
 
   (if (fboundp 'extent-start-position)
-      (fset 'bbdb-extent-start-position 'extent-start-position)
-    (fset 'bbdb-extent-start-position 'overlay-start))
+      (defalias 'bbdb-extent-start-position 'extent-start-position)
+    (defalias 'bbdb-extent-start-position 'overlay-start))
 
   (if (fboundp 'extent-end-position)
-      (fset 'bbdb-extent-end-position 'extent-end-position)
-    (fset 'bbdb-extent-end-position 'overlay-end))
+      (defalias 'bbdb-extent-end-position 'extent-end-position)
+    (defalias 'bbdb-extent-end-position 'overlay-end))
 
   (if (fboundp 'extent-face)
-      (fset 'bbdb-extent-face 'extent-face)
+      (defalias 'bbdb-extent-face 'extent-face)
     (defun bbdb-extent-face (extent)
       (overlay-get extent 'face)))
 
   (if (fboundp 'set-extent-face)
-      (fset 'bbdb-set-extent-face 'set-extent-face)
+      (defalias 'bbdb-set-extent-face 'set-extent-face)
     (defun bbdb-set-extent-face (extent face) "set the face for an overlay"
       (overlay-put extent 'face face)))
 
   (if (fboundp 'set-extent-begin-glyph)
-      (fset 'bbdb-set-extent-begin-glyph 'set-extent-begin-glyph)
-    (fset 'bbdb-set-extent-begin-glyph 'ignore)) ; XXX noop
+      (defalias 'bbdb-set-extent-begin-glyph 'set-extent-begin-glyph)
+    (defalias 'bbdb-set-extent-begin-glyph 'ignore)) ; XXX noop
 
   (if (fboundp 'set-extent-end-glyph)
-      (fset 'bbdb-set-extent-end-glyph 'set-extent-end-glyph)
-    (fset 'bbdb-set-extent-end-glyph 'ignore))) ; XXX noop
+      (defalias 'bbdb-set-extent-end-glyph 'set-extent-end-glyph)
+    (defalias 'bbdb-set-extent-end-glyph 'ignore))) ; XXX noop
 
 
+(eval-when-compile (defvar scrollbar-height))
 ;;;###autoload
 (defun bbdb-fontify-buffer (&optional records)
   (interactive)
@@ -252,7 +254,9 @@
 
 ;;; share the xface cache data with VM if it's around
 (defvar vm-xface-cache (make-vector 29 0))
+(eval-when-compile (defvar highlight-headers-hack-x-face-p))
 
+;; In Emacs 21, this could use the x-face support from Gnus.
 (defun bbdb-hack-x-face (face extent)
   "Process a face property of a record and honour it.
 Not done for GNU Emacs just yet, since it doesn't have image support

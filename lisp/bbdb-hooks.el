@@ -83,6 +83,12 @@ which is the current time string."
 ;;; Determining whether to create a record based on the content of the
 ;;; current message.
 
+(eval-when-compile
+  (defvar vm-mail-buffer)
+  (defvar vm-message-pointer)
+  (autoload 'vm-start-of "vm")
+  (autoload 'bbdb/vm-pop-up-bbdb-buffer "bbdb-vm"))
+
 ;;;###autoload
 (defun bbdb-header-start ()
   "Returns a marker at the beginning of the header block of the current

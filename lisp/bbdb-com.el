@@ -25,8 +25,9 @@
 
 (require 'bbdb)
 ;;(require 'bbdb-snarf) causes recursive compile!
-(defvar bbdb-extract-address-components-func);; bbdb-snarf
-(require 'cl)
+(eval-when-compile
+  (require 'cl)
+  (defvar bbdb-extract-address-components-func)) ;; bbdb-snarf
 ;; ARGH. fmh, dammit.
 (require
  (eval-and-compile
@@ -1886,11 +1887,13 @@ the name is always included."
 
 (defun bbdb-send-mail-internal (&optional to subj records)
   (let ((type (or bbdb-send-mail-style
-                  (cond ((featurep 'mh-e) 'mh)
+          ;; In Emacs, `compose-mail' gets whatever you've
+          ;; customized as your preferred `mail-user-agent'.
+                  (cond ((fboundp 'compose-mail) 'compose-mail)
+                        ((featurep 'mh-e) 'mh)
                         ((featurep 'vm) 'vm)
                         ((featurep 'message) 'message)
                         ((featurep 'mew) 'mew)
-                        ((featurep 'compose-mail) 'compose-mail)
                         (t 'mail)))))
     (cond
      ((eq type 'mh)
@@ -2235,6 +2238,8 @@ Currently only used by XEmacs."
   :group 'bbdb-mua-specific
   :type 'boolean)
 
+(eval-when-compile (defvar auto-fill-hook))
+
 ;;;###autoload
 (defun bbdb-complete-name (&optional start-pos)
   "Complete the user full-name or net-address before point (up to the
@@ -2324,7 +2329,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                     (switch-to-buffer standard-output))
                 ;; use next address
                 (let* ((addrs (bbdb-record-net rec))
-                       (this-addr (or (cadr (member (cadar addr) addrs))
+                       (this-addr (or (cadr (member (car (cdar addr)) addrs))
                                       (nth 0 addrs))))
                   (if (= (length addrs) 1)
                       ;; no alternatives. don't signal an error.
@@ -2822,11 +2827,20 @@ try to use internal sound if available."
       ;; This requires the sound files to be loaded via bbdb-xemacs.
       (funcall 'play-sound (intern (format "touchtone%d" num))
                bbdb-sound-volume)
-    (if (and bbdb-sound-player
-             (file-exists-p bbdb-sound-player))
-        (call-process bbdb-sound-player nil nil nil
-                      (aref bbdb-sound-files num))
-      (error "BBDB has no means of playing sound."))))
+    (if (and (not (featurep 'xemacs))
+             ;; We can't tell a priori if Emacs 21 facility will
+             ;; actually work.
+             (condition-case nil
+                 (play-sound (list 'sound
+                                   :file (aref bbdb-sound-files
+                                               (string-to-int num))
+                                   :volume (or volume bbdb-sound-volume)))
+               (error nil)))
+        (if (and bbdb-sound-player
+                 (file-exists-p bbdb-sound-player))
+            (call-process bbdb-sound-player nil nil nil
+                          (aref bbdb-sound-files num))
+          (error "BBDB has no means of playing sound.")))))
 
 (eval-and-compile
   (if (fboundp 'next-event)
@@ -2894,7 +2908,7 @@ is given."
       (let ((alist bbdb-dial-local-prefix-alist))
         (while alist
           (if (string-match (concat "^" (eval (caar alist))) number)
-              (setq shortnumber (concat (cadar alist)
+              (setq shortnumber (concat (car (cdar alist))
                                         (substring number (match-end 0)))
                     alist nil))
           (setq alist (cdr alist)))))
@@ -3397,10 +3411,6 @@ C-g again it will stop scanning."
 ;; Some cases are handled with signals in order to keep the changes in
 ;; bbdb-annotate-message-sender as minimal as possible.
 
-;; GNU vs XEmacs again. GAH.
-(or (fboundp 'char-int)
-    (fset 'char-int 'identity))
-
 (defun bbdb-prompt-for-create ()
   "This function is used by `bbdb-update-records' to ask the user how to
 proceed the processing of records."
@@ -3490,7 +3500,7 @@ Changing this variable will show its effect only after clearing the
                                 header-content))
           (while adlist
             (setq fn (caar adlist)
-                  ad (cadar adlist))
+                  ad (car (cdar adlist)))
 
             ;; ignore uninteresting addresses, this is kinda gross!
             (if (or (not (stringp ignore-senders))

@@ -225,7 +225,9 @@ requested for a couple of seconds."
     nil))
 
 ;;;###autoload
-(fset 'bbdb-srv 'bbdb/srv-handle-headers-with-delay)
+(defalias 'bbdb-srv 'bbdb/srv-handle-headers-with-delay)
+
+(autoload 'bbdb-header-start "bbdb-hooks")
 
 ;;;###autoload
 (defun bbdb/srv-auto-create-mail-news-dispatcher ()

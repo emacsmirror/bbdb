@@ -38,7 +38,7 @@
 ;;; $Id$
 
 (require 'timezone)
-(require 'cl)
+(eval-when-compile (require 'cl))
 
 (eval-when-compile              ; pacify the compiler.
  (autoload 'widget-group-match "wid-edit")
@@ -64,9 +64,10 @@
 (defconst bbdb-version "2.35")
 (defconst bbdb-version-date "$Date$")
 
-(defcustom bbdb-gui (not (null window-system))
-  "*Should the *BBDB* buffer be fontified?
-This variable has no effect if set outside of customize."
+(defcustom bbdb-gui (if (fboundp 'display-color-p) ; Emacs 21
+			(display-color-p)
+		      (not (null window-system))) ; wrong for XEmacs?
+  "*Non-nil means fontify the *BBDB* buffer."
   :group 'bbdb
   :type 'boolean)
 
@@ -89,8 +90,10 @@ prompt the users on how to merge records when duplicates are detected.")
     (defmacro unless (bool &rest forms) `(if ,bool nil ,@forms))
     (defmacro when (bool &rest forms) `(if ,bool (progn ,@forms))))
   (unless (fboundp 'save-current-buffer)
-    (fset 'save-current-buffer 'save-excursion))
-  (unless (fboundp 'mapc) (fset 'mapc 'mapcar))
+    (defalias 'save-current-buffer 'save-excursion))
+  (if (fboundp 'mapc)
+      (defalias 'bbdb-mapc 'mapc)
+    (defalias 'bbdb-mapc 'mapcar))
   )
 
 (unless (fboundp 'with-current-buffer)
@@ -125,7 +128,7 @@ prompt the users on how to merge records when duplicates are detected.")
       bbdb-no-duplicates-p)
     ;; user variables
     (sort (apropos-internal "^bbdb"
-                            (lambda (symbol) (user-variable-p symbol)))
+                            'user-variable-p)
           (lambda (v1 v2) (string-lessp (format "%s" v1) (format "%s" v2))))
     ;; see what the user had loaded
     (list 'features)
@@ -724,6 +727,11 @@ Database initialization function `bbdb-initialize' is run."
 (defvar bbdb-mode-search-map nil
   "Keymap for Insidious Big Brother Database searching")
 
+;; This value should be OK (but not optimal for Emacs, at least) with
+;; both Emacs and XEmacs.
+(defvar bbdb-file-coding-system 'iso-2022-7bit
+  "Coding system used for reading and writing `bbdb-file'.")
+
 (defvar bbdb-suppress-changed-records-recording nil
   "Whether to record changed records in variable `bbdb-changed-records'.
 
@@ -736,7 +744,6 @@ You should bind this variable, not set it; the `!!' is a useful user-
 interface feature, and should only be suppressed when changes need to be
 automatically made to BBDB records which the user will not care directly
 about.")
-
 
 
 ;;; These are the buffer-local variables we use.
@@ -1103,9 +1110,11 @@ If the note is absent, returns a zero length string."
       bbdb-buffer
     (when (and bbdb-file-remote
                (file-newer-than-file-p bbdb-file-remote bbdb-file))
-      (copy-file bbdb-file-remote bbdb-file t t))
+      (let ((coding-system-for-write bbdb-file-coding-system))
+	(copy-file bbdb-file-remote bbdb-file t t)))
     (setq bbdb-buffer
-          (find-file-noselect bbdb-file 'nowarn))))
+          (let ((coding-system-for-read bbdb-file-coding-system))
+	    (find-file-noselect bbdb-file 'nowarn)))))
 
 (defmacro bbdb-with-db-buffer (&rest body)
   (cons 'with-current-buffer
@@ -1308,10 +1317,10 @@ This is a possible identifying function for
   "Insert street subfields of address ADDR in current buffer.
 This may be used by formatting functions listed in
 `bbdb-address-formatting-alist'."
-  (mapc (lambda(str)
-          (indent-to indent)
-          (insert str "\n"))
-        (bbdb-address-streets addr)))
+  (bbdb-mapc (lambda(str)
+	       (indent-to indent)
+	       (insert str "\n"))
+	     (bbdb-address-streets addr)))
 
 (defun bbdb-format-address-continental (addr &optional indent)
   "Insert formated continental address ADDR in current buffer.
@@ -2110,7 +2119,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
         (set (make-local-variable 'bbdb-propnames) nil)
         (set (make-local-variable 'revert-buffer-function)
              'bbdb-revert-buffer)
-        (mapc (lambda (ff) (add-hook 'local-write-file-hooks ff))
+        (bbdb-mapc (lambda (ff) (add-hook 'local-write-file-hooks ff))
               bbdb-write-file-hooks)
         (setq bbdb-hashtable (make-vector bbdb-hashtable-size 0)))
       (setq bbdb-modified-p (buffer-modified-p)
@@ -2352,7 +2361,8 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
                                    bbdb-file-remote))))
     ;; write the current buffer, which is `bbdb-file' (since this is called
     ;; from its `local-write-file-hooks'), into the `bbdb-file-remote'.
-    (write-region (point-min) (point-max) bbdb-file-remote)))
+    (let ((coding-system-for-write bbdb-file-coding-system))
+      (write-region (point-min) (point-max) bbdb-file-remote))))
 
 (defun bbdb-delete-record-internal (record)
   (if (null (bbdb-record-marker record)) (error "bbdb: marker unpresent"))
@@ -3444,8 +3454,8 @@ passed as arguments to initiate the appropriate insinuations.
    supercite  citation package.
    w3         Initialize BBDB support for Web browsers."
 
-  (fset 'advertized-bbdb-delete-current-field-or-record
-        'bbdb-delete-current-field-or-record)
+  (defalias 'advertized-bbdb-delete-current-field-or-record
+    'bbdb-delete-current-field-or-record)
 
   (require 'bbdb-autoloads)
 

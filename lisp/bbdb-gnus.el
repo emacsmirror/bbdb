@@ -112,7 +112,8 @@ C-g again it will stop scanning."
         (msg-id (bbdb/gnus-get-message-id))
         records cache)
     (save-excursion
-      (set-buffer gnus-original-article-buffer)
+      (set-buffer (get-buffer gnus-article-buffer))
+      (gnus-summary-toggle-header 1)
       (if (and msg-id (not bbdb/gnus-offer-to-create))
           (setq cache (bbdb-message-cache-lookup msg-id)))
 
@@ -134,6 +135,7 @@ C-g again it will stop scanning."
                          offer-to-create)))
         (if (and bbdb-message-caching-enabled msg-id)
             (bbdb-encache-message msg-id records))))
+    (gnus-summary-toggle-header -1)	; assume hidden originally
     records))
 
 ;;;###autoload
@@ -407,6 +409,8 @@ This function is meant to be used with the user function defined in
     ;; this is a little bogus, since it will remain set after you've
     ;; quit Gnus
     (or gnus-article-buffer (error "Not in Gnus!"))
+    ;; This is wrong for non-ASCII text.  Why not use
+    ;; gnus-article-hide-signature?
     (set-buffer gnus-original-article-buffer)
     (save-restriction
       (or (gnus-article-narrow-to-signature) (error "No signature!"))
@@ -503,9 +507,10 @@ addresses better than the traditionally static global scorefile."
                                  bbdb-display-layout))
         (bbdb-auto-notes-alist nil))
     (bbdb/gnus-pop-up-bbdb-buffer nil)
-    (set-buffer gnus-original-article-buffer)
+    (set-buffer (get-buffer gnus-article-buffer))
+    (gnus-summary-toggle-header 1)
     (bbdb-show-all-recipients)
-    ))
+    (gnus-summary-toggle-header -1)))
 
 ;;; from Brian Edmonds' gnus-bbdb.el
 ;;;

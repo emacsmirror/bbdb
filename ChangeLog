@@ -20,11 +20,59 @@
 	                    (bbdb/gnus-show-all-recipients):
         Fixed  */show-all-reciepients to always do what it should do!
 
+2002-04-10  Dave Love  <fx@gnu.org>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-show-all-recipients)
+	(bbdb/gnus-update-records): Revert last change
+	but use gnus-summary-toggle-header.
+
+	* lisp/bbdb.el: Require cl only when compiling.
+	Use defalias, not fset generally.
+	(bbdb-mapc): Define instead of aliasing mapcar.
+	(bbdb-submit-bug-report): Avoid useless lambda.
+	(bbdb-format-streets, bbdb-records): Use bbdb-mapc.
+	(bbdb-gui): Fix default, doc.
+	(bbdb-have-re-char-classes): New.
+	(bbdb-clean-username): Use it.
+
+	* lisp/bbdb-srv.el (bbdb-srv): Defalias, not fset.
+	(bbdb-header-start): Autoload.
+
+	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
+	Match Outlook style.
+	(bbdb-extract-address-components): Avoid cadar, caddar.
+
+	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail): Use defalias, not
+	fset.
+
+	* lisp/bbdb-migrate.el (bbdb-migrate, bbdb-migrate-change-dates):
+	Use bbdb-mapc.
+	(bbdb-migrate-record-lambda): Avoid caddr.
+	(bbdb-unmigrate-change-dates): Doc fix.  Use bbdb-mapc.
+
+	* lisp/bbdb-gui.el: Use defalias, not fset generally.
+	(scrollbar-height, highlight-headers-hack-x-face-p): Defvar when
+	compiling.
+	(build-bbdb-insert-field-menu): Fix generation of actions.
+
+	* lisp/bbdb-com.el: Require cl and defvar
+	bbdb-extract-address-components-func only when compiling.
+	(bbdb-send-mail-internal): Try compose-mail first.
+	(auto-fill-hook): Defvar when compiling.
+	(bbdb-complete-name, bbdb-dial, bbdb-get-addresses): Avoid cadar.
+	(char-int): Don't fset it -- unused.
+	(bbdb-play-sound): Provide Emacs 21 case.  Fix fallback case.
+
+	* lisp/bbdb.el (bbdb-file-coding-system): New variable.
+	(bbdb-buffer, bbdb-write-file-hook-fn): Use it.
+
 2002-03-20  Waider  <waider@waider.ie>
 
 	* texinfo/bbdb.texinfo:
 	Rewrote the section on bbdb-dial and its associated variables.
 	Updated copyright notice and version information.
+	Added note about VM integration requiring VM source.
+	Added bbdb-initialize detail to subsection on VM.
 
 2002-03-13  Robert Fenk  <Robert.Fenk@gmx.de>
 

@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.18  2002/05/12 22:17:03  waider
+;; Dave Love's big patch. See ChangeLog for full details.
+;;
 ;; Revision 1.17  2001/05/17 17:15:31  fenk
 ;; (bbdb-unmigrate-zip-codes-to-strings): Fixed the faulty use of let instead of let*.
 ;;
@@ -139,8 +142,8 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
   "Migrate the BBDB from the version on disk (the car of
 `bbdb-file-format-migration') to the current version (in
 `bbdb-file-format')."
-  (mapc (bbdb-migrate-versions-lambda (car bbdb-file-format-migration))
-        records)
+  (bbdb-mapc (bbdb-migrate-versions-lambda (car bbdb-file-format-migration))
+	     records)
   records)
 
 ;;;###autoload
@@ -190,7 +193,7 @@ results will be saved with SET."
   (byte-compile `(lambda (rec)
                   ,@(mapcar (lambda (ch)
                               `(,(cadr ch) rec
-                                (,(caddr ch)
+                                (,(car (cddr ch))
                                  (,(car ch) rec))))
                             changes)
                   rec)))
@@ -299,13 +302,14 @@ This uses the code that used to be in bbdb-parse-zip-string."
           addrs))
 
 (defun bbdb-migrate-change-dates (rec)
-  "Change date formats in timestamp and creation-date fields from
+  "Change date formats.
+Formats are changed in timestamp and creation-date fields from
 \"dd mmm yy\" to \"yyyy-mm-dd\".  Assumes the notes are passed in as an
 argument."
-  (mapc (lambda (rr)
-          (when (memq (car rr) '(creation-date timestamp))
-            (bbdb-migrate-change-dates-change-field rr)))
-        rec)
+  (bbdb-mapc (lambda (rr)
+	       (when (memq (car rr) '(creation-date timestamp))
+		 (bbdb-migrate-change-dates-change-field rr)))
+	     rec)
   rec)
 
 (defun bbdb-migrate-change-dates-change-field (field)
@@ -367,13 +371,14 @@ argument."
           field date)))))
 
 (defun bbdb-unmigrate-change-dates (rec)
-  "Change date formats is timestamp and creation-date fields from
+  "Change date formats.
+Formats are changed in timestamp and creation-date fields from
 \"yyyy-mm-dd\" to \"dd mmm yy\".  Assumes the notes list is passed in
 as an argument."
-  (mapc (lambda (rr)
-          (when (memq (car rr) '(creation-date timestamp))
-            (bbdb-unmigrate-change-dates-change-field rr)))
-        rec)
+  (bbdb-mapc (lambda (rr)
+	       (when (memq (car rr) '(creation-date timestamp))
+		 (bbdb-unmigrate-change-dates-change-field rr)))
+	     rec)
   rec)
 
 (defun bbdb-unmigrate-change-dates-change-field (field)

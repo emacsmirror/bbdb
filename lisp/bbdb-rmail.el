@@ -160,17 +160,17 @@ Leaves original message, deleted, before the undigestified messages."
   ;; message invalidates the cache (which is based on message numbers).
   ;; Same for undigestifying.
   (or (fboundp 'bbdb-orig-rmail-expunge)
-      (fset 'bbdb-orig-rmail-expunge (symbol-function 'rmail-expunge)))
-  (fset 'rmail-expunge 'bbdb/rmail-expunge)
+      (defalias 'bbdb-orig-rmail-expunge (symbol-function 'rmail-expunge)))
+  (defalias 'rmail-expunge 'bbdb/rmail-expunge)
 
   (or (fboundp 'undigestify-rmail-message)
       (autoload 'undigestify-rmail-message "undigest" nil t))
   (if (eq (car-safe (symbol-function 'undigestify-rmail-message)) 'autoload)
       (load (nth 1 (symbol-function 'undigestify-rmail-message))))
   (or (fboundp 'bbdb-orig-undigestify-rmail-message)
-      (fset 'bbdb-orig-undigestify-rmail-message
+      (defalias 'bbdb-orig-undigestify-rmail-message
             (symbol-function 'undigestify-rmail-message)))
-  (fset 'undigestify-rmail-message 'bbdb/undigestify-rmail-message)
+  (defalias 'undigestify-rmail-message 'bbdb/undigestify-rmail-message)
   )
 
 (provide 'bbdb-rmail)
