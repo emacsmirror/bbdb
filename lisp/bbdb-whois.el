@@ -36,6 +36,13 @@
   :group 'bbdb-utilities
   :type 'string)
 
+(defvar bbdb-whois-name nil
+  "Used to store the name during a whois call.")
+(make-variable-buffer-local 'bbdb-whois-name)
+(defvar bbdb-whois-record nil
+  "Used to store the record during a whois call.")
+(make-variable-buffer-local 'bbdb-whois-record)
+
 ;;; main entry point. it'd be nice if we could bbdb-whois an arbitrary
 ;;; name and make a record from that directly.
 
@@ -50,12 +57,12 @@
       ;; XXX we seem to get called with a vector of nils.
       (save-excursion
     (set-buffer (generate-new-buffer " *bbdb-whois*"))
-    (set (make-local-variable 'bbdb-whois-record) the-record)
-    (set (make-local-variable 'bbdb-whois-name)
+    (set bbdb-whois-record the-record)
+    (set bbdb-whois-name
          (if (bbdb-record-getprop the-record 'nic)
-         (concat "!" (bbdb-record-getprop the-record 'nic))
+             (concat "!" (bbdb-record-getprop the-record 'nic))
            (concat (bbdb-record-lastname the-record) ", "
-               (bbdb-record-firstname the-record))))
+                   (bbdb-record-firstname the-record))))
     (let ((proc (open-network-stream "whois" (current-buffer) server 43)))
       (set-process-sentinel proc 'bbdb-whois-sentinel)
       (process-send-string proc (concat bbdb-whois-name "\r\n"))))))
@@ -73,7 +80,7 @@
       ;; refetch.
       (if (not (re-search-forward "Record last updated" (point-max) t))
           (if (re-search-forward "No match" (point-max) t)
-              (message "Can't find a whois record for `%s'" bbdb-whois-name)
+              (message "Can not find a whois record for `%s'" bbdb-whois-name)
             (if (re-search-forward "Access Limit Exceeded" (point-max) t)
                 (message "Per-day access limit to %s exceeded."
                          bbdb-whois-server) ;; bah!
