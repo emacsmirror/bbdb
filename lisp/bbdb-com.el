@@ -1927,8 +1927,11 @@ completion with."
                         bbdb-read-addresses-with-completion-map))
 
 
+;; Internal use. Store the window configuration before we pop up the
+;; completion buffer.
 (defvar bbdb-complete-name-saved-window-config nil)
 
+;; Restore the saved window configuration
 (defun bbdb-complete-name-cleanup ()
   (if bbdb-complete-name-saved-window-config
       (progn
@@ -1989,7 +1992,7 @@ Currently only used by XEmacs."
 
 (defcustom bbdb-complete-name-full-completion 5
   "Show full expanded completion rather than partial matches.
-If t then do it always, if a number then just is the number of
+If t then do it always; if a number then do it if the number of
 completions for a specific match is below that number."
   :group 'bbdb-mua-specific
   :type 'boolean)
@@ -1998,7 +2001,6 @@ completions for a specific match is below that number."
   "List of functions called after a sucessful completion."
   :group 'bbdb-mua-specific
   :type 'boolean)
-
 
 ;;;###autoload
 (defun bbdb-complete-name (&optional start-pos)
@@ -2010,7 +2012,7 @@ bbdb-dwim-net-address-allow-redundancy).  If it is a valid completion
 but not unique, a list of completions is displayed.
 
 If the completion is done and `bbdb-complete-name-allow-cycling' is
-true then cycle thru the nets.
+true then cycle through the nets for the matching record.
 
 When called with a prefix arg then display a list of all nets.
 
@@ -2022,17 +2024,12 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                     (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
                     (goto-char (match-end 0))
                     (point))))
-         (pattern (downcase (buffer-substring beg end)))
+         (pattern (bbdb-string-trim (downcase (buffer-substring beg end))))
          (ht (bbdb-hashtable))
-         ;; If we have two completions which expand to the same record, only
-         ;; treat one as a completion.  For example, if the user asked for
-         ;; completion on "foo" and there was a record of "Foo Bar <foo@baz>",
-         ;; pretend the first completion ("Foo Bar") is valid and the second
-         ;; ("foo@baz") is not, since they're actually the *same* completion
-         ;; even though they're textually different.
-         ;;
-         ;; realistically, because of the hash, you're not guaranteed
-         ;; which will actually be selected. this hurts, of course.
+         ;; make a unique set of matching records (yeah-yeah-this-one),
+         ;; a list of possible completion strings (all-the-completions),
+         ;; and a flag to indicate if there's a single matching record
+         ;; or not (only-one-p)
          (yeah-yeah-this-one nil)
          (only-one-p t)
          (all-the-completions nil)
@@ -2046,26 +2043,29 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                          ()
                        (if (memq (car recs) yeah-yeah-this-one)
                            (setq nets '());; already have it...
-                         (setq only-one-p nil
+                         ;; only zero out only-one-p if we've already
+                         ;; got a matched record
+                         (setq only-one-p (null yeah-yeah-this-one)
                                yeah-yeah-this-one
                                (cons (car recs) yeah-yeah-this-one)))
                        (if (not (memq sym all-the-completions))
                            (setq all-the-completions
-                                 (cons (symbol-name sym)
-                                       all-the-completions))))
+                                 (cons sym all-the-completions))))
                      (setq recs (cdr recs)))
                    nets))))
          (completion (try-completion pattern ht pred)))
 
-    ;; This is to pick the primary mail address by default, unless
-    ;; it's not a valid expansion of 'pattern' above.
-    ;;
-    ;; There is a small amount of non-obviousness here; if, for
-    ;; example, I type ronan<M-TAB>, should this fill in
-    ;; "ronan.waide@myworkaddress.com", or the primary email record
-    ;; for "Ronan Waide"? Possibly yet another tuning parameter. Oop.
-    (and (stringp completion)
-         yeah-yeah-this-one
+    ;; Danger, Will Robinson! try-completion returns 't' for an exact
+    ;; match. We correct for that here.
+    (if (eq completion t)
+        (setq yeah-yeah-this-one (bbdb-gethash pattern ht)
+              only-one-p (= (length yeah-yeah-this-one) 1)
+              completion pattern
+              all-the-completions (list (intern-soft pattern ht))))
+
+    ;; If there are multiple matches for one record, make sure we're
+    ;; picking the primary email address from that record.
+    (and yeah-yeah-this-one
          only-one-p
          (let ((rest all-the-completions) addrs)
            (while yeah-yeah-this-one
@@ -2073,71 +2073,71 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                  (bbdb-record-net (car yeah-yeah-this-one)))
                    yeah-yeah-this-one (cdr yeah-yeah-this-one)))
            (while rest
-             (if (member (car rest) addrs)
-                 (setq completion (car rest)
+             (if (member (symbol-name (car rest)) addrs)
+                 (setq completion (symbol-name (car rest))
                        rest nil)
                (setq rest (cdr rest))))))
 
-    (setq yeah-yeah-this-one nil
-          all-the-completions nil)
-
-    ;; If there is no completion or the address is already a completed one,
-    ;; then cycle though the list of addresses.
-    (when (and bbdb-complete-name-allow-cycling
-               ;; no match or an exact match
-               ;; GNU Emacs somehow has a different view on completeness
-               ;; causing trouble with the cycling stuff
-               (or (null completion) (eq completion t)))
-      (let* ((sym (intern-soft pattern ht))
-             (rec (car (symbol-value sym)))
-             (pattern (buffer-substring beg end))
-             name the-net nets)
-        (setq the-net (funcall bbdb-extract-address-components-func pattern t)
-              the-net (car the-net)
-              name (car the-net)
-              the-net (cadr the-net))
-        (if (not rec)
-            (setq rec (bbdb-search-simple name the-net)))
-        (when rec
-          (setq nets (bbdb-record-net rec))
-          (delete-region beg end)
-          (if current-prefix-arg
-              (let ((standard-output (get-buffer-create "*Completions*")))
-                ;; a previously existing buffer has to be cleaned first
-                (save-excursion (set-buffer standard-output)
-                                (setq buffer-read-only nil)
-                                (erase-buffer))
-                (display-completion-list
-                 (mapcar (lambda (n) (bbdb-dwim-net-address rec n)) nets))
-                (switch-to-buffer standard-output))
-            (setq the-net (member the-net nets))
-            (setq the-net (if (cdr the-net) (cadr the-net) (car nets)))
-            (insert (bbdb-dwim-net-address rec the-net))
-            (setq completion 'done)))))
-
     (cond
-     ;; We have switched to another net
-     ((equal completion 'done)
-      (bbdb-complete-name-cleanup))
-
-     ;; No match
+     ;; No matches found OR you're trying completion on an
+     ;; already-completed record. In the latter case, we might have to
+     ;; cycle through the nets for that record.
      ((null completion)
+      ;; Clean up the completion buffer, if it exists
       (bbdb-complete-name-cleanup)
-      (if bbdb-expand-mail-aliases ;; maybe check for mail alias
-          (or (expand-abbrev)
-              (if bbdb-complete-name-hooks
-                  (run-hooks (ding))))
-        (if bbdb-complete-name-hooks
-            (run-hooks (ding)))))
+      ;; Check for cycling
+      (or (catch 'bbdb-cycling-exit
+            ;; jump straight out if we're not cycling
+            (or bbdb-complete-name-allow-cycling
+                (throw 'bbdb-cycling-exit nil))
 
-     ;; Perfect match...
-     ((eq completion t)
+            ;; find the record we're working on.
+            (let* ((addr (funcall
+                          bbdb-extract-address-components-func
+                          pattern))
+                   (rec
+                    (if (listp addr)
+                        ;; for now, we're ignoring the case where this
+                        ;; returns more than one record. Ideally, the
+                        ;; last expansion would be stored in a
+                        ;; buffer-local variable, perhaps.
+                        (car (bbdb-search-intertwingle (caar addr)
+                                                       (cadar addr)))
+                      nil)))
+              (or rec
+                  (throw 'bbdb-cycling-exit nil))
+
+              (let* ((addrs (bbdb-record-net rec))
+                     (this-addr (or (cadr (member (cadar addr) addrs))
+                                    (nth 0 addrs))))
+                (if (= (length addrs) 1)
+                    ;; no alternatives. don't signal an error.
+                    (throw 'bbdb-cycling-exit t)
+                  ;; replace with new mail address
+                  (delete-region beg end)
+                  (insert (bbdb-dwim-net-address rec this-addr))
+                  (throw 'bbdb-cycling-exit t))))))
+
+      ;; FALL THROUGH
+      ;; Check mail aliases
+      (if (and bbdb-expand-mail-aliases (expand-abbrev))
+          ()
+        (when bbdb-complete-name-hooks
+          (message "completion for \"%s\" unfound." pattern)
+          (ding)))) ;; no matches, sorry!
+
+     ;; Perfect match for a single record
+     ((and only-one-p (string= completion pattern))
       (let* ((sym (intern-soft pattern ht))
              (recs (symbol-value sym))
              the-net match-recs lst primary matched)
-        (while recs
-          (if (not (bbdb-record-net (car recs))) ()
+        ;; XXX this can happen, but it's not fatal.
+        ;;(or (= 1 (length recs))
+        ;;(error "recs is longer than expected"))
 
+        (while recs
+          (if (not (bbdb-record-net (car recs)))
+              ()
             (if (string= pattern
                          (downcase (or (bbdb-record-name (car recs)) "")))
                 (setq match-recs (cons (car recs) match-recs)
@@ -2169,23 +2169,9 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
           (setq recs    (cdr recs)
                 matched nil))
 
-        (if (and (null the-net)
-                 (> (length match-recs) 1))
-            (let ((lst (mapcar (lambda (x)
-                                 (cons (car (bbdb-record-net x)) x))
-                               match-recs))
-                  (completion-ignore-case 't)
-                  comp)
-              (setq lst (bbdb-remove-assoc-duplicates lst)
-                    comp (completing-read "Which primary net: " lst '() 't
-                                          (cons (car (car lst)) 0))
-                    match-recs (list (cdr (assoc comp lst)))
-                    the-net    comp)))
-
-
         (delete-region beg end)
         (insert (bbdb-dwim-net-address (car match-recs) the-net))
-        ;;
+
         ;; if we're past fill-column, wrap at the previous comma.
         (if (and
              (if (boundp 'auto-fill-function) ; the GNU Emacs name.
@@ -2203,7 +2189,6 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                       (forward-char 1)
                       (insert "\n   "))))))
 
-        ;;
         ;; Update the *BBDB* buffer if desired.
         (if bbdb-completion-display-record
             (let ((bbdb-gag-messages t))
@@ -2227,41 +2212,53 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                      (insert completion))))
         (bbdb-complete-name beg)))
 
-     ;; Matched again and got no new chars so show options...
+     ;; Exact match, but more than one record
      (t
       (or (eq (selected-window) (minibuffer-window))
           (message "Making completion list..."))
 
-      (let ((clist (all-completions pattern ht pred))
-            (bbdb-complete-name-allow-cycling nil)
-            list recs)
-        ;; Now collect the expanded completions
-        (if (or (eq t bbdb-complete-name-full-completion)
-                (and (numberp bbdb-complete-name-full-completion)
-                     (< (length clist) bbdb-complete-name-full-completion)))
-            (while clist
-              (if (and (setq recs (intern-soft (car clist) ht))
-                       (setq recs (symbol-value recs)))
-                  (while recs
-                    (add-to-list 'list (bbdb-dwim-net-address
-                                        (car recs)
-                                        (car (bbdb-record-net (car recs)))))
-                    (setq recs (cdr recs)))
-                (add-to-list 'list (car clist)))
-              (setq clist (cdr clist)))
-          (setq list clist))
+      (let ((list))
+        (while yeah-yeah-this-one
+          ;; Build the completion list sanely: Figure out which email
+          ;; address, if any (or many) matched this record, then use
+          ;; that (those) to extend the completion list. If there are
+          ;; no matches in the network addresses, then assume it's
+          ;; something else that matched (company, name, aka) and just
+          ;; add the primary network address. Note that because we're
+          ;; using the original completion list, we (a) save cycles on
+          ;; calculating completions and (b) save cycles on
+          ;; refiltering the list for completion-type.
+          ;;
+          ;; Possible option: allow ALL addresses as completion
+          ;; targets if it matched on name. Right now you get at those
+          ;; by either specifying an email address to complete on, or
+          ;; using completion cycling.
+          (let* ((rec (car yeah-yeah-this-one))
+                 (addrs (bbdb-record-net rec))
+                 (found-match nil)) ;; ick. I hate oneshots.
+            (while addrs
+              (when (member (intern-soft (car addrs) ht)
+                            all-the-completions)
+                (setq found-match t
+                      all-the-completions
+                      (delete (intern-soft (car addrs) ht)
+                              all-the-completions))
+                (add-to-list 'list (bbdb-dwim-net-address rec
+                                                          (car addrs))))
+              (setq addrs (cdr addrs)))
+            (if (not found-match)
+                (add-to-list 'list (bbdb-dwim-net-address
+                                    rec
+                                    (car addrs))))
+            (setq yeah-yeah-this-one (cdr yeah-yeah-this-one))))
 
-        (if (and (not (eq bbdb-completion-type 'net))
-                 (= 2 (length list))
-                 (boundp (intern (car list) ht))
-                 (eq (symbol-value (intern (car list) ht))
-                     (symbol-value (intern (nth 1 list) ht)))
-                 (not (string= completion (car list))))
+        ;; if, after all that, we've only got one matching record...
+        (if (= 1 (length list))
             (progn
               (delete-region beg end)
               (insert (car list))
-              (message " ")
-              (bbdb-complete-name beg))
+              (message ""))
+          ;; otherwise, pop up a completions window
           (if (not (get-buffer-window "*Completions*"))
               (setq bbdb-complete-name-saved-window-config
                     (current-window-configuration)))
@@ -2473,7 +2470,7 @@ modem or the like."
                  (string :tag "pulse dialing" "ATDP ")))
 
 (defcustom bbdb-modem-device "/dev/modem"
-  "Wheather to use the modem for dialing."
+  "Whether to use the modem for dialing."
   :group 'bbdb-phone-dialing
   :type 'string)
 
