@@ -8,8 +8,13 @@
 @c $Id$
 @c
 @c $Log$
-@c Revision 1.11  1997/11/02 06:31:00  simmonmt
-@c Rewrite Part 2 (through MUA-specific features)
+@c Revision 1.12  1997/12/01 05:23:09  simmonmt
+@c Removed `BBDB database' per jwz, added prerequisites section, more
+@c description of special fields, and dissection of record format in
+@c internals section
+@c
+@c description of special fields, and dissection of record format in
+@c internals section
 @c
 @c Revision 1.11  1997/11/02 06:31:00  simmonmt
 @c Rewrite Part 2 (through MUA-specific features)
@@ -126,7 +131,7 @@ This program consists of several groups of files, organized by
 directory:
 
 @ifinfo
-                database printing utility
+@example
      lisp     - the main program code for the @b{BBDB}
      tex      - TeX support files for @xref{bbdb-print}, the @b{BBDB}
                 printing utility
@@ -137,7 +142,7 @@ directory:
 @iftex
 @bgroup@tableindent=1.5in
 @table @b
-@TeX@ support files for bbdb-print, the BBDB database printing utility
+@item lisp
 the main program code for the BBDB
 @item tex
 @TeX@ support files for bbdb-print, the BBDB printing utility
@@ -147,15 +152,58 @@ the documentation files for the BBDB
 miscellaneous external utility programs
 @end table
 @egroup
+@end iftex
+
 @menu
 * General Prerequisites::       General @b{BBDB} requirements
-* XEmacs Package::              Installing as an @b{XEmacs} package
+
 File Installation
 * Normal User::                 "Normal" Installations
 * XEmacs Package::              Installing as an XEmacs package
 
 Initial Configuration
-@node Normal User, XEmacs Package, Installation, Installation
+* Initial Configuration::       How to initially set up the @b{BBDB}
+@end menu
+
+@node General Prerequisites, Normal User, Installation, Installation
+@subsection General Prerequisites
+one exception (for XEmacs 20.4 beta testers - see the next section), 
+no extra packages (beyond those which ship with both GNU Emacs and
+XEmacs) are required for the use of @b{BBDB} core
+that are not part of the @b{BBDB} distribution.  Please note that with
+one exception no extra packages (beyond those which ship with both GNU
+bbdb-create}) and searching (@samp{M-x bbdb}).}  The table below lists
+the requirements of the various portions of the @b{BBDB} and describes
+the impact of these requirements on the functioning of the @b{BBDB}.
+The table below lists the requirements of the various portions of the
+@table @asis
+@item @code{bbdb-ftp} @i{(Association of FTP sites with database records)}
+You must have ange-ftp or EFS in order to use the features provided by
+this file.  EFS is preferred by the code, and will be used instead of
+ange-ftp if both are available.  @code{bbdb-ftp} will fail to load if
+neither package is available.  @code{bbdb-ftp} is an optional part of
+the @b{BBDB} - its absence will not affect core @b{BBDB} functionality.
+@tab @* GNU 20.2
+@item @code{bbdb-gnus} @i{(Integration of the @b{BBDB} with Gnus and/or GNUS)}
+You must have GNUS or Gnus in order to use the features provided by this
+file.  Gnus is included in the standard GNU Emacs and XEmacs (through
+20.3) distributions.  @code{bbdb-gnus} is an optional part of the
+@b{BBDB} - its absence will not affect core @b{BBDB} functionality.
+@tab @center B
+@item @code{bbdb-mhe} @i{(Integration of the @b{BBDB} with the MH-E mail reader)}
+You must have MH-E in order to use the features provided by this file.
+MH-E is included in the standard GNU Emacs and XEmacs (through 20.3)
+distributions.  @code{bbdb-mhe} is an optional part of the @b{BBDB} -
+its absence will not affech core @b{BBDB} functionality.
+@tab @center B
+@item @code{bbdb-reportmail} @i{(Integration of the @b{BBDB} with the
+Reportmail package)}
+@tab @center B
+@i{unfinished}
+@tab 
+@end table
+@tab 
+writing.  As the XEmacs 20.5 package system is still in development, the 
 locations may change without warning.
 
 @node Normal User, XEmacs Package, General Prerequisites, Installation
@@ -253,7 +301,7 @@ tree and the production code.
 @end itemize
 
 @ifinfo
-bbdb-print, the @b{BBDB} database printing utility (@xref{bbdb-print}).
+@subsubheading TeX files
 
 The @file{tex} subdirectory contains the TeX support files for
 bbdb-print, the @b{BBDB} printing utility (@xref{bbdb-print}).
@@ -265,7 +313,7 @@ is taken, TeX will not be able to process the file output by
 @code{bbdb-print}.
 @end ifinfo
 @iftex
-bbdb-print, the @b{BBDB} database printing utility (@xref{bbdb-print}).
+@subsubheading @TeX files
 
 The @file{tex} subdirectory contains the @TeX support files for
 bbdb-print, the @b{BBDB} printing utility (@xref{bbdb-print}).
@@ -626,6 +674,12 @@ Several of the user-defined field names are "special".  That is, the
 does other user-defined fields  The "special" fieldes are:
 
 than it does other user-defined fields.  The "special" fields are:
+@code{bbdb/sc-attribution-field}.
+@item aka
+Used to store non-primary names associated with a given record.
+@item face
+@i{(XEmacs only)} Used for the storage of image data.  This data is to be
+in the format output by @code{compface}, and commonly found in
 Address used in place of the listed net address for fingering the entity 
 @b{Gnus} scoring adjustment for this person.  @xref{Gnus Features}.
 @b{Gnus} scoring adjustment for this person.  For initialization details, see
@@ -1955,13 +2009,290 @@ would exclude any notes recording for message coming from @code{BLAT.COM}.
 @node Internals, Mailing Lists, Utilities, Top
 @section Internals
 
+@b{This section is currently a dumping ground for things that should
+eventually go here, but were found elsewhere in the file.}
+
+@b{INFORMATION IN THIS SECTION IS FOR INFORMATIONAL PURPOSES ONLY.  IT
 SHOULD NOT BE TAKEN AS DOCUMENTATION OF AN EXTERNAL API.  EVERYTHING
 LISTED BELOW IS SUBJECT TO CHANGE WITHOUT NOTICE}
 
 The first time you use
 one of the @b{BBDB} commands, this file is read into an emacs buffer, and
 remains there.  As you make changes to the database, this buffer is
+changed as well, ensuring that if it is auto-saved, it will be saved in
 its most current state. @refill
+
+@subsection BBDB data file format
+
+The data file is arranged in a hierarchical fashion.  At the top level
+are vectors, with one vector per database record.  It is @b{very}
+important that each vector be on its own line, as the BBDB builds and
+stores markers based on this layout.  The markers are then used to
+increase the speed of database modifications (more on this later).  The
+record vectors contain the individual fields of the record.  These
+fields can be of any type, but are currently integers, strings, lists of
+strings, alists, vectors, or lists of vectors.  In the case of fields
+that contain one or more vectors, they can be further broken down in
+terms of the fields of their component vectors.
+
+In an effort to provide a more concrete example to illustrate the above,
+and to provide a reference for database accessor and modifier functions,
+we describe the database format below.  This description starts with the
+fields of the individual record vectors, and drills down through the
+vectors used by some of the fields.
+
+@subsubsection Record Vectors
+
+@multitable @columnfractions .13 .19 .36 .32
+@item @b{Name}
+@tab  @b{Type}
+@tab  @b{Accessor and Modifier}
+@tab  @b{Description}
+
+@item First name
+@tab  String
+@tab  @code{bbdb-record-firstname}@*
+      @code{bbdb-record-set-firstname}
+@tab  Entity's first name
+
+@item Last name
+@tab  String
+@tab  @code{bbdb-record-lastname}@*
+      @code{bbdb-record-set-lastname}
+@tab  Entity's last name
+
+@item AKAs
+@tab  List of Strings
+@tab  @code{bbdb-record-aka}@*
+      @code{bbdb-record-set-aka}
+@tab  Alternate names for entity
+
+@item Company
+@tab  String
+@tab  @code{bbdb-record-company}@*
+      @code{bbdb-record-set-company}
+@tab  Company with which entity is associated
+
+@item Phones
+@tab  List of Vectors
+@tab  @code{bbdb-record-phones}@*
+      @code{bbdb-record-set-phones}
+@tab  List of phone number vectors
+
+@item Addresses
+@tab  List of Vectors
+@tab  @code{bbdb-record-addresses}@*
+      @code{bbdb-record-set-addresses}
+@tab  List of address vectors
+
+@item Net address
+@tab  List of Strings
+@tab  @code{bbdb-record-net}@*
+      @code{bbdb-record-set-net}
+@tab  Alist
+
+@item Notes
+@tab  Association list of note fields (strings)
+@tab  @code{bbdb-record-raw-notes}@*
+      @code{bbdb-record-set-raw-notes}
+@tab  String or Association list of note fields (strings)
+
+@item Cache
+@tab  Vector
+@tab  @code{bbdb-record-cache}@*
+      @code{bbdb-record-set-cache}
+@tab  Record cache.@*
+      @i{Internal version only.}
+
+@end multitable
+
+The phone, address and cache vector fields are described below.  Please
+note that, as indicated in the table above, the cache is present only in 
+the internal version of the database - it is not written out as part of
+the @file{.bbdb} file.
+
+In addition, the accessor and modifier functions for the notes alist
+are described.
+
+@subsubsection Phone Vectors
+
+To access the fields in the below table, you must first get the list of
+phone vectors using the @code{bbdb-record-phones} function.  Note that
+if you alter the phones field with the @code{bbdb-record-set-phones}
+function, you are altering the entire phones list for the given record.
+Use the modifier functions below for modifications to individual phone
+vectors.
+
+@multitable @columnfractions .13 .19 .36 .32
+@item @b{Name}
+@tab  @b{Type}
+@tab  @b{Accessor and Modifier}
+@tab  @b{Description}
+
+@item Location
+@tab  String
+@tab  @code{bbdb-phone-location}@*
+      @code{bbdb-phone-set-location}
+@tab  Phone number identifier
+
+@item Area
+@tab  Integer
+@tab  @code{bbdb-phone-area}@*
+      @code{bbdb-phone-set-area}
+@tab  Area code for phone number
+
+@item Exchange
+@tab  Integer
+@tab  @code{bbdb-phone-exchange}@*
+      @code{bbdb-phone-set-exchange}
+@tab  Exchange (aka prefix) for phone number
+
+@item Suffix
+@tab  Integer
+@tab  @code{bbdb-phone-suffix}@*
+      @code{bbdb-phone-set-suffix}
+@tab  Suffix for phone number
+
+@item Extension
+@tab  Integer
+@tab  @code{bbdb-phone-extension}@*
+      @code{bbdb-phone-set-extension}
+@tab  Phone number extension (@samp{0} if none)
+
+@end multitable
+
+@subsubsection Address Vectors
+
+To access the fields in the below table, you must first get the list of
+address vectors using the @code{bbdb-record-addresses} function.  Note
+that if you alter the addresses field with the
+@code{bbdb-record-set-addresses} function, you are altering the entire
+addresses list for the given record.  Use the modifier functions below
+for modifications to individual address vectors.
+
+@multitable @columnfractions .13 .19 .36 .32
+@item @b{Name}
+@tab  @b{Type}
+@tab  @b{Accessor and Modifier}
+@tab  @b{Description}
+
+@item Location
+@tab  String
+@tab  @code{bbdb-address-location}@*
+      @code{bbdb-address-set-location}
+@tab  Address identifier
+
+@item Street1
+@tab  String
+@tab  @code{bbdb-address-street1}@*
+      @code{bbdb-address-set-street1}
+@tab  First line of street address.  ``'' if none.
+
+@item Street2
+@tab  String
+@tab  @code{bbdb-address-street2}@*
+      @code{bbdb-address-set-street2}
+@tab  Second line of street address.  ``'' if none.
+
+@item Street3
+@tab  String
+@tab  @code{bbdb-address-street3}@*
+      @code{bbdb-address-set-street3}
+@tab  Third line of street address.  ``'' if none.
+
+@item City
+@tab  String
+@tab  @code{bbdb-address-city}@*
+      @code{bbdb-address-set-city}
+@tab  City name
+
+@item State
+@tab  String
+@tab  @code{bbdb-address-state}@*
+      @code{bbdb-address-set-state}
+@tab  State abbreviation
+
+@item Zip
+@tab  Integer
+@tab  @code{bbdb-address-zip}@*
+      @code{bbdb-address-set-zip}
+@tab  Zip code
+
+@end multitable
+
+@subsubsection Cache Vector
+
+This vector is present only in the internal database representation.  It 
+is not written out to the database file because it contains information
+aggregated from the rest of the record that is reconstructed when the
+database is read.  To write the cache information to the database file
+would increase the risk of database inconsistency, and would violate the 
+principles of normalization.
+
+To access the cache fields using the functions listed below that begin
+with @code{bbdb-cache-}, you must first get the cache vector using the
+@code{bbdb-record-cache} function.  The functions that begin with
+@code{bbdb-record-} get the cache vector internally.  Note that if you
+alter the cache field in the high-level record with the
+@code{bbdb-record-set-cache} function, you are altering the entire cache
+vector for the given record.  Use the modifier functions below for
+modifications to individual cache fields.
+
+@multitable @columnfractions .15 .17 .36 .32
+@item @b{Name}
+@tab  @b{Type}
+@tab  @b{Accessor and Modifier}
+@tab  @b{Description}
+
+@item Name Cache
+@tab  String
+@tab  @code{bbdb-cache-namecache}@*
+      @code{bbdb-cache-set-namecache}
+@tab  Preconcatenated name of entity
+
+@item Sort Key
+@tab  String
+@tab  @code{bbdb-cache-sortkey}@*
+      @code{bbdb-cache-set-sortkey}
+@tab  Preconcatenated sort key for record
+
+@item Marker
+@tab  Marker
+@tab  @code{bbdb-cache-marker}@*
+      @code{bbdb-record-marker}@*
+      @code{bbdb-cache-set-marker}@*
+      @code{bbdb-record-set-marker}@*
+@tab  Marker in @file{.bbdb} for start of record
+
+@item Deleted
+@tab  Boolean
+@tab  @code{bbdb-cache-deleted-p}@*
+      @code{bbdb-record-deleted-p}@*
+      @code{bbdb-cache-set-deleted-p}@*
+      @code{bbdb-record-set-deleted-p}
+@tab  Set to @code{t} if record has been deleted, @code{nil} if not
+
+@end multitable
+
+The functions listed above will return @code{nil} if their respective
+cache fields are not set.  The functions listed below will return the
+value of their cache fields if set, but will also build (and set) the
+correct field values if the fields are unset:
+
+@table @code
+@item bbdb-record-name
+Return the name in the Name Cache field of the cache (if set).  If
+the name has not been built yet (if the field is @code{nil}), the name is 
+built, stored in the Name Cache field, and returned.
+
+@item bbdb-record-sortkey
+Return the name it the Sort Key field of the cache (if set).  If the
+Sort Key field has not yet been set (if the field is @code{nil}), the
+Sort Key is built, stored in the Sort Key field, and returned.
+@subsubsection Notes Alist
+@end table
+where @var{NAME} is the symbol for the name of the note, and
+@var{VALUE} is the value of the note.
 @node Utilities, The Mailing List, Internals, Top
 @section Utilities
 
