@@ -3,6 +3,10 @@
 	* lisp/bbdb-com.el (bbdb-complete-name): Create a popup buffer
 	before displaying records in order to make sure it has the right
 	size.
+	(bbdb-redisplay-one-record): Care for the case when a record is
+	not present any more in the BBDB buffer.
+	(bbdb-insert-new-field): get the current records before doing
+	anything else to ensure that we do not lose the context.
 
 2002-03-12  Robert Fenk  <Robert.Fenk@gmx.de>
 
