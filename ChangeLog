@@ -1,3 +1,16 @@
+2001-02-14  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el:
+	Some more defcustom stuff (Alex Schroeder)
+	Empty string is a valid Zip code (Alex Schroeder)
+
+	* lisp/bbdb.el: 
+	Some defvars changed to defcustoms (Alex Schroeder)
+	bbdb-add-or-remove-mail-alias documented in mode help (Alex Schroeder)
+
+	* texinfo/bbdb.texinfo
+	Zipcode stuff (Alex Schroeder)
+	
 2001-02-13  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-vm.el
@@ -18,7 +31,7 @@
 	* lisp/bbdb-snarf.el (replace-in-string): Fix the argument order
 	of replace-regexp-in-string.
 
-2001-02-10  Ronan Waide  <waider@waider.ie>
+2001-02-10  Waider  <waider@waider.ie>
 
 	* bbdb/lisp/bbdb.el:
 	Fixed bbdb-undisplay-records. bbdb-buffer-name is /not/ a buffer!
