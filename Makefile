@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.60  2000/04/12 23:37:06  waider
+# Cleanup work
+#
 # Revision 1.59  1998/04/11 07:23:03  simmonmt
 # Fix for compatibility with more makes
 #
@@ -198,8 +201,17 @@ clean:
 	cd lisp; $(MAKE) clean
 	cd texinfo; $(MAKE) clean
 
-# Testing
+reallyclean: clean
+	cd texinfo; $(MAKE) reallyclean
 
+# Testing
+test: test-setup test-bbdb
+
+test-setup:
+	cp $$HOME/.bbdb $$HOME/.bbdb-test
+
+test-bbdb:
+	emacs -l $$HOME/bbdb-test.el
 
 # FSF Emacs 19.34
 
@@ -213,7 +225,7 @@ emacs19.34-test-setup:
 	@echo
 	@echo '** Setting up **'
 	make clean
-	rm -f /p/local/elisp-19.34/gnus/lisp/*
+	rm -f /local/downloads/emacs-19.34/*
 	cp /home/simmonmt/gnus/lisp/*.el /p/local/elisp-19.34/gnus/lisp
 
 emacs19.34-test-bbdb:
@@ -313,16 +325,22 @@ emacs20.2-test-all:
 
 
 # Deployment
-
-TARFILES=	bbdb-Makefile bbdb.texinfo bbdb.el $(DEPSRCS) \
-		bbdb-print.tex multicol.tex
+TARFILES=Makefile ChangeLog INSTALL README lisp misc tex texinfo utils
 
 tar: $(TARFILES)
 	@NAME=`sed -n							     \
-  's/^(defconst bbdb-version "\([0-9]\.[0-9][0-9]*\).*/bbdb-\1/p' bbdb.el` ; \
+  's/^(defconst bbdb-version "\([0-9]\.[0-9][0-9]*\).*/bbdb-\1/p' lisp/bbdb.el` ; \
   rm -f $$NAME ; ln -s . $$NAME ;					    \
   echo creating tar file $${NAME}.tar.$(COMPRESS_EXT)... ;		    \
-   $(TAR) -vchf - `echo $(TARFILES)				    	    \
+   $(TAR) --exclude=CVS -vchf - `echo $(TARFILES)				    	    \
    | sed "s|^|$$NAME/|g; s| | $$NAME/|g" `				    \
    | $(COMPRESS) > $${NAME}.tar.$(COMPRESS_EXT) ;			    \
   rm $$NAME
+
+dist: clean info tar
+
+TAGS: tags
+
+tags:
+	etags */*.el
+
