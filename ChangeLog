@@ -1,3 +1,11 @@
+2001-03-01  Robert Fenk  <fenk@forwiss.de>
+
+	* bbdb.el (bbdb-submit-bug-report): A function for submitting bug
+	reports, which should make it easier for reportes and maintaines
+	to give and have all necessary information.  Additional variables
+	may have to be add and a remark in the documentation to use this 
+        function when reporting problems.
+
 2001-02-25  Waider  <waider@waider.ie>
 
 	* html/bbdb-2.20.tar.gz:

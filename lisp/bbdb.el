@@ -104,6 +104,42 @@ prompt the users on how to merge records when duplicates are detected.")
  (autoload 'y-or-n-p-with-timeout "timer")
  )
 
+
+;;;###autoload
+(defun bbdb-submit-bug-report ()
+  "Submit a bug report, with pertinent information to the BBDB info list."
+  (interactive)
+  (require 'reporter)
+  (delete-other-windows)
+  (reporter-submit-bug-report
+   "bbdb-info@lists.sourceforge.net"
+   (concat "BBDB " bbdb-version)
+   (append
+    ;; non user variables
+    '(bbdb-version-date
+      bbdb-file-format
+      bbdb-no-duplicates-p)
+    ;; user variables 
+    (sort (apropos-internal "^bbdb"
+                            (lambda (symbol) (user-variable-p symbol)))
+          (lambda (v1 v2) (string-lessp (format "%s" v1) (format "%s" v2))))
+    ;; see what the user had loaded
+    (list 'features)
+    )
+   nil
+   nil
+   "Please change the Subject header to a concise bug description.\nIn this report, remember to cover the basics, that is, what you expected to\nhappen and what in fact did happen.  Please remove these\ninstructions from your message.")
+
+  ;; insert the backtrace buffer content if present
+  (let ((backtrace (get-buffer-create "*Backtrace*")))
+    (when backtrace
+      (goto-char (point-max))
+      (insert "\n\n")
+      (insert-buffer-substring backtrace)))
+
+  (goto-char (point-min))
+  (mail-position-on-field "Subject"))
+
 ;; Make custom stuff work even without customize
 ;;   Courtesy of Hrvoje Niksic <hniksic@srce.hr>
 (eval-and-compile
