@@ -34,6 +34,25 @@
  (defvar mail-aliases))
 
 (autoload 'mail-abbrev-expand-hook "mailabbrev.el")
+
+;;; Stuff for completion on label fields
+(defcustom bbdb-field-labels
+  '("Home" "Office" "Mobile" "Other")
+  "*List of labels for fields such as Address and Phone"
+  :group 'bbdb-record-creation
+  :type 'list)
+
+(defcustom bbdb-default-field-label
+  '"Home"
+  "*Default label from bbdb-field-labels"
+  :group 'bbdb-record-creation
+  :type 'list)
+
+(defcustom bbdb-default-country
+  '"Emacs" ;; what do you mean, it's not a country?
+  "*Default country to use if none is specified."
+  :group 'bbdb-record-creation
+  :type 'string) ;; wonder if there's a smart place to get this? TZ, maybe?
 
 (defmacro bbdb-grovel-elide-arg (arg)
   (list 'if arg
@@ -368,7 +387,7 @@ Whether this is used at all depends on the variable `bbdb-check-zip-codes-p'."
   :type '(repeat regexp))
 
 (defun bbdb-parse-zip-string (string)
-  "Check wether STRING is a legal zip code.
+  "Check whether STRING is a legal zip code.
 Do this only if `bbdb-check-zip-codes-p' is non-nil."
   (if (and bbdb-check-zip-codes-p
        (not (memq t (mapcar (lambda (regexp)
@@ -381,7 +400,7 @@ Do this only if `bbdb-check-zip-codes-p' is non-nil."
 (defun bbdb-read-new-record ()
   "Prompt for and return a completely new BBDB record.
 Doesn't insert it in to the database or update the hashtables, but does
-insure that there will not be name collisions."
+ensure that there will not be name collisions."
   (bbdb-records)                ; make sure database is loaded
   (if bbdb-readonly-p (error "The Insidious Big Brother Database is read-only."))
   (let (firstname lastname)
@@ -953,12 +972,18 @@ Country:         country"
          (zip (bbdb-error-retry
                (bbdb-parse-zip-string
                 (bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
-     (country (bbdb-read-string "Country: " (bbdb-address-country addr))))
+     (country (bbdb-read-string "Country: " (or (bbdb-address-country addr)
+                                                bbdb-default-country))))
     (bbdb-address-set-streets addr str)
     (bbdb-address-set-city addr cty)
     (bbdb-address-set-state addr ste)
     (bbdb-address-set-zip addr zip)
-    (bbdb-address-set-country addr country)
+    (if (string= "" (concat cty ste zip country (mapconcat 'identity str "")))
+        ;; user didn't enter anything. this causes a display bug. this
+        ;; is a temporary fix. Ideally, we'd simply discard the entire
+        ;; address entry, but that's going to require bigger hacking.
+        (bbdb-address-set-country addr "Emacs")
+      (bbdb-address-set-country addr country))
     nil))
 
 (defcustom bbdb-address-editing-function 'bbdb-address-edit-default
@@ -974,13 +999,22 @@ The default value is the symbol `bbdb-address-edit-default'."
 If optional parameter LOCATION is non-nil, edit the location sub-field
 of the address as well.  The address itself is edited using the editing
 function in `bbdb-address-editing-function'."
-  (let ((loc (or location (bbdb-read-string "Location: " (bbdb-address-location addr)))))
+  (let ((loc
+         (or location (bbdb-read-string "Location: "
+                                        (or (bbdb-address-location addr)
+                                            bbdb-default-field-label)
+                                        (mapcar (function (lambda(x) (list x)))
+                                                bbdb-field-labels)))))
     (bbdb-address-set-location addr loc))
   (funcall bbdb-address-editing-function addr))
 
+
 (defun bbdb-record-edit-phone (phone-number)
   (let ((newl (bbdb-read-string "Location: "
-                                (bbdb-phone-location phone-number)))
+                                (or (bbdb-phone-location phone-number)
+                                    bbdb-default-field-label)
+                                (mapcar (function (lambda(x) (list x)))
+                                        bbdb-field-labels)))
         (newp (let ((bbdb-north-american-phone-numbers-p
                      (= (length phone-number) bbdb-phone-length)))
                 (bbdb-error-retry
@@ -2869,8 +2903,7 @@ info: \\[bbdb-info]")))
          (string-lessp emacs-version "19")) ; v19 has history built in
     (mapcar 'gmhist-make-magic
             '(bbdb bbdb-name bbdb-company bbdb-net bbdb-changed)))
-
-;;----------------------------------------------------------------------------
+
 ;;;###autoload
 (defcustom bbdb-update-records-mode 'annotating
   "Controls how `bbdb-update-records' processes email addresses.
@@ -2901,23 +2934,23 @@ functions `bbdb-update-records' and `bbdb-prompt-for-create'."
 
 ;;;###autoload
 (defun bbdb-update-records (addrs auto-create-p offer-to-create)
-  "Returns the records corresponding to the lis of addresses ADDRS,
+  "Returns the records corresponding to the list of addresses ADDRS,
 creating or modifying them as necessary.  A record will be created if
 AUOT-CREATE-P is non-nil or if OFFER-TO-CREATE is true and the user
 confirms the creation.
 
-The variable `bbdb/gnus-update-records-mode' controls what actions 
+The variable `bbdb/gnus-update-records-mode' controls what actions
 are performed and it might override `bbdb-update-records-mode'.
 
-When hitting C-g once you will not be asked anymore for new people listed
+When hitting C-g once you will not be asked any more for new people listed
 in this message, but it will search only for existing records.  When hitting
 C-g again it will stop scanning."
   (setq auto-create-p (bbdb-invoke-hook-for-value auto-create-p))
-  
+
   (let ((bbdb-records (bbdb-records))
         (processed-addresses 0)
         (bbdb-offer-to-create (or offer-to-create (eq 'prompt auto-create-p)))
-        (bbdb-update-records-mode 
+        (bbdb-update-records-mode
          (if offer-to-create 'annotating
            (if (listp bbdb-update-records-mode)
                (eval bbdb-update-records-mode)
@@ -2988,31 +3021,33 @@ C-g again it will stop scanning."
         (message "Updating of BBDB records finished"))
     records))
 
-
 (defun bbdb-get-help-window (message)
-  "Display MESSAGE in a new window wich is the last one in the current frame."
+  "Display MESSAGE in a new window which is the last one in the current frame."
   (let ((b (get-buffer-create " *BBDB Help*"))
-        (w (get-buffer-window " *BBDB Help*"))
-        (wl (window-list))
+        (w (or (get-buffer-window " *BBDB Help*")
+               (get-lru-window)))
+
+;;        (wl (window-list))
         (lines (let ((l 2) (s 0))
                  (while (setq s (string-match "\n" message s))
                    (setq s (1+ s) l (1+ l)))
                  l)))
 
-    (when (not w)
-      (setq w (car wl)
-            wl (cdr wl))
+;;    (when (not w)
+;;      (setq w (car wl)
+;;            wl (cdr wl))
+;;
+;;      (while wl
+;;        (if (< (nth 1 (window-pixel-edges w))
+;;               (nth 1 (window-pixel-edges (car wl))))
+;;            (setq w (car wl)))
+;;        (setq wl (cdr wl)))
 
-      (while wl
-        (if (< (nth 1 (window-pixel-edges w))
-               (nth 1 (window-pixel-edges (car wl))))
-            (setq w (car wl)))
-        (setq wl (cdr wl)))
-      (setq w (split-window w)))
+    (setq w (split-window w))
 
     (select-window w)
     (switch-to-buffer b)
-    (erase-buffer b)
+    (erase-buffer)
     (insert message)
     (goto-char (point-min))
     (let ((window-min-height 1))
@@ -3020,7 +3055,7 @@ C-g again it will stop scanning."
     w))
 
 (defun bbdb-kill-help-window (window)
-  "Kill the buffer coresponding to WINDOW and delete the WINDOW."
+  "Kill the buffer corresponding to WINDOW and delete the WINDOW."
   (kill-buffer (window-buffer window))
   (delete-window window))
 
@@ -3028,6 +3063,11 @@ C-g again it will stop scanning."
 ;; uses the above variable in order to manipulate bbdb-update-records.
 ;; Some cases are handled with signals in order to keep the changes in
 ;; bbdb-annotate-message-sender as minimal as possible.
+
+;; GNU vs XEmacs again. GAH.
+(or (fboundp 'char-int)
+    (defmacro char-int( c ) (list 'string-to-char c))) ;; ick.
+
 (defun bbdb-prompt-for-create ()
   "This function is used by `bbdb-update-records' to ask the user how to
 proceed the processing of records."
@@ -3078,7 +3118,6 @@ Type q  to quit updating records.  No more search or annotation is done.")))
                   (bbdb-kill-help-window w)
                   (signal 'quit nil)))))))))
 
-;;----------------------------------------------------------------------------
 ;;;###autoload
 (defcustom bbdb-get-addresses-from-headers
   '("From" "Resent-From" "Reply-To")
@@ -3096,7 +3135,7 @@ Type q  to quit updating records.  No more search or annotation is done.")))
 ;;;###autoload
 (defcustom bbdb-get-addresses-headers
   (append bbdb-get-addresses-from-headers bbdb-get-addresses-to-headers)
-  "*List of headers to search for sendes and recipients email addresses."
+  "*List of headers to search for senders and recipients email addresses."
   :group 'bbdb-mua-specific
   :type 'list)
 
