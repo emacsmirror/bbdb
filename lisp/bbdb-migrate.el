@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.4  2000/04/05 16:45:07  bbdb-writer
+;; * Added Alex's BBDB v4 format migration (country field)
+;;
 ;; Revision 1.3  1998/10/10 18:47:21  simmonmt
 ;; From slbaur: Don't pass an integer to concat.
 ;; Format dates with number format - not string - so we get leading
@@ -45,7 +48,8 @@
 ;;    ((VERSION . DIFFERENCES) ... )
 (defconst bbdb-migration-features
   '((3 . "* Date format for `creation-date' and `timestamp' has changed,
-  from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")))
+  from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")
+    (4 . "* Country field added.")))
 
 ;;;###autoload
 (defun bbdb-migration-query (ondisk)
@@ -85,7 +89,7 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 			      (format "%d" bbdb-file-format)
 			      "? ")))
       (delete-window win)
-      (kill-this-buffer)
+      (kill-buffer buf)
       (set-window-configuration wc)
       (if update bbdb-file-format ondisk))))
 
@@ -107,9 +111,37 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 					bbdb-migrate-change-dates)))))
 	      records (cdr records)))
       newrecs))
-   
+   ;; Version 3 -> 4
+   ((= (car bbdb-file-format-migration) 3)
+    (let (newrecs)
+      (while records
+	;; (car records) is the current record.  Take its address-list,
+	;; ie. the 5th field, and add the empty string to each address.
+	;; This is the new country field.
+	(let ((old-addr-list (aref (car records) 5))
+	      (new-addr-list))
+	  (while old-addr-list
+	    (let* ((old-addr (car old-addr-list))
+			   (new-addr))
+	      (setq old-addr-list (cdr old-addr-list))
+; 		  (setq new-addr (vector (aref old-addr 0) ;; tag
+; 								 (list (aref old-addr 1) ;; street 1
+; 									   (aref old-addr 2) ;; street 2
+; 									   (aref old-addr 3)) ;; street 3
+; 								 (aref old-addr 4) ;; city
+; 								 (aref old-addr 5) ;; state
+; 								 (aref old-addr 6) ;; zip
+;         set below old-addr to new-addr for street migration
+	      (setq new-addr (vconcat old-addr [""])) ;; add country field
+	      (setq new-addr-list (append new-addr-list (list new-addr)))))
+	  (aset (car records) 5 new-addr-list))
+	(setq newrecs (append newrecs 
+						  (list (car records)))
+	      records (cdr records)))
+      newrecs))
+   ;; Unknown Version
    (t (error (format "BBDB Cannot migrate from unknown version %d"
-		     (car bbdb-file-format-migration))))))
+					 (car bbdb-file-format-migration))))))
 
 ;;;###autoload
 (defun bbdb-unmigrate-record (record)
@@ -117,13 +149,33 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 `bbdb-file-format') to the version to be saved (the cdr of
 `bbdb-file-format-migration')."
   (cond
+   ;; Version 4 -> 3
+   ((= (cdr bbdb-file-format-migration) 3)
+    ;; Take all the old addresses, ie. the 5th field, and for each
+    ;; address, copy all but the last string to the new address.  This
+    ;; was the country of version 4.  Some version 4 zip codes will be
+    ;; illegal version 3 (as used in 2.00.06) zip codes.  This problem
+    ;; has not been solved.
+    (let ((old-addr-list (aref record 5))
+		  (new-addr-list))
+      (while old-addr-list
+		(let* ((old-addr (car old-addr-list))
+			   (len (1- (length old-addr)))
+			   (new-addr (make-vector len nil))
+			   (i 0))
+	  (setq old-addr-list (cdr old-addr-list))
+	  (while (< i len)
+	    (aset new-addr i (aref old-addr i))
+	    (setq i (1+ i)))
+	  (setq new-addr-list (append new-addr-list (list new-addr)))
+	  (aset record 5 new-addr-list)))))
    ;; Version 3 -> 2
    ((= (cdr bbdb-file-format-migration) 2)
     (bbdb-migrate-record record '((bbdb-record-raw-notes
-				   bbdb-record-set-raw-notes
-				   bbdb-unmigrate-change-dates))))
+								   bbdb-record-set-raw-notes
+								   bbdb-unmigrate-change-dates))))
    (t (error (format "BBDB Cannot unmigrate to unknown version %d"
-		     (car bbdb-file-format-migration))))))
+					 (car bbdb-file-format-migration))))))
 
 (defun bbdb-migrate-record (rec changes)
   "Perform changes on a single database record (passed in REC).
@@ -132,7 +184,7 @@ CHANGES is a function containing entries of the form
         (GET SET FUNCTION)
 
 where GET is the function to be used to retrieve the field to be
-modified, and SET is the function to be used te set the field to be
+modified, and SET is the function to be used to set the field to be
 modified.  FUNCTION will be applied to the result of GET, and its
 results will be saved with SET."
 
