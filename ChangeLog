@@ -1,6 +1,14 @@
+2001-06-05  Didier Verna  <didier@xemacs.org>
+
+	* aclocal.m4: upgrade to Autoconf 2.50.
+	* aclocal.m4 (BBDB_PRE_INIT): new.
+	* aclocal.m4 (BBDB_ARG_SUBST): new.
+	* configure.ac: renamed from configure.in. Upgrade to Autoconf
+	2.50.
+
 2001-06-01  "Albert L. Ting" <alt@artisan.com>
 
-	* lisp/bbdb-vm.el (bbdb/vm-update-records): 
+	* lisp/bbdb-vm.el (bbdb/vm-update-records):
 	* lisp/bbdb-gnus.el (bbdb/gnus-update-records):
 	Subject: bbdb-get-only-first-address-p patches
 
@@ -16,11 +24,11 @@
 
 2001-05-21  Robert Fenk  <Robert.Fenk@gmx.de>
 
-	* lisp/bbdb.el (bbdb/news-auto-create-p): 
+	* lisp/bbdb.el (bbdb/news-auto-create-p):
 		       (bbdb/mail-auto-create-p):
 	* lisp/bbdb-com.el (bbdb-update-records):
 	Fixed a typo.
-	
+
 	* lisp/bbdb-com.el (bbdb-complete-name):
 	(bbdb-complete-name-hooks): Instead of dinging when completing a
 	complete address (and with cycling disabled) call theses hook
