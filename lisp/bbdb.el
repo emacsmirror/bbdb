@@ -107,6 +107,7 @@ prompt the users on how to merge records when duplicates are detected.")
  (autoload 'bbdb-migrate-update-file-version "bbdb-migrate")
  (autoload 'bbdb-unmigrate-record "bbdb-migrate")
  (autoload 'bbdb-redisplay-records "bbdb-com")
+ (autoload 'bbdb-create-internal "bbdb-com")
  (autoload 'y-or-n-p-with-timeout "timer")
  )
 
@@ -2633,7 +2634,7 @@ before the record is created, otherwise it is created without confirmation
         (setq record (if (or (null
                               (bbdb-invoke-hook-for-value prompt-to-create-p))
                              (bbdb-y-or-n-p
-                              (format "%s is not in the db; add? "
+                              (format "%s is not in the db.  Add? "
                                       (or name net))))
                          (make-vector bbdb-record-length nil))
               created-p (not (null record)))
@@ -2767,7 +2768,7 @@ before the record is created, otherwise it is created without confirmation
                         (and
                          (not (equal net "???"))
                          (let ((the-first-bit
-                                (format "add address \"%s\" to \"" net))
+                                (format "Add address \"%s\" to \"" net))
                                ;; this groveling is to prevent the "(y or n)"
                                ;; from falling off the right edge of the
                                ;; screen. 
@@ -2785,8 +2786,17 @@ before the record is created, otherwise it is created without confirmation
                                        0 (max 0 (- w (length the-first-bit)
                                                    20)))
                                       "...")))
-                           (bbdb-y-or-n-p (concat the-first-bit the-next-bit
-                                                  "\"? ")))))))
+                           (when (and (not (bbdb-y-or-n-p (concat the-first-bit
+                                                                  the-next-bit
+                                                                  "\"? ")))
+                                      (bbdb-y-or-n-p
+                                       (format "Create a new record for %s? "
+                                               (bbdb-record-name record))))
+                             ;; else add a new record with the same name
+                             (setq record
+                                   (bbdb-create-internal name nil net
+                                                         nil nil nil))
+                             nil))))))
                     ;; then modify an existing record
                     (let ((front-p (cond ((null bbdb-new-nets-always-primary)
                                           (bbdb-y-or-n-p
@@ -2803,13 +2813,7 @@ before the record is created, otherwise it is created without confirmation
                                              (nconc (bbdb-record-net record)
                                                     (list net))))
                       (bbdb-puthash (downcase net) record) ; important!
-                      (or change-p (setq change-p t)))
-                  ;; else add a new one with the same name
-                  (if (bbdb-y-or-n-p (format "Create a new record for %s? "
-                                             (bbdb-record-name record)))
-                      (setq record
-                            (bbdb-create-internal name nil net nil nil nil)))
-                  ))))
+                      (or change-p (setq change-p t)))))))
         
         (bbdb-debug
          (if (and change-p bbdb-readonly-p)
