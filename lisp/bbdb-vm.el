@@ -166,7 +166,8 @@ C-g again it will stop scanning."
 					      bbdb/mail-auto-create-p)
 					     bbdb/vm-offer-to-create);; force create
 					 'bbdb/vm-prompt-for-create))
-				       ((eq bbdb/vm-update-records-mode 'searching)
+				       ((eq bbdb/vm-update-records-mode
+					    'searching)
 					;; search for the first record having
 					;; this net  
 					(let ((net (cadr bbdb/vm-address))
@@ -176,13 +177,12 @@ C-g again it will stop scanning."
 							nil nil net))
 					  (if record (car record) nil))))
 				 processed-addresses (+ processed-addresses 1))
-			   (when (and (not (eq bbdb/vm-offer-to-create 'quit))
+			   (when (and (not bbdb-silent-running)
+				      (not (eq bbdb/vm-offer-to-create 'quit))
 				      (= 0 (% processed-addresses 5)))
 			     (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs))))
-			       (if vm-xemacs-p
-				   (display-message 'progress mess)
-				 (message mess))
-			       (sit-for 0))))
+			       (display-message 'progress mess))
+			   (sit-for 0)))
 		       (quit (cond ((eq bbdb/vm-update-records-mode
 					'annotating)
 				    (setq bbdb/vm-update-records-mode
@@ -202,7 +202,10 @@ C-g again it will stop scanning."
 
 		   addrs)
              (setq records (nreverse records))
-             (bbdb/vm-encache-message msg records))))
+	     (bbdb/vm-encache-message msg records))))
+    
+    (if (not bbdb-silent-running)
+	(display-message 'progress "Updating of BBDB records finished"))
     records))
 
 (defvar bbdb/vm-offer-to-create nil
@@ -423,14 +426,10 @@ for new email addresses."
   (vm-select-folder-buffer)
   (vm-check-for-killed-summary)
 
-  (bbdb/vm-pop-up-bbdb-buffer t)
-
   (let ((bbdb/vm-get-from-headers bbdb/vm-snarf-all-headers)
-    (bbdb/vm-get-only-first-from-p nil)
-    (bbdb-message-cache nil)
-    records)
-    (setq records (bbdb/vm-update-records offer-to-create))
-    (bbdb-display-records records)))
+	(bbdb/vm-get-only-first-from-p nil)
+	(bbdb-message-cache nil))
+    (bbdb/vm-pop-up-bbdb-buffer offer-to-create)))
 
 
 ;;; bbdb/vm-auto-add-label
@@ -501,13 +500,13 @@ This is how you hook it in.
 (defun bbdb-insinuate-vm ()
   "Call this function to hook BBDB into VM."
   (cond ((boundp 'vm-select-message-hook) ; VM 5.36+
-     (add-hook 'vm-select-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
-    ((boundp 'vm-show-message-hook) ; VM 5.32.L+
-     (add-hook 'vm-show-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
-    (t
-     (error "vm versions older than 5.36 no longer supported")))
+	 (add-hook 'vm-select-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
+	((boundp 'vm-show-message-hook) ; VM 5.32.L+
+	 (add-hook 'vm-show-message-hook 'bbdb/vm-pop-up-bbdb-buffer))
+	(t
+	 (error "vm versions older than 5.36 no longer supported")))
   (define-key vm-mode-map ":" 'bbdb/vm-show-sender)
-;;  (define-key vm-mode-map "'" 'bbdb/vm-show-all-recipients) ;; not yet
+   ;;  (define-key vm-mode-map "'" 'bbdb/vm-show-all-recipients) ;; not yet
   (define-key vm-mode-map ";" 'bbdb/vm-edit-notes)
   (define-key vm-mode-map "/" 'bbdb)
   ;; VM used to inherit from mail-mode-map, so bbdb-insinuate-sendmail
