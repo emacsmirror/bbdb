@@ -51,6 +51,7 @@
  (autoload 'bbdb-unmigrate-record "bbdb-migrate")
  (autoload 'bbdb-redisplay-records "bbdb-com")
  (autoload 'bbdb-create-internal "bbdb-com")
+ (autoload 'bbdb-append-records-p "bbdb-com")
  (autoload 'y-or-n-p-with-timeout "timer")
  (autoload 'mail-position-on-field "sendmail")
  ;; autoload doesn't work for these
