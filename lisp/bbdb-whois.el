@@ -18,181 +18,238 @@
 ;;; from the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA
 ;;; 02139, USA.
 ;;;
-;;; Send bug reports to roland@gnu.ai.mit.edu.
+;;; Send bug reports to bbdb@waider.ie
 
 (require 'bbdb-com)
 
 (defmacro bbdb-add-to-field (record field text)
   (let ((get (intern (concat "bbdb-record-" (symbol-name field))))
-	(set (intern (concat "bbdb-record-set-" (symbol-name field)))))
+    (set (intern (concat "bbdb-record-set-" (symbol-name field)))))
     (` (let ((old ((, get) (, record)))
-	     (text (, text)))
-	 (or (member text old)
-	     ((, set) (, record) (nconc old (list text))))))))
+         (text (, text)))
+     (or (member text old)
+         ((, set) (, record) (nconc old (list text))))))))
 
 (defcustom bbdb-whois-server (or (and (boundp 'whois-server) whois-server)
-			      "rs.internic.net")
+                                 "whois.geektools.com")
   "*Server for \\[bbdb-whois] lookups."
   :group 'bbdb-utilities
   :type 'string)
 
+;;; main entry point. it'd be nice if we could bbdb-whois an arbitrary
+;;; name and make a record from that directly.
+
 ;;;###autoload
 (defun bbdb-whois (the-record &optional server)
   (interactive (list (bbdb-get-record "BBDB Whois: ")
-		     (and current-prefix-arg
-			  (read-string "Query whois server: "
-				       bbdb-whois-server))))
+             (and current-prefix-arg
+              (read-string "Query whois server: "
+                       bbdb-whois-server))))
   (or server (setq server bbdb-whois-server))
   (if (or (bbdb-record-lastname the-record) (bbdb-record-firstname the-record))
       ;; XXX we seem to get called with a vector of nils.
       (save-excursion
-	(set-buffer (generate-new-buffer " *bbdb-whois*"))
-	(set (make-local-variable 'bbdb-whois-record) the-record)
-	(set (make-local-variable 'bbdb-whois-name)
-	     (if (bbdb-record-getprop the-record 'nic)
-		 (concat "!" (bbdb-record-getprop the-record 'nic))
-	       (concat (bbdb-record-lastname the-record) ", "
-		       (bbdb-record-firstname the-record))))
-	(let ((proc (open-network-stream "whois" (current-buffer) server 43)))
-	  (set-process-sentinel proc 'bbdb-whois-sentinel)
-	  (process-send-string proc (concat bbdb-whois-name "\r\n"))))))
+    (set-buffer (generate-new-buffer " *bbdb-whois*"))
+    (set (make-local-variable 'bbdb-whois-record) the-record)
+    (set (make-local-variable 'bbdb-whois-name)
+         (if (bbdb-record-getprop the-record 'nic)
+         (concat "!" (bbdb-record-getprop the-record 'nic))
+           (concat (bbdb-record-lastname the-record) ", "
+               (bbdb-record-firstname the-record))))
+    (let ((proc (open-network-stream "whois" (current-buffer) server 43)))
+      (set-process-sentinel proc 'bbdb-whois-sentinel)
+      (process-send-string proc (concat bbdb-whois-name "\r\n"))))))
 
+;;; This function parses the results from the server.
 (defun bbdb-whois-sentinel (proc status)
   (save-excursion
     (let (rec)
       (set-buffer (process-buffer proc))
       (setq rec bbdb-whois-record)
       (goto-char 1)
-      (if (search-forward "To single out one record" nil t)
-	  (message "%s is ambiguous to whois; try a different name"
-		   bbdb-whois-name)
-	(replace-string "\r\n" "\n")
-	(goto-char 1)
-	(if (re-search-forward
-	     (concat (if (string-match "^!" bbdb-whois-name)
-			 (concat "(\\("
-				 (regexp-quote (substring bbdb-whois-name 1))
-				 "\\))")
-		       (concat (regexp-quote bbdb-whois-name)
-			       ".*(\\([A-Z0-9]+\\))"))
-		     "\\s *\\(\\S +@\\S +\\)?$")
-	     nil t)
-	    (let ((net (if (match-beginning 2)
-			   (downcase (buffer-substring (match-beginning 2)
-						       (match-end 2)))))
-		  (nic (buffer-substring (match-beginning 1) (match-end 1)))
-		  (lines nil))
-	      (if net
-		  (bbdb-add-to-field rec net net))
-	      (bbdb-record-putprop rec 'nic nic)
 
-	      ;; Snarf company.
-	      (forward-line 1)
-	      (back-to-indentation)
-	      (let ((company (buffer-substring (point) (progn (end-of-line)
-							      (point))))
-		    (old (bbdb-record-company rec)))
-		(cond ((not old)
-		       (bbdb-record-set-company rec company))
-		      ((string= old company)
-		       nil)
-		      (t
-		       (bbdb-record-putprop rec 'nic-organization company))))
+      ;; check for multiple replies
+      ;; should maybe present a menu/completion buffer of multiples and do a
+      ;; refetch.
+      (if (not (re-search-forward "Record last updated" (point-max) t))
+          (if (re-search-forward "No match" (point-max) t)
+              (message "Can't find a whois record for `%s'" bbdb-whois-name)
+            (if (re-search-forward "Access Limit Exceeded" (point-max) t)
+                (message "Per-day access limit to %s exceeded."
+                         bbdb-whois-server) ;; bah!
+              (message "%s is ambiguous to whois; try a different name"
+                       bbdb-whois-name)))
 
-	      ;; Read the address info into LINES.
-	      (while (progn (forward-line 1)
-			    (not (looking-at "^$")))
-		(back-to-indentation)
-		(setq lines (cons (buffer-substring (point)
-						    (progn (end-of-line)
-							   (point)))
-				  lines)))
+        ;; clean up & parse buffer, otherwise.
+        (replace-string "\r\n" "\n")
+        (goto-char 1)
+        (if (re-search-forward
+             (concat (if (string-match "^!" bbdb-whois-name)
+                         (concat "(\\("
+                                 (regexp-quote (substring bbdb-whois-name 1))
+                 "\\))")
+               (concat (regexp-quote bbdb-whois-name)
+                   ".*(\\([A-Z0-9]+\\))"))
+             "\\s *\\(\\S +@\\S +\\)?$")
+         nil t)
+        (let ((net (if (match-beginning 2)
+               (downcase (buffer-substring (match-beginning 2)
+                               (match-end 2)))))
+          (nic (buffer-substring (match-beginning 1) (match-end 1)))
+          (lines nil))
+          (if net
+          (bbdb-add-to-field rec net net))
+          (bbdb-record-putprop rec 'nic nic)
 
-	      ;; Snarf phone number.
-	      (if (car lines)
-		  (progn
-		    (if (not (bbdb-find-phone (car lines)
-					      (bbdb-record-phones rec)))
-			(let ((phone-number (vector "phone" (car lines))))
-			  (bbdb-add-to-field rec phones phone-number)))
-		    (setq lines (cdr lines))))
+          ;; Snarf company.
+          ;; not all nic records have companies, though.
+          (forward-line 1)
+          (back-to-indentation)
+          (let ((company (buffer-substring (point) (progn (end-of-line)
+                                  (point))))
+            (old (bbdb-record-company rec)))
+        (cond ((not old)
+               (bbdb-record-set-company rec company))
+              ((string= old company)
+               nil)
+              (t
+               (bbdb-record-putprop rec 'nic-organization company))))
 
-	      ;; Snarf address.
-	      (if (car lines)
-		  (let ((addr (make-vector bbdb-address-length nil))
-			(city "")
-			(state "")
-			zip)
-		    (if (string-match
-			 "\\([^,]+\\),\\s *\\(\\S +\\)\\s *\\([0-9-]+\\)"
-			 (car lines))
-			(setq city (substring (car lines)
-					      (match-beginning 1)
-					      (match-end 1))
-			      state (substring (car lines)
-					       (match-beginning 2)
-					       (match-end 2))
-			      zip (string-to-int (substring (car lines)
-							    (match-beginning 3)
-							    (match-end 3)))
-			      lines (cdr lines)))
-		    (bbdb-address-set-location addr "address") ;???
-		    (bbdb-address-set-city addr city)
-		    (bbdb-address-set-state addr state)
-		    (bbdb-address-set-zip addr zip)
-; FIXME whois in general is busted.
-; 		    (setq lines (nreverse lines))
-; 		    (bbdb-address-set-street1 addr (or (car lines) ""))
-; 		    (setq lines (cdr lines))
-; 		    (bbdb-address-set-street2 addr (or (car lines) ""))
-; 		    (setq lines (cdr lines))
-; 		    (bbdb-address-set-street3 addr (or (car lines) ""))
-; 		    (setq lines (cdr lines))
-		    (bbdb-add-to-field rec addresses addr)))
+          ;; Read the address info into LINES.
+          (while (progn (forward-line 1)
+                (not (looking-at "^$")))
+            (back-to-indentation)
+            (setq lines (cons (buffer-substring (point)
+                                                (progn (end-of-line)
+                                                       (point)))
+                              lines)))
 
-	      ;; Snarf any random notes.
-	      (setq lines nil)
-	      (while (progn
-		       (forward-line 1)
-		       (back-to-indentation)
-		       (not (looking-at
-			     "$\\|Record last updated on")))
-		(if (looking-at "Alternate mailbox: \\(\\S +\\)$")
-		    (bbdb-add-to-field rec net
-				       (buffer-substring (match-beginning 1)
-							 (match-end 1)))
-		  (setq lines (cons (buffer-substring (point)
-						      (progn (end-of-line)
-							     (point)))
-				    lines))))
-	      (if lines
-		  (bbdb-record-putprop rec 'nic-notes
-				       (mapconcat 'identity
-						  (nreverse lines)
-						  "\n")))
+          ;; Snarf phone number.
+          ;; phone, fax are presented, it seems, as
+          ;; +country area prefix number +country area prefix number
+          ;; we can look for the " +" and split there, I guess.
+          (if (car lines)
+              (let ((phones (car lines))
+                    (n 1)
+                    phone-numbers)
+                (while (string-match "^\\(.+\\) \\+" phones)
+                  (setq phone-numbers
+                        (append phone-numbers
+                                (list (substring phones 0 (match-end 1))))
+                        phones (substring phones (+ 1 (match-end 1)))))
+                (setq phone-numbers (append phone-numbers
+                                            (list phones)))
 
-	      ;; Snarf the last-update date.
-	      (if (re-search-forward "Record last updated on \\(\\S *\\)\\."
-				     nil t)
-		  (bbdb-record-putprop rec 'nic-updated
-				       (buffer-substring (match-beginning 1)
-							 (match-end 1))))
+                ;; now add each member of the list to the bbdb record
+                ;; it'd be nice if we could be smarter about this.
+                (mapcar (function
+                         (lambda(p)
+                           (if (not (bbdb-find-phone
+                                     p (bbdb-record-phones rec)))
+                               (let ((p-n
+                                      (vector (format "nic-phone-%d" n) p)))
+                                 (bbdb-add-to-field rec phones p-n)
+                                 (setq n (+ 1 n))))))
+                        phone-numbers)
 
-	      (save-excursion
-		(set-buffer bbdb-buffer-name)
-		(bbdb-redisplay-one-record rec)))
-	  (message "No whois information for %s" bbdb-whois-name)))
+                ;; throw away phones line from what we've snarfed
+                (setq lines (cdr lines))))
+
+          ;; Snarf address.
+          (if (car lines)
+              (let ((addr (make-vector bbdb-address-length nil))
+                    (city "")
+                    (state "")
+                    (zip "")
+                    (country ""))
+
+                ;; extract country
+                (if (string-match "^[A-Z][A-Z]$" (car lines))
+                    (setq country (car lines) ;; could convert from ISO...
+                          lines (cdr lines)))
+
+                ;; extract city, state, zip
+                ;; it would be nice if this could all use bbdb-snarf.
+                ;; or if NICs would hand out something machine
+                ;; readable, like <shudder> XML.
+                ;;
+                ;; note the zipcode check at the end of the regexp
+                ;; isn't really a zipcode check, because we don't do
+                ;; zipcode checks any more.
+                (if (string-match
+                     "\\([^,]+\\),\\s *\\(\\S +\\)\\s *\\(.+\\)"
+                     (car lines))
+                    (setq city (substring (car lines)
+                                          (match-beginning 1)
+                                          (match-end 1))
+                          state (substring (car lines)
+                                           (match-beginning 2)
+                                           (match-end 2))
+                          zip (substring (car lines)
+                                         (match-beginning 3)
+                                         (match-end 3))
+                          lines (cdr lines))
+                  ;; otherwise we just stuff everything into the
+                  ;; streets list and let the user clean it up. This
+                  ;; would be nice to do heuristically, if I knew
+                  ;; enough about variable address formats.
+                  ;; (bbdb-snarf-grok-address (ADDR)) would be neat.
+                  )
+
+                (bbdb-address-set-location addr "nic-address")
+                (bbdb-address-set-city addr (or city ""))
+                (bbdb-address-set-state addr (or state ""))
+                (bbdb-address-set-zip addr (or zip ""))
+                (bbdb-address-set-country addr (or country ""))
+                (setq lines (nreverse lines))
+                (bbdb-address-set-streets addr lines)
+
+                ;; should probably overwrite existing nic-address field.
+                (bbdb-add-to-field rec addresses addr)))
+
+          ;; Snarf any random notes.
+          (setq lines nil)
+          (while (progn
+                   (forward-line 1)
+                   (back-to-indentation)
+                   (not (looking-at
+                         "$\\|Record last updated on")))
+            (if (looking-at "Alternate mailbox: \\(\\S +\\)$")
+                (bbdb-add-to-field rec net
+                                   (buffer-substring (match-beginning 1)
+                                                     (match-end 1)))
+              (setq lines (cons (buffer-substring (point)
+                                                  (progn (end-of-line)
+                                                         (point)))
+                                lines))))
+          (if lines
+              (bbdb-record-putprop rec 'nic-notes
+                                   (mapconcat 'identity
+                                              (nreverse lines)
+                                              "\n")))
+
+          ;; Snarf the last-update date.
+          (if (re-search-forward "Record last updated on \\(\\S *\\)\\."
+                                 nil t)
+              (bbdb-record-putprop rec 'nic-updated
+                                   (buffer-substring (match-beginning 1)
+                                                     (match-end 1))))
+
+          (save-excursion
+            (set-buffer bbdb-buffer-name)
+            (bbdb-redisplay-one-record rec)))
+        (message "No whois information for %s" bbdb-whois-name)))
       (delete-process proc)
       (kill-buffer (current-buffer)))))
 
 (defun bbdb-find-phone (string record)
   "Return the vector entry if STRING is a phone number listed in RECORD."
   (let ((phone nil)
-	(done nil))
+    (done nil))
     (while (and record (not done))
       (setq phone (car record))
       (if (string= string (bbdb-phone-string phone))
-	  (setq done phone))
+      (setq done phone))
       (setq record (cdr record)))
     done))
 
