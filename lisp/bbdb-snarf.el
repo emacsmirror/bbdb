@@ -574,7 +574,7 @@ See `bbdb-extract-address-component-handler' for more information."
 
 ;;; alternative name parser
 ;;; ###autoload
-(defun bbdb-rfc822-addresses ( addrline )
+(defun bbdb-rfc822-addresses ( addrline &optional ignore-errors)
   "Split ADDRLINE into a list of parsed addresses.
 
 You can't do this with rfc822.el in any sort of useful way because it discards
