@@ -27,8 +27,8 @@
 
 ;;;###autoload
 (defun bbdb/gnus-update-record (&optional offer-to-create)
-  "returns the record corresponding to the current GNUS message, creating 
-or modifying it as necessary.  A record will be created if 
+  "returns the record corresponding to the current GNUS message, creating
+or modifying it as necessary.  A record will be created if
 bbdb/news-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
 the user confirms the creation."
   (if bbdb-use-pop-up
@@ -58,7 +58,7 @@ the user confirms the creation."
 
 ;;;###autoload
 (defun bbdb/gnus-annotate-sender (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record 
+  "Add a line to the end of the Notes field of the BBDB record
 corresponding to the sender of this message.  If REPLACE is non-nil,
 replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
@@ -222,7 +222,7 @@ for `bbdb/gnus-summary-get-author'."
 
 ;;;###autoload
 (defun bbdb/gnus-lines-and-from (header)
-  "Useful as the value of gnus-optional-headers in *GNUS* (not Gnus).
+  "Useful as the value of `gnus-optional-headers' in *GNUS* (not Gnus).
 NOTE: This variable no longer seems to be present in Gnus.  It seems
 to have been replaced by `message-default-headers', which only takes
 strings.  In the future this should change."
@@ -236,8 +236,8 @@ strings.  In the future this should change."
 		      (error nil))))
 	 (name (car data))
 	 (net (car (cdr data)))
-	 (record (and data 
-		      (bbdb-search-simple name 
+	 (record (and data
+		      (bbdb-search-simple name
 		       (if (and net bbdb-canonicalize-net-hook)
 			   (bbdb-canonicalize-address net)
 			 net))))
@@ -247,7 +247,7 @@ strings.  In the future this should change."
 	;; bogon!
 	(setq record nil))
 
-    (setq name 
+    (setq name
 	  (or (and bbdb/gnus-summary-prefer-bbdb-data
 		   (or (and bbdb/gnus-summary-prefer-real-names
 			    (and record (bbdb-record-name record)))
@@ -293,15 +293,15 @@ This function is meant to be used with the user function defined in
 		      (error nil))))
 	 (name (car data))
 	 (net (car (cdr data)))
-	 (record (and data 
-		      (bbdb-search-simple name 
+	 (record (and data
+		      (bbdb-search-simple name
 		       (if (and net bbdb-canonicalize-net-hook)
 			   (bbdb-canonicalize-address net)
 			 net)))))
     (if (and record name (member (downcase name) (bbdb-record-net record)))
 	;; bogon!
 	(setq record nil))
-    (setq name 
+    (setq name
 	  (or (and bbdb/gnus-summary-prefer-bbdb-data
 		   (or (and bbdb/gnus-summary-prefer-real-names
 			    (and record (bbdb-record-name record)))
@@ -388,9 +388,9 @@ bbdb/gnus-score.  This will be set automatically if you change a BBDB
 record which contains a gnus-score field.")
 
 (defun bbdb/gnus-score-invalidate-alist (rec)
-  "This function is called through bbdb-after-change-hook, and sets
-bbdb/gnus-score-rebuild-alist to t if the changed record contains a
-gnus-score field."
+  "This function is called through `bbdb-after-change-hook',
+and sets `bbdb/gnus-score-rebuild-alist' to t if the changed
+record contains a gnus-score field."
   (if (bbdb-record-getprop rec bbdb/gnus-score-field)
       (setq bbdb/gnus-score-rebuild-alist t)))
 
@@ -462,7 +462,7 @@ addresses better than the traditionally static global scorefile."
 	 (add-hook 'gnus-Article-prepare-hook 'bbdb/gnus-update-record)
 	 (add-hook 'gnus-Save-newsrc-hook 'bbdb-offer-save)
 	 (define-key gnus-Subject-mode-map ":" 'bbdb/gnus-show-sender)
-	 (define-key gnus-Subject-mode-map [(control :)] 
+	 (define-key gnus-Subject-mode-map [(control :)]
 	   'bbdb/gnus-summary-show-all-recipients)
 	 (define-key gnus-Subject-mode-map ";" 'bbdb/gnus-edit-notes))
 	(t                                   ; 3.15 or higher
@@ -488,7 +488,7 @@ addresses better than the traditionally static global scorefile."
 Please redefine `bbdb/gnus-summary-user-format-letter' to a different letter."
 			bbdb/gnus-summary-user-format-letter))
 	     (fset get-author-user-fun 'bbdb/gnus-summary-get-author))))
-    
+
     ; One tick.  One tick only, please
     (cond (bbdb/gnus-summary-in-bbdb-format-letter
 	   (if (and (fboundp in-bbdb-user-fun)
@@ -499,7 +499,7 @@ Please redefine `bbdb/gnus-summary-user-format-letter' to a different letter."
 Redefine `bbdb/gnus-summary-in-bbdb-format-letter' to a different letter."
 			bbdb/gnus-summary-in-bbdb-format-letter))
 	     (fset in-bbdb-user-fun 'bbdb/gnus-summary-author-in-bbdb)))))
-  
+
   ;; Scoring
   (add-hook 'bbdb-after-change-hook 'bbdb/gnus-score-invalidate-alist)
 ;  (setq gnus-score-find-score-files-function
@@ -516,7 +516,7 @@ Redefine `bbdb/gnus-summary-in-bbdb-format-letter' to a different letter."
 
 ;;;###autoload
 (defun bbdb-insinuate-message ()
-  "Call this function to hook BBDB into message-mode."
+  "Call this function to hook BBDB into `message-mode'."
   (define-key message-mode-map "\M-\t" 'bbdb-complete-name))
 
 (provide 'bbdb-gnus)

@@ -20,7 +20,7 @@
 
 ;;; This file lets you do stuff like
 ;;;
-;;;	o  automatically update a "timestamp" field each time a record is 
+;;;	o  automatically update a "timestamp" field each time a record is
 ;;;        modified
 ;;;	o  automatically add some string to the notes field(s) based on the
 ;;;	   contents of header fields of the current message
@@ -35,6 +35,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.59  2000/07/13 17:07:00  sds
+;; minor doc fixes to comply with the standards
+;;
 ;; Revision 1.58  2000/04/05 17:09:06  bbdb-writer
 ;; * Autoload cookie for bbdb-header-start
 ;;
@@ -77,7 +80,7 @@
 
 ;;;###autoload
 (defun bbdb-timestamp-hook (record)
-  "For use as a bbdb-change-hook; maintains a notes-field called `timestamp'
+  "For use as a `bbdb-change-hook'; maintains a notes-field called `timestamp'
 for the given record which contains the time when it was last modified.  If
 there is such a field there already, it is changed, otherwise it is added."
   (bbdb-record-putprop record 'timestamp (format-time-string
@@ -86,7 +89,7 @@ there is such a field there already, it is changed, otherwise it is added."
 
 ;;;###autoload
 (defun bbdb-creation-date-hook (record)
-  "For use as a bbdb-create-hook; adds a notes-field called `creation-date'
+  "For use as a `bbdb-create-hook'; adds a notes-field called `creation-date'
 which is the current time string."
   ;; hey buddy, we've known about your antics since the eighties...
   (bbdb-record-putprop record 'creation-date (format-time-string
@@ -94,7 +97,7 @@ which is the current time string."
 					      (current-time))))
 
 
-;;; Determining whether to create a record based on the content of the 
+;;; Determining whether to create a record based on the content of the
 ;;; current message.
 
 ;;;###autoload
@@ -152,14 +155,14 @@ beginning of the message headers."
 
 (defcustom bbdb-ignore-most-messages-alist '()
   "*An alist describing which messages to automatically create BBDB
-records for.  This only works if bbdb/news-auto-create-p or 
+records for.  This only works if bbdb/news-auto-create-p or
 bbdb/mail-auto-create-p (or both) is 'bbdb-ignore-most-messages-hook.
-The format of this alist is 
+The format of this alist is
    (( HEADER-NAME . REGEXP ) ... )
 for example,
    ((\"From\" . \"@.*\\.maximegalon\\.edu\")
     (\"Subject\" . \"time travel\"))
-will cause BBDB entries to be made only for messages sent by people at 
+will cause BBDB entries to be made only for messages sent by people at
 Maximegalon U., or (that's *or*) people posting about time travel.
 
 See also bbdb-ignore-some-messages-alist, which has the opposite effect."
@@ -171,9 +174,9 @@ See also bbdb-ignore-some-messages-alist, which has the opposite effect."
 
 (defcustom bbdb-ignore-some-messages-alist '()
   "*An alist describing which messages *not* to automatically create
-BBDB records for.  This only works if bbdb/news-auto-create-p or 
+BBDB records for.  This only works if bbdb/news-auto-create-p or
 bbdb/mail-auto-create-p (or both) is 'bbdb-ignore-some-messages-hook.
-The format of this alist is 
+The format of this alist is
    (( HEADER-NAME . REGEXP ) ... )
 for example,
    ((\"From\" . \"mailer-daemon\")
@@ -234,8 +237,8 @@ match the bbdb-ignore-some-messages-alist (which see)."
 (defcustom bbdb-auto-notes-alist nil
   "*An alist which lets you have certain pieces of text automatically added
 to the BBDB record representing the sender of the current message based on
-the subject or other header fields.  This only works if bbdb-notice-hook 
-is 'bbdb-auto-notes-hook.  The format of this alist is 
+the subject or other header fields.  This only works if bbdb-notice-hook
+is 'bbdb-auto-notes-hook.  The format of this alist is
 
    (( HEADER-NAME
        (REGEXP . STRING) ... )
@@ -250,7 +253,7 @@ the record corresponding to anyone you get mail from via one of the VM
 mailing lists.  If, that is, bbdb/mail-auto-create-p is set such that the
 record would have been created, or the record already existed.
 
-The format of elements of this list may also be 
+The format of elements of this list may also be
        (REGEXP FIELD-NAME STRING)
 or
        (REGEXP FIELD-NAME STRING REPLACE-P)
@@ -259,7 +262,7 @@ instead of
 
 meaning add the given string to the named field.  The field-name may not
 be name, address, phone, or net (builtin fields) but must be either ``notes,''
-``company,'' or the name of a user-defined note-field. 
+``company,'' or the name of a user-defined note-field.
        (\"pattern\" . \"string to add\")
 is equivalent to
        (\"pattern\" notes \"string to add\")
@@ -301,7 +304,7 @@ See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'."
 		  )))
 
 (defcustom bbdb-auto-notes-ignore nil
-  "Alist of headers and regexps to ignore in bbdb-auto-notes-hook.
+  "Alist of headers and regexps to ignore in `bbdb-auto-notes-hook'.
 Each element looks like
 
     (HEADER . REGEXP)
@@ -313,7 +316,7 @@ For example,
 would exclude the phony `Organization:' headers in GNU mailing-lists
 gatewayed to gnu.* newsgroups.  Note that this exclusion applies only
 to a single field, not to the entire message.  For that, use the variable
-bbdb-auto-notes-ignore-all."
+`bbdb-auto-notes-ignore-all'."
   :group 'bbdb-noticing-records
   :type '(repeat (cons
 		  (string :tag "Header name")
@@ -321,7 +324,7 @@ bbdb-auto-notes-ignore-all."
 
 (defcustom bbdb-auto-notes-ignore-all nil
   "Alist of headers and regexps which cause the entire message to be ignored
-in bbdb-auto-notes-hook.  Each element looks like
+in `bbdb-auto-notes-hook'.  Each element looks like
 
     (HEADER . REGEXP)
 
@@ -329,7 +332,7 @@ For example,
 
     (\"From\" . \"BLAT\\\\.COM\")
 
-would exclude any notes recording for message coming from BLAT.COM. 
+would exclude any notes recording for message coming from BLAT.COM.
 Note that this is different from `bbdb-auto-notes-ignore', which applies
 only to a particular header field, rather than the entire message."
   :group 'bbdb-noticing-records
@@ -340,10 +343,10 @@ only to a particular header field, rather than the entire message."
 
 ;;;###autoload
 (defun bbdb-auto-notes-hook (record)
-  "For use as a bbdb-notice-hook.  This might automatically add some text
+  "For use as a `bbdb-notice-hook'.  This might automatically add some text
 to the notes field of the BBDB record corresponding to the current record
 based on the header of the current message.  See the documentation for
-the variables bbdb-auto-notes-alist and bbdb-auto-notes-ignore."
+the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
   ;; This could stand to be faster...
   ;; could optimize this to check the cache, and noop if this record is
   ;; cached for any other message, but that's probably not the right thing.
@@ -406,8 +409,8 @@ the variables bbdb-auto-notes-alist and bbdb-auto-notes-ignore."
 			      (if re
 				  (not (string-match re fieldval))
 				t)))))
-		  ;; An integer as STRING is an index into match-data: 
-		  ;; A function as STRING calls the function on fieldval: 
+		  ;; An integer as STRING is an index into match-data:
+		  ;; A function as STRING calls the function on fieldval:
 		  (if did-match
 		      (setq string
 			    (cond ((integerp string) ; backward compat
@@ -445,7 +448,7 @@ the variables bbdb-auto-notes-alist and bbdb-auto-notes-ignore."
 			    (bbdb-record-putprop record notes-field-name
 						 string)
 			    (bbdb-maybe-update-display record))
-			;; add STRING to old contents, don't replace 
+			;; add STRING to old contents, don't replace
 			(if (eq notes-field-name 'notes)
 			    (message "Adding note \"%s\"" string)
 			  (message "Adding \"%s\" to field \"%s\""
@@ -473,7 +476,7 @@ the variables bbdb-auto-notes-alist and bbdb-auto-notes-ignore."
 				 (substring string
 					    (match-beginning 0)
 					    (match-end 0)))
-				((and (>= c ?1) 
+				((and (>= c ?1)
 				      (<= c ?9))
 				 ;; return empty string if N'th
 				 ;; sub-regexp did not match:

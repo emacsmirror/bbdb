@@ -364,9 +364,9 @@ is nil...\)"
 
 
 (defun bbdb-read-new-record ()
-  "Prompt for and return a completely new bbdb-record.  Doesn't insert it in to
-the database or update the hashtables, but does insure that there will not be
-name collisions."
+  "Prompt for and return a completely new BBDB record.
+Doesn't insert it in to the database or update the hashtables, but does
+insure that there will not be name collisions."
   (bbdb-records)                ; make sure database is loaded
   (if bbdb-readonly-p (error "The Insidious Big Brother Database is read-only."))
   (let (firstname lastname)
@@ -689,7 +689,7 @@ certain commands.\)"
   nil)
 
 (defmacro bbdb-do-all-records-p ()
-  "Whether the last command was bbdb-apply-next-command-to-all-records."
+  "Whether the last command was `bbdb-apply-next-command-to-all-records'."
   '(eq last-command 'bbdb-apply-next-command-to-all-records))
 
 
@@ -703,7 +703,7 @@ it is a north american or european phone number by providing a prefix
 argument.  A prefix arg of ^U means it's to be a euronumber, and any
 other prefix arg means it's to be a a structured north american number.
 Otherwise, which style is used is controlled by the variable
-bbdb-north-american-phone-numbers-p."
+`bbdb-north-american-phone-numbers-p'."
   (interactive (let ((name "")
                      (completion-ignore-case t))
                  (while (string= name "")
@@ -1382,8 +1382,7 @@ well as possibly querying about differing values.
 
 This function does nothing to ensure the integrity of the rest of the
 database, that is somebody elses problem (something like
-bbdb-refile-record)."
-
+`bbdb-refile-record')."
   (if (or (null new-record) (eq old-record new-record))
       (error "those are the same"))
   (let ((new-name (bbdb-record-name    new-record))
@@ -1799,8 +1798,8 @@ composition buffer.)"
 
 ;;;###autoload
 (defun bbdb-completion-predicate (symbol)
-  "For use as the third argument to completing-read, to obey the
-semantics of bbdb-completion-type."
+  "For use as the third argument to `completing-read'.
+Obey the semantics of `bbdb-completion-type'."
   (cond ((null bbdb-completion-type) 't)
         ((not (boundp symbol)) '())
         (t (let ((sym  (symbol-name symbol))
@@ -1812,9 +1811,9 @@ semantics of bbdb-completion-type."
              ok))))
 
 (defun bbdb-completing-read-record (prompt &optional omit-records)
-  "Prompt for and return a record from the bbdb; completion is done according
-to `bbdb-completion-type'.  If the user just hits return, nil is returned.
-Otherwise, a valid response is forced."
+  "Prompt for and return a record from the bbdb.
+Completion is done according to `bbdb-completion-type'.  If the user
+just hits return, nil is returned.  Otherwise, a valid response is forced."
   (let* ((ht (bbdb-hashtable))
          (completion-ignore-case 't)
          (string (completing-read prompt ht 'bbdb-completion-predicate t))
@@ -1864,7 +1863,7 @@ completion with."
 
 ;;;###autoload
 (defun bbdb-read-addresses-with-completion (prompt &optional default)
-  "Like read-string, but allows bbdb-complete-name style completion."
+  "Like `read-string', but allows `bbdb-complete-name' style completion."
   (read-from-minibuffer prompt default
                         bbdb-read-addresses-with-completion-map))
 
@@ -1880,7 +1879,7 @@ completion with."
         (setq bbdb-complete-name-saved-window-config nil))))
 
 (defun bbdb-display-completion-list (list &optional callback data)
-  "Wrapper for display-completion-list.
+  "Wrapper for `display-completion-list'.
 CALLBACK and DATA are discarded."
   (display-completion-list list))
 
@@ -1918,7 +1917,7 @@ preceeding newline, colon, or comma).  If what has been typed is unique,
 insert an entry of the form \"User Name <net-addr>\".  If it is a valid
 completion but not unique, a list of completions is displayed.
 
-Completion behaviour can be controlled with 'bbdb-completion-type'."
+Completion behaviour can be controlled with `bbdb-completion-type'."
   (interactive)
   (let* ((end (point))
          (beg (or start-pos
@@ -2118,7 +2117,7 @@ Completion behaviour can be controlled with 'bbdb-completion-type'."
 ;;; interface to mail-abbrevs.el.
 
 (defcustom bbdb-define-all-aliases-field 'mail-alias
-  "*The field which bbdb-define-all-aliases searches for."
+  "*The field which `bbdb-define-all-aliases' searches for."
   :group 'bbdb
   :type 'symbol)
 
@@ -2460,8 +2459,8 @@ The results are displayed in the bbdb buffer."
 
 ;;; Time-based functions
 (defun bbdb-kill-older (date &optional compare function)
-  "*Apply FUNCTION to all records with timestamps older than DATE.  The
-comparison is done with COMPARE.  If FUNCTION is not specified, the
+  "*Apply FUNCTION to all records with timestamps older than DATE.
+The comparison is done with COMPARE.  If FUNCTION is not specified, the
 selected records are deleted.  If COMPARE is not specified,
 `string-lessp' is used.
 
@@ -2493,29 +2492,29 @@ is true, where VALUE is the value of the FIELD field of REC."
 
 ;;;###autoload
 (defun bbdb-timestamp-older (date)
-  "*Display records with timestamp older than DATE.  DATE must be in
-yyyy-mm-dd format."
+  "*Display records with timestamp older than DATE.
+DATE must be in yyyy-mm-dd format."
   (interactive "sOlder than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'timestamp string<)))
 
 ;;;###autoload
 (defun bbdb-timestamp-newer (date)
-  "*Display records with timestamp newer than DATE.  DATE must be in
-yyyy-mm-dd format."
+  "*Display records with timestamp newer than DATE.
+DATE must be in yyyy-mm-dd format."
   (interactive "sNewer than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'timestamp string>)))
 
 ;;;###autoload
 (defun bbdb-creation-older (date)
-  "*Display records with creation-date older than DATE.  DATE must be
-in yyyy-mm-dd format."
+  "*Display records with creation-date older than DATE.
+DATE must be in yyyy-mm-dd format."
   (interactive "sOlder than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'creation-date string<)))
 
 ;;;###autoload
 (defun bbdb-creation-newer (date)
-  "*Display records with creation-date newer than DATE.  DATE must be
-in yyyy-mm-dd format."
+  "*Display records with creation-date newer than DATE.
+DATE must be in yyyy-mm-dd format."
   (interactive "sNewer than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'creation-date string>)))
 

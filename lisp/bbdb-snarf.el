@@ -95,7 +95,7 @@ If CONSUME-P is set, delete the text, if found."
       default)))
 
 (defun bbdb-snarf-parse-phone-number (phone)
-  "Fix the bogosity that is bbdb-snarf-parse-phone-number.
+  "Fix the bogosity that is `bbdb-snarf-parse-phone-number'.
 It doesn't always return a normalized phone number.
 For (800) 555-1212 it returns a three element list."
   (let ((try (bbdb-parse-phone-number phone)))
@@ -107,7 +107,7 @@ For (800) 555-1212 it returns a three element list."
 (defun bbdb-snarf (where)
   "snarf up a bbdb record WHERE the point is.
 We assume things are line-broken and paragraph-bounded.
-The name comes first and other fields (address, 
+The name comes first and other fields (address,
 phone, email, web pages) are recognized by context.
 
 Requred context:
@@ -131,12 +131,12 @@ patches to internationalize these assumptions are welcome.
   "snarf up a bbdb record in the current region.  See `bbdb-snarf' for
 more details."
   (interactive "r")
-  
+
   (save-excursion
     (let
 	((buf (get-buffer-create " *BBDB snarf*"))
 	 (text (buffer-substring begin end))
-	 phones nets web city state zip country name address-lines 
+	 phones nets web city state zip country name address-lines
 	 address-vector notes)
       (set-buffer buf)
       (erase-buffer)
@@ -194,7 +194,7 @@ more details."
 	(re-search-forward "\\(\\sw\\|[ -\.,]\\)*\\sw" nil t)
 	(setq name (match-string 0))
 	(delete-region (match-beginning 0) (match-end 0)))
-      
+
       ;; address
       (goto-char (point-min))
       (cond
@@ -275,7 +275,7 @@ more details."
 
 
 ; (setq bbdb-snarf-test-cases "
-; 
+;
 ; another test person
 ; 1234 Gridley St.
 ; Los Angeles, CA 91342
@@ -283,19 +283,19 @@ more details."
 ; test@person.net
 ; http://www.foo.bar/
 ; other stuff about this person
-; 
+;
 ; test person
 ; 1234 Gridley St.
 ; St. Los Angeles, CA 91342-1234
 ; 555-1212
 ; test@person.net
-; 
+;
 ; x test person
 ; 1234 Gridley St.
 ; Los Angeles, California 91342-1234
 ; 555-1212
 ; test@person.net
-; 
+;
 ; y test person
 ; 1234 Gridley St.
 ; Los Angeles, CA

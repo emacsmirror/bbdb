@@ -7,7 +7,7 @@
 ;;; Version: 3.92; 4Jan95
 
 ;;; This file is part of the bbdb-print extensions to the Insidious
-;;; Big Brother Database, which is for use with GNU Emacs. 
+;;; Big Brother Database, which is for use with GNU Emacs.
 ;;;
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -47,7 +47,7 @@
 ;;; what is meant by "interesting" information.  You can also restrict
 ;;; printing to just the records currently in the *BBDB* buffer by
 ;;; using *P instead of P.
-;;;       
+;;;
 ;;; There are various options for the way the formatting is done; most
 ;;; are controlled by the variable bbdb-print-alist. See its
 ;;; documentation for the allowed options.
@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.64  2000/07/13 17:07:00  sds
+;; minor doc fixes to comply with the standards
+;;
 ;; Revision 1.63  2000/05/29 22:47:50  waider
 ;; *** empty log message ***
 ;;
@@ -100,16 +103,16 @@
 ;;;
 ;;; Put this file somewhere on your load-path.  Put bbdb-print.tex and
 ;;; bbdb-cols.tex somewhere on your TEXINPUTS path, or put absolute
-;;; pathnames into the variable bbdb-print-format-files (which see). Put 
+;;; pathnames into the variable bbdb-print-format-files (which see). Put
 ;;; (add-hook 'bbdb-load-hook (function (lambda () (require 'bbdb-print))))
 ;;; into your .emacs, or autoload it.
 ;;;
 ;;; This program was adapted for BBDB by Boris Goldowsky
-;;; <boris@cs.rochester.edu> and Dirk Grunwald 
+;;; <boris@cs.rochester.edu> and Dirk Grunwald
 ;;; <grunwald@cs.colorado.edu> using a TeX format designed by Luigi
-;;; Semenzato <luigi@paris.cs.berkeley.edu>. 
+;;; Semenzato <luigi@paris.cs.berkeley.edu>.
 ;;; We are also grateful to numerous people on the bbdb-info
-;;; mailing list for suggestions and bug reports. 
+;;; mailing list for suggestions and bug reports.
 
 ;;; Code:
 
@@ -233,7 +236,7 @@ in the following simple examples:
     (font-size . 6)
     (quad-hsize . "3.15in")
     (quad-vsize . "4.5in"))
-  "*Formatting options for bbdb-print, all formats.
+  "*Formatting options for `bbdb-print', all formats.
 This is an alist of the form ((option1 . value1) (option2 . value2) ...)
 
 You can have separate settings for brief and non-brief printouts;
@@ -260,36 +263,36 @@ The possible options and legal values are:
  - hsize, vsize: horizontal dimension of pages.  String value can be any valid
    TeX dimension, or nil to use TeX's default.
  - hoffset, voffset: shift TeX's output rightward (downward) by this distance
-   (any TeX dimension).  Nil or 0 uses TeX's default positioning.  
+   (any TeX dimension).  Nil or 0 uses TeX's default positioning.
  - quad-hsize, quad-vsize: for the quad format, horizontal and
      vertical size of the little pages.  These must be strings which
      are valid TeX dimensions, eg \"10cm\"."
   :group 'bbdb-utilities-print
   :type 'bbdb-print-alist-widget)
 
-(defcustom bbdb-print-full-alist 
-  '((columns . 3) 
+(defcustom bbdb-print-full-alist
+  '((columns . 3)
     (separator . 2)
     (include-files "bbdb-print" "bbdb-cols"))
-  "*Extra options for bbdb-print non-brief format.
+  "*Extra options for `bbdb-print' non-brief format.
 These supplement or override entries in `bbdb-print-alist'; see description
 of possible contents there."
   :group 'bbdb-utilities-print
   :type 'bbdb-print-alist-widget)
 
 (defcustom bbdb-print-brief-alist
-  '((columns . 1) 
+  '((columns . 1)
     (separator . 1)
     (n-phones . 2)
     (n-addresses . 1)
     (include-files "bbdb-print-brief" "bbdb-cols"))
-  "*Extra Options for bbdb-print, brief format.
+  "*Extra Options for `bbdb-print', brief format.
 These supplement or override entries in `bbdb-print-alist'; see description
 of possible contents there."
   :group 'bbdb-utilities-print
   :type 'bbdb-print-alist-widget)
 
-(defconst bbdb-print-filofax-alist 
+(defconst bbdb-print-filofax-alist
   (append '((font-size . 12)
 	    (columns . 2)
 	    (voffset . "-2cm")
@@ -302,12 +305,12 @@ of possible contents there."
 (defcustom bbdb-print-prolog
   (concat "%%%% ====== Phone/Address list in -*-TeX-*- Format =====\n"
 	  "%%%%        produced by bbdb-print, version 3.0\n\n")
-  "*TeX statements to include at the beginning of the bbdb-print file."
+  "*TeX statements to include at the beginning of the `bbdb-print' file."
   :group 'bbdb-utilities-print
   :type '(text :format "%t:\n%v"))
 
 (defcustom bbdb-print-epilog "\\endaddresses\n\\bye\n"
-  "*TeX statements to include at the end of the bbdb-print file."
+  "*TeX statements to include at the end of the `bbdb-print' file."
   :group 'bbdb-utilities-print
   :type '(text :format "%t:\n%v"))
 
@@ -315,7 +318,7 @@ of possible contents there."
 
 (defsubst bbdb-print-if-not-blank (string &rest more)
   "If STRING is not null, then return it concatenated
-with rest of arguments.  If it is null, then all arguments are 
+with rest of arguments.  If it is null, then all arguments are
 ignored and the null string is returned."
   (if (or (null string) (equal "" string))
       ""
@@ -325,18 +328,18 @@ ignored and the null string is returned."
 (defun bbdb-print (visible-records to-file brief)
   "Make a TeX file for printing out the bbdb database.\\<bbdb-mode-map>
 If \"\\[bbdb-apply-next-command-to-all-records]\\[bbdb-print]\" is \
-used instead of simply \"\\[bbdb-print]\", then includes only the 
+used instead of simply \"\\[bbdb-print]\", then includes only the
 people currently in the *BBDB* buffer.  With a prefix argument, makes
 a brief \(one-line-per-entry) printout.
 
 There are various variables for customizing the content & format of
 the printout, notably the variables `bbdb-print-alist' and
-`bbdb-print-require'.  See the file bbdb-print.el for more information." 
+`bbdb-print-require'.  See the file bbdb-print.el for more information."
   (interactive (list (bbdb-do-all-records-p)
  		     (read-file-name "Print To File: "
  				     (file-name-directory bbdb-print-file-name)
  				     bbdb-print-file-name
- 				     nil 
+ 				     nil
  				     (file-name-nondirectory bbdb-print-file-name))
 		     current-prefix-arg))
   (setq bbdb-print-file-name (expand-file-name to-file))
@@ -346,7 +349,7 @@ the printout, notably the variables `bbdb-print-alist' and
 		      (bbdb-records)
 		    (set-buffer bbdb-buffer-name)
 		    (mapcar 'car bbdb-records)))
-	 (psstring (if (cdr (assoc 'ps-fonts alist)) 
+	 (psstring (if (cdr (assoc 'ps-fonts alist))
 		       "ps" ""))
 	 (columns (cdr (assoc 'columns alist)))
 	 (current-letter t)
@@ -367,12 +370,12 @@ the printout, notably the variables `bbdb-print-alist' and
       (while infiles
 	(insert (format "\\input %s\n" (car infiles)))
 	(setq infiles (cdr infiles))))
-    (insert (format "\n\\set%ssize{%d}\n" 
+    (insert (format "\n\\set%ssize{%d}\n"
 		    psstring (cdr (assoc 'font-size alist)))
-	    (format "\\setseparator{%d}\n" 
+	    (format "\\setseparator{%d}\n"
 		    (cdr (assoc 'separator alist)))
 	    (cond ((eq 'quad columns)
-		   (format "\\quadformat{%s}{%s}" 
+		   (format "\\quadformat{%s}{%s}"
 			   (cdr (assoc 'quad-hsize alist))
 			   (cdr (assoc 'quad-vsize alist))))
 		  ((eq 'grid columns) "\\grid")
@@ -391,7 +394,7 @@ the printout, notably the variables `bbdb-print-alist' and
                       "\\catcode`ß=\\active\\chardefß=\"FF"))
 	    "\n\n\\beginaddresses\n")
     (while records
-      (setq current-letter 
+      (setq current-letter
 	    (bbdb-print-format-record (car records) current-letter
 				      brief pofl n-phones n-addresses))
       (setq records (cdr records)))
@@ -426,12 +429,12 @@ The result looks like this:
  zip city, state
  country"
   (insert
-   (format 
+   (format
     "\\address{%s}\n"
-    (bbdb-print-tex-quote 
+    (bbdb-print-tex-quote
      (if addr
 	 (concat
-          (mapconcat (function (lambda(str) 
+          (mapconcat (function (lambda(str)
                                  (if (= 0 (length (bbdb-string-trim str)))
                                      ()
                                    (concat str"\\\\\n"))))
@@ -443,7 +446,7 @@ The result looks like this:
 	    (if (or (> (length c) 0)
 		    (> (length z) 0)
 		    (> (length s) 0))
-		(concat z (if (and (> (length z) 0) 
+		(concat z (if (and (> (length z) 0)
 				   (> (length c) 0)) " " "")
 			c (if (and (or (> (length z) 0)
 				       (> (length c) 0))
@@ -466,12 +469,12 @@ The result looks like this:
  city, state  zip
  country"
   (insert
-   (format 
+   (format
     "\\address{%s}\n"
-    (bbdb-print-tex-quote 
+    (bbdb-print-tex-quote
      (if addr
-         (concat 
-          (mapconcat (function (lambda(str) 
+         (concat
+          (mapconcat (function (lambda(str)
                                  (if (= 0 (length (bbdb-string-trim str)))
                                      ()
                                    (concat str "\\\\\n"))))
@@ -483,7 +486,7 @@ The result looks like this:
 	    (if (or (> (length c) 0)
 		    (> (length z) 0)
 		    (> (length s) 0))
-		(concat c (if (and (> (length c) 0) 
+		(concat c (if (and (> (length c) 0)
 				   (> (length s) 0)) ", " "")
 			s (if (and (or (> (length c) 0)
 				       (> (length s) 0))
@@ -506,9 +509,9 @@ The return value is the new CURRENT-LETTER."
 
   (bbdb-debug (if (bbdb-record-deleted-p record)
 		  (error "plus ungood: tex formatting deleted record")))
-  
+
   (let* ((bbdb-elided-display bbdb-print-elide)
-	 (first-letter 
+	 (first-letter
 	  (substring (concat (bbdb-record-sortkey record) "?") 0 1))
 	 (name    (and (bbdb-field-shown-p 'name)
 		       (or (bbdb-record-getprop record 'tex-name)
@@ -555,10 +558,10 @@ The return value is the new CURRENT-LETTER."
 		 (if p
 		     (setq rightside (bbdb-print-phone-string (car p))
 			   phone (cdr p))))))
-	(insert (format "\\firstline{%s}{%s}\n" 
+	(insert (format "\\firstline{%s}{%s}\n"
 			name
 			(bbdb-print-tex-quote rightside))))
-      
+
       (if company
 	  (insert (format "\\comp{%s}\n" (bbdb-print-tex-quote company))))
 
@@ -571,8 +574,8 @@ The return value is the new CURRENT-LETTER."
 	(if (car phone)
 	    (let ((place (aref (car phone) 0))
 		  (number (bbdb-print-phone-string (car phone))))
-	      (insert (format "\\phone{%s%s}\n" 
-			      (bbdb-print-tex-quote 
+	      (insert (format "\\phone{%s%s}\n"
+			      (bbdb-print-tex-quote
 			       (bbdb-print-if-not-blank place ": "))
 			      (bbdb-print-tex-quote number))))
 	  (insert (format "\\phone{}\n")))
@@ -595,7 +598,7 @@ The return value is the new CURRENT-LETTER."
       ;; Addresses.  FUTURE: If none left, should use phones instead.
 
       (if n-addresses
-	  (setq address 
+	  (setq address
 		(bbdb-print-firstn n-addresses address brief)))
       (while address
 	(bbdb-format-address (car address) 'printing)
@@ -610,9 +613,9 @@ The return value is the new CURRENT-LETTER."
 	  (if (bbdb-field-shown-p (car thisnote))
 	      (progn
 		(if (eq 'notes (car thisnote))
-		    (insert (format "\\notes{%s}\n" (bbdb-print-tex-quote 
+		    (insert (format "\\notes{%s}\n" (bbdb-print-tex-quote
 						     (cdr thisnote))))
-		  (insert (format "\\note{%s}{%s}\n" 
+		  (insert (format "\\note{%s}{%s}\n"
 				  (bbdb-print-tex-quote (symbol-name
 							 (car thisnote)))
 				  (bbdb-print-tex-quote (cdr thisnote))))))))
@@ -627,7 +630,7 @@ The return value is the new CURRENT-LETTER."
 
 (defun bbdb-print-phone-string (phone)
   "Format PHONE-NUMBER as a string, obeying omit-area-code setting.
-Omit-area-code is one of the allowed symbols in bbdb-print-alist, which see."
+Omit-area-code is one of the allowed symbols in `bbdb-print-alist', which see."
   (let ((str (bbdb-phone-string phone))
 	(omit (cdr (assoc 'omit-area-code bbdb-print-alist))))
     (if (and omit (string-match omit str))
@@ -637,7 +640,7 @@ Omit-area-code is one of the allowed symbols in bbdb-print-alist, which see."
 (defun bbdb-print-front-if (func list)
   "Move first elt of LIST satisfying FUNC to front.
 The car of the returned list is the first element that returned nonnil;
-The cdr is the rest of the list.  
+The cdr is the rest of the list.
 But if the FUNC returns nil for every elements of the LIST, returns nil."
   (cond ((null list) nil)
 	((funcall func (car list))
@@ -658,7 +661,7 @@ adding nil's.  If N is nil, just returns LIST."
 
 (defun bbdb-print-tex-quote (string)
   "Quote any unquoted TeX special characters that appear in STRING.
-In other words, # alone will be replaced by \\#, but \\^ will be left for 
+In other words, # alone will be replaced by \\#, but \\^ will be left for
 TeX to process as an accent."
   (if string
       (save-excursion
@@ -667,7 +670,7 @@ TeX to process as an accent."
 	(insert string)
 	(goto-char (point-min))
 	(while (not (eobp))
-	  (cond ((looking-at "[<>=]+") 
+	  (cond ((looking-at "[<>=]+")
 		 (replace-match "$\\&$"))
 		((and (looking-at "[#$%&_]")
 		      (not (eq ?\\ (char-after (1- (point))))))

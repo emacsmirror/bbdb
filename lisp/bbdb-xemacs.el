@@ -177,7 +177,7 @@
 	      (list 'bbdb-send-mail-internal
 		    (bbdb-dwim-net-address record (car addrs)))
 	      t))))
-      
+
 
 (defun build-bbdb-field-menu (record field)
   (let ((type (car field)))
@@ -293,10 +293,11 @@
 ;; Utility functions that mask others to provide XEmacs-specific functionality
 ;;;###autoload
 (defun bbdb-xemacs-display-completion-list (list &optional callback data)
-  "Wrapper for display-completion-list.  Allows callbacks on XEmacs
-display-completion-list is called with `:activate-callback CALLBACK'
-if CALLBACK is non-nil. `:user-data DATA' is also used if DATA is
-non-nil.  Neither are used if CALLBACK is nil."
+  "Wrapper for `display-completion-list'.
+Allows callbacks on XEmacs `display-completion-list' is called with
+`:activate-callback CALLBACK' if CALLBACK is non-nil.
+`:user-data DATA' is also used if DATA is non-nil.
+Neither are used if CALLBACK is nil."
   (cond ((and callback data)
 	 (display-completion-list list
 				  :activate-callback callback

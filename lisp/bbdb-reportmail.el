@@ -44,7 +44,7 @@
 
 ;; v1.01 26 June 1997
 ;;       Fixed the advice so that if we are the message recipient, do
-;;       nothing so that display-time-process-new-mail will correctly 
+;;       nothing so that display-time-process-new-mail will correctly
 ;;       trap this case.
 ;;
 ;; v1.00 26 June 1997
@@ -54,6 +54,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.55  2000/07/13 17:07:00  sds
+;; minor doc fixes to comply with the standards
+;;
 ;; Revision 1.54  1998/04/11 07:18:55  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back
 ;;
@@ -70,7 +73,7 @@
 (require 'mail-extr)
 
 (defun bbdb/reportmail-alternate-full-name (address)
-  (if address 
+  (if address
       (let ((entry (bbdb-search-simple nil address)))
 	(if entry
 	    (or (bbdb-record-getprop entry 'mail-name)
@@ -78,9 +81,9 @@
 
 (defadvice display-time-get-field
   (around bbdb/reportmail-hack-display-time-get-field disable activate)
-  "Advises the display-time-get-field function in the reportmail package. 
+  "Advises the `display-time-get-field' function in the reportmail package.
 If the field is \"from\" or \"to\", it tries to replace the value of the field
-with the name field of the corresponding BBDB entry, if one can be found. 
+with the name field of the corresponding BBDB entry, if one can be found.
 
 If no corresponding record can be found, the field value is left unaltered."
   (let (gf-field)
@@ -89,17 +92,17 @@ If no corresponding record can be found, the field value is left unaltered."
     ;; Call the original display-time-get-field
     ad-do-it
     (if (or (string= gf-field "To") (string= gf-field "From"))
-	(setq ad-return-value 
-	      (or 
+	(setq ad-return-value
+	      (or
 	       ;; If this message is to me, then do nothing so
 	       ;; reportmail can trap this case in
 	       ;; display-time-process-new-mail
-	       (if (display-time-member ad-return-value 
+	       (if (display-time-member ad-return-value
                       display-time-my-addresses)
 		   ad-return-value
 		 nil)
 	       ;; Is the sender/recipient in our BBDB?
-	       (bbdb/reportmail-alternate-full-name 
+	       (bbdb/reportmail-alternate-full-name
 		(car (cdr (mail-extract-address-components ad-return-value))))
 	       ;; Can't find sender/recipient in BBDB; do nothing.
 	       ad-return-value)
@@ -108,7 +111,7 @@ If no corresponding record can be found, the field value is left unaltered."
 ;;;###autoload
 (defun bbdb-insinuate-reportmail ()
   "Call this function to hook BBDB into reportmail."
-  (ad-enable-advice 'display-time-get-field 'around 
+  (ad-enable-advice 'display-time-get-field 'around
 		    'bbdb/reportmail-hack-display-time-get-field)
   (ad-activate 'display-time-get-field)
   (message "Insinuated BBDB into Reportmail.")

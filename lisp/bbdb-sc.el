@@ -3,7 +3,7 @@
 ;;; This file is an addition to the Insidious Big Brother Database
 ;;; (aka BBDB), copyright (c) 1991, 1992 Jamie Zawinski
 ;;; <jwz@netscape.com>.
-;;; 
+;;;
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
 ;;; published by the Free Software Foundation; either version 1, or (at your
@@ -25,7 +25,7 @@
 ;;; Thanks to Richard Stanton <stanton@haas.berkeley.edu> for ideas
 ;;; for improvements and to Michael D. Carney  <carney@ltx-tr.com>
 ;;; for testing and feedback.
- 
+
 ;;; $Date$ by $Author$
 ;;; $Revision$
 
@@ -42,7 +42,7 @@
 ;;; set and isues an warning message if "sc-consult" is not included.
 ;;;
 ;;;   (setq sc-preferred-attribution-list
-;;;     '("sc-lastchoice" "x-attribution" "sc-consult" 
+;;;     '("sc-lastchoice" "x-attribution" "sc-consult"
 ;;;       "initials" "firstname" "lastname"))
 ;;;
 ;;;
@@ -57,7 +57,7 @@
 ;;; And finally we set the sc-mail-glom-frame to enable the
 ;;; fetching of the name of person when there is only an e-mail
 ;;; address in the original mail:
-;;; 
+;;;
 ;;;  (setq sc-mail-glom-frame
 ;;;    '((begin                        (setq sc-mail-headers-start (point)))
 ;;;      ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
@@ -72,6 +72,9 @@
 
 ;;;
 ; $Log$
+; Revision 1.11  2000/07/13 17:07:01  sds
+; minor doc fixes to comply with the standards
+;
 ; Revision 1.10  1998/04/11 07:18:18  simmonmt
 ; Colin Rafferty's patch adding autoload cookies back
 ;
@@ -110,7 +113,7 @@
 
 ;;; User variable(s)
 (defcustom bbdb/sc-replace-attr-p t
- "t if you like to create a new BBDB entry when 
+ "t if you like to create a new BBDB entry when
 entering a non-default attribution, 'ask if the user
 should be asked before creation and NIL if we never create a new entry."
  :group 'bbdb-utilities-supercite
@@ -123,7 +126,7 @@ should be asked before creation and NIL if we never create a new entry."
   :group 'bbdb-utilities-supercite
   :type '(symbol :tag "Field name"))
 
-;;; Code starts 
+;;; Code starts
 (defcustom bbdb/sc-last-attribution ""
  "Default attribution return by the SuperCite citation engine,
 used to compare against citation selected by the user."
@@ -136,7 +139,7 @@ FROM is user e-mail address to look for in BBDB."
     ;; if logged in user sent this, use recipients.
     (let ((check (if (or (null from)
 			 (string-match (bbdb-user-mail-names) from))
-		     (car (cdr (mail-extract-address-components 
+		     (car (cdr (mail-extract-address-components
 				(or (sc-mail-field "to") from))))
 		   from)))
       (if from
@@ -153,9 +156,9 @@ FROM is user e-mail address to look for in BBDB."
 	    (not (string-match (bbdb-user-mail-names) address)))
 	(let* ((bbdb-notice-hook nil)
 	       ;; avoid noticing any headers in the reply message
-	       (record (bbdb-annotate-message-sender 
+	       (record (bbdb-annotate-message-sender
 		       from t
-		       (bbdb-invoke-hook-for-value 
+		       (bbdb-invoke-hook-for-value
 			bbdb/mail-auto-create-p) t)))
 	  (if record
 	      (let ((old (bbdb-record-getprop record 'attribution)))
@@ -168,17 +171,17 @@ FROM is user e-mail address to look for in BBDB."
 			   (bbdb-change-record record nil)))))))))
 
 (defun bbdb/sc-default ()
-  "If the current \"from\" field in sc-mail-info alist 
+  "If the current \"from\" field in `sc-mail-info' alist
 contains only an e-mail address, lookup e-mail address in
-BBDB, and prepend a new \"from\" field to sc-mail-info."
+BBDB, and prepend a new \"from\" field to `sc-mail-info'."
   (let* ((from   (sc-mail-field "from"))
 	 (pair   (and from (mail-extract-address-components from))))
     (if (and pair (not (car pair)))
 	(let* ((record (bbdb-search-simple nil (car (cdr pair))))
 	       (name   (and record (bbdb-record-name record))))
-	  (if name	  
-	      (setq sc-mail-info 
-		    (cons (cons "from" 
+	  (if name
+	      (setq sc-mail-info
+		    (cons (cons "from"
 				(format "%s (%s)" (car (cdr pair)) name))
 			  sc-mail-info)))))))
 
@@ -201,15 +204,15 @@ Custom."
 			     "be gathered from the BBDB without \"sc-consult\""
 			     "in sc-preferred-attribution-list")))
     (defvar sc-preferred-attribution-list
-      '("sc-lastchoice" "x-attribution" "sc-consult" 
+      '("sc-lastchoice" "x-attribution" "sc-consult"
         "initials" "firstname" "lastname")))
-  
+
   ;; check sc-attrib-selection-list
   (defvar sc-attrib-selection-list
-    '(("sc-from-address" 
-       ((".*" . (bbdb/sc-consult-attr 
+    '(("sc-from-address"
+       ((".*" . (bbdb/sc-consult-attr
 		 (sc-mail-field "sc-from-address")))))))
-  
+
   ;; set sc-mail-glom-frame
   (defvar sc-mail-glom-frame
     '((begin                        (setq sc-mail-headers-start (point)))
@@ -225,12 +228,12 @@ Custom."
 ;;;###autoload
 (defun bbdb-insinuate-sc ()
   "Call this function to hook BBDB into Supercite."
-  
+
   (add-hook 'sc-post-hook 'bbdb/sc-set-attr)
-  (add-hook 'sc-attribs-postselect-hook 
+  (add-hook 'sc-attribs-postselect-hook
 		 (function (lambda()
-			     (setq bbdb/sc-last-attribution 
-				   (if sc-downcase-p 
+			     (setq bbdb/sc-last-attribution
+				   (if sc-downcase-p
 				       (downcase attribution) attribution))))))
 
 (provide 'bbdb-sc)

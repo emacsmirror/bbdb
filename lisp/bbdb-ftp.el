@@ -3,7 +3,7 @@
 ;;; This file is an addition to the Insidious Big Brother Database
 ;;; (aka BBDB), copyright (c) 1991, 1992 Jamie Zawinski
 ;;; <jwz@netscape.com>.
-;;; 
+;;;
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
 ;;; published by the Free Software Foundation; either version 1, or (at your
@@ -19,12 +19,15 @@
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-;;; This file was written by Ivan Vazquez <ivan@haldane.bu.edu> 
+;;; This file was written by Ivan Vazquez <ivan@haldane.bu.edu>
 
 ;; $Date$ by $Author$
 ;; $Revision$
 ;;
 ;; $Log$
+;; Revision 1.57  2000/07/13 17:07:00  sds
+;; minor doc fixes to comply with the standards
+;;
 ;; Revision 1.56  2000/04/13 00:12:02  waider
 ;; * Thomas's duplicates patch
 ;;
@@ -51,7 +54,7 @@
 
 ;;; Note that Ftp Site BBDB entries differ from regular entries by the
 ;;; fact that the Name Field must have the ftp site preceeded by the
-;;; bbdb-ftp-site-name-designator-prefix.  This defaults to "Ftp Site:" 
+;;; bbdb-ftp-site-name-designator-prefix.  This defaults to "Ftp Site:"
 ;;; BBDB Ftp Site entries also have two new fields added, the
 ;;; ftp-dir slot, and the ftp-user slot.  These are added to the notes
 ;;; alist part of the bbdb-records, the original bbdb-record structure
@@ -63,7 +66,7 @@
 ;;; bbdb-ftp - Use ange-ftp to open an ftp-connection to a BBDB
 ;;;            record's name.  If this command is executed from the
 ;;;            *BBDB* buffer, ftp the site of the record at point;
-;;;            otherwise, it prompts for an ftp-site. 
+;;;            otherwise, it prompts for an ftp-site.
 
 ;;; bbdb-create-ftp-site -
 ;;;            Add a new ftp-site entry to the bbdb database; prompts
@@ -102,19 +105,19 @@
   "Expands into an accessor function for slots in the notes alist."
   (let ((fn-name (intern (concat "bbdb-record-" (symbol-name slot)))))
     (list 'defun fn-name (list 'record)
-	  (list 'cdr 
+	  (list 'cdr
 		(list 'assoc (list 'quote slot)
 		      (list 'bbdb-record-raw-notes 'record))))))
 
-(defun-bbdb-raw-notes-accessor ftp-dir) 
+(defun-bbdb-raw-notes-accessor ftp-dir)
 (defun-bbdb-raw-notes-accessor ftp-user)
 
 (defun bbdb-record-ftp-site (record)
   "Acessor Function. Returns the ftp-site field of the BBDB record or nil."
   (let* ((name (bbdb-record-name record))
 	 (ftp-pfx-regexp (concat bbdb-ftp-site-name-designator-prefix " *"))
-	 (ftp-site 
-	  (and (string-match ftp-pfx-regexp name) 
+	 (ftp-site
+	  (and (string-match ftp-pfx-regexp name)
 	       (substring name (match-end 0)))))
     ftp-site))
 
@@ -124,7 +127,7 @@
 	(tab-char-code   ?\t)
 	(index 0))
     (if string
-	(progn 
+	(progn
 	  (while (or (char-equal (elt string index) space-char-code)
 		     (char-equal (elt string index) tab-char-code))
 	    (setq index (+ index 1)))
@@ -164,7 +167,7 @@ the record at point; otherwise, it prompts for an ftp-site.
 			"Not an ftp site.  Check bbdb-ftp-site-name-designator-prefix")))))
 
 (defun bbdb-read-new-ftp-site-record ()
-  "Prompt for and return a completely new bbdb-record that is
+  "Prompt for and return a completely new BBDB record that is
 specifically an ftp site entry.  Doesn't insert it in to the database
 or update the hashtables, but does insure that there will not be name
 collisions."
@@ -194,18 +197,19 @@ collisions."
       (if (string= notes "")   (setq notes nil))
 
       (let ((record
-	     (vector firstname lastname nil company nil nil nil 
-		     (append 
+	     (vector firstname lastname nil company nil nil nil
+		     (append
 		      (if notes (list (cons 'notes notes)) nil)
 		      (if dir   (list (cons 'ftp-dir dir)) nil)
 		      (if user  (list (cons 'ftp-user user)) nil))
 		     (make-vector bbdb-cache-length nil))))
 	record))))
-   
+
 ;;;###autoload
 (defun bbdb-create-ftp-site (record)
-  "Add a new ftp-site entry to the bbdb database; prompts for all relevant info
-using the echo area, inserts the new record in the db, sorted alphabetically."
+  "Add a new ftp-site entry to the bbdb database.
+Prompts for all relevant info using the echo area,
+inserts the new record in the db, sorted alphabetically."
   (interactive (list (bbdb-read-new-ftp-site-record)))
   (bbdb-invoke-hook 'bbdb-create-hook record)
   (bbdb-change-record record t)
