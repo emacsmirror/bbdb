@@ -298,8 +298,7 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
     (setq next-marker (or (nth 2 next-record-cons) (point-max)))
     (delete-region (point) next-marker)
     (if (< position next-marker)
-        (goto-char position)
-      (goto-char (- (point-max) 2)))
+        (goto-char position))
     
     (save-excursion
       (run-hooks 'bbdb-list-hook))
