@@ -1,3 +1,7 @@
+2000-06-30  Jochen Küpper  <Jochen@Jochen-Kuepper.de>
+
+	* lisp/Makefile: Add everything to build bbdb-merge.elc.
+
 2000-06-14  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-com.el:

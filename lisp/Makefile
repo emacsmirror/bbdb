@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8  2000/06/30 21:58:11  kuepper
+# Build bbdb-merge.elc
+#
 # Revision 1.7  1998/03/10 07:33:12  simmonmt
 # Finally fixed that damn 19.34 :link problem - needed to put OTHERDIR
 # stuff first in the load-path before loading bbdb.el.
@@ -84,7 +87,7 @@ PUSHPATH= -eval "`\
 DEPSRCS=	bbdb-com.el  bbdb-hooks.el  bbdb-gnus.el  bbdb-mhe.el \
 		bbdb-rmail.el bbdb-vm.el bbdb-ftp.el bbdb-whois.el \
 		bbdb-xemacs.el bbdb-print.el bbdb-srv.el bbdb-reportmail.el \
-		bbdb-migrate.el
+		bbdb-merge.el bbdb-migrate.el
 
 DEPBINS=	${DEPSRCS:.el=.elc}
 SRCS=		bbdb.el  $(DEPSRCS)
@@ -103,6 +106,7 @@ auto-autoloads.elc: auto-autoloads.el
 bbdb.elc:            bbdb.el
 bbdb-com.elc:        bbdb.elc bbdb-com.el
 bbdb-ftp.elc:        bbdb.elc bbdb-ftp.el
+bbdb-merge.elc:      bbdb-merge.el
 bbdb-migrate.elc:    bbdb.elc bbdb-migrate.el
 bbdb-print.elc:      bbdb.elc bbdb-print.el
 bbdb-snarf.elc:      bbdb.elc bbdb-snarf.el
@@ -148,7 +152,7 @@ autoloads: auto-autoloads.elc
 
 extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc  \
 	bbdb-srv.elc bbdb-reportmail.elc bbdb-snarf.elc bbdb-w3.elc \
-	bbdb-sc.elc bbdb-migrate.elc
+	bbdb-sc.elc bbdb-merge.elc bbdb-migrate.elc
 bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc extras
 rmail:	bbdb bbdb-rmail.elc
 vm:	bbdb bbdb-vm.elc
