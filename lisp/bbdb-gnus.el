@@ -628,13 +628,19 @@ spooled, using the addresses in the headers and information from the
 BBDB."
   (let ((prq (list (cons 0 nil) (cons 1 nil) (cons 2 nil) (cons 3 nil))))
     ;; the From: header is special
-    (let* ((hdr (or (mail-fetch-field "from") (user-login-name)))
+    (let* ((hdr (or (mail-fetch-field "resent-from")
+                    (mail-fetch-field "from")
+                    (user-login-name)))
        (rv (bbdb/gnus-split-to-group hdr t)))
       (setcdr (nth (cdr rv) prq) (cons (car rv) nil)))
     ;; do the rest of the headers
-    (let ((hdr (or (concat (mail-fetch-field "to" nil t) ", "
-               (mail-fetch-field "cc" nil t) ", "
-               (mail-fetch-field "apparently-to" nil t)) "")))
+    (let ((hdr (or (concat (or (mail-fetch-field "resent-to" nil t)
+                               (mail-fetch-field "to" nil t))
+                           ", "
+                           (mail-fetch-field "cc" nil t)
+                           ", "
+                           (mail-fetch-field "apparently-to" nil t))
+                   "")))
       (setq hdr (rfc822-addresses hdr))
       (while hdr
     (let* ((rv (bbdb/gnus-split-to-group (car hdr)))
