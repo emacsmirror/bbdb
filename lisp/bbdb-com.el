@@ -148,7 +148,7 @@
   "Display all entries in the BBDB matching the regexp STRING
 in either the name(s), company, network address, or notes."
   (interactive "sRegular Expression for General Search: \nP")
-  (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep))
+  (let ((bbdb-elided-display (or bbdb-elided-display (and elidep t)))
         (notes (cons '* string)))
     (bbdb-display-records
      (bbdb-search (bbdb-records) string string string notes nil))))
@@ -2120,7 +2120,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
        (delete-region beg end)
        (insert completion)
        (setq end (point))
-       (let ((last ""))
+       (let ((last "")
+	     (bbdb-complete-name-recursion t))
          (while (and (stringp completion)
                      (not (string= completion last))
                      (setq last completion
@@ -2129,7 +2130,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
            (if (stringp completion)
                (progn (delete-region beg end)
                       (insert completion))))
-         (bbdb-complete-name beg)))
+	   (bbdb-complete-name beg)))
 
       ;; Matched again and got no new chars so show options...
       (t
@@ -2271,7 +2272,9 @@ When called with prefix argument it will remove the alias.
 We honor `bbdb-apply-next-command-to-all-records'!
 The new alias will only be added if it isn't there yet."
   (interactive (list (if (bbdb-do-all-records-p) 'all 'one)
-             (completing-read "Mail alias: " (bbdb-get-mail-aliases))
+             (completing-read
+              (format "%s mail alias: " (if current-prefix-arg "Remove" "Add"))
+              (bbdb-get-mail-aliases))
              current-prefix-arg))
   (setq newalias (bbdb-string-trim newalias))
   (setq newalias (if (string= "" newalias) nil newalias))
@@ -2615,8 +2618,7 @@ The results of the search is returned as a list of records."
                  (bbdb-record-name rec)
                  (setq hash (bbdb-gethash (downcase (bbdb-record-name rec))))
                  (> (length hash) 1))
-        (setq ret (append hash ret)
-              hit 1)
+        (setq ret (append hash ret))
         (message "BBDB record `%s' causes duplicates, maybe it is equal to a company name."
                  (bbdb-record-name rec))
         (sit-for 1))
@@ -2637,8 +2639,7 @@ The results of the search is returned as a list of records."
             (while aka
               (setq hash (bbdb-gethash (downcase (car aka))))
               (when (> (length hash) 1)
-                (setq ret (append hash ret)
-                      hit 3)
+                (setq ret (append hash ret))
                 (message "BBDB record `%s' has duplicate aka `%s'"
                          (bbdb-record-name rec) (car aka))
                 (sit-for 1))
