@@ -431,6 +431,14 @@ be asked that question the very first time the message is selected."
   :type '(choice (const :tag "Enable caching" t)
 		 (const :tag "Disable caching" nil)))
 
+(defcustom bbdb-silent-running nil
+  "*If this is true, bbdb will suppress all its informational messages and
+queries. Be very very certain you want to set this, because it will suppress
+prompting to alter record names, assign names to addresses, etc."
+  :group 'bbdb-noticing-records
+  :type '(choice (const :tag "Run silently" t)
+				 (const :tag "Disable silent running" nil)))
+
 (defcustom bbdb-mode-hook nil
   "*Hook or hooks invoked when the *BBDB* buffer is created."
   :group 'bbdb-hooks
@@ -1301,7 +1309,9 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 		rest (cdr rest)))
 	(setq bbdb-showing-changed-ones done))
       (bbdb-frob-mode-line (length records))
-      (if (not bbdb-gag-messages) (message "Formatting..."))
+      (and (not bbdb-gag-messages)
+		   (not bbdb-silent-running)
+		   (message "Formatting..."))
       (bbdb-mode)
       ;; this in in the *BBDB* buffer, remember, not the .bbdb buffer.
       (set (make-local-variable 'bbdb-records) nil)
@@ -1317,7 +1327,9 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 	  (bbdb-format-record (nth 0 (car records))
 			      (nth 1 (car records)))
 	  (setq records (cdr records))))
-      (if (not bbdb-gag-messages) (message "Formatting...done.")))
+      (and (not bbdb-gag-messages) 
+		   (not bbdb-silent-running)
+		   (message "Formatting...done.")))
     (set-buffer bbdb-buffer-name)
     (if (and append first)
 	(let ((cons (assq first bbdb-records))
@@ -1662,7 +1674,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 		   ;;(run-hooks 'bbdb-after-read-db-hook) ; run this?
 		   nil)
 		  (t
-		   (or shut-up (message "Parsing BBDB..."))
+		   (or shut-up bbdb-silent-running (message "Parsing BBDB..."))
 		   (bbdb-flush-all-caches)
 		   (cond ((and bbdb-notice-auto-save-file
 			       (file-newer-than-file-p (make-auto-save-file-name)
@@ -2590,24 +2602,31 @@ before the record is created, otherwise it is created without confirmation
 	  ;; have a message-name, not the same as old name.
 	  (cond (bbdb-readonly-p nil)
 		;;(created-p nil)
-		((and bbdb-quiet-about-name-mismatches old-name)
+		((and (not bbdb-quiet-about-name-mismatches) old-name)
 		 (message "name mismatch: \"%s\" changed to \"%s\""
 			  (bbdb-record-name record) name)
 		 (sit-for 1))
-		((or created-p
+		(created-p
+
+		 (if (not bbdb-silent-running)
 		     (if (null old-name)
-			 (bbdb-y-or-n-p
-			  (format "Assign name \"%s\" to address \"%s\"? "
-				  name (car (bbdb-record-net record))))
+				 (bbdb-y-or-n-p
+				  (format "Assign name \"%s\" to address \"%s\"? "
+						  name (car (bbdb-record-net record))))
 		       (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
-					      old-name name))))
+									  old-name name))))
 		 (setq change-p 'sort)
 		 (and old-name bbdb-use-alternate-names
-		     (if (bbdb-y-or-n-p (format "Keep name \"%s\" as an AKA? "
-						old-name))
-			 (bbdb-record-set-aka record
-			   (cons old-name (bbdb-record-aka record)))
-		       (bbdb-remhash (downcase old-name) record)))
+			  (if bbdb-silent-running
+				  (bbdb-record-set-aka record
+									   (cons old-name 
+											 (bbdb-record-aka record)))
+				(if (bbdb-y-or-n-p (format "Keep name \"%s\" as an AKA? "
+										   old-name))
+					(bbdb-record-set-aka record
+										 (cons old-name 
+											   (bbdb-record-aka record)))
+				  (bbdb-remhash (downcase old-name) record))))
 		 (bbdb-record-set-namecache record nil)
 		 (bbdb-record-set-firstname record fname)
 		 (bbdb-record-set-lastname record lname)
@@ -2617,10 +2636,12 @@ before the record is created, otherwise it is created without confirmation
 			       record)
 		 )
 		((and old-name
-		      bbdb-use-alternate-names
-		      (bbdb-y-or-n-p
-			(format "Make \"%s\" an alternate for \"%s\"? "
-				name old-name)))
+		      bbdb-use-alternate-names)
+
+		 (if (not bbdb-silent-running)
+			 (bbdb-y-or-n-p
+			  (format "Make \"%s\" an alternate for \"%s\"? "
+					  name old-name)))
 		 (setq change-p 'sort)
 		 (bbdb-record-set-aka
 		   record
