@@ -1,3 +1,19 @@
+2001-03-04  Waider  <waider@waider.ie>
+
+	* BBDB 2.32 tagged, bottled, and set free.
+
+	* lisp/bbdb.el: Version number update for release.
+
+	* lisp/bbdb-snarf.el:
+	Require bbdb-com (for bbdb-parse-phone-number)
+	Stop from loading .bbdb when compiling!
+
+	* lisp/bbdb-sc.el:
+	Mark bbdb/sc-default for autoload. Not sure this is entirely the right thing.
+
+	* lisp/Makefile.in:
+	">>" and ">" transposed. (Yair Friedman)
+
 2001-03-03  Waider  <waider@waider.ie>
 
 	* lisp/bbdb.el:
@@ -5,7 +21,7 @@
 
 2001-03-01  Robert Fenk  <fenk@forwiss.de>
 
-	* bbdb.el (bbdb-submit-bug-report): A function for submitting bug
+	* lisp/bbdb.el (bbdb-submit-bug-report): A function for submitting bug
 	reports, which should make it easier for reportes and maintaines
 	to give and have all necessary information.  Additional variables
 	may have to be add and a remark in the documentation to use this 
