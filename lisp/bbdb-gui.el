@@ -137,13 +137,6 @@
   (fset 'bbdb-set-extent-end-glyph 'ignore)) ; XXX noop
 
 
-(defvar bbdb-main-extent-priority
-  (if (string-match "XEmacs\\|Lucid" emacs-version) 3 1)
-  "The priority of the main extent.
-This should be less than 2 (the priority of the field extents)
-on XEmacs and greater than 2 on Emacs since they order priorities
-in the opposite directions.  Vive la difference!")
-
 ;;;###autoload
 (defun bbdb-fontify-buffer ()
   (save-excursion
@@ -171,7 +164,7 @@ in the opposite directions.  Vive la difference!")
         ;; have to move off the record and back on again before it'll
         ;; notice that you're on a more specific overlay. This is
         ;; bogus, like most GNU Emacs GUI stuff.
-        (bbdb-set-extent-property e 'priority bbdb-main-extent-priority)
+        (bbdb-set-extent-property e 'priority 3)
         (setq p (+ start (length (bbdb-record-name record))))
         (if (bbdb-record-company record)
             (setq p (+ p 3 (length (bbdb-record-company record)))))
