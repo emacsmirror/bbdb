@@ -1,3 +1,40 @@
+2001-09-20  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-create-hook), (bbdb-notice-hook):
+	Added a note that hook functions might use the new variables
+	bbdb-update-address-class and bbdb-update-address-header to obtain
+	information about the currently processed email address.
+
+	* lisp/bbdb-com.el (bbdb-get-addresses-headers): merged 
+	bbdb-get-addresses-from-headers  and bbdb-get-addresses-to-headers
+	into this variable.
+	(bbdb-get-addresses): new generic function for extraction of email
+	addresses from header, which is used by Gnus and VM
+	(bbdb-update-address-class), (bbdb-update-address-header): new
+	variable providing additional information to hook functions about
+	the currently processed email address.
+	
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): uses
+	bbdb-get-addresses instead of bbdb/gnus-get-addresses which was
+	removed. 
+	(bbdb/gnus-show-sender), (bbdb/gnus-show-all-recipients),
+	(bbdb/gnus-show-records): modified to use new style of
+	bbdb-get-addresses-headers 
+	
+	* lisp/bbdb-vm.el (bbdb/vm-get-header-content): VM specific header
+	extraction function.
+	(bbdb/vm-update-records): bbdb-get-addresses instead of
+	bbdb/vm-get-addresses which was removed.  
+	(bbdb/vm-show-all-recipients),
+	(bbdb/vm-show-sender), (bbdb/vm-show-records): modified to use new
+	style of bbdb-get-addresses-headers 
+
+	* lisp/bbdb-hooks.el (bbdb-auto-notes-alist): Additional element
+	type to allow actions also on recipients of an message 
+	(bbdb-auto-notes-hook): Fixed to perfom auto-note actions only for
+	authors of a message.  Support for new features of
+	bbdb-auto-notes-alist.  Honor bbdb-silent-running.
+
 2001-09-11  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-print.el (bbdb-print-field-shown-p): Added as a
