@@ -1138,7 +1138,7 @@ bbdb-elided-display will be consulted instead by mail and news.")
 	  (setq records (cdr records))))
       (if (not bbdb-gag-messages) (message "Formatting...done.")))
     (set-buffer bbdb-buffer-name)
-    (if append
+    (if (and append first)
 	(let ((cons (assq first bbdb-records))
 	      (window (get-buffer-window (current-buffer))))
 	  (if window (set-window-start window (nth 2 cons)))
