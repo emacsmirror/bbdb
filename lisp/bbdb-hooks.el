@@ -35,6 +35,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.61  2000/11/16 11:59:40  fenk
+;; (bbdb-extract-field-value): added
+;; 	(case-fold-search t) as headers should be checked case insensitive
+;;
 ;; Revision 1.60  2000/08/03 18:04:50  sds
 ;; * lisp/bbdb.el (bbdb-notes-default-separator): new user option
 ;; (bbdb-annotate-notes): use it
@@ -143,7 +147,8 @@ beginning of the message headers."
   ;; divided real-names from addresses; the actual From: and Subject: fields
   ;; exist only in the message.
   (setq field-name (concat (regexp-quote field-name) "[ \t]*:[ \t]*"))
-  (let (done)
+  (let ((case-fold-search t)
+	done)
     (while (not (or done
 		    (looking-at "\n") ; we're at BOL
 		    (eobp)))
