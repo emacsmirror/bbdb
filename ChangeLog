@@ -1,3 +1,13 @@
+2004-02-01  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-snarf.el (bbdb-merge-interactively):
+	If the specified value of 'nets' isn't a list, make it so.
+
+2004-01-23  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el:
+	Handle surnames with prefixes (Adrian Lanz <lanz@fowi.ethz.ch>)
+
 2003-10-10  Robert Widhopf  <bbdb@robf.de>
 
 	* lisp/bbdb-com.el (bbdb-edit-current-field): Handle field
@@ -31,8 +41,6 @@
 	* texinfo/bbdb.texinfo:
 	* Rewrite doco for bbdb-electric-p to make it a little clearer.
 
-	* ChangeLog: *** empty log message ***
-
 	* testing/Makefile.in: * Use GREP and GREPCONTEXT autoconfs
 
 	* configure.ac:
@@ -41,13 +49,13 @@
 	* testing/bbdb-test: * Added a record to test completion stuff
 
 	* testing/bbdb-test.el:
-	* Updated to reflect small change in completion logic
+	Updated to reflect small change in completion logic
 
 2003-07-24  Jochen Küpper  <bbdb@jochen-kuepper.de>
 
 	* bits/bbdb-pgp.el: No error if mailcrypt isn't available.
 	(bbdb/pgp-quiet): Added.
-	(bbdb/pgp-hook-fun): Be quite if bbdb/pgp-quiet is set.
+	(bbdb/pgp-hook-fun): Be quiet if bbdb/pgp-quiet is set.
 
 2003-07-24  Robert Fenk  <bbdb@robf.de>
 
@@ -57,13 +65,13 @@
 
 	* lisp/bbdb-com.el (bbdb-update-records): Ignore empty/broken
 	addresses, e.g. extraction on "foo@bar.baz<>" results in (nil nil)
-	which should be ignored.  (reported by "Neil W. Van Dyke)
+	which should be ignored.  (reported by Neil W. Van Dyke)
 
 2003-07-23  Robert Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb.el (bbdb-annotate-message-sender): Invoke the
 	prompt-to-create hook just if it has a value.  (fixes MH not
-	honoring 'promt for bbdb/mail-auto-create-p)
+	honoring 'prompt for bbdb/mail-auto-create-p)
 
 	* lisp/bbdb-hooks.el (bbdb-force-record-create): A fix for the
 	mhe-mode case (from Vladimir G. Ivanovic) 
