@@ -212,26 +212,26 @@ displaying the record corresponding to the sender of the current message."
         ;; display the bbdb buffer iff there is a record for this article.
         (if records
             (bbdb-pop-up-bbdb-buffer
-           (lambda (w)
-             (let ((b (current-buffer)))
-               (set-buffer (window-buffer w))
-               (prog1 (or (eq major-mode 'gnus-Article-mode)
-                          (eq major-mode 'gnus-article-mode))
-                 (set-buffer b)))))
-        (or bbdb-inside-electric-display
-            (not (get-buffer-window bbdb-buffer-name))
-            (let (w)
-              (delete-other-windows)
-              (if (assq 'article gnus-buffer-configuration)
-                  (gnus-configure-windows 'article)
-                (gnus-configure-windows 'SelectArticle))
-              (if (setq w (get-buffer-window
-                           (if (boundp 'gnus-summary-buffer)
-                               gnus-summary-buffer
-                             gnus-Subject-buffer)))
-                  (select-window w)))))
-      (set-buffer b)))
-    (if records (bbdb-display-records records bbdb-pop-up-display-layout))
+             (lambda (w)
+               (let ((b (current-buffer)))
+                 (set-buffer (window-buffer w))
+                 (prog1 (or (eq major-mode 'gnus-Article-mode)
+                            (eq major-mode 'gnus-article-mode))
+                   (set-buffer b)))))
+          (or bbdb-inside-electric-display
+              (not (get-buffer-window bbdb-buffer-name))
+              (let (w)
+                (delete-other-windows)
+                (if (assq 'article gnus-buffer-configuration)
+                    (gnus-configure-windows 'article)
+                  (gnus-configure-windows 'SelectArticle))
+                (if (setq w (get-buffer-window
+                             (if (boundp 'gnus-summary-buffer)
+                                 gnus-summary-buffer
+                               gnus-Subject-buffer)))
+                    (select-window w)))))
+        (set-buffer b))
+      (if records (bbdb-display-records records bbdb-pop-up-display-layout)))
     records))
 
 ;;
@@ -327,63 +327,6 @@ for `bbdb/gnus-summary-get-author'."
   "*The field whose value will be used to mark messages by this user in Gnus."
   :group 'bbdb-mua-specific-gnus
   :type 'symbol)
-
-;; My local gnus installation doesn't have nntp-header-lines &c. This
-;; is probably pretty old and should be elided.
-;;;###autoload
-(defun bbdb/gnus-lines-and-from (header)
-  "Useful as the value of `gnus-optional-headers' in *GNUS* (not Gnus).
-NOTE: This variable no longer seems to be present in Gnus.  It seems
-to have been replaced by `message-default-headers', which only takes
-strings.  In the future this should change."
-  (let* ((length bbdb/gnus-lines-and-from-length)
-     (lines (nntp-header-lines header))
-     (from (nntp-header-from header))
-     (data (and (or bbdb/gnus-summary-mark-known-posters
-            bbdb/gnus-summary-show-bbdb-names)
-            (condition-case ()
-            (mail-extract-address-components from)
-              (error nil))))
-     (name (car data))
-     (net (car (cdr data)))
-     (record (and data
-              (bbdb-search-simple name
-               (if (and net bbdb-canonicalize-net-hook)
-               (bbdb-canonicalize-address net)
-             net))))
-     string L)
-
-    (if (and record name (member (downcase name) (bbdb-record-net record)))
-    ;; bogon!
-    (setq record nil))
-
-    (setq name
-      (or (and bbdb/gnus-summary-prefer-bbdb-data
-           (or (and bbdb/gnus-summary-prefer-real-names
-                (and record (bbdb-record-name record)))
-               (and record (bbdb-record-net record)
-                (nth 0 (bbdb-record-net record)))))
-          (and bbdb/gnus-summary-prefer-real-names
-           (or (and (equal bbdb/gnus-summary-prefer-real-names 'bbdb)
-                net)
-               name))
-          net from "**UNKNOWN**"))
-      ;; GNUS can't cope with extra square-brackets appearing in the summary.
-      (if (and name (string-match "[][]" name))
-      (progn (setq name (copy-sequence name))
-         (while (string-match "[][]" name)
-           (aset name (match-beginning 0) ? ))))
-      (setq string (format "%s%3d:%s"
-               (if (and record bbdb/gnus-summary-mark-known-posters)
-                   (or (bbdb-record-getprop
-                    record bbdb-message-marker-field)
-                   "*")
-                 " ")
-               lines (or name from))
-        L (length string))
-      (cond ((> L length) (substring string 0 length))
-        ((< L length) (concat string (make-string (- length L) ? )))
-        (t string))))
 
 (defun bbdb/gnus-summary-get-author (header)
   "Given a Gnus message header, returns the appropriate piece of
