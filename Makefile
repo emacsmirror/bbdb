@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.61  2000/05/25 17:35:12  waider
+# Updated some of the test targets
+#
 # Revision 1.60  2000/04/12 23:37:06  waider
 # Cleanup work
 #
@@ -100,6 +103,9 @@ OTHERDIR	=
      COMPRESS = gzip --verbose --best
  COMPRESS_EXT = gz
 
+# The horror. GNU make wants you to add a "-" before MAKEFLAGS if
+# you're doing recursive makes. Solaris make doesn't. Only matters for
+# the test targets way down, so.
    BUILDFLAGS = $(MAKEFLAGS) "EMACS=$(EMACS)" "MAKEINFO=$(MAKEINFO)" \
 		"VMDIR=$(VMDIR)" "GNUSDIR=$(GNUSDIR)" "MHEDIR=$(MHEDIR)" \
 		"OTHERDIR=$(OTHERDIR)"
@@ -213,116 +219,111 @@ test-setup:
 test-bbdb:
 	emacs -l $$HOME/bbdb-test.el
 
-# FSF Emacs 19.34
+# FSF Emacs 19.34 (w32 emacs is actually 19.36)
+EMACS_19_34_DIR=/local/downloads/emacs-19.34
 
 emacs19.34-test: emacs19.34-test-setup emacs19.34-test-bbdb
 emacs19.34-test: emacs19.34-test-rmail emacs19.34-test-vm
 emacs19.34-test: emacs19.34-test-mhe   emacs19.34-test-gnus
 emacs19.34-test: emacs19.34-test-all
 
-emacs19.34-test-setup:
+emacs19.34-test-setup: clean
 	@echo '--- TESTING BBDB WITH FSF EMACS 19.34 ---'
 	@echo
 	@echo '** Setting up **'
-	make clean
-	rm -f /local/downloads/emacs-19.34/*
-	cp /home/simmonmt/gnus/lisp/*.el /p/local/elisp-19.34/gnus/lisp
+	@-rm -rf $(EMACS_19_34_DIR)/site-lisp
+	@mkdir $(EMACS_19_34_DIR)/site-lisp
+	@cp lisp/*.el $(EMACS_19_34_DIR)/site-lisp
+	@cp ../emacs-19.34/site-lisp $(EMACS_19_34_DIR)/site-lisp
 
 emacs19.34-test-bbdb:
 	@echo
 	@echo '** Testing build of "bbdb" **'
 	@echo
-	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
-	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 bbdb
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs bbdb
 
 emacs19.34-test-rmail:
 	@echo
 	@echo '** Testing build of "rmail" **'
 	@echo
-	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
-	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 rmail
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs rmail
 
 emacs19.34-test-vm:
 	@echo
 	@echo '** Testing build of "vm" **'
 	@echo
-	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
-	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 vm
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs vm
 
 emacs19.34-test-mhe:
 	@echo
 	@echo '** Testing build of "mhe" **'
 	@echo
-	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
-	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 mhe
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs mhe
 
 emacs19.34-test-gnus:
 	@echo
 	@echo '** Testing build of "gnus" **'
 	@echo
-	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
-	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 gnus
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs gnus
 
-emacs19.34-test-all:
+emacs19.34-test-all: clean
 	@echo
 	@echo '** Testing build of "all" **'
 	@echo
-	-make clean
-	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
-	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 all
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs all
 
-# FSF Emacs 20.2
+# FSF Emacs 20.6
+EMACS_19_34_DIR=/local/downloads/emacs-20.6
 
-emacs20.2-test: emacs20.2-test-setup emacs20.2-test-bbdb
-emacs20.2-test: emacs20.2-test-rmail emacs20.2-test-vm
-emacs20.2-test: emacs20.2-test-mhe   emacs20.2-test-gnus
-emacs20.2-test: emacs20.2-test-all
+emacs20.6-test: emacs20.6-test-setup emacs20.6-test-bbdb
+emacs20.6-test: emacs20.6-test-rmail emacs20.6-test-vm
+emacs20.6-test: emacs20.6-test-mhe   emacs20.6-test-gnus
+emacs20.6-test: emacs20.6-test-all
 
-emacs20.2-test-setup:
-	@echo '--- TESTING BBDB WITH FSF EMACS 20.2 ---'
+emacs20.6-test-setup: clean
+	@echo '--- TESTING BBDB WITH FSF EMACS 20.6 ---'
 	@echo
 	@echo '** Setting up **'
-	make clean
-	rm -f /p/local/elisp-20.2/gnus/lisp/*
-	cp /home/simmonmt/gnus/lisp/*.el /p/local/elisp-20.2/gnus/lisp
+	@-rm -rf $(EMACS_19_34_DIR)/site-lisp
+	@mkdir $(EMACS_19_34_DIR)/site-lisp
+	@cp lisp/*.el $(EMACS_19_34_DIR)/site-lisp
+	@cp ../emacs-20.6/site-lisp $(EMACS_19_34_DIR)/site-lisp
 
-emacs20.2-test-bbdb:
+emacs20.6-test-bbdb:
 	@echo
 	@echo '** Testing build of "bbdb" **'
 	@echo
-	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp bbdb
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs bbdb
 
-emacs20.2-test-rmail:
+emacs20.6-test-rmail:
 	@echo
 	@echo '** Testing build of "rmail" **'
 	@echo
-	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp rmail
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs rmail
 
-emacs20.2-test-vm:
+emacs20.6-test-vm:
 	@echo
 	@echo '** Testing build of "vm" **'
 	@echo
-	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp vm
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs vm
 
-emacs20.2-test-mhe:
+emacs20.6-test-mhe:
 	@echo
 	@echo '** Testing build of "mhe" **'
 	@echo
-	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp mhe
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs mhe
 
-emacs20.2-test-gnus:
+emacs20.6-test-gnus:
 	@echo
 	@echo '** Testing build of "gnus" **'
 	@echo
-	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp gnus
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs gnus
 
-emacs20.2-test-all:
+emacs20.6-test-all: clean
 	@echo
 	@echo '** Testing build of "all" **'
 	@echo
-	-make clean
-	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp all
-
+	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs all
 
 # Deployment
 TARFILES=Makefile ChangeLog INSTALL README lisp misc tex texinfo utils
