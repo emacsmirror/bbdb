@@ -2130,6 +2130,7 @@ current record.
 \\[bbdb-apply-next-command-to-all-records]\\[bbdb-send-mail]\t Compose mail \
 to everyone whose record is displayed.
 \\[bbdb-finger]\t Finger the net address of the current record.
+\\[bbdb-ftp]\t FTP to the curent records's `ftp' field.
 \\[bbdb-apply-next-command-to-all-records]\\[bbdb-finger]\t Finger the \
 net address of all displayed records.
 \\[bbdb-save-db]\t Save the BBDB file to disk.
@@ -2142,6 +2143,7 @@ displayed records only.
 \\[bbdb-help]\t Display a one line command summary in the echo area.
 \\[bbdb-www]\t Visit Web sites listed in the `www' field(s) of the current \
 record.
+\\[bbdb-whois]\t run whois on the current record.
 
 For address completion using the names and net addresses in the database:
 \t in Sendmail mode, type \\<mail-mode-map>\\[bbdb-complete-name].
@@ -2941,14 +2943,17 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map [(m)]          'bbdb-send-mail)
   (define-key bbdb-mode-map [(meta d)]     'bbdb-dial)
   (define-key bbdb-mode-map [(f)]          'bbdb-finger)
+  (define-key bbdb-mode-map [(F)]          'bbdb-ftp)
   (define-key bbdb-mode-map [(i)]          'bbdb-info)
   (define-key bbdb-mode-map [(??)]         'bbdb-help)
   (define-key bbdb-mode-map [(q)]          'bbdb-bury-buffer)
   (define-key bbdb-mode-map [(control x) (control t)]
                                            'bbdb-transpose-fields)
-  (define-key bbdb-mode-map [(W)]          'bbdb-www)
+  (define-key bbdb-mode-map [(w)]          'bbdb-www)
+  (define-key bbdb-mode-map [(meta w)]     'bbdb-whois)
   (define-key bbdb-mode-map [(P)]          'bbdb-print)
   (define-key bbdb-mode-map [(h)]          'other-window)
+  (define-key bbdb-mode-map [(=)]          'delete-other-windows)
   (define-key bbdb-mode-map [(c)]          'bbdb-create)
   (define-key bbdb-mode-map [(C)]          'bbdb-changed)
   (define-key bbdb-mode-map [(b)]          'bbdb))
