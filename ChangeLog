@@ -1,3 +1,9 @@
+2000-08-14  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb-com.el: require `cl' at compile time for `flet'
+	(bbdb-add-or-remove-mail-alias): use `let', not `setq'
+	(bbdb-send-mail-internal): fixed call to `vm-mail-internal'
+
 2000-08-11  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el (bbdb-save-db): fixed the calling sequence of
