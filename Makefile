@@ -4,6 +4,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.58  1998/03/10 07:27:02  simmonmt
+# Removed my paths, added comments about the Custom requirement for
+# building Gnus support under 19.34
+#
 # Revision 1.57  1998/02/23 07:08:48  simmonmt
 # Alphabetized MUA directory variables, added OTHERDIR variable
 #
@@ -37,9 +41,9 @@
 # otherwise "require" won't work in the batch emacs.
 #
 # Set the ones you've got, and comment out the rest.
-GNUSDIR 	= /home/simmonmt/gnus/lisp
-MHEDIR 		= 
-VMDIR   	= 
+GNUSDIR         = 
+MHEDIR 	        = 
+VMDIR           = 
 
 # ***************************
 # Locations of other packages
@@ -49,7 +53,8 @@ VMDIR   	=
 # will use with the BBDB (see the "Byte Compiling the Lisp files"
 # section of the BBDB manual for more information).  If more than one
 # directory is to be used, separate the directories with spaces.  Do
-# not quote the directory names.
+# not quote the directory names.  GNU Emacs 19.34 should put the path
+# to Custom 1.9962 here if they plan to build Gnus support.
 OTHERDIR	=
 
 # **************************
@@ -190,9 +195,121 @@ clean:
 	cd lisp; $(MAKE) clean
 	cd texinfo; $(MAKE) clean
 
-#
-# Hmmmm.
-#
+# Testing
+
+
+# FSF Emacs 19.34
+
+emacs19.34-test: emacs19.34-test-setup emacs19.34-test-bbdb
+emacs19.34-test: emacs19.34-test-rmail emacs19.34-test-vm
+emacs19.34-test: emacs19.34-test-mhe   emacs19.34-test-gnus
+emacs19.34-test: emacs19.34-test-all
+
+emacs19.34-test-setup:
+	@echo '--- TESTING BBDB WITH FSF EMACS 19.34 ---'
+	@echo
+	@echo '** Setting up **'
+	make clean
+	rm -f /p/local/elisp-19.34/gnus/lisp/*
+	cp /home/simmonmt/gnus/lisp/*.el /p/local/elisp-19.34/gnus/lisp
+
+emacs19.34-test-bbdb:
+	@echo
+	@echo '** Testing build of "bbdb" **'
+	@echo
+	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
+	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 bbdb
+
+emacs19.34-test-rmail:
+	@echo
+	@echo '** Testing build of "rmail" **'
+	@echo
+	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
+	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 rmail
+
+emacs19.34-test-vm:
+	@echo
+	@echo '** Testing build of "vm" **'
+	@echo
+	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
+	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 vm
+
+emacs19.34-test-mhe:
+	@echo
+	@echo '** Testing build of "mhe" **'
+	@echo
+	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
+	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 mhe
+
+emacs19.34-test-gnus:
+	@echo
+	@echo '** Testing build of "gnus" **'
+	@echo
+	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
+	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 gnus
+
+emacs19.34-test-all:
+	@echo
+	@echo '** Testing build of "all" **'
+	@echo
+	-make clean
+	-make EMACS=emacs-19.34 GNUSDIR=/p/local/elisp-19.34/gnus/lisp \
+	      OTHERDIR=/p/local/elisp-19.34/custom-1.9962 all
+
+# FSF Emacs 20.2
+
+emacs20.2-test: emacs20.2-test-setup emacs20.2-test-bbdb
+emacs20.2-test: emacs20.2-test-rmail emacs20.2-test-vm
+emacs20.2-test: emacs20.2-test-mhe   emacs20.2-test-gnus
+emacs20.2-test: emacs20.2-test-all
+
+emacs20.2-test-setup:
+	@echo '--- TESTING BBDB WITH FSF EMACS 20.2 ---'
+	@echo
+	@echo '** Setting up **'
+	make clean
+	rm -f /p/local/elisp-20.2/gnus/lisp/*
+	cp /home/simmonmt/gnus/lisp/*.el /p/local/elisp-20.2/gnus/lisp
+
+emacs20.2-test-bbdb:
+	@echo
+	@echo '** Testing build of "bbdb" **'
+	@echo
+	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp bbdb
+
+emacs20.2-test-rmail:
+	@echo
+	@echo '** Testing build of "rmail" **'
+	@echo
+	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp rmail
+
+emacs20.2-test-vm:
+	@echo
+	@echo '** Testing build of "vm" **'
+	@echo
+	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp vm
+
+emacs20.2-test-mhe:
+	@echo
+	@echo '** Testing build of "mhe" **'
+	@echo
+	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp mhe
+
+emacs20.2-test-gnus:
+	@echo
+	@echo '** Testing build of "gnus" **'
+	@echo
+	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp gnus
+
+emacs20.2-test-all:
+	@echo
+	@echo '** Testing build of "all" **'
+	@echo
+	-make clean
+	-make EMACS=emacs-20.2 GNUSDIR=/p/local/elisp-20.2/gnus/lisp all
+
+
+# Deployment
 
 TARFILES=	bbdb-Makefile bbdb.texinfo bbdb.el $(DEPSRCS) \
 		bbdb-print.tex multicol.tex
