@@ -22,14 +22,14 @@
 ;; $Id$
 ;;
 
-(eval-and-compile 
+(eval-and-compile
   (require 'cl)
   (require 'bbdb)
   (require 'bbdb-com)
   (require 'bbdb-snarf)
   (require 'vm-autoload)
   (require 'vm)
-  
+
   (if (not (fboundp 'vm-record-and-change-message-pointer))
       (load-library "vm-motion"))
   (if (not (fboundp 'vm-su-from))
@@ -41,7 +41,7 @@
   "Return real name and email address of sender respectively recipient.
 If an address matches `vm-summary-uninteresting-senders' it will be ignored.
 If `vm-summary-uninteresting-senders' is nil we use `bbdb-user-mail-names'
-instead.    
+instead.
 The headers to search can be configured by `bbdb/vm-get-addresses-headers'."
   (setq msg (vm-real-message-of msg))
   (let ((headers bbdb-get-addresses-headers)
@@ -56,13 +56,13 @@ The headers to search can be configured by `bbdb/vm-get-addresses-headers'."
         (while adlist
           (setq fn (caar adlist)
                 ad (cadar adlist))
-          
+
           ;; ignore uninteresting addresses, this is kinda gross!
           (if (or (not (stringp uninteresting-senders))
                   (not (or (and fn (string-match uninteresting-senders fn))
                            (and ad (string-match uninteresting-senders ad)))))
               (add-to-list 'addrlist (car adlist)))
-          
+
           (if (and only-first-address addrlist)
               (setq adlist nil headers nil)
             (setq adlist (cdr adlist)))))
@@ -101,7 +101,7 @@ creating or modifying them as necessary.  A record will be created if
 bbdb/mail-auto-create-p is non-nil or if OFFER-TO-CREATE is true, and
 the user confirms the creation.
 
-The variable `bbdb/vm-update-records-mode' controls what actions 
+The variable `bbdb/vm-update-records-mode' controls what actions
 are performed and it might override `bbdb-update-records-mode'.
 
 When hitting C-g once you will not be asked anymore for new people listed
@@ -126,7 +126,7 @@ C-g again it will stop scanning."
         (setq records (if bbdb-get-only-first-address-p
                           (list (car cache))
                         cache))
-      
+
       (let ((bbdb-update-records-mode (or bbdb/vm-update-records-mode
                                           bbdb-update-records-mode)))
         (setq records (bbdb-update-records
@@ -134,7 +134,7 @@ C-g again it will stop scanning."
                         msg bbdb-get-only-first-address-p)
                        bbdb/mail-auto-create-p
                        offer-to-create))
-        
+
         (bbdb-encache-message msg records)))
     records))
 
@@ -226,8 +226,8 @@ configuration of what is being displayed."
         ;; Always update the records; if there are no records, empty the
         ;; BBDB window. This should be generic, not VM-specific.
         (bbdb-display-records records))
-      
-      (when (not records) 
+
+      (when (not records)
         (bbdb-undisplay-records)
         (if (get-buffer-window bbdb-buffer-name)
             (delete-window (get-buffer-window bbdb-buffer-name)))))))
@@ -394,6 +394,22 @@ This is how you hook it in.
       1))))
 
 
+;;; Automatically add a record for replies.
+;;; Contributed by Robert Fenk, 27 Oct 2000. It only took me 8 months to put
+;;; it in the source...
+;;;
+;;; (add-hook 'vm-reply-hook 'bbdb/vm-force-create) to enable it. You could
+;;; presumably hook it elsewhere as well.
+(defun bbdb/vm-force-create ()
+  "Force automatic adding of a bbdb entry for current message."
+  (interactive)
+  (let ((bbdb/mail-auto-create-p t)
+    (bbdb-message-caching-enabled nil))
+    (save-excursion
+      (vm-select-folder-buffer)
+      (bbdb/vm-pop-up-bbdb-buffer))))
+
+
 ;;;###autoload
 (defun bbdb-insinuate-vm ()
   "Call this function to hook BBDB into VM."
