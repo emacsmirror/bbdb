@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.57  1998/02/23 07:08:48  simmonmt
+# Alphabetized MUA directory variables, added OTHERDIR variable
+#
 # Revision 1.56  1997/11/02 06:35:43  simmonmt
 # Fixed package install - `foo 'bar` (as opposed to `foo 'bar'`) works
 # in Bourne shell, but not in others.  That and it's not exactly
@@ -34,9 +37,20 @@
 # otherwise "require" won't work in the batch emacs.
 #
 # Set the ones you've got, and comment out the rest.
-VMDIR   	= 
 GNUSDIR 	= /home/simmonmt/gnus/lisp
 MHEDIR 		= 
+VMDIR   	= 
+
+# ***************************
+# Locations of other packages
+# ***************************
+#
+# Add the directories (if any) containing the optional packages you
+# will use with the BBDB (see the "Byte Compiling the Lisp files"
+# section of the BBDB manual for more information).  If more than one
+# directory is to be used, separate the directories with spaces.  Do
+# not quote the directory names.
+OTHERDIR	=
 
 # **************************
 # XEmacs Packagization (sp?)
@@ -76,7 +90,8 @@ MHEDIR 		=
  COMPRESS_EXT = gz
 
    BUILDFLAGS = $(MAKEFLAGS) "EMACS=$(EMACS)" "MAKEINFO=$(MAKEINFO)" \
-		"VMDIR=$(VMDIR)" "GNUSDIR=$(GNUSDIR)" "MHEDIR=$(MHEDIR)"
+		"VMDIR=$(VMDIR)" "GNUSDIR=$(GNUSDIR)" "MHEDIR=$(MHEDIR)" \
+		"OTHERDIR=$(OTHERDIR)"
 
 #    COMPRESS = compress
 #COMPRESS_EXT = Z
