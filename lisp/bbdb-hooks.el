@@ -35,6 +35,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.55  1998/02/23 07:09:37  simmonmt
+;; We use add-hook now
+;;
 ;; Revision 1.54  1998/01/06 06:05:31  simmonmt
 ;; Added provide of bbdb-hooks.  Fixed custom specs (added cons type
 ;; instead of group where appropriate).  Replaced bbdb-time-string
@@ -560,7 +563,7 @@ which behave the same way."
 ;;; obviously superior.  See also var `bbdb-canonicalize-redundant-nets-p'.
 ;;;
 ;;; Turn this on with
-;;;   (bbdb-add-hook 'bbdb-change-hook 'bbdb-delete-redundant-nets)
+;;;   (add-hook 'bbdb-change-hook 'bbdb-delete-redundant-nets)
 
 (defun bbdb-delete-redundant-nets (record)
   "Deletes redundant network addresses.
