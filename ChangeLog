@@ -1,3 +1,8 @@
+2001-05-18  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-invoke-hook-for-value): Fix: Return symbols
+	BUT CALL FUNCTIONS!
+
 2001-05-17  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb.el (bbdb-invoke-hook-for-value): Return symbols just
