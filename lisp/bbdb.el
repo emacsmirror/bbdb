@@ -39,7 +39,7 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "2.00.05")
+(defconst bbdb-version "2.00.06")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
@@ -1093,6 +1093,8 @@ bbdb-elided-display will be consulted instead by mail and news.")
 			    (list x bbdb-elided-display (make-marker))))
 			  records)))
   (let ((b (current-buffer))
+        (temp-buffer-setup-hook nil)
+        (temp-buffer-show-hook nil)
 	(first (car (car records))))
     (with-output-to-temp-buffer bbdb-buffer-name
       (set-buffer bbdb-buffer-name)
