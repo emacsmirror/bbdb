@@ -2727,7 +2727,8 @@ of all of those people."
   (mail-abbrev-expand-hook)
 
   (when bbdb-completion-display-record
-    (bbdb-pop-up-bbdb-buffer bbdb-use-pop-up)
+    (if bbdb-use-pop-up
+        (bbdb-pop-up-bbdb-buffer))
     (let ((bbdb-gag-messages t))
       (bbdb-display-records-1
        (mapcar (lambda (x) (bbdb-search-simple nil x)) records)
