@@ -52,7 +52,7 @@
 ;;;
 ;;;   (setq sc-attrib-selection-list
 ;;;        '(("sc-from-address" ((".*" . (bbdb/sc-consult-attr
-;;;				       (sc-mail-field "sc-from-address")))))))
+;;;                    (sc-mail-field "sc-from-address")))))))
 ;;;
 ;;; And finally we set the sc-mail-glom-frame to enable the
 ;;; fetching of the name of person when there is only an e-mail
@@ -63,7 +63,7 @@
 ;;;      ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
 ;;;      ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
 ;;;      ("^$"                         (progn (bbdb/sc-default)
-;;;  					 (list 'abort '(step . 0))))
+;;;                      (list 'abort '(step . 0))))
 ;;;      ("^[ \t]+"                    (sc-mail-append-field))
 ;;;      (sc-mail-warn-if-non-rfc822-p (sc-mail-error-in-mail-field))
 ;;;      (end                          (setq sc-mail-headers-end (point)))))
@@ -71,40 +71,6 @@
 ;;;
 
 ;;;
-; $Log$
-; Revision 1.11  2000/07/13 17:07:01  sds
-; minor doc fixes to comply with the standards
-;
-; Revision 1.10  1998/04/11 07:18:18  simmonmt
-; Colin Rafferty's patch adding autoload cookies back
-;
-; Revision 1.9  1998/02/23 07:22:00  simmonmt
-; Fixed intro comments.  Use add-hook, not bbdb-add-hook
-;
-; Revision 1.8  1998/01/06 06:12:32  simmonmt
-; Customized variables, removed autoloads, and added provide of bbdb-sc
-;
-; Revision 1.7  1997/11/02 07:46:44  simmonmt
-; Welcome to the family.  Moved the automatically running code into
-; functions.  Generalized attribution field.
-;
-; Revision 1.6  1995/03/28  12:11:01  marsj
-; Added original source and thanks
-;
-; Revision 1.5  1995/03/28  11:38:20  marsj
-; Moved the defvar before the require for bbdb and sc
-;
-; Revision 1.4  1995/03/27  16:13:40  marsj
-; If setup variables are not bound, set them using defvar.
-;
-; Revision 1.3  1995/03/26  18:58:59  marsj
-; *** empty log message ***
-;
-; Revision 1.2  1995/03/25  15:05:02  marsj
-; Added require and insertion of hooks
-;
-; Revision 1.1  1995/03/25  15:00:56  marsj
-; Initial revision
 ;;;
 
 ;;; packages
@@ -118,8 +84,8 @@ entering a non-default attribution, 'ask if the user
 should be asked before creation and NIL if we never create a new entry."
  :group 'bbdb-utilities-supercite
  :type '(choice (const "Create a new BBDB entry" t)
-		(const "Confirm new record creation" ask)
-		(const "Don't create a new entry" nil)))
+        (const "Confirm new record creation" ask)
+        (const "Don't create a new entry" nil)))
 
 (defcustom bbdb/sc-attribution-field 'attribution
   "The BBDB field used for Supercite attribution information."
@@ -138,52 +104,56 @@ used to compare against citation selected by the user."
 FROM is user e-mail address to look for in BBDB."
     ;; if logged in user sent this, use recipients.
     (let ((check (if (or (null from)
-			 (string-match (bbdb-user-mail-names) from))
-		     (car (cdr (mail-extract-address-components
-				(or (sc-mail-field "to") from))))
-		   from)))
+             (string-match (bbdb-user-mail-names) from))
+             (car (cdr (mail-extract-address-components
+                (or (sc-mail-field "to") from))))
+           from)))
       (if from
-	  (let ((record (bbdb-search-simple nil from)))
-	    (and record (bbdb-record-getprop record bbdb/sc-attribution-field))))))
+      (let ((record (bbdb-search-simple nil from)))
+        (and record (bbdb-record-getprop record bbdb/sc-attribution-field))))))
 
 (defun bbdb/sc-set-attr ()
   "Add attribute to BBDB."
   (let ((from (sc-mail-field "from"))
-	(address (sc-mail-field "sc-from-address"))
-	(attr (sc-mail-field "sc-attribution")))
+    (address (sc-mail-field "sc-from-address"))
+    (attr (sc-mail-field "sc-attribution")))
     (if (and from attr bbdb/sc-replace-attr-p
-	    (not (string-equal attr bbdb/sc-last-attribution))
-	    (not (string-match (bbdb-user-mail-names) address)))
-	(let* ((bbdb-notice-hook nil)
-	       ;; avoid noticing any headers in the reply message
-	       (record (bbdb-annotate-message-sender
-		       from t
-		       (bbdb-invoke-hook-for-value
-			bbdb/mail-auto-create-p) t)))
-	  (if record
-	      (let ((old (bbdb-record-getprop record 'attribution)))
-		;; ignore if we have an value and same value
-		(if (and (not (and old (string-equal old attr)))
-			 (or (not (eq bbdb/sc-replace-attr-p 'ask))
-			     (y-or-n-p (concat "Change attribution " attr))))
-		    (progn (bbdb-record-putprop record
-						bbdb/sc-attribution-field attr)
-			   (bbdb-change-record record nil)))))))))
+        (not (string-equal attr bbdb/sc-last-attribution))
+        (not (string-match (bbdb-user-mail-names) address)))
+    (let* ((bbdb-notice-hook nil)
+           ;; avoid noticing any headers in the reply message
+           (record (bbdb-annotate-message-sender
+               from t
+               (bbdb-invoke-hook-for-value
+            bbdb/mail-auto-create-p) t)))
+      (if record
+          (let ((old (bbdb-record-getprop record 'attribution)))
+        ;; ignore if we have an value and same value
+        (if (and (not (and old (string-equal old attr)))
+             (or (not (eq bbdb/sc-replace-attr-p 'ask))
+                 (y-or-n-p (concat "Change attribution " attr))))
+            (progn (bbdb-record-putprop record
+                        bbdb/sc-attribution-field attr)
+               (bbdb-change-record record nil)))))))))
 
+;;; this is marked as autoload since someone managed to trip up Gnus
+;;; with it. I'm not clear this needs fixing, as you should be calling
+;;; bbdb-insinuate-sc if you're using supercite/BBDB. However.
+;;;###autoload
 (defun bbdb/sc-default ()
   "If the current \"from\" field in `sc-mail-info' alist
 contains only an e-mail address, lookup e-mail address in
 BBDB, and prepend a new \"from\" field to `sc-mail-info'."
   (let* ((from   (sc-mail-field "from"))
-	 (pair   (and from (mail-extract-address-components from))))
+     (pair   (and from (mail-extract-address-components from))))
     (if (and pair (not (car pair)))
-	(let* ((record (bbdb-search-simple nil (car (cdr pair))))
-	       (name   (and record (bbdb-record-name record))))
-	  (if name
-	      (setq sc-mail-info
-		    (cons (cons "from"
-				(format "%s (%s)" (car (cdr pair)) name))
-			  sc-mail-info)))))))
+    (let* ((record (bbdb-search-simple nil (car (cdr pair))))
+           (name   (and record (bbdb-record-name record))))
+      (if name
+          (setq sc-mail-info
+            (cons (cons "from"
+                (format "%s (%s)" (car (cdr pair)) name))
+              sc-mail-info)))))))
 
 ;;; setup the default setting of the variables
 (defun bbdb/sc-setup-variables ()
@@ -199,10 +169,10 @@ Custom."
   ;; check for sc-consult in sc-preferred-attribution-list
   (if (boundp 'sc-preferred-attribution-list)
       (or (member '"sc-consult" sc-preferred-attribution-list)
-	  (bbdb-warn (concat "\"sc-consult\" not included in "
-			     "sc-preferred-attribution-list.  Attributions cannot"
-			     "be gathered from the BBDB without \"sc-consult\""
-			     "in sc-preferred-attribution-list")))
+      (bbdb-warn (concat "\"sc-consult\" not included in "
+                 "sc-preferred-attribution-list.  Attributions cannot"
+                 "be gathered from the BBDB without \"sc-consult\""
+                 "in sc-preferred-attribution-list")))
     (defvar sc-preferred-attribution-list
       '("sc-lastchoice" "x-attribution" "sc-consult"
         "initials" "firstname" "lastname")))
@@ -211,7 +181,7 @@ Custom."
   (defvar sc-attrib-selection-list
     '(("sc-from-address"
        ((".*" . (bbdb/sc-consult-attr
-		 (sc-mail-field "sc-from-address")))))))
+         (sc-mail-field "sc-from-address")))))))
 
   ;; set sc-mail-glom-frame
   (defvar sc-mail-glom-frame
@@ -219,7 +189,7 @@ Custom."
       ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
       ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
       ("^$"                         (progn (bbdb/sc-default)
-					   (list 'abort '(step . 0))))
+                       (list 'abort '(step . 0))))
       ("^[ \t]+"                    (sc-mail-append-field))
       (sc-mail-warn-if-non-rfc822-p (sc-mail-error-in-mail-field))
       (end                          (setq sc-mail-headers-end (point))))))
@@ -231,10 +201,10 @@ Custom."
 
   (add-hook 'sc-post-hook 'bbdb/sc-set-attr)
   (add-hook 'sc-attribs-postselect-hook
-		 (function (lambda()
-			     (setq bbdb/sc-last-attribution
-				   (if sc-downcase-p
-				       (downcase attribution) attribution))))))
+         (function (lambda()
+                 (setq bbdb/sc-last-attribution
+                   (if sc-downcase-p
+                       (downcase attribution) attribution))))))
 
 (provide 'bbdb-sc)
 ;;; end of bbdb-sc.el
