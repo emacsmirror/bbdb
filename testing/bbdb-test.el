@@ -13,13 +13,14 @@
 (require 'bbdb)
 (require 'bbdb-snarf) ;; should be autoloaded, I'm sure.
 
-(defun bbdb-test/initialize()
-  ;; Set up a test BBDB
-  (setq bbdb-file (expand-file-name "~/.bbdb-test"))
-  (find-file bbdb-file)
-  (erase-buffer)
-  (save-buffer)
-  (kill-buffer))
+(defvar bbdb-test/bbdb-file
+  (expand-file-name
+   "bbdb-test"
+   (file-name-directory (locate-library "bbdb-test"))))
+
+(defun bbdb-test/initialize ()
+  (setq bbdb-file bbdb-test/bbdb-file)
+  (bbdb-initialize))
 
 (defun bbdb-test/log-result (format &rest rest)
   (save-excursion
@@ -27,18 +28,55 @@
     (goto-char (point-max))
     (insert (apply 'format format rest))))
 
+(defun bbdb-test/switch-to-test-bbdb ()
+  "Edit the test BBDB"
+  (interactive)
+  (let ((old-bbdb-file bbdb-file)
+        (bbdb-file bbdb-test/bbdb-file))
+
+    ;; cleanup for normal BBDB
+    (bbdb-save-db)
+    (set-buffer bbdb-buffer)
+    (kill-buffer (current-buffer))
+    (find-file-noselect old-bbdb-file)
+    (kill-buffer (current-buffer))
+
+    ;; now care for test BBDB
+    (condition-case nil
+        (progn
+          (bbdb-initialize)
+          (recursive-edit)
+          (message "recursive-edit!! BBDB %s"
+                   (abbreviate-file-name bbdb-file))
+          (sit-for 2))
+      (error
+       (message "Returned to BBDB %s"
+		(abbreviate-file-name old-bbdb-file)))
+      (quit
+       (message "Returned to BBDB %s"
+		(abbreviate-file-name old-bbdb-file))))))
+          
 ;;;###autoload
 (defun bbdb-test/run-all ()
+  "Run all BBDB tests.
+I.e. look for variables matching \"^bbdb-test/.+$\" and with a documentation
+starting with \"Test\""
   (interactive)
-  (bbdb-initialize)
-  (let ((bbdb-read-only-p t) ;; Don't trash BBDB!
-        (test-vars (apropos-internal "^bbdb-test/.*$"
-                                      (lambda (s) (and (symbolp s)
-                                                       (boundp s)
-                                                       (not (fboundp s))))))
+  (let ((test-vars
+         (apropos-internal
+          "^bbdb-test/.+$"
+          (lambda (s) (and (symbolp s)
+                           (boundp s)
+                           (documentation-property s 'variable-documentation)
+                           (string-match "^Test"
+                            (documentation-property s 'variable-documentation)
+                            )))))
         (test-res  (get-buffer-create "*Test Results*")))
-    (pop-to-buffer test-res)
 
+    (bbdb-initialize)
+
+    (pop-to-buffer test-res)
+    
     (save-excursion
       (set-buffer test-res)
       (erase-buffer)
@@ -51,52 +89,57 @@
       (setq test-vars (cdr test-vars)))
     (set-buffer test-res)))
 
+(defmacro bbdb-test/with-var-set (var value &rest body)
+  (append (list 'let (list (list (symbol-value var) value)))
+          body))
+
+;;;###autoload
 (defun bbdb-test/run-one-test (test-var)
   (interactive "SEnter a variable to test: ")
   (or (string-match "^bbdb-test/" (symbol-name test-var))
       (setq test-var (intern (concat "bbdb-test/" (symbol-name test-var)))))
-  (let ((frob-var (intern (substring (symbol-name test-var) 10)))
-        (frob-vals (symbol-value test-var))
+  (let ((bbdb-var (intern (substring (symbol-name test-var) 10)))
+        (vals (symbol-value test-var))
         test-func)
-
+    
     ;; Peel the test function off the top of the variable, and
     ;; adjust the variable upward.
-    (setq test-func (car frob-vals)
-          frob-vals (cdr frob-vals))
+    (setq test-func (car vals)
+          vals (cdr vals))
 
     (bbdb-test/log-result "Testing %s\n  using\t%s:\n\n"
-                          frob-var test-func)
+                          bbdb-var test-func)
 
-    (while frob-vals
-      (let* ((current-test-data (car frob-vals))
-             (frob-val (car current-test-data))
-             (frob-par (cdr current-test-data)))
-        (bbdb-test/log-result "  %s:\n" frob-val)
-
+    (while vals
+      (let* ((current-test-data (car vals))
+             (val (car current-test-data))
+             (par (cdr current-test-data)))
         ;; ick. Hope you weren't using this.
-        (set frob-var frob-val)
-
-        (while frob-par
-          (bbdb-test/log-result "    ")
-          (bbdb-test/log-result
-           (funcall test-func (nth 0 (car frob-par))
-                    (nth 1 (car frob-par))))
-          (bbdb-test/log-result "\n")
-          (setq frob-par (cdr frob-par)))
-
-        (bbdb-test/log-result "\n")
-        (with-current-buffer (get-buffer "*Test Results*")
-          (goto-char (point-max))))
+        (bbdb-test/with-var-set
+         bbdb-var val
+         (bbdb-test/log-result "  %s:\n" (symbol-value bbdb-var))
+                                        
+         (if par
+             (while par
+               (bbdb-test/log-result "\t%s\n"
+                                     (apply test-func (car par)))
+               (setq par (cdr par)))
+           (funcall test-func)))
+      
+        (bbdb-test/log-result "\n"))
+      
+      (with-current-buffer (get-buffer "*Test Results*")
+        (goto-char (point-max)))
 
       ;; next set of values
-      (setq frob-vals (cdr frob-vals)))
+      (setq vals (cdr vals)))
 
-    (bbdb-test/log-result "Completed testing of %s.\n%s\n"
-                          frob-var (make-string 79 ?-))))
+      (bbdb-test/log-result "Completed testing of %s.\n%s\n"
+                            bbdb-var (make-string 79 ?-))))
 
 
 ;; Coverage guestimation (VARIABLES ONLY; turns up a few false ones)
-(defun bbdb-test/guestimate-coverage()
+(defun bbdb-test/guestimate-coverage ()
   (interactive)
   (let* ((vars (apropos-internal "^bbdb-.*$"
                                  (lambda (s)
@@ -117,68 +160,54 @@
 ;;; These are test-harness functions for BBDB functionality
 ;;;
 ;;; Test BBDB's completion
-(defun bbdb-test/bbdb-completion-type-test (input output)
-  (let ((bbdb-complete-name-allow-cycling t)       ;; some test cases
-        (bbdb-dwim-net-address-allow-redundancy t) ;; need this
-        bbdb-completion-display-record) ;; stop BBDB buffer from
-                                        ;; popping up
-
-    ;; Make sure there isn't a completions buffer lying around
-    (if (get-buffer "*Completions*")
-        (kill-buffer "*Completions*"))
-
+(defun bbdb-test/bbdb-complete-name (input output ocompletions)
+  (let ((bbdb-complete-name-allow-cycling t)         ;; some test cases
+        (bbdb-dwim-net-address-allow-redundancy nil) ;; need this
+        bbdb-completion-display-record
+        result completions)
+    
     ;; Try completing
     (with-current-buffer (get-buffer-create "*BBDB_TEST*")
       (erase-buffer)
       (insert input)
-
+      
       ;; Try completion. Disable beeping so that we don't get noise
       ;; while testing uncompletables.
       (flet ((beep nil ())
-             (ding nil ()))
-        (bbdb-complete-name))
+             (ding nil ())
+             ;; Hack to get around interactivity
+             (bbdb-display-completion-list
+              (list &optional cb data)
+              (setq completions list)))
+	(save-excursion 
+	  (bbdb-complete-name)))
 
-      ;; Hack to get around interactivity
-      (if (get-buffer "*Completions*")
-          (progn
-            (save-excursion
-              (set-buffer (get-buffer "*Completions*"))
-              (goto-char (point-min))
-              (forward-line 4) ;; pick the first completion provided
-              (beginning-of-line)
-              (copy-region-as-kill (point)
-                                   (progn (end-of-line)
-                                          (point))))
-            (kill-buffer "*Completions*")
-            (beginning-of-line)
-            (delete-region (point)
-                           (progn (end-of-line)
-                                  (point)))
-            (yank)))
+      (setq result (buffer-substring (point-min) (point-max)))
 
-      (beginning-of-line)
-      (copy-region-as-kill (point) (progn (end-of-line) (point)))
-
+      (if (get-buffer-window "*Completions*")
+          (kill-buffer "*Completions*"))
+      
       ;; Check the output
-      (let ((result (current-kill 0)))
-        (set-text-properties 0 (length result) nil result)
-        (if (equal result output)
-            (format "PASSED %s => %s" input output)
-          (format "FAILED %s => %s (%s)" input output result))))))
+      (if (and (equal result output)
+               (equal completions ocompletions))
+          (format "PASSED %S => %S" input output)
+        (format "FAILED %S =>\n\t  got      %S %S\n\t  expected %S %S" input
+                result completions
+                output ocompletions)))))
 
 ;;; Test BBDB parsing of email addresses
 (defun bbdb-test/bbdb-extract-address-components (input output)
   "Test suite for BBDB developers internal use."
   (let (parsed)
     (setq parsed (funcall bbdb-extract-address-components-func input t))
-    (if (and parsed (equal output (car parsed)))
-        (format "PASSED %S => \n\t\t%S" input (car parsed))
-      (format "FAILED got `%S' expected `%S'" (car parsed) output))))
+    (if (and parsed (equal output parsed))
+        (format "PASSED %S => \n\t\t%S" input parsed)
+      (format "FAILED got `%S' expected `%S'" parsed output))))
 
 ;; Test username-cleaning-function
 ;; This function doesn't depend on any variables.
 ;; XXX fix the test harness to not require a variable to frob!
-(defun bbdb-test/bbdb-clean-username(input output)
+(defun bbdb-test/bbdb-clean-username (input output)
   (let ((result (bbdb-clean-username input)))
     (if (and result (equal output result))
         (format "PASSED %S => \n\t\t%S" input result)
@@ -188,64 +217,102 @@
 
 
 ;; These are setup variables for the testing
-(defvar bbdb-clean-username-dummy nil)
-(defvar bbdb-test/bbdb-clean-username-dummy)
-(setq bbdb-test/bbdb-clean-username-dummy
-      '(bbdb-test/bbdb-clean-username
-        (nil ("Ronan Waide" "Ronan Waide")
-             ("Forrester Research, Inc." "Forrester Research, Inc")
-             ("Ronan Waide ext 5781" "Ronan Waide")
-             ("Ronan Waide (Just This Guy)" "Ronan Waide")
-             )))
+(defvar bbdb-test/bbdb-clean-username-dummy
+  '(bbdb-test/bbdb-clean-username
+    (nil ("Ronan Waide" "Ronan Waide")
+         ("Forrester Research, Inc." "Forrester Research, Inc")
+         ("Ronan Waide ext 5781" "Ronan Waide")
+         ("Ronan Waide (Just This Guy)" "Ronan Waide")
+         ))
+  "Test")
 
 (defvar bbdb-test/bbdb-extract-address-components-func
-  '(bbdb-test/bbdb-extract-address-components
-    (bbdb-rfc822-addresses
-     ("Robert Fenk <fenk@users.sourceforge.net>"
-      ("Robert Fenk" "fenk@users.sourceforge.net"))
-     ("\"Robert Fenk, Jr\" <fenk@users.sourceforge.net>"
-      ("Robert Fenk, Jr." "fenk@users.sourceforge.net"))
-     ("\"Fenk, Robert\" <fenk@users.sourceforge.net>"
-      ("Robert Fenk" "fenk@users.sourceforge.net"))
-     ("fenk@users.sourceforge.net (Robert Fenk)"
-      ("Robert Fenk" "fenk@users.sourceforge.net"))
-     ("fenk@users.sourceforge.net (Robert Fenk, Jr)"
-      ("Robert Fenk, Jr." "fenk@users.sourceforge.net"))
-     ("Robert.Fenk@users.sourceforge.net"
-      ("Robert Fenk" "Robert.Fenk@users.sourceforge.net")))
-    (bbdb-extract-address-components
-     ("Robert Fenk <fenk@users.sourceforge.net>"
-      ("Robert Fenk" "fenk@users.sourceforge.net"))
-     ("\"Robert Fenk, Jr\" <fenk@users.sourceforge.net>"
-      ("Robert Fenk, Jr." "fenk@users.sourceforge.net"))
-     ("\"Fenk, Robert\" <fenk@users.sourceforge.net>"
-      ("Robert Fenk" "fenk@users.sourceforge.net"))
-     ("fenk@users.sourceforge.net (Robert Fenk)"
-      ("Robert Fenk" "fenk@users.sourceforge.net"))
-     ("fenk@users.sourceforge.net (Robert Fenk, Jr)"
-      ("Robert Fenk, Jr." "fenk@users.sourceforge.net"))
-     ("Robert.Fenk@users.sourceforge.net"
-      ("Robert Fenk" "Robert.Fenk@users.sourceforge.net")))))
+  (let ((test-cases '(("Robert Fenk <fenk@users.sourceforge.net>"
+                       (("Robert Fenk" "fenk@users.sourceforge.net")))
+                      ("\"Robert Fenk, Jr\" <fenk@users.sourceforge.net>"
+                       (("Robert Fenk, Jr." "fenk@users.sourceforge.net")))
+                      ("<fenk@users.sourceforge.net>"
+                       ((nil "fenk@users.sourceforge.net")))
+                      ("\"Fenk, Robert\" <fenk@users.sourceforge.net>"
+                       (("Robert Fenk" "fenk@users.sourceforge.net")))
+                      ("fenk@users.sourceforge.net (Robert Fenk)"
+                       (("Robert Fenk" "fenk@users.sourceforge.net")))
+                      ("fenk@users.sourceforge.net (Robert Fenk, Jr)"
+                       (("Robert Fenk, Jr." "fenk@users.sourceforge.net")))
+                      ("Robert.Fenk@users.sourceforge.net"
+                       (("Robert Fenk" "Robert.Fenk@users.sourceforge.net")))
+                      ("<fenk@gmx.de>, fenk@web.de"
+                       ((nil "fenk@gmx.de") (nil "fenk@web.de")))
+                      )))
+    (list 'bbdb-test/bbdb-extract-address-components
+          (cons 'bbdb-rfc822-addresses test-cases)
+          (cons 'bbdb-extract-address-components test-cases)))
+  "Test")
 
 ;; Things to test bbdb-completion-type with
-(defvar bbdb-test/bbdb-completion-type
-  '(bbdb-test/bbdb-completion-type-test ;; test function
-    ;; variable setting, (input, output)
-    (nil ("waider" "Ronan Waide <waider@waider.ie>")
+(defvar bbdb-test/bbdb-completion-type 
+  '(bbdb-test/bbdb-complete-name ;; test function
+    ;; variable setting, (input output completions)
+    (nil ("waider"
+          "waider@"
+          ("Ronan Waide <waider@dspsrv.com>"
+           "Ronan Waide <waider@waider.ie>"))
          ;; test cycling
          ("Ronan Waide <waider@waider.ie>"
-          "Ronan Waide <0872867770@e-merge.ie>")
-         ("ronan waide" "Ronan Waide <waider@waider.ie>")
-         ("ronan.waide" "Ronan Waide <ronan.waide@euroconex.com>")
-         ("Robert.Fenk@g" "Robert Fenk <Robert.Fenk@gmx.de>")
-         ("jwz" "Jamie Zawinski <jwz@jwz.org>"))
-    (name ("waider" "waider") ;; no completion
-          ("ronan waide" "Ronan Waide <waider@waider.ie>"))
-    (net ("waider" "Ronan Waide <waider@waider.ie>")
-         ("jwz" "Jamie Zawinski <jwz@jwz.org>"))
-    (primary ("waider" "Ronan Waide <waider@waider.ie>"))
-    (primary-or-name ("waider" "Ronan Waide <waider@waider.ie>"))
-    (name-or-primary ("waider" "Ronan Waide <waider@waider.ie>"))))
+          "Ronan Waide <waider@dspsrv.com>"
+          nil)
+         ("ronan waide"
+          "Ronan Waide <waider@waider.ie>"
+          nil)
+         ("ronan.waide"
+          "Ronan.Waide@euroconex.com"
+          nil)
+         ("Ronan"
+          "Ronan"
+          ("Ronan.Waide@euroconex.com"
+           "Ronan Waide <waider@waider.ie>"))
+         ("Robert.Fenk@g"
+          "Robert.Fenk@gmx.de"
+          nil)
+         ("Robert.Fenk"
+          "robert.fenk@"
+          ("Robert.Fenk@forwiss.de"
+           "Robert.Fenk@gmx.de"))
+         ("jwz"
+          "Jamie Zawinski <jwz@jwz.org>"
+          nil))
+    (name ("waider"
+           "waider"
+           nil)
+          ("ronan"
+           "Ronan Waide <waider@waider.ie>"
+           nil)
+          ("ronan waide"
+           "Ronan Waide <waider@waider.ie>"
+           nil))
+    (net ("waider"
+          "waider@"
+          ("Ronan Waide <waider@dspsrv.com>"
+           "Ronan Waide <waider@waider.ie>"))
+         ("jwz"
+          "Jamie Zawinski <jwz@jwz.org>"
+          nil))
+    (primary ("waider"
+              "Ronan Waide <waider@waider.ie>"
+              nil))
+    (primary-or-name ("waider"
+                      "Ronan Waide <waider@waider.ie>"
+                      nil)
+                     ("ronan"
+                      "Ronan Waide <waider@waider.ie>"
+                      nil))
+    (name-or-primary ("waider"
+                      "Ronan Waide <waider@waider.ie>"
+                      nil)
+                     ("ronan"
+                      "Ronan Waide <waider@waider.ie>"
+                      nil)))
+  "Test")
 
 ;; This is a list of **158** symbols defined in BBDB at present. Some
 ;; are obviously not actually variables and can be ignored. Mark the
