@@ -2560,10 +2560,10 @@ before the record is created, otherwise it is created without confirmation
                                        (downcase tmp)))))))
           ;; have a message-name, not the same as old name.
           (cond (bbdb-readonly-p nil)
-                ((and (not bbdb-quiet-about-name-mismatches)
+                ((and bbdb-quiet-about-name-mismatches
                       (not bbdb-silent-running)
                       old-name)
-                 (message "name mismatch: \"%s\" changed to \"%s\""
+                 (message "name mismatch: \"%s\" has changed to \"%s\""
                           (bbdb-record-name record) name)
                  (sit-for 1))
                 ((or created-p
