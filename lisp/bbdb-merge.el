@@ -4,66 +4,53 @@
 
 (require 'bbdb)
 (require 'bbdb-com)
-;;; just starting off on this, may be of use to others
+
 ;;; to do:
 ;;; smarter phone, notes and address merging.
 
 ;;;###autoload
-(defun bbdb-merge-record( firstname lastname aka nets addrs phones company
-                                    notes date override &optional merge-record )
+(defun bbdb-merge-record( new-record &optional merge-record override )
   "Generic merge function.
 
-Merges FIRSTNAME LASTNAME AKA NETS ADDRS PHONES COMPANY NOTES into
-your bbdb, using DATE to check who's more up-to-date and OVERRIDE to
-decide who gets precedence if two dates match. DATE can be extracted
-from a notes if it's an alist with an element marked timestamp. Set
-OVERRIDE to 'new to allow the new record to stomp on existing data,
-'old to preserve existing data or nil to merge both together . If it
-can't find a record to merge with, it will create a new record. If
-MERGE-RECORD is set, it's a record discovered by other means that should
-be merged with.
+Merges new-record into your bbdb, using DATE to check who's more
+up-to-date and OVERRIDE to decide who gets precedence if two dates
+match. DATE can be extracted from a notes if it's an alist with an
+element marked timestamp. Set OVERRIDE to 'new to allow the new record
+to stomp on existing data, 'old to preserve existing data or nil to
+merge both together . If it can't find a record to merge with, it will
+create a new record. If MERGE-RECORD is set, it's a record discovered
+by other means that should be merged with.
 
 Returns the Grand Unified Record."
 
-  (let ((name (bbdb-string-trim (concat firstname " " lastname)))
-        olddate)
+  (let* ((firstname (bbdb-record-firstname new-record))
+         (lastname (bbdb-record-lastname new-record))
+         (aka (bbdb-record-aka new-record))
+         (nets (bbdb-record-net new-record))
+         (addrs (bbdb-record-addresses new-record))
+         (phones (bbdb-record-phones new-record))
+         (company (bbdb-record-company new-record))
+         (notes (bbdb-record-raw-notes new-record))
+         (name (bbdb-string-trim (concat firstname " " lastname)))
+		 (date (if (listp notes) (cdr (assq 'timestamp notes)) nil))
+         olddate)
 
-    ;; data dinking. this allows some of the parameters to be
-    ;; strings/vectors OR lists, saving on the world's supply of
-    ;; brackets.
-    ;; for doubleplus bonus points, I should parse the
-    ;; wish-you-were-vectors from strings, too.
-    (and (stringp aka)
-         (setq aka (list aka)))
-
-    (and (stringp nets)
-         (setq nets (list nets)))
-
-    (and (vectorp addrs)
-         (setq addrs (list addrs)))
-
-    (and (vectorp phones)
-         (setq phones (list phones)))
-
+	;; for convenience
     (if (stringp notes)
         (setq notes (list (cons 'notes notes))))
 
     ;; See if we have a record that looks right, using an intertwingle
-    ;; search. Could probably parameterize
-    ;; that. bbdb-merge-search-function or some such.
+    ;; search. Could probably parameterize that.
+    ;; bbdb-merge-search-function or some such.
     (if (null merge-record)
         (setq merge-record (bbdb-search-simple name nets)))
 
     (if merge-record
         (progn
-          ;; If date is unset, see if there's a datestamp in the notes field
-          (if (null date)
-              (if (listp notes)
-                  (setq date (cdr (assq 'timestamp notes)))))
-
-          ;; if date is still unset, set it to the existing record's date.
+          ;; if date is unset, set it to the existing record's date.
           (setq olddate (bbdb-record-getprop merge-record 'timestamp)
                 date (or date olddate))
+		  ;; FIXME if date & olddate are STILL unset, set to today's date.
 
           ;; if the old record is actually newer, invert the sense of override
           (if (string-lessp olddate date)
@@ -73,13 +60,15 @@ Returns the Grand Unified Record."
 
           (bbdb-record-set-firstname merge-record
            (if (null override)
-               (bbdb-merge-strings (bbdb-record-firstname merge-record) firstname " ")
+               (bbdb-merge-strings (bbdb-record-firstname merge-record) 
+								   firstname " ")
              (if (eq 'new override) firstname
                (bbdb-record-firstname merge-record))))
 
           (bbdb-record-set-lastname merge-record
            (if (null override)
-               (bbdb-merge-strings (bbdb-record-lastname merge-record) lastname " ")
+               (bbdb-merge-strings (bbdb-record-lastname merge-record) 
+								   lastname " ")
              (if (eq 'new override) lastname
                (bbdb-record-lastname merge-record))))
 
@@ -93,28 +82,33 @@ Returns the Grand Unified Record."
           (bbdb-record-set-aka
            merge-record
            (if (null override)
-               (bbdb-merge-lists (bbdb-record-aka merge-record) aka)
+               (bbdb-merge-lists!
+                (bbdb-record-aka merge-record) 
+				(if (listp aka) aka (list aka)) 'string= 'downcase)
              (if (eq 'new override) aka
                (bbdb-record-aka merge-record))))
 
           (bbdb-record-set-net
            merge-record
            (if (null override)
-               (bbdb-merge-lists (bbdb-record-net merge-record) nets)
+               (bbdb-merge-lists!
+                (bbdb-record-net merge-record) nets 'string= 'downcase)
              (if (eq 'new override) nets
                (bbdb-record-net merge-record))))
 
           (bbdb-record-set-phones
            merge-record
            (if (null override)
-               (bbdb-merge-lists (bbdb-record-phones merge-record) phones)
+               (bbdb-merge-lists!
+                (bbdb-record-phones merge-record) phones 'equal)
              (if (eq 'new override) phones
                (bbdb-record-phones merge-record))))
 
           (bbdb-record-set-addresses
            merge-record
            (if (null override)
-               (bbdb-merge-lists (bbdb-record-addresses merge-record) addrs)
+               (bbdb-merge-lists!
+                (bbdb-record-addresses merge-record) addrs 'equal)
              (if (eq 'new override) addrs
                (bbdb-record-addresses merge-record))))
 
@@ -138,8 +132,8 @@ Returns the Grand Unified Record."
                   (bbdb-record-set-raw-notes merge-record n1)))))
 
       ;; we couldn't find a record, so create one
-      (setq merge-record (bbdb-create-internal name company nets addrs phones
-                                               notes))
+      (setq merge-record 
+			(bbdb-create-internal name company nets addrs phones notes))
       ;; bite me, bbdb-create-internal
       (bbdb-record-set-firstname merge-record firstname)
       (bbdb-record-set-lastname merge-record lastname))
@@ -150,12 +144,25 @@ Returns the Grand Unified Record."
     (if (equal (bbdb-record-lastname merge-record) "")
         (bbdb-record-set-lastname merge-record nil))
 
-    ;; fix up the in-memory copy. which doesn't appear to actually work.
-    ;;(bbdb-change-record merge-record t)
-    ;;(bbdb-with-db-buffer
-    ;;(if (not (memq merge-record bbdb-changed-records))
-    ;;(setq bbdb-changed-records
-    ;;(cons merge-record bbdb-changed-records))))
+    ;; fix up the in-memory copy.
+    (bbdb-change-record merge-record t)
+    (let ((name    (bbdb-record-name    merge-record))
+          (company (bbdb-record-company merge-record)))
+      (if (> (length name) 0)
+          (bbdb-remhash (downcase name) merge-record))
+      (if (> (length company) 0)
+          (bbdb-remhash (downcase company) merge-record)))
+    (bbdb-record-set-namecache merge-record nil)
+    (if (or (bbdb-record-lastname merge-record)
+            (bbdb-record-firstname merge-record))
+        (bbdb-puthash (downcase (bbdb-record-name merge-record)) merge-record))
+	(if (bbdb-record-company merge-record)
+		(bbdb-puthash (downcase (bbdb-record-company merge-record)) 
+					  merge-record))
+    (bbdb-with-db-buffer
+     (if (not (memq merge-record bbdb-changed-records))
+         (setq bbdb-changed-records
+               (cons merge-record bbdb-changed-records))))
 
     ;; your record, sir.
     merge-record))
@@ -163,32 +170,17 @@ Returns the Grand Unified Record."
 ;; fixme this could be a macro, I guess.
 (defun bbdb-merge-strings( s1 s2 &optional sep )
   "Merge two strings together uniquely. If s1 doesn't contain s2, return s1+sep+s2."
-  (cond ((or (null s1)
-             (string-equal s1 ""))
-         s2)
-        ((or (null s2)
-             (string-equal s2 ""))
-         s1)
-        (t
-         (if (string-match s2 s1)
-             s1
-           (concat s1 (or sep "") s2)))))
-
-;; fixme this too could be a macro
-(defun bbdb-merge-lists( l1 l2 )
-  "Merge two lists without duplication."
-  (append l1
-   (delete nil
-           (mapcar (function (lambda( e )
-                               (if (member e l1)
-                                   nil
-                                 e))) l2))))
+  (cond ((or (null s1) (string-equal s1 "")) s2)
+        ((or (null s2) (string-equal s2 "")) s1)
+        (t (if (string-match s2 s1) s1
+			 (concat s1 (or sep "") s2)))))
 
 ;;;###autoload
 (defun bbdb-merge-file( &optional bbdb-new override match-fun)
   "Merge a bbdb file into the in-core bbdb."
   (interactive "fMerge bbdb file: ")
-  (message "Merging %s" bbdb-new)
+  (or bbdb-gag-messages
+	  (message "Merging %s" bbdb-new))
   ;; argh urgle private environment
   (let* ((bbdb-live-file bbdb-file) (bbdb-file bbdb-new)
          (bbdb-live-buffer-name bbdb-buffer-name)
@@ -197,27 +189,17 @@ Returns the Grand Unified Record."
          (bbdb-buffer nil) ;; hack hack
          (bbdb-file bbdb-live-file)
          (bbdb-buffer-name bbdb-live-buffer-name)
-         (live-records (bbdb-records)))
+         (live-records (bbdb-records))
+         (bbdb-refile-notes-default-merge-function 'bbdb-merge-strings))
 
     ;; merge everything
-    (mapcar (function (lambda(r)
-                        (bbdb-merge-record (bbdb-record-firstname r)
-                                           (bbdb-record-lastname r)
-                                           (bbdb-record-aka r)
-                                           (bbdb-record-net r)
-                                           (bbdb-record-addresses r)
-                                           (bbdb-record-phones r)
-                                           (bbdb-record-company r)
-                                           (bbdb-record-raw-notes r)
-                                           override
+    (mapcar (function (lambda(rec)
+                        (bbdb-merge-record rec 
                                            (if match-fun
                                                (funcall match-fun r)
-                                             nil)))) new-records))
-
-  ;; flush bbdb's internals. urgh. This forces bbdb-records to reread
-  ;; the database on the next call.
-  (bbdb-with-db-buffer
-   (setq bbdb-records nil))
-  (setq bbdb-buffer nil))
+                                             nil)
+										   override))) new-records))
+  ;; hack
+  (setq bbdb-buffer (or (get-file-buffer bbdb-file) nil)))
 
 (provide 'bbdb-merge)
