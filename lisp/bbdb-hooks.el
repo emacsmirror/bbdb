@@ -44,13 +44,15 @@
         (require 'gnus)
         (require 'bbdb-gnus))
     (error nil))
-  (condition-case ()
+  (condition-case()
       (progn
         (require 'vm)
         (require 'bbdb-vm))
     (error nil))
   (autoload 'mh-show "mh-e")
-  (require 'bbdb-rmail))
+  (condition-case()
+      (require 'bbdb-rmail)
+    (error nil)))
 
 (defvar rmail-buffer)
 (defvar mh-show-buffer)
