@@ -1,3 +1,9 @@
+2001-06-23  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-mhe.el (bbdb/mh-update-record): 
+	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail):
+	  Fixed the faulty use of bbdb/prompt-for-create-p.
+
 2001-06-10  Waider  <waider@waider.ie>
 
 	* lisp/bbdb.el 
