@@ -25,7 +25,7 @@
 ;; $Id$
 ;;
 
-(eval-and-compile 
+(eval-and-compile
   (require 'bbdb)
   (require 'bbdb-com)
   (require 'mail-utils)
@@ -39,8 +39,11 @@
   "Return a (numeric) key for MESSAGE"
   (`(let* ((attrs (file-attributes (, message)))
            (status-time (nth 6 attrs))
-           (status-time-2 (cdr status-time)))
-      (logxor (nth 10 attrs)
+           (status-time-2 (cdr status-time))
+           (inode (nth 10 attrs)))
+      (logxor (if (integerp inode) ;; if inode is larger than an emacs int,
+                  inode               ;; it's returned as a dotted pair
+                (car inode))
               (car status-time)
               ;; We need the following test because XEmacs returns the
               ;; status time as a dotted pair, whereas FSF and Epoch
@@ -52,7 +55,7 @@
 ;;;###autoload
 (defun bbdb/mh-update-record (&optional offer-to-create)
   "Returns the record corresponding to the current MH message, creating or
-modifying it as necessary.  A record will be created if 
+modifying it as necessary.  A record will be created if
 bbdb/mail-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
 the user confirms the creation."
   (save-excursion
@@ -86,10 +89,10 @@ the user confirms the creation."
             (bbdb-encache-message msg (list record))
             ;; return one record
             record))))))
-    
+
 ;;;###autoload
 (defun bbdb/mh-annotate-sender (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record 
+  "Add a line to the end of the Notes field of the BBDB record
 corresponding to the sender of this message.  If REPLACE is non-nil,
 replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
