@@ -2452,7 +2452,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
               (when (not (member rec uniq))
                 (setq uniq (cons rec uniq)
                       nets (bbdb-record-net rec)
-                      name (downcase (bbdb-record-name rec))
+                      name (downcase (or (bbdb-record-name rec) ""))
                       akas (mapcar 'downcase (bbdb-record-aka rec)))
                 (while nets
                   (setq net (car nets))
