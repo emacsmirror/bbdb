@@ -1624,9 +1624,9 @@ semantics of bbdb-completion-type."
 	 (or (null bbdb-completion-type)
 	     (and (memq bbdb-completion-type
 			'(name primary-or-name name-or-primary))
-		  (setq n (or (bbdb-record-name r)
-			      (bbdb-record-company r)))
-		  (string= name (downcase n)))
+                  (or (string= name (downcase (or (bbdb-record-name r) "")))
+                      (member name (mapcar 'downcase (bbdb-record-company r)))
+                      (member name (mapcar 'downcase (bbdb-record-aka r)))))
 	     ;; #### do something about AKA or mail-name or mail-alias here?
 	     (and (setq n (bbdb-record-net r))
 		  (or (and (memq bbdb-completion-type
@@ -1732,7 +1732,7 @@ Completion behaviour can be controlled with 'bbdb-completion-type'."
 				 (not (eq rec yeah-yeah-this-one)))
 			    (setq only-one-p nil))
 			(setq all-the-completions
-			      (cons sym all-the-completions))
+                             (cons (symbol-name sym) all-the-completions))
 			(if (eq rec yeah-yeah-this-one)
 			    nil
 			  (and net (setq yeah-yeah-this-one rec))
@@ -1741,16 +1741,15 @@ Completion behaviour can be controlled with 'bbdb-completion-type'."
     ;; If there were multiple completions for this record, the one that was
     ;; picked is random (hash order.)  So canonicalize that to be the one
     ;; closest to the front of the list.
-    (if (and (stringp completion)
+    (and (stringp completion)
 	     yeah-yeah-this-one
-	     only-one-p)
-	(let ((addrs (bbdb-record-net yeah-yeah-this-one))
-	      (rest all-the-completions))
-	  (while rest
-	    (if (member (symbol-name (car rest)) addrs)
-		(setq completion (symbol-name (car rest))
-		      rest nil))
-	    (setq rest (cdr rest)))))
+         only-one-p
+         (let ((addrs (bbdb-record-net yeah-yeah-this-one)))
+           (while addrs
+             (if (member (car addrs) all-the-completions)
+                 (setq completion (car addrs)
+                       addrs nil)
+               (setq addrs (cdr addrs))))))
     (setq yeah-yeah-this-one nil
 	  all-the-completions nil)
     (cond ((eq completion t)
