@@ -1,4 +1,15 @@
+2001-03-26  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb.el (bbdb-message-cache-lookup): 
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): 
+	* lisp/bbdb-vm.el (bbdb/vm-update-records):
+	YABugfix: first record was lost when looking it up from the
+	cache. 
+
 2001-03-25  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb.el (bbdb-message-cache-lookup):
+	Removed the faulty single record code for Rmail/MHE
 
 	* lisp/bbdb-mhe.el (bbdb/mh-update-record):
 	Bugfix for new caching functions
@@ -13,9 +24,6 @@
 	* lisp/bbdb-vm.el (bbdb/gnus-show-records):
 	* lisp/bbdb-vm.el (bbdb/vm-show-records):
 	Also show the records of uninteresting senders
-
-	* lisp/bbdb.el (bbdb-message-cache-lookup):
-	Removed the faulty single record code for Rmail/MHE
 
 2001-03-25  Waider  <waider@waider.ie>
 
