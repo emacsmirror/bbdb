@@ -223,7 +223,7 @@ using the echo area, inserts the new record in the db, sorted alphabetically." t
 
 ;;;***
 
-;;;### (autoloads (bbdb-insinuate-message bbdb-insinuate-gnus bbdb/gnus-score bbdb/gnus-lines-and-from bbdb/gnus-show-sender bbdb/gnus-annotate-sender bbdb/gnus-update-record) "bbdb-gnus" "lisp/bbdb-gnus.el")
+;;;### (autoloads (bbdb-insinuate-message bbdb-insinuate-gnus bbdb/gnus-score bbdb/gnus-snarf-signature bbdb/gnus-lines-and-from bbdb/gnus-show-sender bbdb/gnus-annotate-sender bbdb/gnus-update-record) "bbdb-gnus" "lisp/bbdb-gnus.el")
 
 (autoload 'bbdb/gnus-update-record "bbdb-gnus" "\
 returns the record corresponding to the current GNUS message, creating 
@@ -245,6 +245,9 @@ Useful as the value of gnus-optional-headers in *GNUS* (not Gnus).
 NOTE: This variable no longer seems to be present in Gnus.  It seems
 to have been replaced by `message-default-headers', which only takes
 strings.  In the future this should change." nil nil)
+
+(autoload 'bbdb/gnus-snarf-signature "bbdb-gnus" "\
+Snarf signature from the corresponding *Article* buffer." t nil)
 
 (autoload 'bbdb/gnus-score "bbdb-gnus" "\
 This returns a score alist for GNUS.  A score pair will be made for
@@ -372,7 +375,7 @@ Call this function to hook BBDB into Supercite." nil nil)
 
 ;;;***
 
-;;;### (autoloads (bbdb-snarf) "bbdb-snarf" "lisp/bbdb-snarf.el")
+;;;### (autoloads (bbdb-snarf-region bbdb-snarf) "bbdb-snarf" "lisp/bbdb-snarf.el")
 
 (autoload 'bbdb-snarf "bbdb-snarf" "\
 snarf up a bbdb record WHERE the point is.
@@ -391,6 +394,10 @@ Address and phone context are currently US-specific;
 patches to internationalize these assumptions are welcome.
 
 \\[bbdb-snarf] is similar to \\[bbdb-whois-sentinel], but less specialized." t nil)
+
+(autoload 'bbdb-snarf-region "bbdb-snarf" "\
+snarf up a bbdb record in the current region.  See `bbdb-snarf' for
+more details." t nil)
 
 ;;;***
 
