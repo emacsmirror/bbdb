@@ -169,13 +169,24 @@ Returns the Grand Unified Record."
     ;; your record, sir.
     merge-record))
 
-;; fixme this could be a macro, I guess.
+;; fixme these could be a macros, I guess.
+(defun bbdb-instring( s1 s2 )
+;;  (and case-fold-search
+;;       (setq s1 (downcase s1)
+;;             s2 (downcase s2)))
+  (catch 'done
+    (while (>= (length s1) (length s2))
+      (if (string= s2 (substring s1 0 (length s2)))
+          (throw 'done t)
+        (setq s1 (substring s1 1))))
+    (throw 'done nil)))
+
 (defun bbdb-merge-strings (s1 s2 &optional sep)
   "Merge two strings together uniquely.
 If s1 doesn't contain s2, return s1+sep+s2."
   (cond ((or (null s1) (string-equal s1 "")) s2)
         ((or (null s2) (string-equal s2 "")) s1)
-        (t (if (string-match s2 s1) s1
+        (t (if (bbdb-instring s2 s1) s1
              (concat s1 (or sep "") s2)))))
 
 ;;;###autoload
