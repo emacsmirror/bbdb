@@ -3,7 +3,6 @@
 ;;; This file is part of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
 ;;; Interface to GNUS version 3.12 or greater.  See bbdb.texinfo.
-;;; last change 11-oct-93.
 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -19,6 +18,15 @@
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
+;;
+;; $Id$
+;;
+;; $Log$
+;; Revision 1.52  1997/09/28 06:00:17  simmonmt
+;; Fix to accomodate nil gnus-single-article-buffer
+;;
+;;
+
 (require 'bbdb)
 (require 'gnus)
 
@@ -31,7 +39,7 @@ the user confirms the creation."
       (bbdb/gnus-pop-up-bbdb-buffer offer-to-create)
     (let ((from
 	   (progn
-	     (set-buffer "*Article*")
+	     (set-buffer gnus-article-buffer)
 	     (save-restriction
 	       (widen)
 	       ;;(gnus-article-show-all-headers)
