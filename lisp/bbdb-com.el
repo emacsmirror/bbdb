@@ -1259,11 +1259,24 @@ the opposite state of the record under point."
 (defun bbdb-unelide-record (arg)
   "Show all the fields of a record.
 This is done by disabling the variables `bbdb-elided-display' and
-`bbdb-omit-display'."  
+`bbdb-omit-display' and uneliding the record."  
   (interactive "P")
-  (let ((bbdb-display-omit-fields nil)
-        (bbdb-elided-display nil))
-    (bbdb-elide-record arg)))
+  (let* ((record (bbdb-current-record))
+         (cons (assq record bbdb-records))
+         (current-state (nth 1 cons)))
+    (cond ((or (memq current-state '(nil t))
+               (eq current-state 'omitted-display))
+           (let ((bbdb-display-omit-fields nil)
+                 (bbdb-elided-display nil))
+             (setcar (cdr cons) nil)
+             (bbdb-redisplay-one-record record))
+           (setcar (cdr cons) 'full-display)
+           )
+          (t
+           (setcar (cdr cons) nil)
+           (bbdb-redisplay-one-record record)
+           (setcar (cdr cons) 'omitted-display)
+           ))))
 
 ;;;###autoload
 (defun bbdb-elide-all-records (arg)
@@ -1277,7 +1290,8 @@ Like `bbbd-elide-record' but for all visible records."
          (cons (assq record bbdb-records))
          (current-state (nth 1 cons))
          (desired-state
-          (cond ((null arg) (not current-state))
+          (cond ((null arg)
+                 (or (not (eq current-state t)) (not current-state)))
                 ((eq arg 0) nil)
                 (t t))))
     (unless (eq current-state desired-state)
