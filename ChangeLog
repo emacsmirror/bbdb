@@ -1,3 +1,31 @@
+2002-02-01  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-address-edit-continental): Asking for the
+	ZIP code before the city and do not ask for a state.
+
+	* lisp/bbdb.el (bbdb-format-record-layout-multi-line): 
+	(bbdb-format-record-layout-one-line): Set text-property bbdb-field
+	with element 'field-name for labels of phones and addresses.
+
+	* lisp/bbdb-com.el (bbdb-redisplay-one-record): Remove
+	text-property bbdb-field before redisplaying to avoid extending
+	the new properties. 
+
+	* lisp/bbdb-gui.el (bbdb-fontify-buffer): Use test properties also
+	for name, company and labels of phones and addresses.  Highlight
+	them also in one-line layout.
+
+2002-01-31  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-redisplay-one-record): remove bbdb-field
+	text-properties before redisplaying.
+
+2002-01-30  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-vm.el (bbdb/vm-set-auto-folder-alist): Fixed some
+	comments and creation of vm-auto-folder-alist to match headers in
+	the order of (bbdb/vm-set-auto-folder-alist-headers): a new variable.
+
 2002-01-29  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-sc.el (bbdb/sc-consult-attr): Fixed to really use
