@@ -94,12 +94,12 @@ The headers to search can be configured by `bbdb/vm-get-from-headers'."
   (bbdb-records)
   (if bbdb-message-caching-enabled
       (let ((records (assq message-key bbdb-message-cache))
-        (invalid nil))
-    (mapcar (lambda (record)
-          (if (bbdb-record-deleted-p record)
-              (setq invalid t)))
-        (cdr records))
-    (if invalid nil records))))
+	    (invalid nil))
+	(mapcar (lambda (record)
+		  (if (bbdb-record-deleted-p record)
+		      (setq invalid t)))
+		(cdr records))
+	(if invalid nil records))))
 
 (defun bbdb/vm-encache-message (message-key bbdb-record)
   "Don't call this multiple times with the same args, it doesn't replace."
@@ -346,9 +346,8 @@ before the @."
 ;;;###autoload
 (defun bbdb/vm-snarf-all (&optional offer-to-create)
   "Snarfs all email addresses from the headers.
-The headers specified in `bbdb/vm-get-email-addresses-headers'.  are
-searched.
-Optional argument MSG is a VM message pointer."
+The headers specified in `bbdb/vm-snarf-all-headers' are searched
+for new email addresses."
   (interactive)
 
   (vm-check-for-killed-folder)
@@ -358,9 +357,9 @@ Optional argument MSG is a VM message pointer."
   (bbdb/vm-pop-up-bbdb-buffer t)
 
   (let ((bbdb/vm-get-from-headers bbdb/vm-snarf-all-headers)
-    (bbdb/vm-get-only-first-from-p nil)
-    (bbdb-message-cache nil)
-    records)
+	(bbdb/vm-get-only-first-from-p nil)
+	(bbdb-message-cache nil)
+	records)
     (setq records (bbdb/vm-update-records offer-to-create))
     (bbdb-display-records records)))
 
