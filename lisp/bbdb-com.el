@@ -23,6 +23,13 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.60  1998/04/11 07:32:59  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back.
+;; Changed prompts for bbdb-phones, bbdb-net, bbdb-company, bbdb-name and
+;; bbdb to make them more intuitive.  Started to remove support for
+;; advertized-bbdb-delete-current-field-or-record.  Fixed error in
+;; comment.
+;;
 ;; Revision 1.59  1998/03/13 09:54:22  simmonmt
 ;; Colin's fix for properly counting the size of notes fields
 ;;
@@ -168,34 +175,39 @@
 	 (nreverse matches)))))
 
 
+;;;###autoload
 (defun bbdb (string elidep)
   "Display all entries in the BBDB matching the regexp STRING 
 in either the name(s), company, network address, or notes."
-  (interactive "sRegular Expression: \nP")
+  (interactive "sRegular Expression for General Search: \nP")
   (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep))
 	(notes (cons '* string)))
     (bbdb-display-records
      (bbdb-search (bbdb-records) string string string notes nil))))
 
+;;;###autoload
 (defun bbdb-name (string elidep)
   "Display all entries in the BBDB matching the regexp STRING in the name
 \(or ``alternate'' names\)."
-  (interactive "sRegular Expression: \nP")
+  (interactive "sRegular Expression for Name Search: \nP")
   (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) string))))
 
+;;;###autoload
 (defun bbdb-company (string elidep)
   "Display all entries in BBDB matching STRING in the company field."
-  (interactive "sRegular Expression: \nP")
+  (interactive "sRegular Expression for Company Search: \nP")
   (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) nil string))))
 
+;;;###autoload
 (defun bbdb-net (string elidep)
   "Display all entries in BBDB matching regexp STRING in the network address."
-  (interactive "sRegular Expression: \nP")
+  (interactive "sRegular Expression for Net Address Search: \nP")
   (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) nil nil string))))
 
+;;;###autoload
 (defun bbdb-notes (which string elidep)
   "Display all entries in BBDB matching STRING in the named notes field."
   (interactive
@@ -214,14 +226,15 @@ in either the name(s), company, network address, or notes."
 
 (defun bbdb-phones (string elidep)
   "Display all entries in BBDB matching the regexp STRING in the phones field."
-  (interactive "sRegular Expression: \nP")
+  (interactive "sRegular Expression for Phone Search: \nP")
   (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records
      (bbdb-search (bbdb-records) nil nil nil nil string))))
 
+;;;###autoload
 (defun bbdb-changed (elidep)
   "Display all entries in the bbdb database which have been changed since
-the database was last last saved."
+the database was last saved."
   (interactive "P")
   (let ((bbdb-elided-display (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records
@@ -242,6 +255,7 @@ be returned."
 
 ;;; fancy redisplay
 
+;;;###autoload
 (defun bbdb-redisplay-records ()
   "Regrinds the contents of the *BBDB* buffer, without scrolling.
 If possible, you should call bbdb-redisplay-one-record instead."
@@ -437,6 +451,7 @@ name collisions."
 		     (make-vector bbdb-cache-length nil))))
 	record))))
 
+;;;###autoload
 (defun bbdb-create (record)
   "Add a new entry to the bbdb database; prompts for all relevant info
 using the echo area, inserts the new record in the db, sorted alphabetically,
@@ -671,6 +686,7 @@ NOTES is a string, or an alist associating symbols with strings."
 	(nth count tmp)))))
 
 
+;;;###autoload
 (defun bbdb-apply-next-command-to-all-records ()
   "Typing \\<bbdb-mode-map>\\[bbdb-apply-next-command-to-all-records] \
 in the *BBDB* buffer makes the next command operate on all
@@ -688,6 +704,7 @@ certain commands.\)"
   '(eq last-command 'bbdb-apply-next-command-to-all-records))
 
 
+;;;###autoload
 (defun bbdb-insert-new-field (name contents)
   "Add a new field to the current record; the field type and contents
 are prompted for if not supplied.
@@ -814,6 +831,7 @@ bbdb-north-american-phone-numbers-p."
 	 (bbdb-read-string (format "%s: " name)))))
 
 
+;;;###autoload
 (defun bbdb-edit-current-field ()
   "Edit the contents of the Insidious Big Brother Database field displayed on 
 the current line (this is only meaningful in the \"*BBDB*\" buffer.)   If the 
@@ -977,6 +995,7 @@ section, then the entire field is edited, not just the current line."
       ))
   nil)
 
+;;;###autoload
 (defun bbdb-record-edit-notes (bbdb-record &optional regrind)
   (interactive (list (bbdb-current-record t) t))
   (let ((notes (bbdb-read-string "Notes: " (bbdb-record-notes bbdb-record))))
@@ -987,6 +1006,7 @@ section, then the entire field is edited, not just the current line."
 	(bbdb-redisplay-one-record bbdb-record)))
   nil)
 
+;;;###autoload
 (defun bbdb-record-edit-property (bbdb-record &optional prop regrind)
   (interactive (list (bbdb-current-record t) nil t))
   (let* ((propnames (bbdb-propnames))
@@ -1036,6 +1056,7 @@ section, then the entire field is edited, not just the current line."
 	  (setq field next-field)))
     next-field))
 
+;;;###autoload
 (defun bbdb-transpose-fields (&optional arg)
   "This is like the `transpose-lines' command, but it is for BBDB fields.
 If the cursor is on a field of a BBDB record, that field and the previous
@@ -1109,6 +1130,7 @@ phone number; the order of field types is fixed.\)"
     (bbdb-redisplay-one-record record)))
 
 
+;;;###autoload
 (defun bbdb-delete-current-field-or-record ()
   "Delete the line which the cursor is on; actually, delete the field which
 that line represents from the database.  If the cursor is on the first line
@@ -1143,6 +1165,7 @@ deleted."
 	  (bbdb-change-record record nil)
 	  (bbdb-redisplay-one-record record)))))
 
+;;;###autoload
 (defun bbdb-delete-current-record (r &optional noprompt)
   "Delete the entire bbdb database entry which the cursor is within."
   (interactive (list (bbdb-current-record t)))
@@ -1172,6 +1195,7 @@ deleted."
 	;;(bbdb-offer-save)
 	)))
 
+;;;###autoload
 (defun bbdb-elide-record (arg)
   "Toggle whether the current record is displayed expanded or elided
 \(multi-line or one-line display.\)  With a numeric argument of 0, the 
@@ -1228,6 +1252,7 @@ the opposite state of the record under point."
       (goto-char (nth 2 (assq record bbdb-records)))
       (recenter '(4)))))
 
+;;;###autoload
 (defun bbdb-omit-record (n)
   "Remove the current record from the display without deleting it from the
 database.  With a prefix argument, omit the next N records.  If negative, 
@@ -1292,6 +1317,7 @@ that function will be used instead."
       string1
     string2))
 
+;;;###autoload
 (defun bbdb-refile-record (old-record new-record)
   "Merge the current record into some other record; that is, delete the
 record under point after copying all of the data within it into some other
@@ -1402,6 +1428,7 @@ Completion behaviour is as dictated by the variable `bbdb-completion-type'."
 
 ;;; Send-Mail interface
 
+;;;###autoload
 (defun bbdb-dwim-net-address (record &optional net)
   "Returns a string to use as the email address of the given record.  The
 given address is the address the mail is destined to; this is formatted like
@@ -1483,6 +1510,7 @@ address is used as-is."
       (error "bbdb-send-mail-style must be vm, mh, message, or rmail")))))
 		   
 
+;;;###autoload
 (defun bbdb-send-mail (bbdb-record &optional subject)
   "Compose a mail message to the person indicated by the current bbdb record.
 The first (most-recently-added) address is used if there are more than one.
@@ -1585,6 +1613,7 @@ composition buffer.)"
       (if (cdr addrs) (progn (insert ",\n") (indent-relative)))
       (setq addrs (cdr addrs)))))
 
+;;;###autoload
 (defun bbdb-show-all-recipients ()
   "*Display BBDB records for all recipients of the message in this buffer."
   (interactive)
@@ -1618,6 +1647,7 @@ composition buffer.)"
 
 ;;; completion
 
+;;;###autoload
 (defun bbdb-completion-predicate (symbol)
   "For use as the third argument to completing-read, to obey the
 semantics of bbdb-completion-type."
@@ -1666,6 +1696,7 @@ Otherwise, a valid response is forced."
     (define-key map "\M-\t" 'bbdb-complete-name)
     map))
 
+;;;###autoload
 (defun bbdb-read-addresses-with-completion (prompt &optional default)
   "Like read-string, but allows bbdb-complete-name style completion."
     (read-from-minibuffer prompt default
@@ -1701,6 +1732,7 @@ Currently only used by XEmacs."
      (bbdb-complete-name beg)))
 
   
+;;;###autoload
 (defun bbdb-complete-name (&optional start-pos)
   "Complete the user full-name or net-address before point (up to the 
 preceeding newline, colon, or comma).  If what has been typed is unique,
@@ -1844,6 +1876,7 @@ Completion behaviour can be controlled with 'bbdb-completion-type'."
 	       (or (eq (selected-window) (minibuffer-window))
 		   (message "Making completion list...done"))))))))
 
+;;;###autoload
 (defun bbdb-yank ()
   "Insert the current contents of the *BBDB* buffer at point."
   (interactive)
@@ -1859,6 +1892,7 @@ Completion behaviour can be controlled with 'bbdb-completion-type'."
   :group 'bbdb
   :type 'symbol)
 
+;;;###autoload
 (defun bbdb-define-all-aliases ()
   "Define mail aliases for some of the records in the database.
 Every record which has a `mail-alias' field will have a mail alias
@@ -1959,6 +1993,7 @@ correspond to the 0, 1, 2, ... 9 digits, respectively."
   :group 'bbdb-phone-dialing
   :type 'vector)
 
+;;;###autoload
 (defun bbdb-dial (phone force-area-code)
   "On a Sun SparcStation, play the appropriate tones on the builtin 
 speaker to dial the phone number corresponding to the current line.
@@ -2076,6 +2111,7 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
 	(bbdb-split finger-host ",")
       (bbdb-record-net record))))
 
+;;;###autoload
 (defun bbdb-finger (record &optional which-address)
   "Finger the network address of a BBDB record. 
 If this command is executed from the *BBDB* buffer, finger the network
@@ -2167,30 +2203,35 @@ is true, where VALUE is the value of the FIELD field of REC."
        (if (and val (,compare val ,cmpval))
 	   rec nil))))
 
+;;;###autoload
 (defun bbdb-timestamp-older (date)
   "*Display records with timestamp older than DATE.  DATE must be in
 yyyy-mm-dd format."
   (interactive "sOlder than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'timestamp string<)))
 
+;;;###autoload
 (defun bbdb-timestamp-newer (date)
   "*Display records with timestamp newer than DATE.  DATE must be in
 yyyy-mm-dd format."
   (interactive "sNewer than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'timestamp string>)))
 
+;;;###autoload
 (defun bbdb-creation-older (date)
   "*Display records with creation-date older than DATE.  DATE must be
 in yyyy-mm-dd format."
   (interactive "sOlder than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'creation-date string<)))
 
+;;;###autoload
 (defun bbdb-creation-newer (date)
   "*Display records with creation-date newer than DATE.  DATE must be
 in yyyy-mm-dd format."
   (interactive "sNewer than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'creation-date string>)))
 
+;;;###autoload
 (defun bbdb-creation-no-change ()
   "*Display records that have the same timestamp and creation-date."
   (interactive)
@@ -2207,6 +2248,7 @@ standard place."
   :type 'file)
 
 (defvar Info-directory) ; v18
+;;;###autoload
 (defun bbdb-info ()
   (interactive)
   (require 'info)
@@ -2223,12 +2265,13 @@ standard place."
       (let ((Info-directory (file-name-directory file)))
 	(Info-goto-node (format "(%s)Top" file))))))
 
+;;;###autoload
 (defun bbdb-help ()
   (interactive)
   (message (substitute-command-keys "\\<bbdb-mode-map>\
 new field: \\[bbdb-insert-new-field]  \
 edit field: \\[bbdb-edit-current-field]  \
-delete field: \\[advertized-bbdb-delete-current-field-or-record]  \
+delete field: \\[bbdb-delete-current-field-or-record]  \
 mode help: \\[describe-mode]  \
 info: \\[bbdb-info]")))
 
