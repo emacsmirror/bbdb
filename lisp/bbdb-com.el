@@ -2484,9 +2484,9 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
             uniq nets net name akas)
         ;; Now collect all the dwim-addresses for each completion, but only
         ;; once for each record!  Add it if the net is part of the completions
-        (mapc
+        (bbdb-mapc
          (lambda (sym)
-           (mapc
+           (bbdb-mapc
             (lambda (rec)
               (when (not (member rec uniq))
                 (setq uniq (cons rec uniq)

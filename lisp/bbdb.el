@@ -2963,7 +2963,7 @@ If not present or when the records have been modified return nil."
             (invalid nil))
         (when records
           (setq records (cdr records))
-          (mapc (lambda (record)
+          (bbdb-mapc (lambda (record)
                   (if (bbdb-record-deleted-p record)
                       (setq invalid t)))
                 records))
