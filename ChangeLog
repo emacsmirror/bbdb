@@ -1,3 +1,22 @@
+2001-03-25  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-mhe.el (bbdb/mh-update-record):
+	Bugfix for new caching functions
+
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-records):
+	Another bugfix: check for nil before caching
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-show-sender):
+	* lisp/bbdb-vm.el (bbdb/vm-show-sender):
+	Show recipients if we find no senders
+
+	* lisp/bbdb-vm.el (bbdb/gnus-show-records):
+	* lisp/bbdb-vm.el (bbdb/vm-show-records):
+	Also show the records of uninteresting senders
+
+	* lisp/bbdb.el (bbdb-message-cache-lookup):
+	Removed the faulty single record code for Rmail/MHE
+
 2001-03-25  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-rmail.el:
