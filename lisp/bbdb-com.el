@@ -2992,9 +2992,13 @@ proceed the processing of records."
       (when (not (integerp bbdb-offer-to-create))
         (setq prompt (format "%s is not in the db; add? (y,!,n,s,q,?)"
                              (or (car bbdb-address) (cadr bbdb-address))))
-        (while (not (key-press-event-p
-                     (setq event (next-command-event nil prompt)))))
-        (setq bbdb-offer-to-create (char-int (event-to-character event))))
+        (while (not event)
+          (setq event (read-key-sequence prompt))
+          (if (featurep 'xemacs)
+              (setq event (char-int (event-to-character event)))
+            (setq event (if (stringp event) (aref event 0)))))
+          
+        (setq bbdb-offer-to-create event))
       
       (cond ((eq bbdb-offer-to-create (char-int ?y))
              (setq bbdb-offer-to-create old-offer-to-create)
