@@ -2456,7 +2456,7 @@ folder.")
 
 (defun bbdb-message-cache-lookup (message-key)
   "Return cached bbeb records for MESSAGE-KEY.
-If not present or when the records have been modified return nil." 
+If not present or when the records have been modified return nil."
   (bbdb-records)
   (if bbdb-message-caching-enabled
       (let ((records (assq message-key bbdb-message-cache))
@@ -2569,7 +2569,7 @@ and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\"."
                                           prompt-to-create-p)
   "Fills the record corresponding to the sender with as much info as possible.
 A record may be created by this; a record or nil is returned.
-If bbdb-readonly-p is true, then a record will never be created.
+If `bbdb-readonly-p' is true, then a record will never be created.
 If CREATE-P is true, then a record may be created, otherwise it won't.
 If PROMPT-TO-CREATE-P is true, then the user will be asked for confirmation
 before the record is created, otherwise it is created without confirmation
@@ -2740,7 +2740,7 @@ before the record is created, otherwise it is created without confirmation
         (if (and net (not bbdb-readonly-p))
             (if (null (bbdb-record-net record))
                 ;; names are always a sure match, so don't bother prompting
-                ;; here. 
+                ;; here.
                 (progn (bbdb-record-set-net record (list net))
                        (bbdb-puthash (downcase net) record) ; important!
                        (or change-p (setq change-p t)))
@@ -2773,7 +2773,7 @@ before the record is created, otherwise it is created without confirmation
                                 (format "Add address \"%s\" to \"" net))
                                ;; this groveling is to prevent the "(y or n)"
                                ;; from falling off the right edge of the
-                               ;; screen. 
+                               ;; screen.
                                (the-next-bit (mapconcat 'identity
                                                         (bbdb-record-net
                                                          record)
@@ -2818,7 +2818,7 @@ before the record is created, otherwise it is created without confirmation
                                                     (list net))))
                       (bbdb-puthash (downcase net) record) ; important!
                       (or change-p (setq change-p t)))))))
-        
+
         (bbdb-debug
          (if (and change-p bbdb-readonly-p)
              (error
