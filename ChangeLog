@@ -1,3 +1,12 @@
+2002-02-04  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* bbdb.el (bbdb-format-address-default): 
+	(bbdb-format-address-continental): do not ouput the label.  This
+	is done by `bbdb-format-record-layout-multi-line'
+
+	* bbdb.el (bbdb-format-record-layout-multi-line): Fixed buggy setting of
+	text-property for 'bbdb-field for addresses and phones.
+
 2002-02-01  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-address-edit-continental): Asking for the
