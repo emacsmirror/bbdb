@@ -320,7 +320,7 @@ more details."
 ;       "some test cases")
 
 
-  
+
 (defun bbdb-merge-interactively (name company nets addrs phones notes)
   "Interactively add a new record; arguments same as \\[bbdb-create-internal]."
   (let*
@@ -329,8 +329,9 @@ more details."
        (lastname (nth 1 f-l-name))
        (aka nil)
        (new-record
-    (vector firstname lastname aka company phones addrs nets notes
-           (make-vector bbdb-cache-length nil)))
+        (vector firstname lastname aka company phones addrs
+                (if (listp nets) nets (list nets)) notes
+                (make-vector bbdb-cache-length nil)))
        (old-record (bbdb-search-simple name nets)))
     (if old-record
     (progn
