@@ -332,6 +332,9 @@ is nil...\)"
 
 ;;; Parsing other things
 
+(defvar bbdb-expand-mail-aliases t
+  "If non-nil, expand mail aliases in bbdb-complete-name")
+
 (defvar bbdb-check-zip-codes-p t
   "If non-nil, require legal zip codes when entering an address.
 The format of legal zip codes is determined by the variable
@@ -2028,7 +2031,9 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
      ;; No match
      ((null completion)
       (bbdb-complete-name-cleanup)
-      (ding))
+      (if bbdb-expand-mail-aliases ;; maybe check for mail alias
+          (expand-abbrev)
+        (ding)))
 
       ;; Perfect match...
       ((eq completion t)
