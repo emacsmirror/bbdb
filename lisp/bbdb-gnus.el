@@ -26,24 +26,20 @@
 (require 'bbdb-snarf)
 (require 'gnus)
 
-;;; Compiler hushing
-(eval-when-compile
-  (defvar gnus-window-configuration)                      ;; gnus-win
-  (defvar gnus-optional-headers)                          ;; ??
-  (defvar gnus-Subject-buffer)                            ;; ??
-  (defvar gnus-Subject-mode-map)                          ;; ??
-  (defvar gnus-ignored-from-addresses)                    ;; gnus-sum
+(eval-and-compile
+  (require 'bbdb-com)
+  (require 'gnus-win)
   (require 'gnus-sum)
-  (autoload 'gnus-summary-select-article "gnus-sum")
-  (autoload 'gnus-article-narrow-to-signature "gnus-art")
-  (autoload 'nntp-header-lines "nntp")
-  (autoload 'nntp-header-from "nntp")
-  (defvar bbdb-pop-up-elided-display)                     ;; bbdb
-  (autoload 'bbdb-record-edit-notes "bbdb-com")
-  (autoload 'bbdb-record-edit-property "bbdb-com")
-  (autoload 'bbdb-snarf-region "bbdb-snarf")
-  (autoload 'bbdb-show-all-recipients "bbdb-com")
-  (autoload 'rfc822-addresses "rfc822"))
+  (require 'gnus-art)
+  (require 'rfc822))
+
+;;; Compiler hushing
+;;; Some of these are probably obsolete variables for older versions
+;;; of gnus that should be taken out back and shot.
+(eval-when-compile
+   (defvar gnus-optional-headers)
+   (defvar gnus-Subject-mode-map)
+   (defvar gnus-Subject-buffer))
 
 (defun bbdb/gnus-get-addresses (&optional only-first-address)
   "Return real name and email address of sender respectively recipients.
@@ -54,9 +50,9 @@ The headers to search can be configured by `bbdb-get-addresses-headers'."
   (save-restriction
     (goto-char (point-min))
     (narrow-to-region (point-min)
-		      (if (search-forward "\n\n" nil 'force)
-			  (match-end 0)
-			(point-max)))
+              (if (search-forward "\n\n" nil 'force)
+              (match-end 0)
+            (point-max)))
 
     (let ((headers bbdb-get-addresses-headers)
           (uninteresting-senders (or (if (boundp 'gnus-ignored-from-addresses)
@@ -136,7 +132,7 @@ or modifying it as necessary.  A record will be created if
 bbdb/news-auto-create-p is non-nil or if OFFER-TO-CREATE is true
 and the user confirms the creation.
 
-The variable `bbdb/gnus-update-records-mode' controls what actions 
+The variable `bbdb/gnus-update-records-mode' controls what actions
 are performed and it might override `bbdb-update-records-mode'.
 
 When hitting C-g once you will not be asked anymore for new people listed
@@ -360,6 +356,8 @@ for `bbdb/gnus-summary-get-author'."
   :group 'bbdb-mua-specific-gnus
   :type 'symbol)
 
+;; My local gnus installation doesn't have nntp-header-lines &c. This
+;; is probably pretty old and should be elided.
 ;;;###autoload
 (defun bbdb/gnus-lines-and-from (header)
   "Useful as the value of `gnus-optional-headers' in *GNUS* (not Gnus).
@@ -768,7 +766,7 @@ determine the group and spooling priority for a single address."
       (cond
        ((and rgx pub
          (goto-char (point-min))
-         (re-search-forward "^From \\([^ \n]+\\)[ \n]" nil t)
+         (re-search-forward "^From: \\([^ \n]+\\)[ \n]" nil t)
          (string-match rgx (buffer-substring (match-beginning 1) (match-end 1))))
         (cons pub 3))
        (prv
