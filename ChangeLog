@@ -1,3 +1,8 @@
+2003-07-23  Robert Fenk  <Robert Fenk>
+
+	* lisp/bbdb-hooks.el (bbdb-force-record-create): A fix for the
+	mhe-mode case (from Vladimir G. Ivanovic) 
+
 2003-06-25  Robert Fenk  <Robert Fenk>
 
 	* lisp/bbdb.el (bbdb-pop-up-bbdb-buffer): Some fixes for special
