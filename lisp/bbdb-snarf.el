@@ -401,35 +401,39 @@ more details."
                   start me))
           (concat result (substring string start))))))
 
-(defcustom bbdb-extract-address-components-func 'bbdb-extract-address-components
+(defcustom bbdb-extract-address-components-func
+  'bbdb-extract-address-components
   "Function called to parse one or more email addresses.
 See bbdb-extract-address-components for an example."
   :group 'bbdb-noticing-records
   :type 'function)
 
 (defcustom bbdb-extract-address-component-regexps
-    '(;; "surname, firstname" <address>  from Outlookers
+    '(;; "name" <address>
       ("\"\\([^\"]*\\)\"\\s-*<\\([^>]+\\)>"
-       (bbdb-clean-username (match-string 1 adstring)) 2)
-      ;; "name" <address>
-      ("\"\\([^\"]*\\)\"\\s-*<\\([^>]+\\)>"
-       (bbdb-clean-username (match-string 1 adstring)) 2)
+       (car (mail-extract-address-components
+             (concat "\"" (match-string 1 adstring) "\"")))
+       2)
       ;; name <address>
-      ("\\(\\b[^<,]*\\b\\)\\s-*<\\([^>]+\\)>"
+      ("\\([^<>,\t][^<>,]+[^<>, \t]\\)\\s-*<\\([^>]+\\)>"
        1 2)
       ;; <address>
       ("<\\([^>]+\\)>" nil 2)
       ;; address (name)
       ("\\(\\b[^<\",()]+\\b\\)\\s-*(\\([^)]+\\))"
-       2 1)
+       (car (mail-extract-address-components
+             (concat "\"" (match-string 2 adstring) "\"")))
+       1)
       ;; firstname.lastname@host
-      ("\\b\\(\\([^@]+\\.[^@]+\\)@[0-9a-z._-]+\\)\\b"
-       (bbdb-clean-username (match-string 2 adstring)) 1)
+      ("\\b\\(\\([^@ \t\n.]+\\.[^@ \t\n.]+\\)@[^@ \t\n]+\\)\\b"
+       (car (mail-extract-address-components
+             (concat "\"" (match-string 2 adstring) "\"")))
+       1)
       ;; user@host
-      ("\\b\\(\\([0-9a-z._-+]+\\)@[0-9a-z._-]+\\)\\b"
+      ("\\b\\(\\([^@ \t\n]+\\)@[^@ \t\n]+\\)\\b"
        nil 1)
       ;; local address
-      ("\\b\\([0-9a-z._-]+\\)\\b"
+      ("\\b\\([^@ \t\n]+\\)\\b"
        nil 1)
       )
     "*List of regexps matching headers.
@@ -501,6 +505,9 @@ If extracting fails one probably has to adjust the variable
         (let ((regexp (caar adcom-regexp))
               (fn (cadar adcom-regexp))
               (ad (caddar adcom-regexp)))
+;          (message "(string-match %S %S)"
+;                   (concat "^\\s-*" regexp "\\s-*\\(,\\|$\\)")
+;                   adstring)
           (cond ((string-match
                   (concat "^[^,]*\\("
                           bbdb-extract-address-component-ignore-regexp
@@ -602,5 +609,41 @@ version doesn't support multiple addresses."
                 addrline (substring addrline comma)
                 start 0))))
     addrs))
+
+(defun bbdb-test/bbdb-extract-address-components ()
+  "Test suite for BBDB developers internal use."
+  (let ((extr-functions '(bbdb-rfc822-addresses
+                          bbdb-extract-address-components))
+        (test-cases '(("Robert Fenk <fenk@users.sourceforge.net>"
+                       "Robert Fenk" "fenk@users.sourceforge.net")
+                      ("\"Robert Fenk, Jr\" <fenk@users.sourceforge.net>"
+                       "Robert Fenk, Jr." "fenk@users.sourceforge.net")
+                      ("\"Fenk, Robert\" <fenk@users.sourceforge.net>"
+                       "Robert Fenk" "fenk@users.sourceforge.net")
+                      ("fenk@users.sourceforge.net (Robert Fenk)"
+                       "Robert Fenk" "fenk@users.sourceforge.net")
+                      ("fenk@users.sourceforge.net (Robert Fenk, Jr)"
+                       "Robert Fenk, Jr." "fenk@users.sourceforge.net")
+                      ("Robert.Fenk@users.sourceforge.net"
+                       "Robert Fenk" "Robert.Fenk@users.sourceforge.net")))
+        (errors 0)
+        parsed)
+    (while extr-functions
+      (let ((test-cases test-cases)
+            (extr-fun (car extr-functions)))
+        (while test-cases
+          (setq parsed (funcall extr-fun (caar test-cases) t))
+          (when (not (and parsed (equal (cdar test-cases) (car parsed))))
+            (message "ERROR:%s: parsing `%S' got `%S' expected `%S'"
+                     extr-fun (caar test-cases) (car parsed) (cdar test-cases))
+            (setq errors (1+ errors)))
+          (setq test-cases (cdr test-cases))))
+      (setq extr-functions (cdr extr-functions)))
+    
+    (if (> errors 0)
+        (error "There have been %d errors in bbdb-extract-address-components."
+               errors)
+      (message "There have been no errors in bbdb-extract-address-components."
+               errors))))
 
 (provide 'bbdb-snarf)
