@@ -1,3 +1,17 @@
+Fri Mar 13 01:52:00 1998  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 1.91unoff released
+
+Wed Mar 12 15:37:86 1998  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb.el (parse-bbdb-internal): Fixed the error message on
+	  mismatched bbdb-file-format.
+
+Fri Feb 06 00:00:00 1998  Colin Rafferty  <colin@xemacs.org>
+
+	* bbdb-com.el (bbdb-current-field): Made it correctly count the
+	  number of lines of a specially-formatted note field.
+
 Mon Mar 09 23:25:00 1998  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 1.90unoff released
