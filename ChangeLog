@@ -1,3 +1,9 @@
+2001-02-02  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-com.el (bbdb-find-duplicates): Fixes records without a
+	name and adds additional messages in order to understand the
+	duplicates.
+
 2001-02-02  Didier Verna  <didier@xemacs.org>
 
 	* Makefile.in (SUBDIRS): new variable.
