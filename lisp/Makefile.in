@@ -142,10 +142,14 @@ bbdb-reportmail.elc: bbdb.elc bbdb-reportmail.el
 bbdb-sc.elc: bbdb.elc bbdb-sc.el
 	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "supercite") (byte-compile-file "bbdb-sc.el") (message "Optional package bbdb-sc skipped - supercite not found"))'
 
-# bbdb-hooks uses VM macros if it can find VM.  If you don't have VM,
-# then the $(VM) makefile variable should be undefined or empty.
+# bbdb-hooks uses VM macros if it can find VM.
+
 bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
-	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc $(VM) \
+	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc \
+	-eval '(and (not (string= "$(VMDIR)" "")) \
+		    (setq load-path (cons "$(VMDIR)" load-path)) \
+		    (load "vm" t) \
+		    (load "vm-vars" t))' \
 	-f batch-byte-compile $(@:.elc=.el)
 
 autoloads: bbdb-autoloads.el
