@@ -226,7 +226,7 @@ be returned."
 ;;;###autoload
 (defun bbdb-redisplay-records ()
   "Regrinds the contents of the *BBDB* buffer, without scrolling.
-If possible, you should call bbdb-redisplay-one-record instead."
+If possible, you should call `bbdb-redisplay-one-record' instead."
   (let ((p (point))
         (m (condition-case condition (mark) (error nil))))
     (goto-char (window-start))
@@ -303,7 +303,7 @@ will be signalled if unparsable.  All of these are unambigously parsable:
 Note that \"4151212123\" is ambiguous; it could be interpreted either as
 \"(415) 121-2123\" or as \"415-1212 x123\".
 
-\(And uh, oh yeah, this does little if bbdb-north-american-phone-numbers-p
+\(And uh, oh yeah, this does little if `bbdb-north-american-phone-numbers-p'
 is nil...\)"
 
   (cond ((if number-type
@@ -333,7 +333,7 @@ is nil...\)"
 ;;; Parsing other things
 
 (defvar bbdb-expand-mail-aliases t
-  "If non-nil, expand mail aliases in bbdb-complete-name")
+  "If non-nil, expand mail aliases in `bbdb-complete-name'.")
 
 (defvar bbdb-check-zip-codes-p t
   "If non-nil, require legal zip codes when entering an address.
@@ -1567,7 +1567,7 @@ given address is the address the mail is destined to; this is formatted like
 \"Firstname Lastname <addr>\" unless both the first name and last name are
 constituents of the address, as in John.Doe@SomeHost, or the address is
 already in the form \"Name <foo>\" or \"foo (Name)\", in which case the
-address is used as-is. If bbdb-dwim-net-address-allow-redundancy is non-nil,
+address is used as-is. If `bbdb-dwim-net-address-allow-redundancy' is non-nil,
 the name is always included."
   (or net (setq net (car (bbdb-record-net record))))
   (or net (error "record unhas network addresses"))
@@ -2093,7 +2093,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
          ;;
          ;; if we're past fill-column, wrap at the previous comma.
          (if (and
-              (if (boundp 'auto-fill-function) ; the emacs19 name.
+              (if (boundp 'auto-fill-function) ; the GNU Emacs name.
                   auto-fill-function
                   auto-fill-hook)
               (>= (current-column) fill-column))
@@ -2137,7 +2137,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
        (or (eq (selected-window) (minibuffer-window))
            (message "Making completion list..."))
        (let ((list (all-completions pattern ht pred))
-         (bbdb-complete-name-recursion t))
+             (bbdb-complete-name-recursion t))
          ;;       (recs (delq nil (mapcar (lambda (x)
          ;;                     (symbol-value (intern-soft x ht)))
          ;;                   list)))
@@ -2622,7 +2622,7 @@ The results of the search is returned as a list of records."
         (message "BBDB record `%s' causes duplicates, maybe it is equal to a company name."
                  (bbdb-record-name rec))
         (sit-for 1))
-      
+
       (if (memq 'net fields)
           (let ((nets (bbdb-record-net rec)))
             (while nets
@@ -2644,7 +2644,7 @@ The results of the search is returned as a list of records."
                          (bbdb-record-name rec) (car aka))
                 (sit-for 1))
               (setq aka (cdr aka)))))
-      
+
       (setq records (cdr records)))
 
     (reverse (bbdb-remove-memq-duplicates ret))))
