@@ -73,7 +73,7 @@ call %1\bin\%emacs% -batch -q -no-site-file %PUSHPATH% -l ./bbdb.elc %MHE% -f ba
 
 echo home is where the heart is.
 
-rem echo >bbdb-autoloads.el
+rem echo  &gt; bbdb-autoloads.el
 rem call %1\bin\%emacs% -batch -q -no-site-file -l autoload -eval "(setq generated-autoload-file \"%BBDBDIR%\\bbdb-autoloads.el\")" -eval "(setq make-backup-files nil)" -eval "(setq autoload-package-name \"bbdb\")" -f batch-update-autoloads %BBDBDIR%
 call %1\bin\%emacs% -batch -q -no-site-file -f batch-byte-compile bbdb-autoloads.el
 
