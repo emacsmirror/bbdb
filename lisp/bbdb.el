@@ -1414,10 +1414,11 @@ the raw field content and return a string."
     (if (and append first)
         (let ((cons (assq first bbdb-records))
               (window (get-buffer-window (current-buffer))))
-          (if window (set-window-start window (nth 2 cons)))
-          ;; this doesn't really belong here, but it's convenient...
-          (save-excursion (run-hooks 'bbdb-list-hook))))
+          (if window (set-window-start window (nth 2 cons)))))
     (bbdbq)
+    ;; this doesn't really belong here, but it's convenient ... and when
+    ;; using electric display it would not be called otherwise.
+    (save-excursion (run-hooks 'bbdb-list-hook))
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
     (set-buffer b)))
@@ -1507,7 +1508,6 @@ the raw field content and return a string."
           (define-key bbdb-mode-map " " 'bbdb-done-command)
           (electric-bbdb-display-records records))
       (bbdb-display-records-1 records)
-      (save-excursion (run-hooks 'bbdb-list-hook))
       ;; don't smash keybinding if they invoked `bbdb-display'
       ;; from inside an electric loop.
       (unless bbdb-inside-electric-display
@@ -2788,16 +2788,18 @@ before the record is created, otherwise it is created without confirmation
                                        0 (max 0 (- w (length the-first-bit)
                                                    20)))
                                       "...")))
-                           (when (and (not (bbdb-y-or-n-p (concat the-first-bit
-                                                                  the-next-bit
-                                                                  "\"? ")))
-                                      (bbdb-y-or-n-p
-                                       (format "Create a new record for %s? "
-                                               (bbdb-record-name record))))
+                           (if (bbdb-y-or-n-p (concat the-first-bit
+                                                      the-next-bit
+                                                      "\"? "))
+                               ;; then add the new net
+                               t
                              ;; else add a new record with the same name
-                             (setq record
-                                   (bbdb-create-internal name nil net
-                                                         nil nil nil))
+                             (if (bbdb-y-or-n-p
+                                  (format "Create a new record for %s? "
+                                          (bbdb-record-name record)))
+                                 (setq record
+                                       (bbdb-create-internal name nil net
+                                                             nil nil nil)))
                              nil))))))
                     ;; then modify an existing record
                     (let ((front-p (cond ((null bbdb-new-nets-always-primary)
