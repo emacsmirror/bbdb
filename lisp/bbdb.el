@@ -1994,10 +1994,10 @@ The keybindings, more precisely:
       (assoc (symbol-name fieldname) (bbdb-propnames))
       (bbdb-set-propnames (append (bbdb-propnames)
 				  (list (list (symbol-name fieldname))))))
-  (if (string= "" annotation)
-      nil
     (let ((notes (bbdb-string-trim
 		   (or (bbdb-record-getprop bbdb-record fieldname) ""))))
+    (if (or (string= "" annotation) (string-match annotation notes))
+        nil
       (bbdb-record-putprop bbdb-record fieldname
 			   (if (or replace (string= notes ""))
 			       annotation
