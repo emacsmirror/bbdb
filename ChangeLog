@@ -1,4 +1,6 @@
 2001-01-24  Waider  <waider@waider.ie>
+        * RELEASED BBDB 2.2
+	
 	* texinfo/Makefile.in: 
 	Added distclean target
 
