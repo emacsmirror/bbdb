@@ -76,10 +76,36 @@
         (list 'not (list 'eq arg 0))
         'bbdb-display-layout))
 
+(defvar bbdb-search-invert nil
+  "Bind this variable to t in order to invert the result of `bbdb-search'.
+
+\(let ((bbdb-search-invert t))
+   \(bbdb-search records foo foo))")
+
+(defun bbdb-search-invert-p ()
+  "Return `bbdb-search-invert' and set it to nil.
+To set it on again, use `bbdb-search-invert-set'."
+  (let ((result bbdb-search-invert))
+    (setq bbdb-search-invert nil)
+    result))
+
+;;;###autoload
+(defun bbdb-search-invert-set ()
+  "Typing \\<bbdb-mode-map>\\[bbdb-append-records] inverts the meaning of the next search command.
+Sets `bbdb-search-invert' to t.
+You will have to call this function again, if you want to
+do repeated inverted searches."
+  (interactive)
+  (setq bbdb-search-invert t)
+  (message (substitute-command-keys
+            "\\<bbdb-mode-map>\\[bbdb-search-invert-set] - ")))
 
 (defmacro bbdb-search (records &optional name company net notes phone)
-  ;; this macro only emits code for those things being searched for;
-  ;; literal nils at compile-time cause no code to be emitted.
+  "Search RECORDS for optional arguments NAME, COMPANY, NET, NOTES, PHONE.
+This macro only emits code for those things being searched for;
+literal nils at compile-time cause no code to be emitted.
+
+If you want to reverse the search, bind `bbdb-search-invert' to t."
   (let (clauses)
     ;; I didn't protect these vars from multiple evaluation because that
     ;; actually generates *less efficient code* in elisp, because the extra
@@ -170,20 +196,33 @@
                    nil))
              (case-fold-search bbdb-case-fold-search)
              (records (, records))
+	     (invert (bbdb-search-invert-p))
              record)
          (while records
            (setq record (car records))
-           (if (or (,@ clauses))
-               (setq matches (cons record matches)))
-           (setq records (cdr records)))
+	   (if (or (and invert
+			(not (or (,@ clauses))))
+		   (and (not invert)
+			(or (,@ clauses))))
+	       (setq matches (cons record matches)))
+	   (setq records (cdr records)))
          (nreverse matches)))))
 
+(defun bbdb-search-prompt (prompt &rest rest)
+  (if (string-match "%m" prompt)
+      (setq prompt (replace-match (if bbdb-search-invert
+                                      "not matching"
+                                    "matching")
+                                  nil nil prompt)))
+  (read-string (apply 'format prompt rest)))
 
 ;;;###autoload
 (defun bbdb (string elidep)
   "Display all entries in the BBDB matching the regexp STRING
 in either the name(s), company, network address, or notes."
-  (interactive "sRegular Expression for General Search: \nP")
+  (interactive
+   (list (bbdb-search-prompt "Search records %m regexp: ")
+         current-prefix-arg))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
         (notes (cons '* string)))
     (bbdb-display-records
@@ -193,21 +232,27 @@ in either the name(s), company, network address, or notes."
 (defun bbdb-name (string elidep)
   "Display all entries in the BBDB matching the regexp STRING in the name
 \(or ``alternate'' names\)."
-  (interactive "sRegular Expression for Name Search: \nP")
-  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
+  (interactive
+   (list (bbdb-search-prompt "Search records with names %m regexp: ")
+         current-prefix-arg))
+   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) string))))
 
 ;;;###autoload
 (defun bbdb-company (string elidep)
   "Display all entries in BBDB matching STRING in the company field."
-  (interactive "sRegular Expression for Company Search: \nP")
+  (interactive
+   (list (bbdb-search-prompt "Search records with company %m regexp: ")
+         current-prefix-arg))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) nil string))))
 
 ;;;###autoload
 (defun bbdb-net (string elidep)
   "Display all entries in BBDB matching regexp STRING in the network address."
-  (interactive "sRegular Expression for Net Address Search: \nP")
+  (interactive
+   (list (bbdb-search-prompt "Search records with net address %m regexp: ")
+         current-prefix-arg))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) nil nil string))))
 
@@ -215,13 +260,17 @@ in either the name(s), company, network address, or notes."
 (defun bbdb-notes (which string elidep)
   "Display all entries in BBDB matching STRING in the named notes field."
   (interactive
-   (list (completing-read "Notes field to search (RET for all): "
-                          (append '(("notes")) (bbdb-propnames))
-                          nil t)
-         (if (featurep 'gmhist)
-             (read-with-history-in 'bbdb-notes-field "Regular expression: ")
-           (read-string "Regular Expression: "))
-         current-prefix-arg))
+   (let (field)
+     (list (setq field (completing-read "Notes field to search (RET for all): "
+                                        (append '(("notes")) (bbdb-propnames))
+                                        nil t))
+           (if (featurep 'gmhist)
+               (read-with-history-in 'bbdb-notes-field "Regular expression: ")
+             (bbdb-search-prompt "Search records with %s %m regexp: "
+                                 (if (string= field "")
+                                     "one field"
+                                   field)))
+           current-prefix-arg)))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
         (notes (if (string= which "")
                    (cons '* string)
@@ -230,7 +279,8 @@ in either the name(s), company, network address, or notes."
 
 (defun bbdb-phones (string elidep)
   "Display all entries in BBDB matching the regexp STRING in the phones field."
-  (interactive "sRegular Expression for Phone Search: \nP")
+  (interactive "sRegular Expression for Phone Search: \nP"
+               current-prefix-arg)
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records
      (bbdb-search (bbdb-records) nil nil nil nil string))))
@@ -240,10 +290,21 @@ in either the name(s), company, network address, or notes."
   "Display all entries in the bbdb database which have been changed since
 the database was last saved."
   (interactive "P")
-  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
-    (bbdb-display-records
-     (bbdb-with-db-buffer
-      bbdb-changed-records))))
+  (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
+        (changed-records  (bbdb-with-db-buffer bbdb-changed-records))
+        unchanged-records)
+    (if (bbdb-search-invert-p)
+        (let ((recs (bbdb-records))
+              unchanged-records
+              r)
+          (while recs
+            (setq r (car recs)
+                  recs (cdr recs))
+            (when (not (member r changed-records))
+              (setq changed-records (delete r changed-records)
+                    unchanged-records (cons r unchanged-records))))
+          (bbdb-display-records unchanged-records)) 
+      (bbdb-display-records changed-records))))
 
 (defun bbdb-display (records)
   "Prompts for and displays a single record (this is faster than searching.)"
@@ -300,12 +361,12 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
     (if (< position next-marker)
         (goto-char position))
     
-    (save-excursion
-      (run-hooks 'bbdb-list-hook))
-    (if bbdb-gui
+    (if (and bbdb-gui (not delete-p))
         (bbdb-fontify-buffer (list record-cons
                                    ;; the record ends here
-                                   (list nil nil next-marker))))))
+                                   (list nil nil next-marker))))
+    (save-excursion
+      (run-hooks 'bbdb-list-hook))))
 
 ;;; Parsing phone numbers
 
@@ -1292,34 +1353,44 @@ deleted."
 
 ;;;###autoload
 (defun bbdb-delete-current-record (r &optional noprompt)
-  "Delete the entire bbdb database entry which the cursor is within."
+  "Delete the entire bbdb database entry which the cursor is within.
+Pressing \\<bbdb-mode-map>\\[bbdb-apply-next-command-to-all-records] will
+delete all records listed in th BBDB buffer."
   (interactive (list (bbdb-current-record t)))
-  (if (or noprompt
-          (bbdb-y-or-n-p (format "delete the entire db entry of %s? "
-                                 (or (bbdb-record-name r)
-                                     (bbdb-record-company r)
-                                     (car (bbdb-record-net r))))))
-      (let* ((record-cons (assq r bbdb-records))
-             (next-record-cons (car (cdr (memq record-cons bbdb-records)))))
-        (bbdb-debug (if (bbdb-record-deleted-p r)
-                        (error "deleting deleted record")))
-        (bbdb-record-set-deleted-p r t)
-        (bbdb-delete-record-internal r)
-        (if (eq record-cons (car bbdb-records))
-            (setq bbdb-records (cdr bbdb-records))
-          (let ((rest bbdb-records))
-            (while (cdr rest)
-              (if (eq record-cons (car (cdr rest)))
-                  (progn
-                    (setcdr rest (cdr (cdr rest)))
-                    (setq rest nil)))
-              (setq rest (cdr rest)))))
-        (bbdb-redisplay-one-record r record-cons next-record-cons t)
-        (bbdb-with-db-buffer
-         (setq bbdb-changed-records (delq r bbdb-changed-records)))
-        ;; (bbdb-offer-save)
-        )))
-
+  (if (bbdb-do-all-records-p)
+      (let ((recs bbdb-records) r)
+        (while recs
+          (setq r (car recs)
+                recs (cdr recs))
+          (bbdb-debug (if (bbdb-record-deleted-p r)
+                          (error "deleting deleted record")))
+          (bbdb-record-set-deleted-p r t)
+          (bbdb-delete-record-internal r)))
+    (if (or noprompt
+            (bbdb-y-or-n-p (format "delete the entire db entry of %s? "
+                                   (or (bbdb-record-name r)
+                                       (bbdb-record-company r)
+                                       (car (bbdb-record-net r))))))
+        (let* ((record-cons (assq r bbdb-records))
+               (next-record-cons (car (cdr (memq record-cons bbdb-records)))))
+          (bbdb-debug (if (bbdb-record-deleted-p r)
+                          (error "deleting deleted record")))
+          (bbdb-record-set-deleted-p r t)
+          (bbdb-delete-record-internal r)
+          (if (eq record-cons (car bbdb-records))
+              (setq bbdb-records (cdr bbdb-records))
+            (let ((rest bbdb-records))
+              (while (cdr rest)
+                (if (eq record-cons (car (cdr rest)))
+                    (progn
+                      (setcdr rest (cdr (cdr rest)))
+                      (setq rest nil)))
+                (setq rest (cdr rest)))))
+          (bbdb-redisplay-one-record r record-cons next-record-cons t)
+          (bbdb-with-db-buffer
+           (setq bbdb-changed-records (delq r bbdb-changed-records)))
+          ;; (bbdb-offer-save)
+          ))))
 
 (defun bbdb-change-records-state-and-redisplay (desired-state records)
   (let (rec)
