@@ -3,6 +3,7 @@
 TAR = @TAR@
 COMPRESS = @COMPRESS@
 COMPEXT = @COMPEXT@
+LN_S = @LN_S@
 
 ETAGS = @ETAGS@
 EMACS = @EMACS@ -no-site-file -no-init-file
@@ -88,7 +89,7 @@ tar: $(TARFILES)
           echo "Sorry, no \`tar' program available." ;                     \
         else                                                               \
           name=`sed -n 's/^(defconst bbdb-version "\([0-9]\.[0-9][0-9]*\).*/bbdb-\1/p' lisp/bbdb.el` ;                                                    \
-          $(RM) $${name} ; $(LN_S) . $${name} ;                            \
+          $(RM) $${name} ; @LN_S@ . $${name} ;                            \
           if test "x$(COMPRESS)" = "x" ; then                              \
             echo "Sorry, no compression program available." ;              \
             echo "The tarball will not be compressed." ;                   \
