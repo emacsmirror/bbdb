@@ -41,7 +41,7 @@
 ;;; bbdb-print; it is used verbatim.
 ;;;
 ;;; Not all fields or records need be printed.  To not print a certain
-;;; field, add it to `bbdb-print-elide' (which see).  If after eliding
+;;; field, add it to `bbdb-print-omit-fields' (which see).  If after eliding
 ;;; fields a record contains no interesting information, it will not
 ;;; be printed at all; the variable `bbdb-print-require' determines
 ;;; what is meant by "interesting" information.  You can also restrict
@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.68  2004/10/13 13:37:06  waider
+;; * Correct variable name in comment
+;;
 ;; Revision 1.67  2001/11/19 21:35:08  waider
 ;; Patch from Alex Schroeder
 ;;
