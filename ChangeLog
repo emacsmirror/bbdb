@@ -1,5 +1,11 @@
 2001-02-01  Robert Fenk  <fenk@forwiss.de>
 
+	* lisp/bbdb-com.el (bbdb-mail-abbrev-expand-hook): honor the
+	pop-up settings, e.g. bbdb-pop-up-target-lines
+
+	* lisp/bbdb-xemacs.el (bbdb-mode-map): Added elide-records binding
+	for button2
+
 	* lisp/bbdb-vm.el (bbdb/vm-pop-up-bbdb-buffer): Fixed the pop-up
 	behaviour. 
 
