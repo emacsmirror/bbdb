@@ -1,3 +1,18 @@
+2001-02-10  Ronan Waide  <waider@waider.ie>
+
+	* bbdb/lisp/bbdb.el:
+	Fixed bbdb-undisplay-records. bbdb-buffer-name is /not/ a buffer!
+
+	* bbdb/lisp/bbdb-vm.el:
+	Seems like the change to bbdb-undisplay-records fixes the VM
+	window problem.
+
+2001-02-08  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb.el: doc fix
+
+	* lisp/bbdb-com.el: doc fixes
+
 2001-02-08  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb.el (bbdb-annotate-message-sender):
