@@ -467,8 +467,5 @@ as of GNU Emacs 20.7"
                            (t nil)))
          (build-bbdb-menu record field))))))
 
-;; hook in fontification
-(add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
-
 ;; tell everyone else we're here.
 (provide 'bbdb-gui)
