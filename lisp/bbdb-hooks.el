@@ -35,6 +35,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.58  2000/04/05 17:09:06  bbdb-writer
+;; * Autoload cookie for bbdb-header-start
+;;
 ;; Revision 1.57  1998/04/11 07:20:59  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back.
 ;; Made `format-time-string' take two arguments for XEmacs 19.15.
@@ -94,6 +97,7 @@ which is the current time string."
 ;;; Determining whether to create a record based on the content of the 
 ;;; current message.
 
+;;;###autoload
 (defun bbdb-header-start ()
   "Returns a marker at the beginning of the header block of the current
 message.  This will not necessarily be in the current buffer."
