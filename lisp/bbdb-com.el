@@ -25,6 +25,7 @@
 
 (require 'bbdb)
 ;;(require 'bbdb-snarf) causes recursive compile!
+(defvar bbdb-extract-address-components-func) ;; bbdb-snarf
 (require 'cl)
 ;; ARGH. fmh, dammit.
 (require
@@ -871,7 +872,7 @@ section, then the entire field is edited, not just the current line."
               (not (equal (if co (downcase co) "")
                           (downcase (or (bbdb-record-company bbdb-record)
                                         ""))))))
-    
+
     ;; delete the old hash entry
     (let ((name    (bbdb-record-name    bbdb-record))
           (company (bbdb-record-company bbdb-record)))
@@ -884,7 +885,7 @@ section, then the entire field is edited, not just the current line."
     ;; add a new hash entry
     (bbdb-puthash (downcase (bbdb-record-name bbdb-record))
                   bbdb-record)
-    
+
   need-to-sort))
 
 (defun bbdb-address-edit-default (addr)
@@ -1259,7 +1260,7 @@ the opposite state of the record under point."
 (defun bbdb-unelide-record (arg)
   "Show all the fields of a record.
 This is done by disabling the variables `bbdb-elided-display' and
-`bbdb-omit-display' and uneliding the record."  
+`bbdb-omit-display' and uneliding the record."
   (interactive "P")
   (let* ((record (bbdb-current-record))
          (cons (assq record bbdb-records))
@@ -1281,7 +1282,7 @@ This is done by disabling the variables `bbdb-elided-display' and
 ;;;###autoload
 (defun bbdb-elide-all-records (arg)
   "Show all the fields of all visible records.
-Like `bbbd-elide-record' but for all visible records."  
+Like `bbbd-elide-record' but for all visible records."
   (interactive "P")
   (bbdb-elide-all-records-internal arg))
 
@@ -2000,12 +2001,14 @@ completions for a specific match is below that number."
 ;;;###autoload
 (defun bbdb-complete-name (&optional start-pos)
   "Complete the user full-name or net-address before point (up to the
-preceeding newline, colon, or comma).  If what has been typed is unique,
-insert an entry of the form \"User Name <net-addr>\".  If it is a valid
-completion but not unique, a list of completions is displayed.
+preceeding newline, colon, or comma, or the value of START-POS).  If
+what has been typed is unique, insert an entry of the form \"User Name
+<net-addr>\" (although see documentation for
+bbdb-dwim-net-address-allow-redundancy).  If it is a valid completion
+but not unique, a list of completions is displayed.
 
-If the completion is done and `bbdb-complete-name-allow-cycling' true then
-cycle thru the nets.
+If the completion is done and `bbdb-complete-name-allow-cycling' is
+true then cycle thru the nets.
 
 When called with a prefix arg then display a list of all nets.
 
@@ -2025,6 +2028,9 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
          ;; pretend the first completion ("Foo Bar") is valid and the second
          ;; ("foo@baz") is not, since they're actually the *same* completion
          ;; even though they're textually different.
+         ;;
+         ;; realistically, because of the hash, you're not guaranteed
+         ;; which will actually be selected. this hurts, of course.
          (yeah-yeah-this-one nil)
          (only-one-p t)
          (all-the-completions nil)
@@ -2049,22 +2055,30 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                    nets))))
          (completion (try-completion pattern ht pred)))
 
-    ;; If there were multiple completions for this record, the one that was
-    ;; picked is random (hash order.)  So canonicalize that to be the one
-    ;; closest to the front of the list.
+    ;; this is to pick the primary mail address by default, unless
+    ;; it's not a valid expansion of 'pattern' above.
+    ;;
+    ;; this is somewhat convoluted, but it does work.
     (and (stringp completion)
          yeah-yeah-this-one
-         only-one-p
-         (let ((rest all-the-completions) addrs)
+         (not only-one-p)
+         (let (rest addrs)
            (while yeah-yeah-this-one
-             (setq addrs (append addrs
-                                 (bbdb-record-net (car yeah-yeah-this-one)))
-                   yeah-yeah-this-one (cdr yeah-yeah-this-one)))
-           (while rest
-             (if (member (symbol-name (car rest)) addrs)
-                 (setq completion (symbol-name (car rest))
-                       rest nil)
-               (setq rest (cdr rest))))))
+             (setq addrs (bbdb-record-net (car yeah-yeah-this-one))
+                   rest all-the-completions)
+             (while rest
+               (if (member (car rest) addrs)
+                   (progn
+                     (while addrs
+                       (if (string-match (concat "^" pattern) (car addrs))
+                           (setq completion (car addrs)
+                                 rest nil
+                                 addrs nil)
+                         (setq addrs (cdr addrs))))
+                     (setq addrs (bbdb-record-net (car yeah-yeah-this-one))))
+                 (setq rest (cdr rest))))
+             (setq yeah-yeah-this-one (cdr yeah-yeah-this-one)))))
+
     (setq yeah-yeah-this-one nil
           all-the-completions nil)
 
