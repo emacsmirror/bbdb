@@ -64,6 +64,9 @@
 ;;; versions 3.0b2 and later only.)
 
 (require 'bbdb)
+(require 'bbdb-com)
+(require 'bbdb-hooks)
+
 
 ;; newer version of gnuserv requires gnuserv-compat when using FSF emacs
 ;; but you might be using an older version, and we can't tell until you
@@ -217,8 +220,6 @@ requested for a couple of seconds."
 ;;;###autoload
 (fset 'bbdb-srv 'bbdb/srv-handle-headers-with-delay)
 
-(autoload 'bbdb-header-start "bbdb-hooks")
-
 ;;;###autoload
 (defun bbdb/srv-auto-create-mail-news-dispatcher ()
   "For use as the value of bbdb/srv-auto-create-p.
@@ -246,28 +247,32 @@ header; and that mail messages never have Path headers.)"
 
 
 ;; For caller-id stuff
-
-(defun bbdb-srv-add-phone (phone-string)
-  (let* ((record (bbdb-completing-read-record
-          (format "Add %s to: " phone-string)))
-     (phone (make-vector (if bbdb-north-american-phone-numbers-p
-                 bbdb-phone-length
-                   2)
-                 nil)))
+;;;###autoload
+(defun bbdb-srv-add-phone (phone-string &optional description record)
+  (let ((phone (make-vector (if bbdb-north-american-phone-numbers-p
+                                bbdb-phone-length
+                              2)
+                            nil)))
+    (setq record (if (stringp record)
+                     (or (bbdb-search-simple record "")
+                         (bbdb-create-internal record nil nil nil nil nil))
+                   (bbdb-completing-read-record
+                    (format "Add %s to: " phone-string))))
     (if (= 2 (length phone))
-    (aset phone 1 phone-string)
+        (aset phone 1 phone-string)
       (let ((newp (bbdb-parse-phone-number phone-string)))
-    (bbdb-phone-set-area phone (nth 0 newp))
-    (bbdb-phone-set-exchange phone (nth 1 newp))
-    (bbdb-phone-set-suffix phone (nth 2 newp))
-    (bbdb-phone-set-extension phone (or (nth 3 newp) 0))))
+        (bbdb-phone-set-area phone (nth 0 newp))
+        (bbdb-phone-set-exchange phone (nth 1 newp))
+        (bbdb-phone-set-suffix phone (nth 2 newp))
+        (bbdb-phone-set-extension phone (or (nth 3 newp) 0))))
     (bbdb-phone-set-location phone
-     (read-string "Phone number description: " "cid"))
-
+                             (or description
+                                 (read-string "Phone number description: "
+                                              "cid")))
     (bbdb-record-set-phones record
-                (nconc (bbdb-record-phones record) (list phone)))
+                            (nconc (bbdb-record-phones record) (list phone)))
     (bbdb-change-record record nil)
     (bbdb-display-records (list record))
-    nil))
+    record))
 
 (provide 'bbdb-srv)
