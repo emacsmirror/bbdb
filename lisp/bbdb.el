@@ -583,7 +583,12 @@ Invoked with no arguments."
 (defcustom bbdb-create-hook 'bbdb-creation-date-hook
   "*Hook or hooks invoked each time a new BBDB record is created.  Invoked
 with one argument, the new record.  This is called *before* the record is
-added to the database.  Note that `bbdb-change-hook' will be called as well."
+added to the database.  Note that `bbdb-change-hook' will be called as well.
+
+Hook functions can use the variable `bbdb-update-address-class' to determine
+the class of an email address according to `bbdb-get-addresses-headers' and
+the variable `bbdb-update-address-header' is set to the header the email
+address was extracted from."
   :group 'bbdb-hooks
   :type 'hook)
 
@@ -657,6 +662,11 @@ in GNUS, VM, MH, or RMAIL, and to act appropriately.
 
 Also note that `bbdb-change-hook' will NOT be called as a result of any
 modifications you may make to the record inside this hook.
+
+Hook functions can use the variable `bbdb-update-address-class' to determine
+the class of an email address according to `bbdb-get-addresses-headers' and
+the variable `bbdb-update-address-header' is set to the header the email
+address was extracted from.
 
 Beware that if the variable `bbdb-message-caching-enabled' is true (a good
 idea) then when you are using VM, MH, or RMAIL, this hook will be called only
@@ -1122,7 +1132,6 @@ present).  Returns a string containing the date in the new format."
 
 (defconst bbdb-buffer-name "*BBDB*")
 
-
 (defcustom bbdb-display-layout-alist
   '((one-line   (order     . (phones mail-alias net notes))
                 (name-end  . 24)
@@ -1200,6 +1209,7 @@ options."
              (cons :tag "Toggle"
                (const :tag "The layout is included when toggling display layout" toggle)
                boolean)))))
+
 (defcustom bbdb-display-layout nil
   "*The default display layout."
   :group 'bbdb
