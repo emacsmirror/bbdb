@@ -2032,7 +2032,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                     (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
                     (goto-char (match-end 0))
                     (point))))
-         (pattern (bbdb-string-trim (downcase (buffer-substring beg end))))
+         (typed (downcase (buffer-substring beg end)))
+         (pattern (bbdb-string-trim typed))
          (ht (bbdb-hashtable))
          ;; make a unique set of matching records (yeah-yeah-this-one),
          ;; a list of possible completion strings (all-the-completions),
@@ -2050,7 +2051,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                      (if (not (setq nets (bbdb-record-net (car recs))))
                          ()
                        (if (memq (car recs) yeah-yeah-this-one)
-                           (setq nets '());; already have it...
+                           (setq nets '()) ;; already have it...
                          ;; only zero out only-one-p if we've already
                          ;; got a matched record
                          (setq only-one-p (null yeah-yeah-this-one)
@@ -2069,7 +2070,9 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
         (setq yeah-yeah-this-one (bbdb-gethash pattern ht)
               only-one-p (= (length yeah-yeah-this-one) 1)
               completion pattern
-              all-the-completions (list (intern-soft pattern ht))))
+              all-the-completions (list (intern-soft pattern ht)))
+      ;; this fixes a buglet in the handling of net-only completion.
+      (setq all-the-completions (reverse all-the-completions)))
 
     ;; If there are multiple matches for one record, make sure we're
     ;; picking the primary email address from that record.
@@ -2204,7 +2207,9 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
         (bbdb-complete-name-cleanup)))
 
      ;; Partial match
-     ((not (string= pattern completion))
+     ;; note, we can't use the trimmed version of the pattern here or
+     ;; we'll recurse infinitely on e.g. common first names
+     ((not (string= typed completion))
       (delete-region beg end)
       (insert completion)
       (setq end (point))
