@@ -37,7 +37,7 @@
 (require 'rfc822)
 (require 'mail-extr)
 
-(defconst digit "[0-9]")
+(defconst bbdb-digit "[0-9]")
 (defvar bbdb-snarf-phone-regexp
   (concat
    "\\(([2-9][0-9][0-9])[-. ]?\\|[2-9][0-9][0-9][-. ]\\)?"
