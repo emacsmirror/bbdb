@@ -1,3 +1,15 @@
+2002-10-30  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-vm.el (bbdb/vm-set-auto-folder-alist): Some fixes for
+	the generation of vm-auto-folder-alist when using a function as
+	folder name.  
+
+	* lisp/bbdb.el (bbdb-display-layout): 
+	(bbdb-pop-up-display-layout): Fixed a toggling bug reported by
+	Patrick Campbell-Preston caused by missing defaults. 
+	(bbdb-display-layout-alist): Fixed docs and added layout
+	pop-up-multi-line to the list of layouts.
+
 2002-10-19  Steve Youngs  <youngs@xemacs.org>
 
 	* bits/bbdb-pgp.el
@@ -9,9 +21,9 @@
 2002-10-20  Waider  <waider@waider.ie>
 
 	* bits/bbdb-pgp.el:
-	Allow bbdb-pgp.el to be configured to use message.el MML tags to perform
-          the signing and encryption, instead of only plain Mailcrypt which is not
-          MIME-aware. (Michael Shields)
+	Allow bbdb-pgp.el to be configured to use message.el MML tags to
+	perform the signing and encryption, instead of only plain
+	Mailcrypt which is not MIME-aware. (Michael Shields)
 
 2002-09-17  Waider  <waider@waider.ie>
 
