@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.8  2000/04/17 08:30:47  waider
+;; omitted bracket on unmigrate for v5->v4
+;;
 ;; Revision 1.7  2000/04/16 04:00:54  waider
 ;; * Added 5->4 unmigration
 ;;
@@ -203,7 +206,7 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 								 (aref old-addr 5))) ;; country
 		  (setq old-addr-list (cdr old-addr-list))
 		  (setq new-addr-list (append new-addr-list (list new-addr)))))
-	  (aset record 5 new-addr-list))
+	  (aset record 5 new-addr-list)))
 
    ;; Version 4 -> 3
    ((= (cdr bbdb-file-format-migration) 3)
