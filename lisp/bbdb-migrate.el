@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.6  2000/04/15 14:57:38  waider
+;; * Fixed misplaced bracket in street migration code.
+;;
 ;; Revision 1.5  2000/04/12 23:57:16  waider
 ;; * Added v5 migration. NB no back-migration yet.
 ;;
@@ -150,11 +153,11 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 				 (delete ""       ;; nuke empties
 						 (list (bbdb-string-trim (aref old-addr 1)) ;; street1
 							   (bbdb-string-trim (aref old-addr 2)) ;; street2
-							   (bbdb-string-trim (aref old-addr 3))) ;; street3
+							   (bbdb-string-trim (aref old-addr 3))));;street3
 						 (aref old-addr 4) ;; city
 						 (aref old-addr 5) ;; state
 						 (aref old-addr 6) ;; zip
-						 (aref old-addr 7)))) ;; country
+						 (aref old-addr 7))) ;; country
 			  (setq new-addr-list (append new-addr-list (list new-addr)))))
 		  (aset (car records) 5 new-addr-list))
 		(setq newrecs (append newrecs 
