@@ -94,10 +94,9 @@ prompt the users on how to merge records when duplicates are detected.")
 (defmacro string> (a b) (list 'not (list 'or (list 'string= a b)
                                          (list 'string< a b))))
 
-(eval-when-compile
-  (if (fboundp 'set-keymap-prompt)
-      ()
-    (defmacro set-keymap-prompt(&rest args)())))
+(eval-and-compile
+  (or (fboundp 'set-keymap-prompt)
+      (fset 'set-keymap-prompt 'ignore)))
 
 ;; this should really be in bbdb-com
 ;;;###autoload
