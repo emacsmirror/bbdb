@@ -75,7 +75,7 @@
 (if (fboundp 'mapcar-extents)
     (defun bbdb-list-extents() (mapcar-extents 'identity))
   (defun bbdb-list-extents()
-    (let ((o (overlay-lists)))(append (car o) (cdr o)))))
+    (let ((o (overlay-lists))) (nconc (car o) (cdr o)))))
 
 (if (fboundp 'set-extent-property)
     (fset 'bbdb-set-extent-property 'set-extent-property)
@@ -88,7 +88,7 @@
 
 (if (fboundp 'extent-property)
     (fset 'bbdb-extent-property 'extent-property)
-  (fset 'extent-property 'overlay-get))
+  (fset 'bbdb-extent-property 'overlay-get))
 
 (if (fboundp 'extent-at)
     (fset 'bbdb-extent-at 'extent-at)
@@ -111,15 +111,15 @@
 
 (if (fboundp 'highlight-extent)
     (fset 'bbdb-highlight-extent 'highlight-extent)
-  (defun highlight-extent (extent &optional highlight-p))) ;; XXX noop
+  (fset 'bbdb-highlight-extent 'ignore)) ; XXX noop
 
 (if (fboundp 'extent-start-position)
     (fset 'bbdb-extent-start-position 'extent-start-position)
-  (fset 'extent-start-position 'overlay-start))
+  (fset 'bbdb-extent-start-position 'overlay-start))
 
 (if (fboundp 'extent-end-position)
     (fset 'bbdb-extent-end-position 'extent-end-position)
-  (fset 'extent-end-position 'overlay-end))
+  (fset 'bbdb-extent-end-position 'overlay-end))
 
 (if (fboundp 'extent-face)
     (fset 'bbdb-extent-face 'extent-face)
@@ -133,11 +133,11 @@
 
 (if (fboundp 'set-extent-begin-glyph)
     (fset 'bbdb-set-extent-begin-glyph 'set-extent-begin-glyph)
-  (defun bbdb-set-extent-begin-glyph(&optional args))) ;XXX noop
+  (fset 'bbdb-set-extent-begin-glyph 'ignore)) ; XXX noop
 
 (if (fboundp 'set-extent-end-glyph)
     (fset 'bbdb-set-extent-end-glyph 'set-extent-end-glyph)
-  (defun bbdb-set-extent-end-glyph(&optional args))) ;XXX noop
+  (fset 'bbdb-set-extent-end-glyph 'ignore)) ; XXX noop
 
 ;;;###autoload
 (defun bbdb-fontify-buffer ()
