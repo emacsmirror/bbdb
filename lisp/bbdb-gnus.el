@@ -436,7 +436,7 @@ addresses better than the traditionally static global scorefile."
 		  "))"))))
   bbdb/gnus-score-alist)
 
-;;; Posted originally by Colin Rafferty on the Å´bbdb-infoÅª mailing list
+;;; Posted originally by Colin Rafferty on the <bbdb-info> mailing list
 (defun bbdb/gnus-summary-show-all-recipients (not-elided)
   "Display BBDB records for all recipients of the message."
   (interactive "P")
@@ -462,6 +462,8 @@ addresses better than the traditionally static global scorefile."
 	 (add-hook 'gnus-Article-prepare-hook 'bbdb/gnus-update-record)
 	 (add-hook 'gnus-Save-newsrc-hook 'bbdb-offer-save)
 	 (define-key gnus-Subject-mode-map ":" 'bbdb/gnus-show-sender)
+	 (define-key gnus-Subject-mode-map [(control :)] 
+	   'bbdb/gnus-summary-show-all-recipients)
 	 (define-key gnus-Subject-mode-map ";" 'bbdb/gnus-edit-notes))
 	(t                                   ; 3.15 or higher
 	 (add-hook 'gnus-article-prepare-hook 'bbdb/gnus-update-record)
