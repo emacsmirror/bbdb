@@ -84,7 +84,7 @@ They are stored in `sound-alist' as touchtone0 to touchtone11."
        ;; just prevents a particular, possibly little-used feature
        ;; from working.
        (bbdb-warn "Can't find any touchtone sounds")
-       (setq files nil))))
+       (setq files nil)))
 
     (if (not files)
         (progn
@@ -96,7 +96,7 @@ They are stored in `sound-alist' as touchtone0 to touchtone11."
                          (intern (concat "touchtone" (format "%d" nr)))
                          bbdb-sound-volume)
         (setq files (cdr files)
-              nr (1+ nr)))))
+              nr (1+ nr))))))
 
 (if (and bbdb-sounds-directory
          (file-directory-p bbdb-sounds-directory)
