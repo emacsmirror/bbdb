@@ -6,6 +6,10 @@ To compile and install the BBDB:
        applicable), and the miscellaneous (but still important) build
        tool names and paths.
 
+       NOTE:  Gnu Emacs 19.34 users should add the path to Custom
+       1.9962 if they plan to build Gnus support.  Gnus support will
+       not build under Gnu Emacs 19.34 without Custom 1.9962.
+
   2) Build the BBDB
        To build the BBDB with support for all of the supported mail
        and news programs (gnus, mh-e, rmail, and vm), issue the
