@@ -2151,12 +2151,14 @@ of all of those people."
             (expansion (mapconcat 'bbdb-dwim-net-address (cdr (car result))
                                   (if (boundp 'mail-alias-separator-string)
                                       mail-alias-separator-string
-                                      ", "))))
-        (if (fboundp 'define-mail-abbrev)
+                                      ", ")))
+            (use-abbrev-p (fboundp 'define-mail-abbrev)))
+        (if use-abbrev-p
             (define-mail-abbrev alias expansion)
             (define-mail-alias alias expansion))
         (setq alias (or (intern-soft alias
-                                     (if (boundp 'mail-abbrevs) mail-abbrevs mail-aliases))
+                                     (if use-abbrev-p
+                                         mail-abbrevs mail-aliases))
                         (error "couldn't find the alias we just defined!")))
         (or (eq (symbol-function alias) 'mail-abbrev-expand-hook)
             (error "mail-aliases contains unexpected hook %s"

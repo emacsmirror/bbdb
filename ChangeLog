@@ -1,3 +1,8 @@
+2000-07-18  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb-com.el (bbdb-define-all-aliases): distinguish between
+	`mail-abbrevs' and `mail-aliases' in a uniform way
+
 2000-07-13  Sam Steingold  <sds@gnu.org>
 
 	* lisp/bbdb.el (bbdb-write-file-hooks): new variable
@@ -27,7 +32,7 @@
 
 2000-06-30  Sam Steingold  <sds@gnu.org>
 
-	* bbdb-migrate.el (bbdb-migrate):
+	* lisp/bbdb-migrate.el (bbdb-migrate):
 	re-wrote using `mapcar' instead of `append'
 	this is linear instead of quadratic and avoids much consing
 
