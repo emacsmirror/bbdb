@@ -1,5 +1,9 @@
 2003-07-23  Robert Fenk  <Robert Fenk>
 
+	* lisp/bbdb.el (bbdb-annotate-message-sender): Invoke the
+	prompt-to-create hook just if it has a value.  (fixes MH not
+	honoring 'promt for bbdb/mail-auto-create-p)
+
 	* lisp/bbdb-hooks.el (bbdb-force-record-create): A fix for the
 	mhe-mode case (from Vladimir G. Ivanovic) 
 
