@@ -1,3 +1,57 @@
+1998-12-03  Adam C. Finnefrock <adam@bigbro.biophys.cornell.edu>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-record): Honor
+	  bbdb-user-mail-names.
+	
+1998-11-17  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-show-sender): Use currently
+	  selected summary line rather than what may be in *Article*
+	  buffer.
+	* lisp/bbdb-gnus.el (bbdb/gnus-edit-notes): ditto
+	* lisp/bbdb-gnus.el (bbdb/gnus-annotate-sender): ditto
+	
+1998-11-09  Didier Verna <verna@inf.enst.fr>
+
+	* lisp/bbdb-xemacs.el (bbdb-fontify-buffer): extent-data is
+	  obsolete (and gone in XEmacs 21.2+).  Replace it.
+	* lisp/bbdb-xemacs.el (bbdb-menu): ditto.
+	
+1998-10-27  Colin Rafferty  <colin@xemacs.org>
+
+	* bbdb-com.el (bbdb-dwim-net-address-allow-redundancy): Created.
+	* bbdb-com.el (bbdb-dwim-net-address): As inspired by Xavier Francois
+	  Vigouroux, use `bbdb-dwim-net-address-allow-redundancy'.
+
+1998-10-23  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb.el: Changed mail list name from info-bbdb to
+	  bbdb-info.
+
+	* lisp/bbdb-print.el: Changed mail list name from info-bbdb to
+	  bbdb-info.
+
+	* texinfo/bbdb.texinfo: Changed mail list name from info-bbdb to
+	  bbdb-info.
+	
+1998-10-13  Colin Rafferty  <colin@xemacs.org>
+
+	* bbdb-snarf.el (bbdb-snarf-web-prop): Made it a symbol.
+
+1998-10-13  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb-com.el (bbdb-read-new-record): Check for integerp
+	  explicitly with bbdb-default-area-code, instead of relying on
+	  condition-case.
+
+	* lisp/bbdb-print.el (bbdb-print-alist-widget): ditto.
+	* lisp/bbdb-print.el (bbdb-print-alist): ditto.
+
+1998-10-12  Adam C. Finnefrock  <adam@bigbro.biophys.cornell.edu>
+
+	* lisp/bbdb-com.el (bbdb-info-file): Made it a choice, since nil didn't 
+	  match the type: file.
+
 1998-10-08  Colin Rafferty  <colin@xemacs.org>
 
 	* lisp/bbdb.el (bbdb-version): BBDB 2.00.02 released
