@@ -41,8 +41,7 @@
 (require 'cl)
 
 (eval-when-compile              ; pacify the compiler.
- (defvar mail-mode-map nil)
- (defvar message-mode-map nil)
+ (autoload 'message-mode-map "message")
  (autoload 'widget-group-match "wid-edit")
  (autoload 'Electric-pop-up-window "electric")
  (autoload 'Electric-command-loop "electric")
@@ -54,6 +53,7 @@
  (autoload 'bbdb-redisplay-records "bbdb-com")
  (autoload 'bbdb-create-internal "bbdb-com")
  (autoload 'y-or-n-p-with-timeout "timer")
+ (autoload 'mail-mode-map "sendmail")
  (autoload 'mail-position-on-field "sendmail")
  )
 
@@ -1326,6 +1326,9 @@ car, then the associated formatting function will always be called.
 Therefore you should always have (nil . bbdb-format-address-default) as
 the last element in the alist.
 
+All functions should take two arguments, the address and an indentation.
+The indentation argument may be optional.
+
 This alist is used in `bbdb-format-address'.
 
 See also `bbdb-address-print-formatting-alist'."
@@ -1447,8 +1450,10 @@ formatted and inserted into the current buffer.  This is used by
                 (null (funcall (caar alist) addr)))
       (setq alist (cdr alist)))
     ;; if we haven't reached the end of functions, we got a hit.
-    (if alist
-        (funcall (cdar alist) addr indent))))
+    (when alist
+      (if printing
+	  (funcall (cdar alist) addr)
+	(funcall (cdar alist) addr indent)))))
 
 (defun bbdb-format-record-name-company (record)
   (let ((name (or (bbdb-record-name record) "???"))
