@@ -1,0 +1,239 @@
+<HTML>
+<HEAD>
+<TITLE>The Insidious Big Brother DataBase @ SourceForge</TITLE>
+</HEAD>
+
+  <body bgcolor="#faebd7"><!-- yeah, I kept the hideous page colour -->
+
+    <table align=center>
+      <tr>
+	<td><img src="images/headright.gif"></td>
+	<td><font size=5><b>The Insidious Big Brother Database</b></font></td>
+	<td><img src="images/headleft.gif"></td>
+      </tr>
+    </table>
+
+    <h2>NEWS: Live on SourceForge. Check out <a href="http://sourceforge.net/project/?group_id=4236">http://sourceforge.net/project/?group_id=4236</a></h2>
+
+	<p align="center">Quicklinks: <a href="index.html#get">get the bbdb</a> | <a
+	href="index.html#lists">mailing lists</a> | <a
+	href="index.html#links">links</a> | <a
+	href="index.html#manual">manual</a></p>
+
+    <h2>What is The Insidious Big Brother Database?</h2>
+	
+    <p>The Insidious Big Brother Database (BBDB) is a contact
+	   management utility created by <a
+	   href="http://www.jwz.org/">Jamie Zawinski</a> for use with
+	   Emacs.  It is tightly integrated with several mail and news
+	   readers (see below), allowing it to create database entries
+	   directly from mail and news messages.  As is usual with
+	   applications for Emacs, this record creation can be configured
+	   in many ways, ranging from a boolean create/don't create
+	   setting to creation based on the result of a user-supplied
+	   function.</p>
+
+    <p>Database records can be used to store many types of
+	   information, from name and address to URLs and X-Face images.
+	   This information can be displayed when a message from an entity
+	   named in a database record is recieved.  In addition, messages
+	   from database members can be tagged in the Gnus Summary Buffer,
+	   and Gnus scoring can be configured based on the contents of
+	   database records.  Supercite citations can even be preset
+	   through the use of records in the BBDB.</p>
+
+    <h2>Requirements:</h2>
+
+    <h3>Supported versions of Emacs</h3>
+    <ul>
+      <li><a href="http://www.gnu.org/">Gnu</a> <a
+      href="ftp://ftp.gnu.org/pub/emacs/">Emacs</a> versions 19.34 and
+      above</li>
+
+      <li><a href="http://www.xemacs.org/">XEmacs</a> versions 19.16 and
+      above</li>
+    </ul>
+
+    <h3>Supported Mail and News readers</h3>
+
+    <p>The BBDB can be used without a mail- or news-reader.  It has,
+    however, been optimized for use with one.</p>
+    <ul>
+      <li><a href="http://www.gnus.org/">Gnus</a></li>
+      <li><a href="http://www.wonderworks.com/vm/">VM</a></li>
+      <li>MH-e</li>
+      <li>Rmail</li>
+      <li>UNIX <a href="http://www.netscape.com/">Netscape</a> Mail
+		  (via bbdb-srv)</li>
+      <li>UNIX <a href="http://www.netscape.com/">Netscape</a> News
+		  (via bbdb-srv)</li>
+    </ul>
+    
+    <a name="get"></a><h2>Getting the BBDB</h2>
+
+    <p>BBDB 2.00.06 is the current released version. It fixes a number
+    of things that emacs 20.x breaks in BBDB 2.00, such as key
+    mappings. You can get it <a href="bbdb-2.00.06.tar.gz">here</a>; the
+    <a href="bbdb-2.00.06.tar.gz.sig">PGP signature</a> is also
+    available. (the key is <a
+    href="../../../misc/waider@waider.ie.asc">here</a>).</p>
+
+    <h3>Current development version: Provisionally 2.2</h3>
+
+    <p>This is as-yet untagged; the change in not-quite-major number reflects
+       the following caveat:
+	
+    <p><b>WARNING</b>: this modifies the BBDB file format. Anything
+	which relies on BBDB's current file format will no longer
+	work. Alex has also written a function to revert the file format
+	to the 2.00.06 variant - see the <a
+	href="index.html#links">links</a> section below. I've modified it
+	to handle the further hack I've inflicted on the streets field.</p>
+
+    <p>This is now in CVS at the head of the tree; you can grab a
+    tarball <a href="bbdb-2.2.tar.gz">here</a>. Note, the tarball
+    might have one or two things that aren't yet in CVS, most notably
+    updates to documentation. The code is solid, though, since it's my
+    live copy of BBDB.</p>
+
+    <h3>Compilation notes:</h3>
+    <ol>
+
+      <li>Compilation is known to work with Solaris make and with GNU
+	      make.  If you discover compilation problems with other
+	      versions of make, please submit a bug report to <a
+	      href="mailto:bbdb-info@lists.sourceforge.net">bbdb-info@lists.sourceforge.net</a>.
+	      The make binary shipped with IRIX 6.2 is known not to work
+	      with BBDB version 2.00. Also, some of the test targets don't
+	      work with GNU make, since MAKEFLAGS doesn't include "-".
+
+      <li>Texinfo 3.11 (or later) is required to compile the texinfo
+          documentation.  It is available at <a
+          href="ftp://ftp.gnu.org/pub/gnu">the GNU FTP site</a>.
+		  Precompiled info files are included in the tarball.
+    </ol>
+    
+    <h2>CVS tree</h2>
+
+    <p>The development and release versions are available via Anon-CVS
+       to the CVS tree at <tt>cvs.bbdb.sourceforge.net</tt>.  To access the
+       tree, log in with the following command:
+
+    <pre>
+    cvs -d :pserver:anonymous@cvs.bbdb.sourceforge.net:/cvsroot/bbdb login
+    </pre>
+
+    The password is blank; just hit return at the prompt.</p>
+
+    To check out a version of the BBDB, use one of the following commands:
+
+    <pre>
+    cvs -d :pserver:anonymous@cvs.bbdb.sourceforge.net:/cvsroot/bbdb checkout bbdb
+    cvs -d :pserver:anonymous@cvs.bbdb.sourceforge.net:/cvsroot/bbdb checkout -r rev bbdb
+    </pre>
+
+    The first command will check out a copy of the latest version.
+    Usually this latest version will be a development version, but it
+    may fetch a release version if the command is executed soon enough
+    after a release version is made available.<p></p>
+
+    The second command allows control of the version retrieved,
+    through the <tt>-r rev</tt> argument.  The <tt>rev</tt> portion of
+    the argument should be replaced with a word of the form:<p></p>
+
+    <center><tt>BBDB_</tt><i>x</i><tt>_</tt><i>yy</i></center><p></p>
+
+    <i>x</i> and <i>yy</i> are components of the version to be retrieved, as in
+    <i>x</i>.<i>yy</i>.  <b>Note:</b> <tt>unoff</tt> should be appended to the
+    above word for all versions prior to 2.00.<p></p>
+
+    To retrieve version 1.90, use the following argument:<br>
+
+    <pre>
+    -r BBDB_1_90unoff
+    </pre>
+
+    To retrieve version 2.00.06, use the following argument:<br>
+
+    <pre>
+    -r BBDB_2_00_06
+    </pre>
+ 
+    <a name="manual"></a><h2>Manual</h2>
+
+    <a href="bbdb.html">This</a> is a HTML version of the texinfo
+    manual that accompanies BBDB. It's rough, but it'll do for the mo
+    until I organise myself some more.
+
+    <a name="get"></a><h2>Mailing Lists</h2>
+
+    There are two mailing lists for the BBDB:<p></p>
+
+    <ul>
+      <li><tt>bbdb-info</tt><br>
+	      General discussion about the BBDB, both for users and
+          developers.  Some of it is archived at <tt><a
+          href="ftp://ftp.xemacs.org/xemacs/bbdb/">ftp://ftp.xemacs.org/xemacs/bbdb/</a></tt>,
+          but this is very old (June 1996).  A more current archive
+          can be found at <a
+          href="http://www.mail-archive.com/bbdb-info%40xemacs.org/">http://www.mail-archive.com/bbdb-info%40xemacs.org/</a>. SourceForge has built-in archiving which doesn't seem to be working just yet, which means some of the messages have been, well, not archived. Working on this.</li>
+
+     <li><tt>bbdb-announce</tt><br>
+         Announcements of new BBDB versions.  This list is moderated,
+         and has very low volume.</li>
+
+    </ul>
+
+    To subscribe to either mailing list, send mail to
+    <i>listname</i><tt>-request@lists.sourceforge.org</tt> with
+    <tt>subscribe</tt> as the body. You will receive a reply
+    requesting confirmation of your subscription; return the
+    confirmation as described in the email, and you're on the
+    list. Alternatively you can visit the list signup page, linked
+    from the <a
+    href="http://sourceforge.net/project/?group_id=4236">sourceforge
+    project page</a>.
+
+	<a name="#links"></a><h2>Links</h2>
+	<p>Several people have been hacking at BBDB and have pages
+	describing what they're at.</p>
+	
+	<p><b>Please note</b> that patches below are generally against the
+       2.00.06 release. Also, check to see if patches are in CVS
+       before you try to apply them.</p>
+
+	<ul>
+	  <li>My <a href="../bbdb-abuse.html">own page</a> currently
+		  containing a half-hearted attempt at a "smart"
+		  <tt>bbdb-snarf</tt>.</li>
+
+	  <li><a href="http://hammer.prohosting.com/~gumbart/">Alex
+		  Schroeder</a> has done some work on <a
+		  href="http://hammer.prohosting.com/~gumbart/emacs.html#12">de-americanising
+		  the address formats</a> and <a
+		  href="http://hammer.prohosting.com/~gumbart/bbdb-funcs.html">some
+		  other stuff</a>. This is now in the CVS tree.</li>
+
+	  <li><a href="http://www.Jochen-Kuepper.de">Jochen
+	      K&uuml;pper</a> has done some work on
+	      <tt>bbdb-print</tt>, which is now in CVS.</li>
+
+	  <li><a href="mailto:Thomas.DeWeese@Kodak.com?subject=BBDB">Thomas
+	  DeWeese</a> has created a <a
+	  href="patches/multi-record.patch">patch</a> to support multiple
+	  records with the same name. This is in CVS.</li>
+
+  </ul>
+	
+    <hr>
+    <address><a href="mailto:waider@waider.ie?subject=BBDB">Ronan
+    Waide</a> (based on <a
+    href="http://pweb.netcom.com/~simmonmt/bbdb/">Matt Simmons' bbdb
+    page</a>)</address>
+
+
+<p align="center">Hosted by <A href="http://sourceforge.net/"><IMG
+src="http://sourceforge.net/images/sflogo2-steel.png" vspace="0"
+border=0 width="143" height="70" alt="sourceforge.net"></A></p>
+</BODY>
+</HTML>

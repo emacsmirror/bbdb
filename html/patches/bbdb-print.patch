@@ -1,0 +1,27 @@
+--- bbdb-print.el-orig	Mon Feb 28 10:42:52 2000
++++ bbdb-print.el	Mon Feb 28 12:39:02 2000
+@@ -489,12 +489,18 @@
+ 		  (bbdb-print-if-not-blank(bbdb-address-street1 addr) "\\\\\n")
+ 		  (bbdb-print-if-not-blank(bbdb-address-street2 addr) "\\\\\n")
+ 		  (bbdb-print-if-not-blank(bbdb-address-street3 addr) "\\\\\n")
+-		  (bbdb-address-city addr)
+-		  (if (and (not (equal "" (bbdb-address-city addr)))
+-			   (not (equal "" (bbdb-address-state addr))))
+-		      ", ")
+-		  (bbdb-print-if-not-blank (bbdb-address-state addr) " ")
+-		  (bbdb-address-zip-string addr)
++		  (if (or (null (bbdb-address-state addr)) (equal "" (bbdb-address-state addr)))
++		      (concat 
++		       (bbdb-address-zip-string addr)
++		       " "
++		       (bbdb-address-city addr))
++		    (concat 
++		     (bbdb-address-city addr)
++		     (if (and (not (equal "" (bbdb-address-city addr)))
++			      (not (equal "" (bbdb-address-state addr))))
++			 ", ")
++		     (bbdb-print-if-not-blank (bbdb-address-state addr) " ")
++		     (bbdb-address-zip-string addr)))
+ 		  "\\\\")
+ 	       "")))))
+ 	(setq address (cdr address)))
