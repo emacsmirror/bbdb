@@ -131,7 +131,11 @@ in this message."
     (inhibit-quit nil)      ; vm better not bind this to t!
     cache records)
 
-    (setq cache (and msg (bbdb/vm-message-cache-lookup msg)))
+    ;; ignore cache if we may be creating a record, since the cache
+    ;; may otherwise tell us that the user didn't want a record for
+    ;; this person.
+    (if (not offer-to-create)
+        (setq cache (and msg (bbdb/vm-message-cache-lookup msg))))
 
     (if (and cache)
         (setq records (if bbdb/vm-get-only-first-from-p
@@ -140,31 +144,33 @@ in this message."
                             nil)
                         (cdr cache)))
       (and msg
-       (let ((addrs (bbdb/vm-get-from msg bbdb/vm-get-only-first-from-p))
-         (bbdb-records (bbdb-records))
-         rec (create-p t))
-         (mapc (lambda (address)
-             (condition-case nil
-             (setq rec
-                   (if create-p
-                   (bbdb-annotate-message-sender
-                    address t
-                    (bbdb-invoke-hook-for-value
-                     bbdb/mail-auto-create-p)
-                    t)
-                 (let ((name (car address))
-                       (net (cadr address)))
-                   (if name
-                       (setq name (bbdb-search bbdb-records
-                                   name nil net)))
-                   (if name (car name) nil))))
-               (quit (setq create-p nil)))
-             ;; people should be listed only once so we use
-             ;; add-to-list
-             (if rec (add-to-list 'records rec)))
-           addrs)
-         (setq records (nreverse records))
-         (bbdb/vm-encache-message msg records))))
+           (let ((addrs (bbdb/vm-get-from msg bbdb/vm-get-only-first-from-p))
+                 (bbdb-records (bbdb-records))
+                 rec
+                 (create-p offer-to-create))
+             (mapc (lambda (address)
+                     (condition-case nil
+                         (setq rec
+                               (if create-p
+                                   (bbdb-annotate-message-sender
+                                    address t
+                                    (or (bbdb-invoke-hook-for-value
+                                         bbdb/mail-auto-create-p)
+                                        offer-to-create) ;; force create
+                                    t)
+                                 (let ((name (car address))
+                                       (net (cadr address)))
+                                   (if name
+                                       (setq name (bbdb-search bbdb-records
+                                                               name nil net)))
+                                   (if name (car name) nil))))
+                       (quit (setq create-p nil)))
+                     ;; people should be listed only once so we use
+                     ;; add-to-list
+                     (if rec (add-to-list 'records rec)))
+                   addrs)
+             (setq records (nreverse records))
+             (bbdb/vm-encache-message msg records))))
     records))
 
 ;;;###autoload
@@ -202,6 +208,15 @@ This buffer will be in bbdb-mode, with associated keybindings."
     (bbdb-display-records records)
       (error "unperson"))))
 
+
+(defun bbdb/vm-show-all-recipients ()
+  "Show all recipients of this message. Counterpart to bbdb/vm-show-sender."
+  (interactive)
+  (vm-follow-summary-cursor)
+  (vm-select-folder-buffer)
+  (vm-check-for-killed-summary)
+  (vm-error-if-folder-empty)
+  (bbdb-show-all-recipients))
 
 (defun bbdb/vm-pop-up-bbdb-buffer (&optional offer-to-create)
   "Make the *BBDB* buffer be displayed along with the VM window(s).
@@ -423,6 +438,7 @@ mail that you send to people (and copy yourself on) is labeled as well."
     (t
      (error "vm versions older than 5.36 no longer supported")))
   (define-key vm-mode-map ":" 'bbdb/vm-show-sender)
+;;  (define-key vm-mode-map "'" 'bbdb/vm-show-all-recipients) ;; not yet
   (define-key vm-mode-map ";" 'bbdb/vm-edit-notes)
   (define-key vm-mode-map "/" 'bbdb)
   ;; VM used to inherit from mail-mode-map, so bbdb-insinuate-sendmail
