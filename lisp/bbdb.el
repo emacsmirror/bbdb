@@ -83,11 +83,14 @@ prompt the users on how to merge records when duplicates are detected.")
                                          (list 'string< a b))))
 
 ;; I LOVE FSF EMACS 19.34!!!!!
+;; these are all defined in cl. we should probably require that instead,
+;; but I'm just bugfixin' for now.
 (if (fboundp 'caar) nil (defun caar (foo) (car (car foo))))
 (if (fboundp 'cdar) nil (defun cdar (foo) (cdr (car foo))))
 (if (fboundp 'cadar) nil (defun cadar (foo) (car (cdr (car foo)))))
 (if (fboundp 'cadr) nil (defun cadr (foo) (car (cdr foo))))
 (if (fboundp 'caddr) nil (defun caddr (foo) (car (cdr (cdr foo)))))
+(if (fboundp 'caddar) nil (defun caddar (foo) (car (cdr (cdr (car foo))))))
 
 (eval-when-compile              ; pacify the compiler
  (defvar bbdb-address-print-formatting-alist) ; "bbdb-print"
