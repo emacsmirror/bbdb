@@ -876,6 +876,13 @@ that holds the number of slots."
   cache
   )
 
+;; HACKHACK
+(defmacro bbdb-record-set-net (vector value)
+  "We redefine the set-binding for 'net to detect changes"
+  (list 'progn
+        (list 'aset vector 6 value)
+        (list 'setq 'bbdb-define-all-aliases-needs-rebuilt t)))
+
 (put 'company 'field-separator "; ")
 (put 'notes 'field-separator "\n")
 
@@ -3691,8 +3698,13 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map [(=)]          'delete-other-windows)
   (define-key bbdb-mode-map [(c)]          'bbdb-create)
   (define-key bbdb-mode-map [(C)]          'bbdb-changed)
-  (define-key bbdb-mode-map [(b)]          'bbdb))
+  (define-key bbdb-mode-map [(b)]          'bbdb)
 
+  (define-key bbdb-mode-map [delete]       'scroll-down)
+  (define-key bbdb-mode-map " "            'scroll-up)
+  )
+
+ 
 ;;; Support for the various Emacsen.  This is for features that the
 ;;; BBDB adds to itself for different Emacsen.  For definitions of
 ;;; functions that aren't present in various Emacsen (for example,
