@@ -261,7 +261,7 @@
   "Process a face property of a record and honour it.
 Not done for GNU Emacs just yet, since it doesn't have image support
 as of GNU Emacs 20.7"
-  (if (not (or (and (boundp 'highlight-headers-hack-x-face-p)
+  (if (not (or (and (fboundp 'highlight-headers-hack-x-face-p)
                     (symbol-value (intern                          ;; compiler
                               "highlight-headers-hack-x-face-p"))) ;; ick.
                (and (featurep 'xemacs)
