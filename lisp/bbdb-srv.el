@@ -21,25 +21,6 @@
 
 ;;
 ;; $Id$
-;;
-;; $Log$
-;; Revision 1.56  1998/10/10 18:47:55  simmonmt
-;; From slbaur - Use new name for set-window-buffer-dedicated.
-;;
-;; Revision 1.55  1998/04/11 07:07:01  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back
-;;
-;; Revision 1.54  1998/03/10 07:38:23  simmonmt
-;; buffer-disable-undo doesn't always return the argument
-;;
-;; Revision 1.53  1998/01/06 06:16:21  simmonmt
-;; Rearranged copyright and customized variables
-;;
-;; Revision 1.52  1997/10/06 01:09:36  simmonmt
-;; jwz patches to support caller ID script, mail/news classification
-;; routine, make sure *BBDB* is bottommost buffer
-;;
-;;
 
 ;;; This requires the `gnuserv' and `itimer' packages.
 ;;;
@@ -62,9 +43,13 @@
 ;;; header, or nothing will be displayed, but it should contain as many headers
 ;;; as your various BBDB hooks might want access to.
 ;;;
-;;; Records will not be displayed until no record has been requested for 
+;;; Records will not be displayed until no record has been requested for
 ;;; `bbdb/srv-display-delay' seconds (default 2.)  This is to prevent rapid
 ;;; display of records from queueing up and swamping the emacs server process.
+;;;
+;;; Note that in order for this to build, itimer.el and gnuserv.el must be in
+;;; the build-path. The easiest way to achieve this is to set OTHERDIR to point
+;;; to the directory/ies they're in.
 
 ;;; A trivial application of this is the shell command:
 ;;;
@@ -77,8 +62,15 @@
 ;;;
 ;;; which will hook BBDB up to Mozilla (Unix Netscape Mail and Netscape News
 ;;; versions 3.0b2 and later only.)
- 
+
 (require 'bbdb)
+
+;; newer version of gnuserv requires gnuserv-compat when using FSF emacs
+;; but you might be using an older version, and we can't tell until you
+;; crash it...
+(or (fboundp 'define-obsolete-variable-alias)
+    (if (locate-library "gnuserv-compat")
+        (require 'gnuserv-compat)))
 (require 'gnuserv)
 (require 'itimer)
 
@@ -88,7 +80,7 @@ but for the case where the record is being displayed by some external
 process via the `gnudoit' mechanism.
 
 If this is t, then records will automatically be created; if this is a
-function name or lambda, then it is called with no arguments to decide 
+function name or lambda, then it is called with no arguments to decide
 whether an entry should be automatically created.  You can use this to,
 for example, create or not create messages which have a particular subject.
 
@@ -98,10 +90,10 @@ message, and then run either `bbdb/news-auto-create-p' or
 `bbdb/mail-auto-create-p' as appropriate."
   :group 'bbdb-utilities-server
   :type '(choice (const :tag "Don't automatically create records" nil)
-		 (const :tag "Automatically create records" t)
-		 (sexp :tag "Use function to determine record creation"
-		       bbdb/srv-auto-create-mail-news-dispatcher)))
-  
+         (const :tag "Automatically create records" t)
+         (sexp :tag "Use function to determine record creation"
+               bbdb/srv-auto-create-mail-news-dispatcher)))
+
 (defcustom bbdb/srv-display-delay 2
   "*How long (in seconds) we must be idle before displaying a record."
   :group 'bbdb-utilities-server
@@ -111,11 +103,11 @@ message, and then run either `bbdb/news-auto-create-p' or
 (defvar bbdb/srv-pending-map
   (and (fboundp 'set-extent-property)
        (condition-case nil
-	   (let ((m (make-sparse-keymap)))
-	     (set-keymap-name m 'bbdb/srv-pending-map)
-	     (define-key m 'button1 'bbdb/srv-pending-add)
-	     m)
-	 (error nil))))
+       (let ((m (make-sparse-keymap)))
+         (set-keymap-name m 'bbdb/srv-pending-map)
+         (define-key m 'button1 'bbdb/srv-pending-add)
+         m)
+     (error nil))))
 
 (defun bbdb/srv-handle-headers (headers &optional create-p)
   "Display (or create) the BBDB entry corresponding to the message headers.
@@ -123,70 +115,70 @@ HEADERS should be a string containing an RFC822 header block; at least a
 \"From:\" header should be provided, but others will be made available to
 the various hooks (like `bbdb-notice-hook' and `bbdb/news-auto-create-p')."
   (let ((buf "*bbdb-tmp*")
-	(record nil)
-	(bbdb-force-dialog-boxes t) ; affects bbdb-y-or-n-p
-	from)
+    (record nil)
+    (bbdb-force-dialog-boxes t) ; affects bbdb-y-or-n-p
+    from)
     (save-excursion
       (set-buffer (or (get-buffer buf)
-		      (progn
-			(setq buf (get-buffer-create buf))
-			(set-buffer buf)
-			(buffer-disable-undo buf)
-			buf)))
+              (progn
+            (setq buf (get-buffer-create buf))
+            (set-buffer buf)
+            (buffer-disable-undo buf)
+            buf)))
       (erase-buffer)
       (insert headers "\n\n")
       (setq from (mail-fetch-field "from"))
       (if (or (null from)
-	      (string-match (bbdb-user-mail-names)
-			    (mail-strip-quoted-names from)))
-	  ;; if logged-in user sent this, use recipients.
-	  (setq from (or (mail-fetch-field "to") from)))
+          (string-match (bbdb-user-mail-names)
+                (mail-strip-quoted-names from)))
+      ;; if logged-in user sent this, use recipients.
+      (setq from (or (mail-fetch-field "to") from)))
       (if from
-	  (setq record
-		(bbdb-annotate-message-sender from t
-					      (or create-p
-						  (bbdb-invoke-hook-for-value
-						   bbdb/srv-auto-create-p))
-					      nil))))
+      (setq record
+        (bbdb-annotate-message-sender from t
+                          (or create-p
+                          (bbdb-invoke-hook-for-value
+                           bbdb/srv-auto-create-p))
+                          nil))))
     (let ((w (get-buffer-window bbdb-buffer-name)))
       (if w
-	  nil
-	(setq w (selected-window))
-	(unwind-protect
-	    (progn
-	      (if (fboundp 'frame-lowest-window)
-		  (select-window (frame-lowest-window)))
-	      (bbdb-pop-up-bbdb-buffer))
-	  (select-window w))
-	(setq w (get-buffer-window bbdb-buffer-name))
-	(if (fboundp 'set-window-dedicated-p)
-	    (set-window-dedicated-p w bbdb-buffer-name))))
+      nil
+    (setq w (selected-window))
+    (unwind-protect
+        (progn
+          (if (fboundp 'frame-lowest-window)
+          (select-window (frame-lowest-window)))
+          (bbdb-pop-up-bbdb-buffer))
+      (select-window w))
+    (setq w (get-buffer-window bbdb-buffer-name))
+    (if (fboundp 'set-window-dedicated-p)
+        (set-window-dedicated-p w bbdb-buffer-name))))
     (cond (record
-	   (let ((bbdb-gag-messages t)
-		 (bbdb-use-pop-up nil)
-		 (bbdb-electric-p nil)
-		 (bbdb-elided-display (bbdb-pop-up-elided-display))
-		 (b (current-buffer)))
-	     (save-window-excursion ;; needed to get around XEmacs 19.15 bug?
-	       (bbdb-display-records (list record)))
-	     (set-buffer b)))
-	  ((and from (not create-p) bbdb/srv-pending-map)
-	   (setq bbdb/srv-pending-headers headers)
-	   (save-excursion
-	     (set-buffer bbdb-buffer-name)
-	     (let ((buffer-read-only nil))
-	       (erase-buffer)
-	       (insert "\t\t\t")
-	       (let ((p (point))
-		     e)
-		 (insert from)
-		 (setq e (make-extent p (point)))
-		 (set-extent-face e 'bold)
-		 (set-extent-property e 'highlight t)
-		 (set-extent-property e 'keymap bbdb/srv-pending-map)
-		 )
-	       (insert "\n\n\t\t\tClick to add to BBDB.")
-	       ))))))
+       (let ((bbdb-gag-messages t)
+         (bbdb-use-pop-up nil)
+         (bbdb-electric-p nil)
+         (bbdb-elided-display (bbdb-pop-up-elided-display))
+         (b (current-buffer)))
+         (save-window-excursion ;; needed to get around XEmacs 19.15 bug?
+           (bbdb-display-records (list record)))
+         (set-buffer b)))
+      ((and from (not create-p) bbdb/srv-pending-map)
+       (setq bbdb/srv-pending-headers headers)
+       (save-excursion
+         (set-buffer bbdb-buffer-name)
+         (let ((buffer-read-only nil))
+           (erase-buffer)
+           (insert "\t\t\t")
+           (let ((p (point))
+             e)
+         (insert from)
+         (setq e (make-extent p (point)))
+         (set-extent-face e 'bold)
+         (set-extent-property e 'highlight t)
+         (set-extent-property e 'keymap bbdb/srv-pending-map)
+         )
+           (insert "\n\n\t\t\tClick to add to BBDB.")
+           ))))))
 
 (defun bbdb/srv-pending-add ()
   (interactive "@")
@@ -205,19 +197,19 @@ we cons less."
   (if bbdb/srv-itimer-arg
       (bbdb/srv-handle-headers
        (prog1 bbdb/srv-itimer-arg
-	 (setq bbdb/srv-itimer-arg nil)))))
+     (setq bbdb/srv-itimer-arg nil)))))
 
 (defun bbdb/srv-handle-headers-with-delay (headers)
   "Just like bbdb/srv-handle-headers, but only updates every few seconds.
 This is so that trying to display many records in succession won't queue them
-up, but will end up only displaying a record when no displays have been 
+up, but will end up only displaying a record when no displays have been
 requested for a couple of seconds."
   (let* ((name "bbdb-srv")
-	 (itimer (get-itimer name)))
+     (itimer (get-itimer name)))
     (setq bbdb/srv-itimer-arg headers)
     (if itimer
-	;; It hasn't gone off yet; just change what it's argument will be.
-	nil
+    ;; It hasn't gone off yet; just change what it's argument will be.
+    nil
       ;; else, start the timer going again.
       (start-itimer name 'bbdb/srv-itimer bbdb/srv-display-delay nil))
     nil))
@@ -237,18 +229,18 @@ header; and that mail messages never have Path headers.)"
   (let (mail-p)
     (save-excursion
       (let ((start (bbdb-header-start)))
-	(set-buffer (marker-buffer start))
-	(setq mail-p
-	      (cond ((progn (goto-char start)
-			    (bbdb-extract-field-value "Status"))
-		     t)
-		    ((progn (goto-char start)
-			    (bbdb-extract-field-value "X-Mozilla-Status"))
-		     t)
-		    ((progn (goto-char start)
-			    (bbdb-extract-field-value "Path"))
-		     nil)
-		    (t t)))))		; can't tell -- guess mail.
+    (set-buffer (marker-buffer start))
+    (setq mail-p
+          (cond ((progn (goto-char start)
+                (bbdb-extract-field-value "Status"))
+             t)
+            ((progn (goto-char start)
+                (bbdb-extract-field-value "X-Mozilla-Status"))
+             t)
+            ((progn (goto-char start)
+                (bbdb-extract-field-value "Path"))
+             nil)
+            (t t)))))       ; can't tell -- guess mail.
     (bbdb-invoke-hook-for-value
      (if mail-p bbdb/mail-auto-create-p bbdb/news-auto-create-p))))
 
@@ -257,23 +249,23 @@ header; and that mail messages never have Path headers.)"
 
 (defun bbdb-srv-add-phone (phone-string)
   (let* ((record (bbdb-completing-read-record
-		  (format "Add %s to: " phone-string)))
-	 (phone (make-vector (if bbdb-north-american-phone-numbers-p
-				 bbdb-phone-length
-			       2)
-			     nil)))
+          (format "Add %s to: " phone-string)))
+     (phone (make-vector (if bbdb-north-american-phone-numbers-p
+                 bbdb-phone-length
+                   2)
+                 nil)))
     (if (= 2 (length phone))
-	(aset phone 1 phone-string)
+    (aset phone 1 phone-string)
       (let ((newp (bbdb-parse-phone-number phone-string)))
-	(bbdb-phone-set-area phone (nth 0 newp))
-	(bbdb-phone-set-exchange phone (nth 1 newp))
-	(bbdb-phone-set-suffix phone (nth 2 newp))
-	(bbdb-phone-set-extension phone (or (nth 3 newp) 0))))
+    (bbdb-phone-set-area phone (nth 0 newp))
+    (bbdb-phone-set-exchange phone (nth 1 newp))
+    (bbdb-phone-set-suffix phone (nth 2 newp))
+    (bbdb-phone-set-extension phone (or (nth 3 newp) 0))))
     (bbdb-phone-set-location phone
      (read-string "Phone number description: " "cid"))
 
     (bbdb-record-set-phones record
-			    (nconc (bbdb-record-phones record) (list phone)))
+                (nconc (bbdb-record-phones record) (list phone)))
     (bbdb-change-record record nil)
     (bbdb-display-records (list record))
     nil))
