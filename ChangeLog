@@ -1,5 +1,10 @@
 2001-02-13  Robert Fenk  <fenk@forwiss.de>
 
+	* lisp/bbdb-vm.el
+	* lisp/bbdb.el:
+	Applied ShengHuos patch to fix the customize problems caused by
+	defining 'characterp as a mcaro im GNU Emacs
+
 	* lisp/bbdb-com.el (bbdb-complete-name): 
 	(bbdb-complete-name-allow-cycling): Allow to enable/disable the
 	cycling of nets.  Default is disabled, as there are some strange
