@@ -558,7 +558,7 @@ new network addresses will always be added at the end of the list."
 
 (defcustom bbdb-send-mail-style nil
   "*Specifies which package should be used to send mail.
-Should be 'vm, 'mh, 'mail, or 'message (or nil, meaning guess.)"
+Should be 'vm, 'mh, 'mail, 'message, or 'gnus (or nil, meaning guess.)"
   :group 'bbdb-record-use
   :type '(choice (const :tag "Use VM to send mail" vm)
                  (const :tag "Use MH-E to send mail" mh)
@@ -566,6 +566,7 @@ Should be 'vm, 'mh, 'mail, or 'message (or nil, meaning guess.)"
                  (const :tag "Use Message to send mail" message)
                  (const :tag "Use Mew to send mail" mew)
                  (const :tag "Use compose-mail to send mail" compose-mail)
+                 (const :tag "Use gnus to send mail" gnus)
                  (const :tag "Guess which package to use" nil)))
 
 (defcustom bbdb-offer-save t

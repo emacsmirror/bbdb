@@ -1914,6 +1914,7 @@ the name is always included."
                         ((featurep 'vm) 'vm)
                         ((featurep 'message) 'message)
                         ((featurep 'mew) 'mew)
+                        ((featurep 'gnus) 'gnus)
                         (t 'mail)))))
     (cond
      ((eq type 'mh)
@@ -1938,6 +1939,8 @@ the name is always included."
       (mew-send to nil subj))
      ((eq type 'compose-mail)
       (compose-mail to subj))
+     ((eq type 'gnus)
+      (gnus-msg-mail to subj))
      (t
       (error "bbdb-send-mail-style must be vm, mh, message, compose-mail, or rmail")))))
 
