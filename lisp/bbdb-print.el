@@ -56,6 +56,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.58  1998/10/17 19:43:26  simmonmt
+;; Patch to convert default area code protection from condition-case to
+;; integerp.
+;;
 ;; Revision 1.57  1998/04/11 07:19:32  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back
 ;;
@@ -156,9 +160,9 @@ in the following simple examples:
 				      (const :tag "Boxed letters with suits" 7)))
 	   (cons :tag "Omit certain area codes"
 		 :value (omit-area-code . ,(concat "^("
-						   (condition-case nil
+						   (if (integerp bbdb-default-area-code)
 						       (int-to-string bbdb-default-area-code)
-						     (t "000"))  ") "))
+						     "000")  ") "))
 		 (const :tag "Omit certain area codes" omit-area-code)
 		 (regexp :tag "Pattern to omit"))
 	   (cons :tag "Phone number location" :value (phone-on-first-line . t)
@@ -206,9 +210,9 @@ in the following simple examples:
 		 (string :tag "Width (must be valid TeX dimension)")))))
 
 (defcustom bbdb-print-alist
-  `((omit-area-code . ,(concat "^(" (condition-case nil
+  `((omit-area-code . ,(concat "^(" (if (integerp bbdb-default-area-code)
 					(int-to-string bbdb-default-area-code)
-				      (t "000")) ") "))
+				      "000") ") "))
     (phone-on-first-line . "^[ \t]*$")
     (ps-fonts . nil)
     (font-size . 6)
