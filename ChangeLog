@@ -1,3 +1,17 @@
+2003-04-01  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-multiple-buffers-default): Modified to nicely
+	interact with bbdb-display-records-1.
+	(bbdb-display-records-1): Honor bbdb-multiple-buffers by calling
+	bbdb-pop-up-bbdb-buffer. 
+
+2003-03-31  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-display-records-1): 
+	* lisp/bbdb-com.el (bbdb-mail-abbrev-expand-hook):
+	Trying to fix the problem with with-output-to-temp-buffer caused
+	several new bugs, thus we do a roll back to the old code.
+	
 2003-03-28  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-com.el: Call bbdb-complete-name-hooks after name completion

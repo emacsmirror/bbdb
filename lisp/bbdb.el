@@ -1757,16 +1757,18 @@ multi-line layout."
                             (list x layout (make-marker)))
                           records)))
 
-  (let ((first (car (car records))))
-    (save-excursion
-      (display-buffer (get-buffer-create bbdb-buffer-name))
+  (let ((b (current-buffer))
+        (temp-buffer-setup-hook nil)
+        (temp-buffer-show-hook nil)
+        (first (car (car records))))
+
+    (if bbdb-multiple-buffers (bbdb-pop-up-bbdb-buffer))
+    
+    (with-output-to-temp-buffer bbdb-buffer-name
       (set-buffer bbdb-buffer-name)
 
       ;; If append is set, clear the buffer, otherwise do clean up.
-      (if append
-          (let ((buffer-read-only nil))
-            (erase-buffer))
-        (bbdb-undisplay-records))
+      (unless append (bbdb-undisplay-records))
 
       ;; If we're appending these records to the ones already displayed,
       ;; then first remove any duplicates, and then sort them.
@@ -1823,7 +1825,8 @@ multi-line layout."
     (save-excursion (run-hooks 'bbdb-list-hook))
     (if bbdb-gui (bbdb-fontify-buffer))
     (set-buffer-modified-p nil)
-    (setq buffer-read-only t)))
+    (setq buffer-read-only t)
+    (set-buffer b)))
 
 (defun bbdb-undisplay-records ()
   (let ((bbdb-display-buffer (get-buffer bbdb-buffer-name)))
