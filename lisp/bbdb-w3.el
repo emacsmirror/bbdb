@@ -20,15 +20,20 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.2  1997/10/11 20:21:32  simmonmt
+;; Modifications mailed in by David Carlton <carlton@math.mit.edu>.  They
+;; look to be mostly adaptations for netscape
+;;
 ;; Revision 1.1  1997/10/11 19:05:54  simmonmt
 ;; Initial revision
 ;;
 ;;
 
-(add-hook 'w3-mode-hooks
-	  '(lambda () (define-key w3-mode-map ":" 'bbdb-grab-www-homepage)))
-(add-hook 'bbdb-load-hook 
-	   '(lambda () (define-key bbdb-mode-map "W" 'bbdb-www)))
+;; Suggested mappings
+;(add-hook 'w3-mode-hooks
+;	  '(lambda () (define-key w3-mode-map ":" 'bbdb-grab-www-homepage)))
+;(add-hook 'bbdb-load-hook 
+;	   '(lambda () (define-key bbdb-mode-map "W" 'bbdb-www)))
 
 (defun bbdb-www (all)
   "Visit URL's stored in `www' fields of the current record.
@@ -48,6 +53,24 @@ Non-interactively, do all records if arg is nonnil."
     (if (not got-one)
 	(error "No WWW field!"))))
 
+(defun bbdb-www-netscape (all)
+  "Visit URL's stored in `www' fields of the current record.
+\\[bbdb-apply-next-command-to-all-records]\\[bbdb-www] \
+means to try all records currently visible.
+Non-interactively, do all records if arg is nonnil."
+  (interactive (list (bbdb-do-all-records-p)))
+  (let ((urls (mapcar '(lambda (r) (bbdb-record-getprop r 'www))
+                      (if all
+                          (mapcar 'car bbdb-records)
+                        (list (bbdb-current-record)))))
+        (got-one nil))
+    (while urls
+      (if (car urls)
+          (browse-url-netscape (setq got-one (car urls))))
+      (setq urls (cdr urls)))
+    (if (not got-one)
+        (error "No WWW field!"))))
+
 (defun bbdb-grab-www-homepage (record)
   "Grab the current URL and store it in the bbdb database"
   (interactive (list (bbdb-completing-read-record "Add WWW homepage for: ")))
@@ -61,46 +84,19 @@ Non-interactively, do all records if arg is nonnil."
   (bbdb-change-record record t)
   (bbdb-display-records (list record)))
 
-
 ;;;; From Fran Litterio <franl@centerline.com>
+;;;; adapted for netscape by Josef Schneeberger <jws@forwiss.uni-erlangen.de>
 ;(defun fetch-url (url)
-;  "Causes a running Mosaic 2.x process to fetch the document at the URL (which
+;  "Causes a running netscape process to fetch the document at the URL (which
 ;is the contents of the region for interactive invocations)."
 ;  (interactive (list (buffer-substring (region-beginning) (region-end))))
-;  (let ((pid ""))
+;  (let ()
 ;    (string-match "[ \t\n]*\\(.*[^ \t\n]\\)[ \t\n]*$" url)
 ;    (setq url (substring url (match-beginning 1) (match-end 1)))
 ;    (save-excursion
-;      (set-buffer (get-buffer-create " *Mosaic Control*"))
-;      (if (string= (buffer-name) " *Mosaic Control*")	; Paranoia!
-;	  (erase-buffer))
-;      (insert-file-contents "~/.mosaicpid")
-;      (setq pid (buffer-substring (point-min) (1- (point-max))))
-;      (erase-buffer)
-;      (insert (concat "newwin\n" url "\n"))
-;      (write-region (point-min) (point-max) (concat "/tmp/Mosaic." pid)
-;		    nil nil))
-;    (signal-process (string-to-number pid)
-;		    (cond
-;		     ((eq system-type 'hpux)
-;		      16)	; SIGUSR1 under HP-UX
-;		     ((eq system-type 'berkeley-unix)
-;		      30)))	; SIGUSR1 under SunOS 4.x
-;    (message (format "Told Mosaic to fetch \"%s\"" url))))
-
-;;; From Fran Litterio <franl@centerline.com>
-;;; adapted for netscape by Josef Schneeberger <jws@forwiss.uni-erlangen.de>
-(defun fetch-url (url)
-  "Causes a running netscape process to fetch the document at the URL (which
-is the contents of the region for interactive invocations)."
-  (interactive (list (buffer-substring (region-beginning) (region-end))))
-  (let ()
-    (string-match "[ \t\n]*\\(.*[^ \t\n]\\)[ \t\n]*$" url)
-    (setq url (substring url (match-beginning 1) (match-end 1)))
-    (save-excursion
-      (shell-command (concat "/usr/local/bin/NETSCAPE/netscape-1.1b3/netscape "
-			     "-remote "
-			     "'openURL("
-			     url
-			     ")'"))))
-    (message (format "Told netscape to fetch \"%s\"" url)))
+;      (shell-command (concat "/usr/local/bin/NETSCAPE/netscape-1.1b3/netscape "
+;			     "-remote "
+;			     "'openURL("
+;			     url
+;			     ")'"))))
+;    (message (format "Told netscape to fetch \"%s\"" url)))
