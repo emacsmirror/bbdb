@@ -1766,21 +1766,20 @@ composition buffer.)"
   "*Display BBDB records for all recipients of the message in this buffer."
   (interactive)
   (let ((marker (bbdb-header-start))
+	(fields '("from" "sender" "to" "cc" "bcc"
+		  "resent-from" "resent-to" "resent-cc" "resent-bcc"))
         addrs)
     (message "Searching...")
     (save-excursion
       (set-buffer (marker-buffer marker))
-      (goto-char marker)
-      (setq addrs
-            (append
-             (save-excursion
-               (bbdb-split (or (bbdb-extract-field-value "from") "") ","))
-             (save-excursion
-               (bbdb-split (or (bbdb-extract-field-value "to") "") ","))
-             (save-excursion
-               (bbdb-split (or (bbdb-extract-field-value "cc") "") ","))
-             (save-excursion
-               (bbdb-split (or (bbdb-extract-field-value "bcc") "") ",")))))
+      (while fields
+	(goto-char marker)
+	(setq addrs (append (bbdb-split (or (bbdb-extract-field-value
+					     (car fields))
+					    "")
+					",")
+			    addrs)
+	      fields (cdr fields))))
     (let ((rest addrs)
           (records '())
           record)
