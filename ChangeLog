@@ -1,6 +1,29 @@
+2001-09-11  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-print.el (bbdb-print-field-shown-p): Added as a
+	replacement for bbdb-field-shown-p. 
+	(bbdb-print-omit-fields): Added as a replacement for
+	bbdb-print-elided-display. 
+
+	* lisp/bbdb-com.el (bbdb-get-addresses-headers):
+	bbdb-auto-notes-alist does not know if a address comes form a
+	author or recipient of a message and therefore might update wrong
+	records, e.g. the organization of recipients to that of the
+	author.
+	Therfore the default is now bbdb-get-addresses-from-headers until
+	the hook functions are able to tell the type (author/recp) of an
+	address. 
+
+2001-09-05  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-complete-name-hooks): Fixed the
+	documentation.
+	(bbdb-get-only-first-address-p): fixed the default value, which
+	should have been t
+
 2001-09-04  Robert Fenk  <Robert.Fenk@gmx.de>
 
-	* lisp/bbdb.el (bbdb-annotate-message-sender): alling of
+	* lisp/bbdb.el (bbdb-annotate-message-sender): calling of
 	bbdb-create-hook functions moved to the end of function
 	(bbdb-display-layout-alist): replaced by the nice version
 	provieded by Alex Schroeder <alex@gnu.org>
