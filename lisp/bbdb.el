@@ -1614,9 +1614,10 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
                (setq shut-up t)
                (revert-buffer t t))
               ;; hassle the user
-              ((bbdb-yes-or-no-p (if (buffer-modified-p buf)
-                                "BBDB has changed on disk; flush your changes and revert? "
-                                "BBDB has changed on disk; revert? "))
+              ((bbdb-yes-or-no-p
+                (if (buffer-modified-p buf)
+                    "BBDB has changed on disk; flush your changes and revert? "
+                    "BBDB has changed on disk; revert? "))
                (or (file-exists-p bbdb-file)
                    (error "bbdb: file %s no longer exists!!" bbdb-file))
                (revert-buffer t t))
@@ -2819,27 +2820,27 @@ When called interactively with a prefix argument, insert string at point."
 
 (defvar bbdb-init-forms
   '((Gnus                       ; Gnus 3.14 or older
-     (add-hook 'gnus-Startup-hook 'bbdb-insinuate-gnus))
+     gnus-Startup-hook bbdb-insinuate-gnus)
     (gnus                       ; Gnus 3.15 or newer
-     (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus))
+     gnus-startup-hook bbdb-insinuate-gnus)
     (mh-e                       ; MH-E
-     (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh))
+     mh-folder-mode-hook bbdb-insinuate-mh)
     (rmail                      ; RMAIL
-     (add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail))
+     rmail-mode-hook bbdb-insinuate-rmail)
     (sendmail                   ; the standard mail user agent
-     (add-hook 'mail-setup-hook 'bbdb-insinuate-sendmail))
+     mail-setup-hook bbdb-insinuate-sendmail)
     (vm                         ; the alternative mail reader
-     (bbdb-insinuate-vm))
+     vm-load-hook bbdb-insinuate-vm)
     (message                    ; the gnus mail user agent
-     (bbdb-insinuate-message))
+     message-load-hook bbdb-insinuate-message)
     (reportmail                 ; mail notification
-     (bbdb-insinuate-reportmail))
+     reportmail-load-hook bbdb-insinuate-reportmail)
     (sc                         ; message citation
-     (bbdb-insinuate-sc))
+     sc-load-hook bbdb-insinuate-sc)
     (supercite                  ; same
-     (bbdb-insinuate-sc))
+     sc-load-hook bbdb-insinuate-sc)
     (w3                         ; WWW browser
-     (bbdb-insinuate-w3)))
+     w3-load-hook bbdb-insinuate-w3))
   "The alist which maps features to insinuationn forms.")
 
 (defun bbdb-initialize (&rest to-insinuate)
@@ -2883,7 +2884,7 @@ passed as arguments to initiate the appropriate insinuations.
       (setq to-insinuate (cdr to-insinuate))
       (if init
           (if (or (featurep feature) (locate-library (symbol-name feature)))
-              (mapc 'eval (cdr init))
+              (add-hook (cadr init) (caddr init))
               (bbdb-warn "cannot locate feature `%s'" feature))
           (bbdb-warn "don't know how to insinuate `%s'" feature))))
 
