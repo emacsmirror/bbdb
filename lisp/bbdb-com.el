@@ -1994,9 +1994,7 @@ completions for a specific match is below that number."
   :type 'boolean)
 
 (defcustom bbdb-complete-name-hooks '(ding)
-  "Show full expanded completion rather than partial matches.
-If t then do it always, if a number then just is the number of
-completions for a specific match is below that number."
+  "List of functions called after a sucessful completion."
   :group 'bbdb-mua-specific
   :type 'boolean)
 
@@ -3126,14 +3124,15 @@ Type q  to quit updating records.  No more search or annotation is done.")))
 
 ;;;###autoload
 (defcustom bbdb-get-addresses-headers
-  (append bbdb-get-addresses-from-headers bbdb-get-addresses-to-headers)
+  ; (append bbdb-get-addresses-from-headers bbdb-get-addresses-to-headers)
+  bbdb-get-addresses-from-headers 
   "*List of headers to search for senders and recipients email addresses."
   :group 'bbdb-mua-specific
   :type 'list)
 
 ;;;###autoload
 (defcustom bbdb-get-only-first-address-p
-  nil
+  t
   "*If t `bbdb-update-records' will return only the first one.
 Changing this variable will show its effect only after clearing the
 `bbdb-message-cache' of a folder or closing and visiting it again."
