@@ -252,6 +252,13 @@ Respects vm-summary-uninteresting-senders."
   :type 'symbol)
 
 ;;;###autoload
+(defcustom bbdb/vm-set-auto-folder-alist-headers '("From:" "To:" "CC:")
+  "*The headers used by `bbdb/vm-set-auto-folder-alist'.
+The order in this list is the order how matching will be performed!"
+  :group 'bbdb-mua-specific-vm
+  :type '(repeat (string :tag "header name")))
+
+;;;###autoload
 (defun bbdb/vm-set-auto-folder-alist ()
   "Create a `vm-auto-folder-alist' according to the records in the bbdb.
 For each record that has a 'vm-folder' attribute, add an
@@ -263,48 +270,43 @@ The element gets added to the 'element-name' sublist of the
 The car of the element consists of all the email addresses for the
 bbdb record concatenated with OR; the cdr is the value of the
 vm-folder attribute.
-If the fist character of vm-folders value is a quote (') it will be
-parsed a lisp expression and consequently one may do his own tweaks
-in order to get a nice folder name.
 
-The only processing this defun does to the email address is to
-`regexp-quote' it; if your email circle is small enough, you could
-consider using just the user part of the email address --- the part
-before the @."
+If the first character of vm-folders value is a quote (') it will be
+parsed as lisp expression and is evaluated to return a folder name."
   (interactive)
   (let* (;; we add the email-address/vm-folder-name pair to this
-     ;; sublist of the vm-auto-folder-alist variable
-     (element-name "from\\|to\\|cc")
-     ;; grab the folder list from the vm-auto-folder-alist
-     (folder-list (assoc element-name vm-auto-folder-alist))
-     ;; the raw-notes and vm-folder attributes of the current bbdb
-     ;; record
-     notes-field folder
-     ;; a regexp matching all the email addresses from the bbdb
+         ;; sublist of the vm-auto-folder-alist variable
+         (headers (reverse bbdb/vm-set-auto-folder-alist-headers))
+         ;; grab the folder list from the vm-auto-folder-alist
+         folder-list
+         ;; the raw-notes and vm-folder attributes of the current bbdb
          ;; record
-     email-regexp
-     )
-    ;; create the folder-list in vm-auto-folder-alist if it doesn't exist
-    (unless folder-list
-      (setq vm-auto-folder-alist (append vm-auto-folder-alist
-                                         (list (list element-name)))
-            folder-list (assoc element-name vm-auto-folder-alist)))
-    (dolist (record (bbdb-records))
-      (setq notes-field (bbdb-record-raw-notes record))
-      (when (and (listp notes-field)
-         (setq folder (cdr (assq bbdb/vm-set-auto-folder-alist-field
-                     notes-field))))
-        ;; quote all the email addresses for the record and join them
-        ;; with OR
-    (setq email-regexp (mapconcat '(lambda (addr)
-                     (regexp-quote addr))
-                      (bbdb-record-net record) "\\|"))
-    (unless (or (zerop (length email-regexp))
-            (assoc email-regexp folder-list))
-      ;; be careful: nconc modifies the list in place
-      (if (equal (elt folder 0) ?\')
-          (setq folder (read folder)))
-      (nconc folder-list (list (cons email-regexp folder))))))))
+         notes-field folder
+         ;; a regexp matching all the email addresses from the bbdb
+         ;; record
+         email-regexp)
+
+    (dolist (header headers)
+      ;; create the folder-list in vm-auto-folder-alist if it doesn't exist
+      (setq folder-list (assoc header vm-auto-folder-alist))
+      (unless folder-list
+        (setq vm-auto-folder-alist (cons (list header)
+                                         vm-auto-folder-alist)
+              folder-list (assoc header vm-auto-folder-alist)))
+      (dolist (record (bbdb-records))
+        (setq notes-field (bbdb-record-raw-notes record))
+        (when (and (listp notes-field)
+                   (setq folder (cdr (assq bbdb/vm-set-auto-folder-alist-field
+                                           notes-field))))
+          ;; quote all the email addresses for the record and join them
+          ;; with OR
+          (setq email-regexp (regexp-opt (bbdb-record-net record)))
+          (unless (or (zerop (length email-regexp))
+                      (assoc email-regexp folder-list))
+            ;; be careful: nconc modifies the list in place
+            (if (equal (elt folder 0) ?\')
+                (setq folder (read folder)))
+            (nconc folder-list (list (cons email-regexp folder)))))))))
 
 
 ;;; bbdb/vm-auto-add-label
