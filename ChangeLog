@@ -1,3 +1,92 @@
+2001-03-17  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-whois.el: Definition of some variable in order to
+	avoid warnings during compilation 
+
+	* lisp/bbdb-mhe.el: 
+	* lisp/bbdb-rmail.el: uses the new caching functions + some
+	other minor changes 
+
+	* lisp/bbdb-snarf.el (bbdb-snarf-region): Unused variables
+	'country and 'namebegin removed
+
+	(bbdb-snarf-nice-real-name-regexp):
+	(bbdb-snarf-nice-real-name): removed and calls replaced by
+	bbdb-clean-username which is more sophisticated 
+
+	* lisp/bbdb-vm.el (bbdb/vm-get-addresses): was formally
+	bbdb/vm-get-from
+	(bbdb/vm-get-from-headers):
+	(bbdb/vm-get-only-first-from-p):
+	(bbdb/vm-message-cache-lookup):
+	(bbdb/vm-encache-message): have been removed, global variables and
+	functions are used now
+
+	(bbdb/vm-show-sender): when called with a prefix call 
+	bbdb/vm-show-all-recipients instead, so we use the same binding
+	for getting both.
+	(bbdb/vm-show-records): new function doing the bbdb/vm-show-*
+	thing and caring for updating the records. 
+
+	(bbdb/vm-snarf-all):
+	(bbdb/vm-snarf-all-headers): have been removed as the
+	bbdb/vm-show-* function provide the same functionality
+	
+	* lisp/bbdb-gnus.el: the same changes as for bbdb-vm.el
+	
+	* lisp/bbdb-xemacs.el (bbdb-load-touchtones): unused variale
+	'error removed
+
+	* lisp/bbdb.el (bbdb-pop-up-elided-display): 
+	(bbdb-pop-up-elided-display): changed to require no unbound
+	bbdb-pop-up-elided-display
+	
+	(bbdb-message-cache-lookup): 
+	(bbdb-encache-message): Once again functions to replace the old
+	macros.  This was necessary as the old macros were not sufficient
+	for the new update mechanism, were we have a list of records.  
+
+	* lisp/bbdb-merge.el (bbdb-merge-file): unused variable
+	'live-records removed
+
+	* lisp/bbdb-com.el (bbdb-redisplay-records): unused variable
+	condition removed
+
+	(bbdb-delete-current-field-or-record): unused variable do-all-p
+	removed
+
+	(bbdb-refile-record): called with a prefix arg it tries to merge
+	with the corresponding duplicate record
+
+	(bbdb-display-completion-list): Use the call back
+	'bbdb-complete-clicked-name when running in Xemacs, thus to
+	further complete after the user selects a completion.
+
+	(bbdb-complete-name): 
+	(bbdb-complete-name-full-completion): new variable controlling
+	whether completion shows expanded entries or not.  This avoids
+	the need for subsequent completions, but might generate more
+	completion alternatives.
+	
+	(bbdb-prompt-for-create):
+	(bbdb-prompt-for-create):
+	(bbdb-get-help-window):
+	(bbdb-update-records): functions used to update BBDB records from 
+	headers of messages in Gnus and VM (RMail and MHE may eventually
+	follow).  Those functions have been renamed and moved from
+	bbdb-vm.el to this location.
+
+	(bbdb-update-records-mode): 
+	(bbdb-offer-to-create): 
+	(bbdb-address): 
+	(bbdb-get-addresses-from-headers): 
+	(bbdb-get-addresses-to-headers): 
+	(bbdb-get-addresses-headers): 
+	(bbdb-get-only-first-address-p): variables for generic
+	update-records support in Gnus and VM.  Those variables have been
+	renamed and moved from bbdb-vm.el to this location.
+
+
 2001-03-04  Waider  <waider@waider.ie>
 
 	* BBDB 2.32 tagged, bottled, and set free.
