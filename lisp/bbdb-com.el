@@ -2233,18 +2233,19 @@ of all of those people."
         (fset alias (list 'lambda '()
                           (list 'bbdb-mail-abbrev-expand-hook
                                 (list 'quote
-                      (mapcar (lambda (x)
-                        (car (bbdb-record-net x)))
+                                      (mapcar (lambda (x)
+                                                (car (bbdb-record-net x)))
                                               (cdr (car result))))))))
       (setq result (cdr result)))))
 
 (defun bbdb-mail-abbrev-expand-hook (records)
   (mail-abbrev-expand-hook)
-  (if bbdb-completion-display-record
-      (let ((bbdb-gag-messages t))
-        (bbdb-display-records-1
-         (mapcar (lambda (x) (bbdb-search-simple nil x)) records)
-         t))))
+  (when bbdb-completion-display-record
+    (bbdb-pop-up-bbdb-buffer bbdb-use-pop-up)
+    (let ((bbdb-gag-messages t))
+      (bbdb-display-records-1
+       (mapcar (lambda (x) (bbdb-search-simple nil x)) records)
+       t))))
 
 (defun bbdb-get-mail-aliases ()
   "Return a list of mail aliases used in the BBDB.
