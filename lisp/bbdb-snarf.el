@@ -426,7 +426,7 @@ See bbdb-extract-address-components for an example."
       ("\\b\\(\\([^@]+\\.[^@]+\\)@[0-9a-z._-]+\\)\\b"
        (bbdb-clean-username (match-string 2 adstring)) 1)
       ;; user@host
-      ("\\b\\(\\([0-9a-z._-]+\\)@[0-9a-z._-]+\\)\\b"
+      ("\\b\\(\\([0-9a-z._-+]+\\)@[0-9a-z._-]+\\)\\b"
        nil 1)
       ;; local address
       ("\\b\\([0-9a-z._-]+\\)\\b"
@@ -592,7 +592,7 @@ version doesn't support multiple addresses."
       (let* ((thisaddr (substring addrline 0 (match-end 1)))
              (comma (match-end 0)) ;; rfc822-addresses trashes match-data
              (parsed (rfc822-addresses thisaddr)))
-        (if (string-match "(" (car parsed)) ;; rfc822 didn't like it.
+        (if (string-match "(" (or (car parsed) "")) ;; rfc822 didn't like it.
             (setq start comma)
           (setq addrs
                 (append addrs (list
