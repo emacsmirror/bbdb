@@ -22,6 +22,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.53  1998/02/23 07:13:01  simmonmt
+;; Use add-hook, not bbdb-add-hook
+;;
 ;; Revision 1.52  1997/11/02 07:43:25  simmonmt
 ;; bbdb/rmail-annotate-sender now takes REPLACE argument
 ;;
@@ -130,7 +133,7 @@ Leaves original message, deleted, before the undigestified messages."
   (define-key rmail-summary-mode-map ":" 'bbdb/rmail-show-sender)
   (define-key rmail-summary-mode-map ";" 'bbdb/rmail-edit-notes)
   
-  (bbdb-add-hook 'rmail-show-message-hook 'bbdb/rmail-update-record)
+  (add-hook 'rmail-show-message-hook 'bbdb/rmail-update-record)
   
   ;; We must patch into rmail-expunge to clear the cache, since expunging a 
   ;; message invalidates the cache (which is based on message numbers).

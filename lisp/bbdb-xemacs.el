@@ -285,7 +285,7 @@
 			   (t nil)))
 	 (build-bbdb-menu record field))))))
 
-(bbdb-add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
+(add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
 
 ;; Utility functions that mask others to provide XEmacs-specific functionality
 (defun bbdb-xemacs-display-completion-list (list &optional callback data)
