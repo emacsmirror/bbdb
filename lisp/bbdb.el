@@ -65,8 +65,8 @@
 (defconst bbdb-version-date "$Date$")
 
 (defcustom bbdb-gui (if (fboundp 'display-color-p) ; Emacs 21
-			(display-color-p)
-		      (not (null window-system))) ; wrong for XEmacs?
+            (display-color-p)
+              (not (null window-system))) ; wrong for XEmacs?
   "*Non-nil means fontify the *BBDB* buffer."
   :group 'bbdb
   :type 'boolean)
@@ -435,8 +435,8 @@ displaying the mismatch message."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Prompt for name changes" nil)
                  (const :tag "Do not prompt for name changes" t)
-		 (integer :tag 
-			  "Instead of prompting, warn for this many seconds")))
+         (integer :tag
+              "Instead of prompting, warn for this many seconds")))
 
 (defcustom bbdb-use-alternate-names t
   "*If this is true, then when bbdb notices a name change, it will ask you
@@ -1113,10 +1113,10 @@ If the note is absent, returns a zero length string."
     (when (and bbdb-file-remote
                (file-newer-than-file-p bbdb-file-remote bbdb-file))
       (let ((coding-system-for-write bbdb-file-coding-system))
-	(copy-file bbdb-file-remote bbdb-file t t)))
+    (copy-file bbdb-file-remote bbdb-file t t)))
     (setq bbdb-buffer
           (let ((coding-system-for-read bbdb-file-coding-system))
-	    (find-file-noselect bbdb-file 'nowarn)))))
+        (find-file-noselect bbdb-file 'nowarn)))))
 
 (defmacro bbdb-with-db-buffer (&rest body)
   (cons 'with-current-buffer
@@ -1320,9 +1320,9 @@ This is a possible identifying function for
 This may be used by formatting functions listed in
 `bbdb-address-formatting-alist'."
   (bbdb-mapc (lambda(str)
-	       (indent-to indent)
-	       (insert str "\n"))
-	     (bbdb-address-streets addr)))
+           (indent-to indent)
+           (insert str "\n"))
+         (bbdb-address-streets addr)))
 
 (defun bbdb-format-address-continental (addr &optional indent)
   "Insert formated continental address ADDR in current buffer.
@@ -2970,9 +2970,22 @@ return them."
   ;; call the bbdb-canonicalize-net-hook repeatedly until it returns a
   ;; value eq to the value passed in.  This implies that it can't
   ;; destructively modify the string.
-  (while (not (eq net (setq net (funcall bbdb-canonicalize-net-hook net)))))
-  net)
 
+  ;; Hysterical Raisins: This is a function, not a hook. In order to
+  ;; make this hook a hook, we'll quietly convert a single function
+  ;; into a hook list.  We should really warn the user that we're
+  ;; doing this, and advise them to update their configuration
+  ;; accordingly. For the release, maybe.
+  (if (functionp bbdb-canonicalize-net-hook)
+      (setq bbdb-canonicalize-net-hook (list bbdb-canonicalize-net-hook)))
+
+  ;; Now, do the hook run. Note, if you mess up, it's possible that
+  ;; BBDB will get stuck here oscillating between various definitions
+  ;; of the canonical address.
+  (while (not (eq net (setq net (run-hook-with-args
+                                 'bbdb-canonicalize-net-hook net)))))
+
+  net)
 
 ;; Mostly written by Rod Whitby.
 (defun bbdb-net-redundant-p (net old-nets)
