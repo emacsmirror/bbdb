@@ -1,3 +1,15 @@
+2003-08-05  Waider  <waider@waider.ie>
+
+	* testing/Makefile.in: * Use GREP and GREPCONTEXT autoconfs
+
+	* configure.ac:
+	* Added a check for grep, and a test to figure out grep's context argument
+
+	* testing/bbdb-test: * Added a record to test completion stuff
+
+	* testing/bbdb-test.el:
+	* Updated to reflect small change in completion logic
+
 2003-07-24  Robert Fenk  <Robert Fenk>
 
 	* lisp/bbdb-com.el (bbdb-send-mail-internal): 
