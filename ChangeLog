@@ -1,3 +1,66 @@
+Sat Apr 11 00:28:17 1998  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb.el: BBDB 2.00.01 released
+	* lisp/bbdb.el (bbdb-mode-map): Added bindings
+	* lisp/bbdb.el (bbdb-mode-search-map): Created, bound search
+	  functions to it.
+	* lisp/bbdb.el (bbdb-initialize): Gutted
+	* lisp/bbdb.el (bbdb-initialize-hook): Created
+	* lisp/bbdb.el (bbdb-load-hook): Changed documentation
+	* lisp/bbdb.el (advertized-bbdb-delete-current-field-or-record):
+	  Began to remove support
+	* lisp/bbdb-com.el (bbdb-changed): Syntax error in comment
+	* lisp/bbdb-com.el (bbdb-phones): Changed prompt
+	* lisp/bbdb-com.el (bbdb-net): Changed prompt
+	* lisp/bbdb-com.el (bbdb-company): Changed prompt
+	* lisp/bbdb-com.el (bbdb-name): Changed prompt
+	* lisp/bbdb-com.el (bbdb): Changed prompt
+	* lisp/bbdb-com.el (advertized-bbdb-delete-current-field-or-record):
+	  Began to remove support
+	* texinfo/bbdb.texinfo: Added EOL list.
+	* texinfo/bbdb.texinfo: EOL'd
+	  advertized-bbdb-delete-current-field-or-record.
+	* texinfo/bbdb.texinfo: EOL'd GNUS support.
+	* texinfo/bbdb.texinfo: Documented bbdb-initialize-hook
+	* texinfo/bbdb.texinfo: Documented new bindings
+	
+Fri Mar 13 00:00:00 1998  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb.el (bbdb-initialize): Made the autoloads be
+	  conditionally loaded.
+	* lisp/bbdb-com.el: Added ###autoload cookies.
+	* lisp/bbdb-ftp.el: Added ###autoload cookies.
+	* lisp/bbdb-gnus.el: Added ###autoload cookies.
+	* lisp/bbdb-hooks.el: Added ###autoload cookies.
+	* lisp/bbdb-mhe.el: Added ###autoload cookies.
+	* lisp/bbdb-migrate.el: Added ###autoload cookies.
+	* lisp/bbdb-print.el: Added ###autoload cookies.
+	* lisp/bbdb-reportmail.el: Added ###autoload cookies.
+	* lisp/bbdb-rmail.el: Added ###autoload cookies.
+	* lisp/bbdb-sc.el: Added ###autoload cookies.
+	* lisp/bbdb-snarf.el: Added ###autoload cookies.
+	* lisp/bbdb-srv.el: Added ###autoload cookies.
+	* lisp/bbdb-vm.el: Added ###autoload cookies.
+	* lisp/bbdb-w3.el: Added ###autoload cookies.
+	* lisp/bbdb-whois.el: Added ###autoload cookies.
+	* lisp/bbdb-xemacs.el: Added ###autoload cookies.
+	* lisp/auto-autoloads.el: Regenerated with new autoloads.
+
+Tue Mar 31 23:46:05 1998  Matt Simmons  <simmonmt@acm.org>
+
+	* lisp/bbdb-migrate.el (bbdb-migrate-change-dates-change-field):
+	  Use %S instead of %s for error messages.
+
+Tue Mar 17 00:00:00 1998  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb-hooks.el (bbdb-timestamp-hook): Made
+ 	  `format-time-string' take two arguments for XEmacs 19.15.
+	* lisp/bbdb-hooks.el (bbdb-creation-date-hook): Same.
+
+Mon Mar 16 20:02:00 1998  Matt Simmons  <simmonmt@acm.org>
+
+	* Makefile: Fix for compatibility with other makes
+		
 Sun Mar 15 23:46:00 1998  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 2.00 released
