@@ -85,6 +85,15 @@
 			  addresses of the form
 			  &lt;Firstname.Lastname@wherever&gt;<br><br></dd>
 
+            <dt>Is there a way to insert literal strings in the phone
+              number field?</dt>
+            <dd>Updated: July 28 2001<br>
+              <br>
+              Set <tt>bbdb-north-american-phone-numbers-p</tt> to
+              nil. This tells BBDB to not try parsing numbers, but to
+              simply accept whatever the user types in.<br><br></dd>
+
+
 	<!-- I guess this question came off the mailing list. It should be
 	reformatted & answered.
 
@@ -113,7 +122,8 @@
           you've typed. If it finds several matches, you can loop
           through them by repeatedly pressing <tt>M-TAB</tt>; you can
           also select from a completion-buffer of
-          choices.<br><Br></dd>
+          choices.<br><Br></dd> <!-- this isn't strictly true; check
+          config -->
 
           <dt>I have 42 records for Douglas Adams. How do I delete the
           duplicates?</dt>
@@ -174,11 +184,32 @@
 	  <dt>Talking to the world outside Emacs</dt>
 	  <dd>
 		  <dl>
+            <dt>BBDB with Gnus is asking me if I want to update
+              &lt;non-ASCII-name&gt to &lt<non-ASCII-name&lt</dt>
+            <dd>Updated: 28 July 2001<br>
+            <br>
+            All Hail coding-systems. This problem can be fixed by
+            enabling a coding system for your BBDB:
+<pre>
+(setq file-coding-system-alist 
+      (cons '("\\.bbdb" iso-8859-1 . iso-8859-1) 
+        file-coding-system-alist))
+</pre>
+            <br>(From Raymond Scholz and ShengHuo ZHU)<br>
+            or you could try this, from Toby Speight:<br>
+<pre>
+;; Need both `coding-system-p' tests to work with Emacs and XEmacs
+(cond ((coding-system-p 'emacs-mule)
+       (modify-coding-system-alist 'file "/\\.bbdb\\'" 'emacs-mule))
+      ((coding-system-p 'escape-quoted)
+       (modify-coding-system-alist 'file "/\\.bbdb\\'" 'escape-quoted)))
+</pre>
+            <br><br></dd>
 
 	<!-- bbdb-whois, bbdb-ftp,
 		 bbdb-talk-to-great-deities-seeking-enlightenment -->
-            <dt>How do I get BBDB and supercite to play?</dt>
-            <dd>Updated: 28 June 2001</br>
+            <dt>How do I get BBDB and supercite to play together?</dt>
+            <dd>Updated: 28 June 2001<br>
             <br>
             (Thanks to Kevin Davidson, quoted here)
             <pre>
@@ -213,7 +244,13 @@
              (t (error "%s did not evaluate to a string or list!"
                        "sc-attrib-selection-list"))
              )))
-            </pre><br><br></dd>
+            </pre><br><br>
+            You might also need the following, from Sergei Pokrovsky:
+<pre>
+ '(sc-citation-nonnested-root-regexp "\\([-._]\\|\\w\\)+")
+ '(sc-citation-root-regexp "\\([-._]\\|\\w\\)*")
+</pre>
+            <br><br></dd>
 
 			<dt>How do I get my Pilot/Addressbook/Phone/Widget to sync
 			with BBDB?</dt>
