@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.59  1998/04/11 07:23:03  simmonmt
+# Fix for compatibility with more makes
+#
 # Revision 1.58  1998/03/10 07:27:02  simmonmt
 # Removed my paths, added comments about the Custom requirement for
 # building Gnus support under 19.34
@@ -106,7 +109,7 @@ OTHERDIR	=
 syntax:
 	@echo "" ;\
 	echo "*** make one or more of: rmail vm mhe gnus all bbdb" ;\
-	echo "" ;\
+	echo "" 
 
 all: bbdb rmail vm mhe gnus info
 
