@@ -314,7 +314,7 @@ prefix argument to the bbdb-insert-new-field command."
   :group 'bbdb-record-creation
   :type 'boolean)
 
-(defcustom bbdb-electric-p t
+(defcustom bbdb-electric-p nil
   "*Whether bbdb mode should be `electric' like `electric-buffer-list'."
   :group 'bbdb-record-display
   :type 'boolean)
@@ -3010,7 +3010,7 @@ passed as arguments to initiate the appropriate insinuations.
   (fset 'advertized-bbdb-delete-current-field-or-record
         'bbdb-delete-current-field-or-record)
 
-  (load "bbdb-autoloads")
+  (require 'bbdb-autoloads)
 
   (while to-insinuate
     (let* ((feature (car to-insinuate))
@@ -3074,7 +3074,7 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map [(control x) (control t)]
                                            'bbdb-transpose-fields)
   (define-key bbdb-mode-map [(w)]          'bbdb-www)
-  (define-key bbdb-mode-map "\M-w"         'bbdb-whois)
+  (define-key bbdb-mode-map [(W)]         'bbdb-whois)
   (define-key bbdb-mode-map [(P)]          'bbdb-print)
   (define-key bbdb-mode-map [(h)]          'other-window)
   (define-key bbdb-mode-map [(=)]          'delete-other-windows)
@@ -3087,9 +3087,6 @@ passed as arguments to initiate the appropriate insinuations.
 ;;; functions that aren't present in various Emacsen (for example,
 ;;; cadr for Emacs 19.34), see below
 (when (string-match "XEmacs\\|Lucid" emacs-version)
-  (add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
-  (define-key bbdb-mode-map 'button3 'bbdb-menu)
-
   ;; Above
   (fset 'bbdb-warn 'warn)
 
@@ -3105,7 +3102,8 @@ passed as arguments to initiate the appropriate insinuations.
   "Call this function to hook BBDB into `message-mode'."
   (define-key message-mode-map "\M-\t" 'bbdb-complete-name))
 
-
+;;; Erm. says here that (require...) can take a noerror flag; why do
+;;; we have this function?
 (defmacro safe-require (thing)
   (list 'condition-case nil (list 'require thing) '(file-error nil)))
 
