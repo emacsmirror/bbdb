@@ -3,24 +3,25 @@
 %%% Authors: Luigi Semenzato <luigi@paris.cs.berkeley.edu>
 %%%          Boris Goldowsky <boris@cs.rochester.edu>
 %%% Copyright (C) 1993 Boris Goldowsky
-%%% Version: 3.0; 21Mar94
+%%% Version: 3.92; 5Jan95
 
 %%% For instructions on using this format file with BBDB, see bbdb-print.el
-%%% which should have come bundled with this file; or write to
-%%% boris@cs.rochester.edu.
+%%% which should have come bundled with this file.  The complete bbdb-print
+%%% package is also available via anonymous ftp at:
+%%% /cs.rochester.edu:/pub/u/boris/bbdb-print.tar.gz
 
 %%% This file is part of the bbdb-print extensions to the Insidious
 %%% Big Brother Database, which is for use with GNU Emacs.
 %%%
-%%% The Insidious Big Brother Database is free software; you can redistribute
-%%% it and/or modify it under the terms of the GNU General Public License as
-%%% published by the Free Software Foundation; either version 1, or (at your
-%%% option) any later version.
+%%% This program is free software; you can redistribute it and/or
+%%% modify it under the terms of the GNU General Public License as
+%%% published by the Free Software Foundation; either version 1, or
+%%% (at your option) any later version.
 %%%
-%%% BBDB is distributed in the hope that it will be useful, but WITHOUT ANY
-%%% WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-%%% FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-%%% details.
+%%% This program is distributed in the hope that it will be useful,
+%%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%%% General Public License for more details.
 %%%
 %%% You should have received a copy of the GNU General Public License
 %%% along with GNU Emacs; see the file COPYING.  If not, write to
@@ -47,12 +48,12 @@
 %%% \endaddresses
 %%% \bye
 
-\nopagenumbers
 \raggedright
 \tolerance=10000
 \hbadness=10000
 \parskip 0pt
 \parindent=0pt  % was 10pt
+\footline{\hfil}
 
 %%%
 %%% Fonts
@@ -126,6 +127,16 @@
 %%% Macros for formatting the entries.
 %%%
 
+\def\beginaddresses{}
+
+\def\endaddresses{
+  \bigskip\hrule\smallskip
+  \noindent {\bf Printed \today}\vfill\endcol}
+
+\def\beginrecord{\bigbreak}
+
+\def\endrecord{\bigbreak}
+
 \def\\{\par}
 
 \def\dots{\leaders\hbox to 0.6em{\hss.\hss}}
@@ -149,14 +160,6 @@
   \noindent\hskip-\leftskip{\it#1:  } #2\\ }}
 
 \def\notes#1{\smallbreak{\it(#1)}\\ }
-
-\def\beginrecord{\bigbreak}
-
-\def\endrecord{\bigbreak}
-
-\def\endaddresses{
-  \bigskip\hrule\smallskip
-  \noindent {\bf Printed \today}\vfill\endcol}
 
 \def\today{\number\day\space
         \ifcase\month\or Jan\or Feb\or Mar\or Apr \or May\or June\or
