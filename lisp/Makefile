@@ -4,6 +4,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.6  1998/02/23 07:23:23  simmonmt
+# Support for OTHERDIR, rearranged flags to Emacs so we can use
+# bbdb-split-string (19.34 doesn't have split-string)
+#
 # Revision 1.5  1998/01/06 06:48:50  simmonmt
 # Fixed bug
 #
@@ -58,11 +62,14 @@ DEPBINS=	${DEPSRCS:.el=.elc}
 SRCS=		bbdb.el  $(DEPSRCS)
 BINS=		bbdb.elc $(DEPBINS)
 
-PUSHPATH=	-eval '(setq load-path (cons "." load-path))'
+PUSHPATH=	-eval '(setq load-path (append (bbdb-split (if (/= 0 (length "$(OTHERDIR)")) \
+                                                                 (concat ". " "$(OTHERDIR)") \
+                                                                 ".") " ")                   \
+					       load-path))'
 
 syntax:
 	@echo "" ;\
-	echo "*** make one or more of: rmail vm mhe gnus all bbdb" ;\
+	echo "*** Make should be run from the `cd ..;pwd` directory" ;\
 	echo "" ;\
 
 all:	rmail gnus vm mhe bbdb info
@@ -81,7 +88,7 @@ bbdb-w3.elc:         bbdb.elc bbdb-w3.el
 bbdb-xemacs.elc:     bbdb.elc bbdb-xemacs.el
 
 .el.elc:
-	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -f batch-byte-compile $<
+	$(EMACS) -batch -q -l ./bbdb.elc $(PUSHPATH) -f batch-byte-compile $<
 
 bbdb.elc:	bbdb.el
 	$(EMACS) -batch -q -f batch-byte-compile ./bbdb.el
@@ -96,18 +103,18 @@ bbdb-vm.elc:	bbdb.elc bbdb-vm.el
 	$(EMACS) -batch -q -l ./bbdb.elc $(VM) -f batch-byte-compile $(@:.elc=.el)
 
 bbdb-srv.elc:   bbdb.elc bbdb-srv.el
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (and (locate-library "gnuserv") (locate-library "itimer")) (byte-compile-file "bbdb-srv.el") (message "Optional package bbdb-srv skipped - gnuserv not found"))'
+	$(EMACS) -batch -q -l ./bbdb.elc $(PUSHPATH) -eval '(if (and (locate-library "gnuserv") (locate-library "itimer")) (byte-compile-file "bbdb-srv.el") (message "Optional package bbdb-srv skipped - gnuserv not found"))'
 
 bbdb-reportmail.elc: bbdb.elc bbdb-reportmail.el
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "reportmail") (byte-compile-file "bbdb-reportmail.el") (message "Optional package bbdb-reportmail skipped - reportmail not found"))'
+	$(EMACS) -batch -q -l ./bbdb.elc $(PUSHPATH) -eval '(if (locate-library "reportmail") (byte-compile-file "bbdb-reportmail.el") (message "Optional package bbdb-reportmail skipped - reportmail not found"))'
 
 bbdb-sc.elc: bbdb.elc bbdb-sc.el
-	@$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc -eval '(if (locate-library "supercite") (byte-compile-file "bbdb-sc.el") (message "Optional package bbdb-sc skipped - supercite not found"))'
+	$(EMACS) -batch -q -l ./bbdb.elc $(PUSHPATH) -eval '(if (locate-library "supercite") (byte-compile-file "bbdb-sc.el") (message "Optional package bbdb-sc skipped - supercite not found"))'
 
 # bbdb-hooks uses VM macros if it can find VM.  If you don't have VM,
 # then the $(VM) makefile variable should be undefined or empty.
 bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
-	$(EMACS) -batch -q $(PUSHPATH) -l ./bbdb.elc $(VM) \
+	$(EMACS) -batch -q -l ./bbdb.elc $(PUSHPATH) $(VM) \
 	-f batch-byte-compile $(@:.elc=.el)
 
 autoloads: auto-autoloads.elc
