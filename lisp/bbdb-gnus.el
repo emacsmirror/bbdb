@@ -50,7 +50,6 @@
 (defun bbdb/gnus-get-message-id ()
   "Return the message-id of the current message."
   (save-excursion
-    (set-buffer (get-buffer gnus-article-buffer))
     (set-buffer gnus-original-article-buffer)
     (goto-char (point-min))
     (let ((case-fold-search t))
@@ -113,7 +112,7 @@ C-g again it will stop scanning."
         (msg-id (bbdb/gnus-get-message-id))
         records cache)
     (save-excursion
-      (set-buffer (get-buffer gnus-article-buffer))
+      (set-buffer gnus-original-article-buffer)
       (if (and msg-id (not bbdb/gnus-offer-to-create))
           (setq cache (bbdb-message-cache-lookup msg-id)))
 
@@ -403,8 +402,10 @@ This function is meant to be used with the user function defined in
   "Snarf signature from the corresponding *Article* buffer."
   (interactive)
   (save-excursion
+    ;; this is a little bogus, since it will remain set after you've
+    ;; quit Gnus
     (or gnus-article-buffer (error "Not in Gnus!"))
-    (set-buffer gnus-article-buffer)
+    (set-buffer gnus-original-article-buffer)
     (save-restriction
       (or (gnus-article-narrow-to-signature) (error "No signature!"))
       (bbdb-snarf-region (point-min) (point-max)))))
@@ -500,7 +501,7 @@ addresses better than the traditionally static global scorefile."
                                  bbdb-display-layout))
         (bbdb-auto-notes-alist nil))
     (bbdb/gnus-pop-up-bbdb-buffer nil)
-    (set-buffer gnus-article-buffer)
+    (set-buffer gnus-original-article-buffer)
     (bbdb-show-all-recipients)
     ))
 
