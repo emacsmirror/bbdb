@@ -56,14 +56,23 @@ prompt the users on how to merge records when duplicates are detected.")
 
 ;; Definitions for things that aren't in all Emacsen and that I really
 ;; would prefer not to live without.
-
 (eval-and-compile
   (if (fboundp 'unless) nil
     (defmacro unless (bool &rest forms) `(if ,bool nil ,@forms))
     (defmacro when (bool &rest forms) `(if ,bool (progn ,@forms))))
   (unless (fboundp 'save-current-buffer)
     (fset 'save-current-buffer 'save-excursion))
-  (unless (fboundp 'mapc) (fset 'mapc 'mapcar)))
+  (unless (fboundp 'mapc) (fset 'mapc 'mapcar))
+  ;; I LOVE FSF EMACS 19.34!!!!!
+  ;; these are all defined in cl. we should probably require that instead,
+  ;; but I'm just bugfixin' for now.
+  (if (fboundp 'caar) nil (defun caar (foo) (car (car foo))))
+  (if (fboundp 'cdar) nil (defun cdar (foo) (cdr (car foo))))
+  (if (fboundp 'cadar) nil (defun cadar (foo) (car (cdr (car foo)))))
+  (if (fboundp 'cadr) nil (defun cadr (foo) (car (cdr foo))))
+  (if (fboundp 'caddr) nil (defun caddr (foo) (car (cdr (cdr foo)))))
+  (if (fboundp 'caddar) nil (defun caddar (foo) (car (cdr (cdr (car foo))))))
+  )
 
 (unless (fboundp 'with-current-buffer)
   (defmacro with-current-buffer (buf &rest body)
@@ -74,16 +83,6 @@ prompt the users on how to merge records when duplicates are detected.")
 
 (defmacro string> (a b) (list 'not (list 'or (list 'string= a b)
                                          (list 'string< a b))))
-
-;; I LOVE FSF EMACS 19.34!!!!!
-;; these are all defined in cl. we should probably require that instead,
-;; but I'm just bugfixin' for now.
-(if (fboundp 'caar) nil (defun caar (foo) (car (car foo))))
-(if (fboundp 'cdar) nil (defun cdar (foo) (cdr (car foo))))
-(if (fboundp 'cadar) nil (defun cadar (foo) (car (cdr (car foo)))))
-(if (fboundp 'cadr) nil (defun cadr (foo) (car (cdr foo))))
-(if (fboundp 'caddr) nil (defun caddr (foo) (car (cdr (cdr foo)))))
-(if (fboundp 'caddar) nil (defun caddar (foo) (car (cdr (cdr (car foo))))))
 
 (eval-when-compile              ; pacify the compiler
  (defvar bbdb-address-print-formatting-alist) ; "bbdb-print"
@@ -1339,7 +1338,6 @@ The default state for Meta-x bbdb and friends is controlled by the variable
 default for when the BBDB buffer is automatically updated by the mail and
 news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 `bbdb-elided-display' will be consulted instead by mail and news.")
-(makunbound 'bbdb-pop-up-elided-display) ; default unbound.
 
 (defcustom bbdb-pop-up-elided-display-name-end 48
   "*Set this to the column where name and company should end in elided
@@ -1360,7 +1358,7 @@ the raw field content and return a string."
   :type 'sexp)
 
 (defmacro bbdb-pop-up-elided-display ()
-  '(if (boundp 'bbdb-pop-up-elided-display)
+  '(if bbdb-pop-up-elided-display
        bbdb-pop-up-elided-display
      bbdb-elided-display))
 
@@ -2496,44 +2494,28 @@ folder.")
 
 (make-variable-buffer-local 'bbdb-message-cache)
 
-(defmacro bbdb-message-cache-lookup (message-key
-                     &optional message-sequence-buffer)
-  (list 'progn '(bbdb-records)  ; yuck, this is to make auto-revert happen
-                ; in a convenient place.
-  (list 'and 'bbdb-message-caching-enabled
-    (let ((bod
-           (list 'let (list (list '--cons--
-                      (list 'assq message-key 'bbdb-message-cache)))
-             '(if (and --cons-- (bbdb-record-deleted-p (cdr --cons--)))
-               (progn
-             (setq bbdb-message-cache (delq --cons-- bbdb-message-cache))
-             nil)
-               (cdr --cons--)))))
-      (if message-sequence-buffer
-          (list 'save-excursion
-            (list 'set-buffer message-sequence-buffer)
-            bod)
-          bod))))
-  )
+(defun bbdb-message-cache-lookup (message-key)
+  "Return cached BBDB records for MESSAGE-KEY.
+If not present or when the records have been modified return nil."
+  (bbdb-records)
+  (if bbdb-message-caching-enabled
+      (let ((records (assq message-key bbdb-message-cache))
+            (invalid nil))
+        (if (and (not (listp records)) (bbdb-record-deleted-p records))
+            (setq invalid t)
+          (mapcar (lambda (record)
+                    (if (bbdb-record-deleted-p record)
+                        (setq invalid t)))
+                  (cdr records)))
+        (if invalid nil records))))
 
-(defmacro bbdb-encache-message (message-key bbdb-record &optional message-sequence-buffer)
-  "Don't call this multiple times with the same args, it doesn't replace."
-  (let ((bod (list 'let (list (list '--rec-- bbdb-record))
-           (list 'if 'bbdb-message-caching-enabled
-             (list 'and '--rec--
-              (list 'progn
-               '(notice-buffer-with-cache (current-buffer))
-               (list 'cdr
-                (list 'car
-                 (list 'setq 'bbdb-message-cache
-                  (list 'cons (list 'cons message-key '--rec--)
-                    'bbdb-message-cache))))))
-             '--rec--))))
-    (if message-sequence-buffer
-    (cons 'save-excursion
-          (list (list 'set-buffer message-sequence-buffer)
-            bod))
-    bod)))
+(defun bbdb-encache-message (message-key bbdb-records)
+  "Cache the BBDB-RECORDS for a message identified by MESSAGE-KEY and
+return them."
+  (and bbdb-message-caching-enabled
+       (add-to-list 'bbdb-message-cache (cons message-key bbdb-records))
+       (notice-buffer-with-cache (current-buffer)))
+  bbdb-records)
 
 (defun bbdb-decache-message (message-key)
   "Remove an element form the cache."
