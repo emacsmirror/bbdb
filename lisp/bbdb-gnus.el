@@ -25,6 +25,23 @@
 (require 'bbdb)
 (require 'gnus)
 
+;;; Compiler hushing
+(eval-when-compile
+  (defvar gnus-window-configuration)                      ;; gnus-win
+  (defvar gnus-optional-headers)                          ;; ??
+  (defvar gnus-Subject-buffer)                            ;; ??
+  (defvar gnus-Subject-mode-map)                          ;; ??
+  (autoload 'gnus-summary-select-article "gnus-sum")
+  (autoload 'gnus-article-narrow-to-signature "gnus-art")
+  (autoload 'nntp-header-lines "nntp")
+  (autoload 'nntp-header-from "nntp")
+  (defvar bbdb-pop-up-elided-display)                     ;; bbdb
+  (autoload 'bbdb-record-edit-notes "bbdb-com")
+  (autoload 'bbdb-record-edit-property "bbdb-com")
+  (autoload 'bbdb-snarf-region "bbdb-snarf")
+  (autoload 'bbdb-show-all-recipients "bbdb-com")
+  (autoload 'rfc822-addresses "rfc822"))
+
 ;;;###autoload
 (defun bbdb/gnus-update-record (&optional offer-to-create)
   "returns the record corresponding to the current GNUS message, creating
@@ -448,6 +465,197 @@ addresses better than the traditionally static global scorefile."
     (set-buffer gnus-article-buffer)
     (bbdb-show-all-recipients)
     ))
+
+;;; from Brian Edmonds' gnus-bbdb.el
+;;;
+;;; Filing with gnus-folder               REQUIRES (ding) 0.50 OR HIGHER
+;;;
+;;; To use this feature, you need to put this file somewhere in your
+;;; load-path and add the following lines of code to your .gnus file:
+;;;
+;;; (setq nnmail-split-methods 'bbdb/gnus-split-method)
+;;;
+;;; You should also examine the variables defvar'd below and customize
+;;; them to your taste.  They're listed roughly in descending likelihood
+;;; of your wanting to change them.  Once that is done, you need to add
+;;; filing information to your BBDB.  There are two fields of interest:
+;;;
+;;; 1. gnus-private.  This field contains the name of the group in which
+;;;    mail to you from any of the addresses associated with this record
+;;;    will be filed.  Also, any self-copies of mail you send any of the
+;;;    same addresses will be filed here.
+;;; 2. gnus-public.  This field is used to keep mail from mailing lists
+;;;    out of the private mailboxes.  It should be added to a record for
+;;;    the list submission address, and is formatted as follows:
+;;;      "group regexp"
+;;;    where group is where mail from the list should be filed, and
+;;;    regexp is a regular expression which is checked against the
+;;;    envelope sender (from the From_ header) to verify that this is
+;;;    the copy which came from the list.  For example, the entry for
+;;;    the ding mailing list might be:
+;;;      "mail.emacs.ding ding-request@ifi.uio.no"
+;;;    Yes, the second part *is* a regexp, so those dots may match
+;;;    something other than dots.  Sue me.
+;;;
+;;; Note that you can also specify a gnus-private field for mailing list
+;;; addresses, in which case self-copies of mail you send to the list
+;;; will be filed there.  Also, the field names can be changed below if
+;;; the defaults aren't hip enough for you.  Lastly, if you specify a
+;;; gnus-private field for your *own* BBDB record, then all self-copies
+;;; of mail you send will be filed to that group.
+;;;
+;;; This documentation should probably be expanded and moved to a
+;;; separate file, but it's late, and *I* know what I'm trying to
+;;; say. :)
+
+;;; custom bits
+(defcustom bbdb/gnus-split-default-group "mail.misc"
+  "*If the BBDB doesn't indicate any group to spool a message to, it will
+be spooled to this group.  If bbdb/gnus-split-crosspost-default is not
+nil, and if the BBDB did not indicate a specific group for one or more
+addresses, messages will be crossposted to this group in addition to any
+group(s) which the BBDB indicated."
+  :group 'bbdb-mua-specific-gnus-splitting
+  :type  'string)
+
+(defcustom bbdb/gnus-split-nomatch-function nil
+  "*This function will be called after searching the BBDB if no place to
+file the message could be found.  It should return a group name (or list
+of group names) -- nnmail-split-fancy as provided with Gnus is an
+excellent choice."
+  :group 'bbdb-mua-specific-gnus-splitting
+  :type  'function)
+
+(defcustom bbdb/gnus-split-myaddr-regexp
+  (concat "^" (user-login-name) "$\\|^"
+          (user-login-name) "@\\([-a-z0-9]+\\.\\)*"
+          (or gnus-local-domain (message-make-domain)
+              (system-name) "") "$")
+  "*This regular expression should match your address as found in the
+From header of your mail.  You should make sure gnus-local-domain or
+gnus-use-generic-from are set before loading this module, if they differ
+from (system-name).  If you send mail/news from multiple addresses, then
+you'll likely have to set this yourself anyways."
+  :group 'bbdb-mua-specific-gnus-splitting
+  :type  'string)
+
+(defcustom bbdb/gnus-split-crosspost-default nil
+  "*If this variable is not nil, then if the BBDB could not identify a
+group for every mail address, messages will be filed in
+bbdb/gnus-split-default-group in addition to any group(s) which the BBDB
+identified."
+  :group 'bbdb-mua-specific-gnus-splitting
+  :type  'boolean)
+
+(defcustom bbdb/gnus-split-private-field 'gnus-private
+  "*This variable is used to determine the field to reference to find the
+associated group when saving private mail for a network address known to
+the BBDB.  The value of the field should be the name of a mail group."
+  :group 'bbdb-mua-specific-gnus-splitting
+  :type  'string)
+
+(defcustom bbdb/gnus-split-public-field 'gnus-public
+  "*This variable is used to determine the field to reference to find the
+associated group when saving non-private mail (received from a mailing
+list) for a network address known to the BBDB.  The value of the field
+should be the name of a mail group, followed by a space, and a regular
+expression to match on the envelope sender to verify that this mail came
+from the list in question."
+  :group 'bbdb-mua-specific-gnus-splitting
+  :type  'string)
+
+;; The split function works by assigning one of four spooling priorities
+;; to each group that is associated with an address in the message.  The
+;; priorities are assigned as follows:
+;;
+;; 0. This priority is assigned when crosspost-default is nil to To/Cc
+;;    addresses which have no private group defined in the BBDB.  If the
+;;    user's own address has no private group defined, then it will
+;;    always be given this priority.
+;; 1. This priority is assigned to To/Cc addresses which have a private
+;;    group defined in the BBDB.  If crosspost-default is not nil, then
+;;    To/Cc addresses which have no private group will also be assigned
+;;    this priority.  This is also assigned to the user's own address in
+;;    the From position if a private group is defined for it.
+;; 2. This priority is assigned to From addresses which have a private
+;;    group defined in the BBDB, except for the user's own address as
+;;    described under priorities 0 and 1.
+;; 3. This priority is assigned to To/Cc addresses which have a public
+;;    group defined in the BBDB, and whose associated regular expression
+;;    matches the envelope sender (found in the header From_).
+;;
+;; The split function evaluates the spool priority for each address in
+;; the headers of the message, and returns as a list all the groups
+;; associated with the addresses which share the highest calculated
+;; priority.
+
+;;;#autoload
+(defun bbdb/gnus-split-method nil
+  "This function expects to be called in a buffer which contains a mail
+message to be spooled, and the buffer should be narrowed to the message
+headers.  It returns a list of groups to which the message should be
+spooled, using the addresses in the headers and information from the
+BBDB."
+  (let ((prq (list (cons 0 nil) (cons 1 nil) (cons 2 nil) (cons 3 nil))))
+    ;; the From: header is special
+    (let* ((hdr (or (mail-fetch-field "from") (user-login-name)))
+       (rv (bbdb/gnus-split-to-group hdr t)))
+      (setcdr (nth (cdr rv) prq) (cons (car rv) nil)))
+    ;; do the rest of the headers
+    (let ((hdr (or (concat (mail-fetch-field "to" nil t) ", "
+               (mail-fetch-field "cc" nil t) ", "
+               (mail-fetch-field "apparently-to" nil t)) "")))
+      (setq hdr (rfc822-addresses hdr))
+      (while hdr
+    (let* ((rv (bbdb/gnus-split-to-group (car hdr)))
+           (pr (nth (cdr rv) prq)))
+      (or (member (car rv) pr) (setcdr pr (cons (car rv) (cdr pr)))))
+    (setq hdr (cdr hdr))))
+    ;; find the highest non-empty queue
+    (setq prq (reverse prq))
+    (while (and prq (not (cdr (car prq)))) (setq prq (cdr prq)))
+    ;; and return...
+    (if (not (or (not (cdr (car prq)))
+         (and (equal (cdr (car prq)) (list bbdb/gnus-split-default-group))
+                  (symbolp bbdb/gnus-split-nomatch-function)
+              (fboundp bbdb/gnus-split-nomatch-function))))
+    (cdr (car prq))
+      (goto-char (point-min))
+      (funcall bbdb/gnus-split-nomatch-function))))
+
+(defun bbdb/gnus-split-to-group (addr &optional source)
+  "This function is called from bbdb/gnus-split-method in order to
+determine the group and spooling priority for a single address."
+  (condition-case tmp
+      (progn
+    (setq tmp (mail-extract-address-components addr))
+    (let* ((nam (car tmp))
+           (net (if (not bbdb-canonicalize-net-hook) (car (cdr tmp))
+              (bbdb-canonicalize-address (car (cdr tmp)))))
+           (rec (bbdb-search-simple nam net))
+           pub prv rgx)
+      (if (not rec) nil
+        (setq prv (bbdb-record-getprop rec bbdb/gnus-split-private-field)
+          pub (bbdb-record-getprop rec bbdb/gnus-split-public-field))
+        (if (and pub (not source) (string-match "^\\([^ ]+\\) \\(.*\\)$" pub))
+        (setq rgx (substring pub (match-beginning 2) (match-end 2))
+              pub (substring pub (match-beginning 1) (match-end 1)))
+          (setq pub nil)))
+      (cond
+       ((and rgx pub
+         (goto-char (point-min))
+         (re-search-forward "^From \\([^ \n]+\\)[ \n]" nil t)
+         (string-match rgx (buffer-substring (match-beginning 1) (match-end 1))))
+        (cons pub 3))
+       (prv
+        (cons prv
+          (- 1 (if source -1 0)
+             (if (string-match bbdb/gnus-split-myaddr-regexp net) 1 0))))
+       (t
+        (cons bbdb/gnus-split-default-group
+          (if (string-match bbdb/gnus-split-myaddr-regexp net) 0
+            (if source 2 (if bbdb/gnus-split-crosspost-default 1 0))))))))
+    (error (cons bbdb/gnus-split-default-group 0))))
 
 ;;
 ;; Insinuation
