@@ -22,19 +22,20 @@
 ;;; bbdb-snarf is code to pick addresses, phones, and such out of a
 ;;; free-form paragraphs.  Things are recognized by context (web pages
 ;;; start with http:// or www., for example).  I wrote it because I
-;;; dispise fill-in-the-blank forms (a la bbdb-create).  (if I wanted
+;;; despise fill-in-the-blank forms (a la bbdb-create).  (if I wanted
 ;;; modes, I'd use vi :-).
 ;;;
 ;;; Eventually I'd like to be able to replace bbdb-mode with a free-form
 ;;; text mode where bbdb-snarf merges in any changes you make.
 ;;; I'm not there yet---merging is not good enough currently.
 ;;; Currently bbdb-snarf is good for pulling postal addresses
-;;; from e-mail messages and coverting other databases.
+;;; from e-mail messages and converting other databases.
 ;;;
 
 (require 'bbdb)
-(require 'bbdb-com) ;; for bbdb-parse-phone-number (and other things?)
-
+(require 'bbdb-com)
+(require 'rfc822)
+(require 'mail-extr)
 
 (defconst digit "[0-9]")
 (defvar bbdb-snarf-phone-regexp
@@ -161,7 +162,7 @@ more details."
       (goto-char (point-min))
       (while (re-search-forward "\\s +$" (point-max) t)
         (replace-match ""))
-      
+
       ;; first, pick out phone numbers
       (goto-char (point-min))
       (while (re-search-forward bbdb-snarf-phone-regexp (point-max) t)
@@ -194,7 +195,7 @@ more details."
       (while (re-search-forward "[^ \t\n<]+@[^ \t\n>]+" (point-max) t)
         (setq nets (append nets (list (match-string 0))))
         (replace-match ""))
-      
+
       (bbdb-snarf-prune-empty-lines)
 
       ;; name
@@ -400,9 +401,15 @@ more details."
                   start me))
           (concat result (substring string start))))))
 
+(defcustom bbdb-extract-address-components-func 'bbdb-extract-address-components
+  "Function called to parse one or more email addresses.
+See bbdb-extract-address-components for an example."
+  :group 'bbdb-noticing-records
+  :type 'function)
+
 (defcustom bbdb-extract-address-component-regexps
-    '(;; "'surname, firstname'" <address>  from Outlookers
-      ("\"'\\([^\"]*\\)'\"\\s-*<\\([^>]+\\)>"
+    '(;; "surname, firstname" <address>  from Outlookers
+      ("\"\\([^\"]*\\)\"\\s-*<\\([^>]+\\)>"
        (bbdb-clean-username (match-string 1 adstring)) 2)
       ;; "name" <address>
       ("\"\\([^\"]*\\)\"\\s-*<\\([^>]+\\)>"
@@ -459,7 +466,7 @@ order to extract the address components and return the rest and the
 components as list or to do what ever it wants, e.g. send a complain
 to the author ...
 
-To skip known unpareable stuff you rather should set the variable
+To skip known unparseable stuff you rather should set the variable
 `bbdb-extract-address-component-ignore-regexp' instead of disabling
 this handler."
   :group 'bbdb-noticing-records
@@ -565,5 +572,35 @@ See `bbdb-extract-address-component-handler' for more information."
 
     (delete '(nil nil) (nreverse fnadlist))))
 
+;;; alternative name parser
+;;; ###autoload
+(defun bbdb-rfc822-addresses ( addrline )
+  "Split ADDRLINE into a list of parsed addresses.
+
+You can't do this with rfc822.el in any sort of useful way because it discards
+the comments. You can't do this with mail-extr.el because the multiple address
+parsing in GNU Emacs appears to be broken beyond belief, and the XEmacs
+version doesn't support multiple addresses."
+  (let (addrs (start 0))
+    (setq addrline (concat addrline ",")) ;; kludge, to make parsing easier
+    ;; Addresses are separated by commas. This is probably the worst
+    ;; possible way to do this, but it does cut down on the amount of
+    ;; coding effort I have to duplicate. Basically, we split on
+    ;; commas, and then try and parse what we've found. Pathologically
+    ;; bad address lines will break this.
+    (while (string-match "\\([^,]+\\)," addrline start)
+      (let* ((thisaddr (substring addrline 0 (match-end 1)))
+             (comma (match-end 0)) ;; rfc822-addresses trashes match-data
+             (parsed (rfc822-addresses thisaddr)))
+        (if (string-match "(" (car parsed)) ;; rfc822 didn't like it.
+            (setq start comma)
+          (setq addrs
+                (append addrs (list
+                               (mail-extract-address-components
+                                thisaddr)))
+                ;; throw away what we just parsed
+                addrline (substring addrline comma)
+                start 0))))
+    addrs))
 
 (provide 'bbdb-snarf)
