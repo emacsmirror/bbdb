@@ -8,6 +8,9 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.30  2000/08/21 08:35:15  waider
+@c Fix an error in VM doco that prevented file from building
+@c
 @c Revision 1.29  2000/08/18 13:34:26  fenk
 @c * texinfo/bbdb.texinfo (VM Features): Documentation of new VM
 @c 	features.
@@ -1895,7 +1898,7 @@ message summary.
 @menu
 * VM Message Summary::                  @b{BBDB} information in message summary
 * VM what records are displayed::
-* VM automatic setup of `vm-set-auto-folder-alist'::
+* VM automatic setup of @code{vm-set-auto-folder-alist}::
 * VM snarfing all email addresses::
 * VM automatic adding of labels::
 @end menu
