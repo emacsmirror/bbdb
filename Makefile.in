@@ -20,7 +20,7 @@ LINKPATH = @LINKPATH@
 # Deployment
 TARFILES = ChangeLog INSTALL Makefile README                        \
            aclocal.m4 configure configure.in install-sh Makefile.in \
-           bits html lisp misc tex texinfo utils
+           bits lisp misc tex texinfo utils
 
 syntax:
 	@echo "" ;\
@@ -47,7 +47,10 @@ gnus:
 autoloads:
 	cd lisp; $(MAKE) autoloads
 
-install-pkg: bbdb autoloads info
+autoloadsc:
+	cd lisp; $(MAKE) autoloadsc
+
+install-pkg: bbdb autoloadsc info
 	rm -fr $(PACKAGEDIR)/lisp/bbdb $(PACKAGEDIR)/info/bbdb \
                $(PACKAGEDIR)/etc/bbdb; \
         if test "x$(SYMLINKS)" = "xno" ; then \
@@ -86,124 +89,19 @@ clean:
 	cd lisp; $(MAKE) clean
 	cd texinfo; $(MAKE) clean
 
-reallyclean: clean
-	cd texinfo; $(MAKE) reallyclean
+distclean: clean
+	cd texinfo; $(MAKE) distclean
+	cd lisp; $(MAKE) distclean
+	$(RM) -f config.status config.cache config.status config.log
+	$(RM) *.tar.gz
+	$(RM) .#*
 
-# Testing
-test: test-setup test-bbdb
+cvsclean: distclean  # configure & Makefile are in CVS, but shouldn't be.
 
-test-setup:
-	cp $${HOME}/.bbdb $${HOME}/.bbdb-test
+# Backward compatibility
+reallyclean: distclean
 
-test-bbdb:
-	$(EMACS) -l $${HOME}/bbdb-test.el
-
-# FSF Emacs 19.34 (w32 emacs is actually 19.36)
-EMACS_19_34_DIR=/local/downloads/emacs-19.34
-
-emacs19.34-test: emacs19.34-test-setup emacs19.34-test-bbdb
-emacs19.34-test: emacs19.34-test-rmail emacs19.34-test-vm
-emacs19.34-test: emacs19.34-test-mhe   emacs19.34-test-gnus
-emacs19.34-test: emacs19.34-test-all
-
-emacs19.34-test-setup: clean
-	@echo '--- TESTING BBDB WITH FSF EMACS 19.34 ---'
-	@echo
-	@echo '** Setting up **'
-	@-rm -rf $(EMACS_19_34_DIR)/site-lisp
-	@mkdir $(EMACS_19_34_DIR)/site-lisp
-	@cp lisp/*.el $(EMACS_19_34_DIR)/site-lisp
-	@cp ../emacs-19.34/site-lisp $(EMACS_19_34_DIR)/site-lisp
-
-emacs19.34-test-bbdb:
-	@echo
-	@echo '** Testing build of "bbdb" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs bbdb
-
-emacs19.34-test-rmail:
-	@echo
-	@echo '** Testing build of "rmail" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs rmail
-
-emacs19.34-test-vm:
-	@echo
-	@echo '** Testing build of "vm" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs vm
-
-emacs19.34-test-mhe:
-	@echo
-	@echo '** Testing build of "mhe" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs mhe
-
-emacs19.34-test-gnus:
-	@echo
-	@echo '** Testing build of "gnus" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs gnus
-
-emacs19.34-test-all: clean
-	@echo
-	@echo '** Testing build of "all" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs all
-
-# FSF Emacs 20.6
-EMACS_19_34_DIR=/local/downloads/emacs-20.6
-
-emacs20.6-test: emacs20.6-test-setup emacs20.6-test-bbdb
-emacs20.6-test: emacs20.6-test-rmail emacs20.6-test-vm
-emacs20.6-test: emacs20.6-test-mhe   emacs20.6-test-gnus
-emacs20.6-test: emacs20.6-test-all
-
-emacs20.6-test-setup: clean
-	@echo '--- TESTING BBDB WITH FSF EMACS 20.6 ---'
-	@echo
-	@echo '** Setting up **'
-	@-rm -rf $(EMACS_19_34_DIR)/site-lisp
-	@mkdir $(EMACS_19_34_DIR)/site-lisp
-	@cp lisp/*.el $(EMACS_19_34_DIR)/site-lisp
-	@cp ../emacs-20.6/site-lisp $(EMACS_19_34_DIR)/site-lisp
-
-emacs20.6-test-bbdb:
-	@echo
-	@echo '** Testing build of "bbdb" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs bbdb
-
-emacs20.6-test-rmail:
-	@echo
-	@echo '** Testing build of "rmail" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs rmail
-
-emacs20.6-test-vm:
-	@echo
-	@echo '** Testing build of "vm" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs vm
-
-emacs20.6-test-mhe:
-	@echo
-	@echo '** Testing build of "mhe" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs mhe
-
-emacs20.6-test-gnus:
-	@echo
-	@echo '** Testing build of "gnus" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs gnus
-
-emacs20.6-test-all: clean
-	@echo
-	@echo '** Testing build of "all" **'
-	@echo
-	$(MAKE) EMACS=$(EMACS_19_34_DIR)/src/emacs all
-
+# tarball
 tar: $(TARFILES)
 	@if test "x$(TAR)" = "x" ; then                                    \
           echo "Sorry, no \`tar' program available." ;                     \
@@ -225,7 +123,7 @@ tar: $(TARFILES)
           rm $${name} ;                                                    \
         fi
 
-dist: clean info tar
+dist: distclean info autoloads tar
 
 TAGS: tags
 
