@@ -126,6 +126,7 @@ patches to internationalize these assumptions are welcome.
    (progn (goto-char where) (forward-paragraph -1) (point))
    (progn (forward-paragraph 1) (point))))
 
+;;;###autoload
 (defun bbdb-snarf-region (begin end)
   "snarf up a bbdb record in the current region.  See `bbdb-snarf' for
 more details."
@@ -371,6 +372,3 @@ more details."
   new-record)
 
 (provide 'bbdb-snarf)
-
-
-
