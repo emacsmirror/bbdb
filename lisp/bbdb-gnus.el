@@ -22,6 +22,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.60  1998/12/05 16:41:38  simmonmt
+;; Honor bbdb-user-mail-names.
+;;
 ;; Revision 1.59  1998/04/11 07:21:25  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back
 ;;
@@ -67,24 +70,28 @@ bbdb/news-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
 the user confirms the creation."
   (if bbdb-use-pop-up
       (bbdb/gnus-pop-up-bbdb-buffer offer-to-create)
-    (let ((from
-	   (progn
-	     (set-buffer gnus-article-buffer)
-	     (save-restriction
-	       (widen)
-	       ;;(gnus-article-show-all-headers)
-	       (narrow-to-region (point-min)
-				 (progn (goto-char (point-min))
-					(or (search-forward "\n\n" nil t)
-					    (error "message unexists"))
-					(- (point) 2)))
-	       (mail-fetch-field "from")))))
+    (set-buffer gnus-article-buffer)
+    (save-restriction
+      (widen)
+      ;;(gnus-article-show-all-headers)
+      (narrow-to-region (point-min)
+                        (progn (goto-char (point-min))
+                               (or (search-forward "\n\n" nil t)
+                                   (error "message unexists"))
+                               (- (point) 2)))
+      (let ((from (mail-fetch-field "from"))
+            name net)
+        (if (or (null from)
+                (string-match (bbdb-user-mail-names)
+                              (mail-strip-quoted-names from)))
+            ;; if logged-in user sent this, use recipients.
+            (setq from (or (mail-fetch-field "to") from)))
       (if from
 	  (bbdb-annotate-message-sender from t
 					(or (bbdb-invoke-hook-for-value
 					     bbdb/news-auto-create-p)
 					    offer-to-create)
-					offer-to-create)))))
+					offer-to-create))))))
 
 ;;;###autoload
 (defun bbdb/gnus-annotate-sender (string &optional replace)
