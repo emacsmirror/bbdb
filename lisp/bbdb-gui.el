@@ -389,7 +389,9 @@ as of GNU Emacs 20.7"
                            'aka
                          (intern (car field)))))
              (vector (car field)
-                     (list 'bbdb-insert-new-field (list 'quote type)
+                     (list 'bbdb-insert-new-field
+                           record
+                           (list 'quote type)
                            (list 'bbdb-prompt-for-new-field-value
                                  (list 'quote type)))
                      (not
