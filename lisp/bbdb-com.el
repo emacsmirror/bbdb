@@ -2118,7 +2118,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
               (or rec
                   (throw 'bbdb-cycling-exit nil))
 
-              (let* ((addrs (bbdb-record-net rec))
+              (let* ((addrs (mapcar 'downcase (bbdb-record-net rec)))
                      (this-addr (or (cadr (member (cadar addr) addrs))
                                     (nth 0 addrs))))
                 (if (= (length addrs) 1)
