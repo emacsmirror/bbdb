@@ -4,6 +4,11 @@
 # $Id$
 #
 # $Log$
+# Revision 1.56  1997/11/02 06:35:43  simmonmt
+# Fixed package install - `foo 'bar` (as opposed to `foo 'bar'`) works
+# in Bourne shell, but not in others.  That and it's not exactly
+# intuitive.
+#
 # Revision 1.55  1997/10/26 05:11:20  simmonmt
 # Installation timing change: .el before .elc.  Tried to optimize
 # install
@@ -114,14 +119,14 @@ install-pkg: bbdb autoloads info
 	      mkdir -p -m 0755 $(PACKAGEROOT)/lisp/bbdb; \
 	      if [ -z "$(SYSVINSTALL)" ] ; then \
 		for i in `ls lisp/*.elc` ; do \
-		   $(BSDINSTALL) -c -m 0644 `echo $$i | sed 's/c$$//g` \
+		   $(BSDINSTALL) -c -m 0644 `echo $$i | sed 's/c$$//g'` \
 			$(PACKAGEROOT)/lisp/bbdb ; \
 		   $(BSDINSTALL) -c -m 0644 $$i $(PACKAGEROOT)/lisp/bbdb ; \
 		done ; \
 	      else \
 		for i in `ls lisp/*.elc` ; do \
 		   $(SYSVINSTALL) -c $(PACKAGEROOT)/lisp/bbdb -s -m 0644 \
-			`echo $$i | sed 's/c$$//g` $(PACKAGEROOT)/lisp/bbdb ; \
+			`echo $$i | sed 's/c$$//g'` $(PACKAGEROOT)/lisp/bbdb ; \
 		   $(SYSVINSTALL) -c $(PACKAGEROOT)/lisp/bbdb -s -m 0644 $$i ; \
 		done ; \
 	      fi ; \
