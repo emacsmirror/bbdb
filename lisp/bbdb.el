@@ -54,9 +54,10 @@
  (autoload 'bbdb-append-records-p "bbdb-com")
  (autoload 'y-or-n-p-with-timeout "timer")
  (autoload 'mail-position-on-field "sendmail")
+ (autoload 'bbdb-fontify-buffer "bbdb-gui")
  ;; autoload doesn't work for these
  (condition-case nil (require 'message)
-   (error (message "Warning: Gnus not found.  If you use Gnus, ensure it is in your `load-path'"))); for message-mode-map
+   (error (message "Warning: message not found.  Ensure it is in your `load-path'"))); for message-mode-map
  (require 'sendmail); for mail-mode-map
  )
 
@@ -340,10 +341,16 @@ you should reload `bbdb-file'."
 
 (defcustom bbdb-default-area-code nil
   "*The default area code to use when prompting for a new phone number.
-This must be a number, not a string."
+This variable also affects dialing."
   :group 'bbdb-record-creation
   :type '(choice (const :tag "none" nil)
-                 (integer :tag "Area code" :value "312")))
+                 'integer)
+  :set (lambda( symb val )
+         (if (or (and (stringp val)
+                      (string-match "^[0-9]+$" val))
+                 (null val))
+             (set symb val)
+           (error "%s must contain digits only." symb))))
 
 (defcustom bbdb-default-domain nil
   "*The default domain to append when prompting for a new net address.
@@ -1539,7 +1546,7 @@ formatted and inserted into the current buffer.  This is used by
                  (setq start (point))
                  (bbdb-format-address addr nil indent)
                  (put-text-property start (point) 'bbdb-field
-                                    (list 'address addr 
+                                    (list 'address addr
                                           (bbdb-address-location addr)))
                  (setq addrs (cdr addrs))))
              (setq start nil))
@@ -1676,7 +1683,7 @@ multi-line layout."
 
 (defun bbdb-display-records-1 (records &optional append layout)
   (setq append (or append (bbdb-append-records-p)))
-  
+
   (if (or (null records)
           (consp (car records)))
       nil
@@ -1924,7 +1931,7 @@ multi-line layout."
                                   (or ht '(bbdb-hashtable)))))
         (list 'and 's (list 'set 's (list 'bbdb-remove! record
                                           (list 'symbol-value 's))))))
-   
+
 (defsubst bbdb-search-intertwingle (name net)
   "Find bbdb records matching NAME and NET.
 
@@ -2609,7 +2616,7 @@ delete the entire record.
 Note that this\n\t will let you add new fields of your own as well.
 \\[bbdb-transpose-fields]\t Swap the field on the current line with the \
 previous field.
-\\[bbdb-dial]\t Play dial tones for the phone number on the current line.
+\\[bbdb-dial]\t Dial the current phone field.
 \\[bbdb-next-record], \\[bbdb-prev-record]\t Move to the next or the previous \
 displayed record, respectively.
 \\[bbdb-create]\t Create a new record.
