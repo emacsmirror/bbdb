@@ -2,7 +2,7 @@
 
 ;;; This file is an addition to the Insidious Big Brother Database
 ;;; (aka BBDB), copyright (c) 1991, 1992 Jamie Zawinski
-;;; <jwz@lucid.com>.
+;;; <jwz@netscape.com>.
 ;;; 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -72,6 +72,9 @@
 
 ;;;
 ; $Log$
+; Revision 1.8  1998/01/06 06:12:32  simmonmt
+; Customized variables, removed autoloads, and added provide of bbdb-sc
+;
 ; Revision 1.7  1997/11/02 07:46:44  simmonmt
 ; Welcome to the family.  Moved the automatically running code into
 ; functions.  Generalized attribution field.
@@ -100,18 +103,26 @@
 (require 'supercite)
 
 ;;; User variable(s)
-(defvar bbdb/sc-replace-attr-p t
+(defcustom bbdb/sc-replace-attr-p t
  "t if you like to create a new BBDB entry when 
 entering a non-default attribution, 'ask if the user
-should be asked before creation and NIL if we never create a new entry.")
+should be asked before creation and NIL if we never create a new entry."
+ :group 'bbdb-utilities-supercite
+ :type '(choice (const "Create a new BBDB entry" t)
+		(const "Confirm new record creation" ask)
+		(const "Don't create a new entry" nil)))
 
-(defvar bbdb/sc-attribution-field 'attribution
-  "The BBDB field used for Supercite attribution information.")
+(defcustom bbdb/sc-attribution-field 'attribution
+  "The BBDB field used for Supercite attribution information."
+  :group 'bbdb-utilities-supercite
+  :type '(symbol :tag "Field name"))
 
 ;;; Code starts 
-(defvar bbdb/sc-last-attribution ""
+(defcustom bbdb/sc-last-attribution ""
  "Default attribution return by the SuperCite citation engine,
-used to compare against citation selected by the user.")
+used to compare against citation selected by the user."
+ :group 'bbdb-utilities-supercite
+ :type '(string :tag "Default citation" ""))
 
 (defun bbdb/sc-consult-attr (from)
   "Extract citing information from BBDB using sc-consult where
@@ -205,7 +216,6 @@ Custom."
       (end                          (setq sc-mail-headers-end (point))))))
 
 ;; insert our hooks - call me from your Emacs initialization file
-;;;###autoload
 (defun bbdb-insinuate-sc ()
   "Call this function to hook BBDB into Supercite."
   
@@ -216,4 +226,5 @@ Custom."
 				   (if sc-downcase-p 
 				       (downcase attribution) attribution))))))
 
+(provide 'bbdb-sc)
 ;;; end of bbdb-sc.el
