@@ -50,7 +50,8 @@
 (defun bbdb-fontify-buffer ()
   (save-excursion
     (set-buffer bbdb-buffer-name)
-    (if (fboundp 'set-specifier)
+    (if (and (fboundp 'set-specifier)
+	     (featurep 'scrollbar))
 	(set-specifier scrollbar-height (cons (current-buffer) 0)))
     ;; first delete existing extents
     (map-extents (function (lambda (x y)
