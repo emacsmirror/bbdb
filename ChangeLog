@@ -1,3 +1,11 @@
+2002-04-30  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-com.el (bbdb-play-sound): argument NUM is integer now.
+	(bbdb-sound-player): If set use this programm, otherwise try
+	native sound support.
+	(bbdb-dial-number): Calculate the right integer, i.e. do not use
+	char-int.
+
 2002-04-18  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-gui.el (build-bbdb-insert-field-menu): Added record to
