@@ -119,10 +119,9 @@ displaying the record corresponding to the sender of the current message."
         (bbdb-use-pop-up nil)
         (bbdb-electric-p nil))
     (let ((records (bbdb/rmail-update-records offer-to-create))
-          (bbdb-elided-display (bbdb-pop-up-elided-display))
           (b (current-buffer)))
       (if records
-          (bbdb-display-records records)
+          (bbdb-display-records records bbdb-pop-up-display-layout)
         (bbdb-undisplay-records)
         (if (get-buffer-window bbdb-buffer-name)
             (delete-window (get-buffer-window bbdb-buffer-name))))

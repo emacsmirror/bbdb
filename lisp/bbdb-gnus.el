@@ -144,7 +144,7 @@ are performed and it might override `bbdb-update-records-mode'.
 When hitting C-g once you will not be asked anymore for new people listed
 in this message, but it will search only for existing records.  When hitting
 C-g again it will stop scanning."
-(let ((bbdb-update-records-mode (or bbdb/gnus-update-records-mode
+  (let ((bbdb-update-records-mode (or bbdb/gnus-update-records-mode
                                       bbdb-update-records-mode))
         (bbdb/gnus-offer-to-create offer-to-create)
         ;; here we may distiguish between different type of messages
@@ -241,11 +241,10 @@ displaying the record corresponding to the sender of the current message."
         (bbdb-electric-p nil))
 
     (when bbdb-use-pop-up
-    (let ((bbdb-elided-display (bbdb-pop-up-elided-display))
-          (b (current-buffer)))
-      ;; display the bbdb buffer iff there is a record for this article.
-      (if records
-          (bbdb-pop-up-bbdb-buffer
+      (let ((b (current-buffer)))
+        ;; display the bbdb buffer iff there is a record for this article.
+        (if records
+            (bbdb-pop-up-bbdb-buffer
            (lambda (w)
              (let ((b (current-buffer)))
                (set-buffer (window-buffer w))
@@ -265,7 +264,7 @@ displaying the record corresponding to the sender of the current message."
                              gnus-Subject-buffer)))
                   (select-window w)))))
       (set-buffer b)))
-    (if records (bbdb-display-records records))
+    (if records (bbdb-display-records records bbdb-pop-up-display-layout))
     records))
 
 ;;
@@ -468,21 +467,21 @@ This function is meant to be used with the user function defined in
 (defun bbdb/gnus-summary-author-in-bbdb (header)
   "Given a Gnus message header, returns a mark if the poster is in the BBDB, \" \" otherwise.  The mark itself is the value of the field indicated by `bbdb-message-marker-field' (`mark-char' by default) if the indicated field is in the poster's record, and `bbdb/gnus-summary-known-poster-mark' otherwise."
   (let* ((from (mail-header-from header))
-     (data (condition-case ()
-           (mail-extract-address-components from)
-         (error nil)))
-     (name (car data))
-     (net (cadr data))
-     record)
+         (data (condition-case ()
+                   (mail-extract-address-components from)
+                 (error nil)))
+         (name (car data))
+         (net (cadr data))
+         record)
     (if (and data
-         (setq record
-           (bbdb-search-simple
-            name (if (and net bbdb-canonicalize-net-hook)
-                 (bbdb-canonicalize-address net)
-               net))))
-    (or (bbdb-record-getprop
-         record bbdb-message-marker-field)
-        bbdb/gnus-summary-known-poster-mark) " ")))
+             (setq record
+                   (bbdb-search-simple
+                    name (if (and net bbdb-canonicalize-net-hook)
+                             (bbdb-canonicalize-address net)
+                           net))))
+        (or (bbdb-record-getprop
+             record bbdb-message-marker-field)
+            bbdb/gnus-summary-known-poster-mark) " ")))
 
 ;;
 ;; Gnus-specific snarfing (see also bbdb-snarf.el)
@@ -585,9 +584,9 @@ addresses better than the traditionally static global scorefile."
   "Display BBDB records for all recipients of the message."
   (interactive "P")
   (gnus-summary-select-article)
-  (let ((bbdb-elided-display (or (not not-elided)
-                                 (and (boundp 'bbdb-pop-up-elided-display)
-                                      bbdb-pop-up-elided-display)))
+  (let ((bbdb-display-layout (or (not not-elided)
+                                 bbdb-pop-up-display-layout
+                                 bbdb-display-layout))
         (bbdb-auto-notes-alist nil))
     (bbdb/gnus-pop-up-bbdb-buffer nil)
     (set-buffer gnus-article-buffer)
