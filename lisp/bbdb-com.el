@@ -710,6 +710,15 @@ argument.  A prefix arg of ^U means it's to be a euronumber, and any
 other prefix arg means it's to be a a structured north american number.
 Otherwise, which style is used is controlled by the variable
 `bbdb-north-american-phone-numbers-p'."
+
+If you are inserting a new net address, you can have BBDB append a
+default domain to any net address that does not contain one.  Set
+`bbdb-default-domain' to a string such as \"mycompany.com\" (or,
+depending on your environment, (getenv \"DOMAINNAME\")), and
+\"@mycompany.com\" will be appended to an address that is entered as
+just a username.  A prefix arg of ^U (or a `bbdb-default-domain'
+value of \"\", the default) means do not alter the address."
+
   (interactive (let ((name "")
                      (completion-ignore-case t))
                  (while (string= name "")
@@ -793,23 +802,31 @@ Otherwise, which style is used is controlled by the variable
       (bbdb-redisplay-one-record record))))
 
 (defun bbdb-prompt-for-new-field-value (name)
-  (cond ((eq name 'net) (bbdb-read-string "Net: "))
+  (cond ((eq name 'net)
+         (let
+             ((n (bbdb-read-string "Net: ")))
+           (if (string-match "^mailto:" n)
+               (setq n (substring n (match-end 0))))
+           (if (or (eq nil bbdb-default-domain)
+                   current-prefix-arg (string-match "[@%!]" n))
+               n
+             (concat n "@" bbdb-default-domain))))
         ((eq name 'aka) (bbdb-read-string "Alternate Names: "))
         ((eq name 'phone)
          (let ((p (make-vector
                    (if (if current-prefix-arg
                            (numberp current-prefix-arg)
-                           bbdb-north-american-phone-numbers-p)
+                         bbdb-north-american-phone-numbers-p)
                        bbdb-phone-length
-                       2)
+                     2)
                    0)))
            (aset p 0 nil)
            (aset p 1
                  (if (= bbdb-phone-length (length p))
                      (if (integerp bbdb-default-area-code)
                          bbdb-default-area-code
-                         0)
-                     nil))
+                       0)
+                   nil))
            (bbdb-record-edit-phone p)
            p))
         ((eq name 'address)
@@ -820,10 +837,11 @@ Otherwise, which style is used is controlled by the variable
         ((assoc (symbol-name name) (bbdb-propnames))
          (bbdb-read-string (format "%s: " name)))
         (t
-         (if (bbdb-y-or-n-p (format "\"%s\" is an unknown field name.  Define it? " name))
+         (if (bbdb-y-or-n-p
+              (format "\"%s\" is an unknown field name.  Define it? " name))
              (bbdb-set-propnames
               (append (bbdb-propnames) (list (list (symbol-name name)))))
-             (error "unknown field \"%s\"" name))
+           (error "unknown field \"%s\"" name))
          (bbdb-read-string (format "%s: " name)))))
 
 (defun bbdb-add-new-field (name)
@@ -1909,11 +1927,19 @@ completion with."
 
 (defun bbdb-display-completion-list (list &optional callback data)
   "Wrapper for `display-completion-list'.
-CALLBACK and DATA are discarded."
+GNU Emacs requires DATA to be in a specific format, viz. (nth 1 data) should
+be a marker for the start of the region being completed."
   (if (featurep 'xemacs)
       (display-completion-list list :activate-callback callback
                                :user-data data)
-    (display-completion-list list)))
+    (display-completion-list list)
+    ;; disgusting hack to make GNU Emacs nuke the bit you've typed
+    ;; when it inserts the completion.
+    (if data
+        (save-excursion
+          (set-buffer standard-output)
+          (setq completion-base-size
+                (- (marker-position (nth 1 data)) 1))))))
 
 (defun bbdb-complete-clicked-name (event extent user-data)
   "Find the record for a name clicked in a completion buffer.
@@ -2173,11 +2199,11 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
      (t
       (or (eq (selected-window) (minibuffer-window))
           (message "Making completion list..."))
-      
+
       (let ((clist (all-completions pattern ht pred))
             (bbdb-complete-name-allow-cycling nil)
             list recs)
-        ;; Now collect the expanded completions 
+        ;; Now collect the expanded completions
         (if (or (eq t bbdb-complete-name-full-completion)
                 (and (numberp bbdb-complete-name-full-completion)
                      (< (length clist) bbdb-complete-name-full-completion)))
@@ -2192,7 +2218,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                 (add-to-list 'list (car clist)))
               (setq clist (cdr clist)))
           (setq list clist))
-        
+
         ;;       (recs (delq nil (mapcar (lambda (x)
         ;;                     (symbol-value (intern-soft x ht)))
         ;;                   list)))
@@ -2881,7 +2907,7 @@ C-g again it will stop scanning."
              bbdb-update-records-mode)))
         (addrslen (length addrs))
         records hits)
-    
+
     (while addrs
       (setq bbdb-address (car addrs))
 
@@ -2889,7 +2915,7 @@ C-g again it will stop scanning."
           (progn
             (setq hits
                   (cond ((eq bbdb-update-records-mode 'annotating)
-                         (list ;; search might return a list 
+                         (list ;; search might return a list
                           (bbdb-annotate-message-sender
                            bbdb-address t
                            (or (bbdb-invoke-hook-for-value auto-create-p)
@@ -2902,18 +2928,18 @@ C-g again it will stop scanning."
                                (bbdb-case-fold-search t))
                            (bbdb-search bbdb-records nil nil net))))
                   processed-addresses (+ processed-addresses 1))
-            
+
             (when (and (not bbdb-silent-running)
                        (not bbdb-gag-messages)
                        (not (eq bbdb-offer-to-create 'quit))
                        (= 0 (% processed-addresses 5)))
-               (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." 
+               (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed."
                                    bbdb-update-records-mode processed-addresses addrslen)))
                  (if nil;(featurep 'xemacs)
                      (display-message 'progress mess)
                    (message mess)))
                (sit-for 0)))
-        
+
         ;; o.k. there was a quit signal so how should we proceed now?
         (quit (cond ((eq bbdb-update-records-mode 'annotating)
                      (setq bbdb-update-records-mode 'searching))
@@ -2924,12 +2950,12 @@ C-g again it will stop scanning."
                     (t
                      (setq bbdb-update-records-mode 'quit)))
               nil))
-      
+
       (while hits
         ;; people should be listed only once so we use add-to-list
         (if (car hits) (add-to-list 'records (car hits)))
         (setq hits (cdr hits)))
-    
+
       (setq addrs (cdr addrs)))
 
     ;; add-to-list adds at the front so we have to reverse the list in order
@@ -2956,7 +2982,7 @@ C-g again it will stop scanning."
     (when (not w)
       (setq w (car wl)
             wl (cdr wl))
-      
+
       (while wl
         (if (< (nth 1 (window-pixel-edges w))
                (nth 1 (window-pixel-edges (car wl))))
@@ -2997,10 +3023,10 @@ proceed the processing of records."
           (if (featurep 'xemacs)
               (setq event (event-to-character (aref event 0)))
             (setq event (if (stringp event) (aref event 0)))))
-        
+
         (setq bbdb-offer-to-create (char-int event)))
       (message "") ;; clear the message buffer
-      
+
       (cond ((eq bbdb-offer-to-create (char-int ?y))
              (setq bbdb-offer-to-create old-offer-to-create)
              nil)
@@ -3022,7 +3048,7 @@ proceed the processing of records."
 
 Type ?  for this help.
 Type y  to add the current record.
-Type !  to add all remaining records.  
+Type !  to add all remaining records.
 Type n  to skip the current record.
 Type s  to switch from annotate to search mode.
 Type q  to quit updating records.  No more search or annotation is done.")))
@@ -3032,10 +3058,10 @@ Type q  to quit updating records.  No more search or annotation is done.")))
                  (quit
                   (bbdb-kill-help-window w)
                   (signal 'quit nil)))))))))
-  
+
 ;;----------------------------------------------------------------------------
 ;;;###autoload
-(defcustom bbdb-get-addresses-from-headers 
+(defcustom bbdb-get-addresses-from-headers
   '("From" "Resent-From" "Reply-To")
   "*List of headers to search for senders email addresses."
   :group 'bbdb-mua-specific
