@@ -1,3 +1,42 @@
+2001-07-08  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el, lisp/bbdb.el:
+	More work on the completion-of-labels stuff. NB I've changed some
+	variable names. Sorry if you actually used this already, but
+	hey. Bleeding edge.
+
+	* lisp/Makefile.in:
+	Made quieter, so it's easier to see compilation problems
+	Fixed gnuserv/bbdb-srv build
+
+2001-07-07  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el: 
+	Use bbdb-extract-field-value
+	Minor compiler cleanup
+
+	* lisp/bbdb-vm.el:
+	Use bbdb-extract-address-components-func
+
+	* lisp/bbdb-gnus.el: 
+	19.34 support mods.
+	Use bbdb-extract-address-components-func.
+
+	* lisp/bbdb-snarf.el:
+	New customization variable: bbdb-extract-address-components-func -
+	this tells BBDB what function you'd like to use to attempt parsing of
+	the mail addresses.
+
+	New function for use with the above: bbdb-rfc822-addresses. Brute
+	force, but does a pretty good job.
+
+	Fixed some comment and documentation typos.
+
+2001-07-01  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-gui.el:
+	Whoops. eval-and-compile, not eval-when-compile.
+
 2001-06-28  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-mhe.el:
