@@ -703,6 +703,20 @@ Database initialization function `bbdb-initialize' is run."
 (defvar bbdb-mode-search-map nil
   "Keymap for Insidious Big Brother Database searching")
 
+(defvar bbdb-suppress-changed-records-recording nil
+  "Whether to record changed records in variable `bbdb-changed-records'.
+
+If this is false, the BBDB will cease to remember which records are changed
+as the change happens.  It will still remember that records have been changed,
+so the file will still be saved, but the changed records list, and the `!!'
+in the *BBDB* buffer modeline that it depends on, will no longer be updated.
+
+You should bind this variable, not set it; the `!!' is a useful user-
+interface feature, and should only be suppressed when changes need to be
+automatically made to BBDB records which the user will not care directly
+about.")
+
+
 
 ;;; These are the buffer-local variables we use.
 ;;; They are mentioned here so that the compiler doesn't warn about them
@@ -1956,7 +1970,11 @@ multi-line layout."
                            (let ((n-rec (car recs)))
                              (if (string= (downcase name)
                                           (downcase
-                                           (or (bbdb-record-name n-rec) "")))
+                                           (or (bbdb-record-name
+                                                n-rec)
+                                               (bbdb-record-company
+                                                n-rec)
+                                               "")))
                                  (setq answer (append recs (list n-rec))))
                              (setq recs (cdr recs))))
                          answer)))
@@ -2340,8 +2358,10 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
 (defun bbdb-delete-record-internal (record)
   (if (null (bbdb-record-marker record)) (error "bbdb: marker unpresent"))
   (bbdb-with-db-buffer
-    (if (memq record bbdb-changed-records) nil
-        (setq bbdb-changed-records (cons record bbdb-changed-records)))
+    (if (or bbdb-suppress-changed-records-recording
+            (memq record bbdb-changed-records))
+        nil
+      (setq bbdb-changed-records (cons record bbdb-changed-records)))
     (let ((tail (memq record bbdb-records)))
       (if (null tail) (error "bbdb: unfound %s" record))
       (setq bbdb-records (delq record bbdb-records))
@@ -2384,8 +2404,10 @@ Assumes the list is already sorted.  Returns the new head."
   (if (null (bbdb-record-marker record))
       (bbdb-record-set-marker record (make-marker)))
   (bbdb-with-db-buffer
-    (if (memq record bbdb-changed-records) nil
-        (setq bbdb-changed-records (cons record bbdb-changed-records)))
+    (if (or bbdb-suppress-changed-records-recording
+            (memq record bbdb-changed-records))
+        nil
+      (setq bbdb-changed-records (cons record bbdb-changed-records)))
     (let ((print-escape-newlines t))
       (bbdb-record-set-sortkey record nil) ; just in case...
       (setq bbdb-records
@@ -2425,8 +2447,10 @@ Assumes the list is already sorted.  Returns the new head."
 
 (defun bbdb-overwrite-record-internal (record unmigrated)
   (bbdb-with-db-buffer
-    (if (memq record bbdb-changed-records) nil
-        (setq bbdb-changed-records (cons record bbdb-changed-records)))
+    (if (or bbdb-suppress-changed-records-recording
+            (memq record bbdb-changed-records))
+        nil
+      (setq bbdb-changed-records (cons record bbdb-changed-records)))
     (let ((print-escape-newlines t)
           (tail bbdb-records))
       ;; Look for record after RECORD in the database.  Use the
@@ -2470,6 +2494,11 @@ Assumes the list is already sorted.  Returns the new head."
         record))))
 
 (defvar inside-bbdb-change-record nil "hands off")
+(defvar inside-bbdb-notice-hook nil
+  "Internal variable; hands off.
+Set to t by the BBDB when inside the `bbdb-notice-hook'.
+
+Calls to the `bbdb-change-hook' are suppressed when this is non-nil.")
 
 (defun bbdb-change-record (record need-to-sort)
   "Update the database after a change to the given record.  Second arg
@@ -2479,7 +2508,8 @@ about updating the name hash-table."
       record
     (let ((inside-bbdb-change-record t)
           unmigrated)
-      (bbdb-invoke-hook 'bbdb-change-hook record)
+      (or inside-bbdb-notice-hook
+          (bbdb-invoke-hook 'bbdb-change-hook record))
       (bbdb-debug (if (bbdb-record-deleted-p record)
                       (error "bbdb: changing deleted record")))
       (if (/= (cdr bbdb-file-format-migration) bbdb-file-format)
@@ -3226,11 +3256,13 @@ before the record is created, otherwise it is created without confirmation
                            (bbdb-record-name record) net)
                 (message "noticed naked address \"%s\"" net))))
 
-        (if created-p (bbdb-invoke-hook 'bbdb-create-hook record))
-        (if change-p (bbdb-change-record record (eq change-p 'sort)))
-        (bbdb-invoke-hook 'bbdb-notice-hook record)
+        (if created-p
+            (bbdb-invoke-hook 'bbdb-create-hook record))
+        (if change-p
+            (bbdb-change-record record (eq change-p 'sort)))
+        (let ((inside-bbdb-notice-hook t))
+          (bbdb-invoke-hook 'bbdb-notice-hook record))
         record))))
-
 
 
 ;;; window configuration hackery
