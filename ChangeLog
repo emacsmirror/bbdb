@@ -1,3 +1,56 @@
+2002-03-11  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el (bbdb-annotate-message-sender):
+	Only invoke bbdb-notice-hook when we have noticed a record.
+
+	* lisp/bbdb-com.el (bbdb-update-records):
+	Docstring fix
+
+2002-03-03  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-get-message-id): 
+	(bbdb/gnus-update-records): 
+	(bbdb/gnus-snarf-signature): 
+	(bbdb/gnus-summary-show-all-recipients): 
+	Use original gnus article buffer rather than the display one
+	  (with its hidden headers and so forth)
+
+	* lisp/bbdb.el
+	prologue:
+	Warn about not being able to find message, not Gnus
+
+	* lisp/bbdb-com.el
+	(bbdb-dial):
+	Code documentation + documentation fix.
+	(bbdb-dial-number):
+	memq takes two args, not three!
+	prologue: 
+	add autoload for bbdb-fontify-buffer
+
+2002-02-05  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el (bbdb dialing stuff):
+	Documentation fixes.
+	(bbdb-dial-number):
+	According to what docs I can find, it's quite okay to pass * and #
+	to a modem as part of a dial string
+	(bbdb-next-event):
+	Made work on emacs (using read-event instead of next-event)
+	(bbdb-play-sound):
+	New function: plays a sound using internal feature, if available,
+	otherwise it falls back to an external sound player.
+	(bbdb-dial-local-prefix-alist):
+	Fix default mapping to allow a string or an integer for default
+	area code.
+
+2002-02-04  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-gui.el (bbdb-fontify-buffer):
+	Remove 'Fontifying...' message
+
+	* lisp/bbdb-com.el (bbdb-search-invert-set):
+	Documentation fix
+
 2002-02-04  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* bbdb.el (bbdb-format-address-default): 
