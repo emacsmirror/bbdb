@@ -1,8 +1,14 @@
 2001-04-19  Robert Fenk  <fenk@forwiss.de>
 
+	* lisp/bbdb-gui.el (bbdb-fontify-buffer): 
+	* lisp/bbdb.el (bbdb-elided-display-fields):
+	Renamed the variables bbdb-pop-up-elided-display-name-end and 
+	bbdb-pop-up-elided-display-fields to bbdb-elided-display-name-end and 
+	bbdb-elided-display-fields, as they are not related to the pop-up
+	feature.
+
 	* texinfo/bbdb.texinfo: Added missing docs for the variables
-	bbdb-pop-up-elided-display-name-end and 
-	bbdb-pop-up-elided-display-fields 
+	bbdb-elided-display-name-end and bbdb-elided-display-fields 
 
 2001-04-16  Waider  <waider@waider.ie>
 
