@@ -26,7 +26,11 @@
 (require 'bbdb)
 ;;(require 'bbdb-snarf) causes recursive compile!
 (require 'cl)
-(require 'mailabbrev)
+;; ARGH. fmh, dammit.
+(require
+ (if (locate-library "mailabbrev")
+     (quote mailabbrev)
+   (quote mail-abbrevs)))
 
 
 (defcustom bbdb-default-country
