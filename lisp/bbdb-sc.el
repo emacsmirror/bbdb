@@ -72,6 +72,9 @@
 
 ;;;
 ; $Log$
+; Revision 1.10  1998/04/11 07:18:18  simmonmt
+; Colin Rafferty's patch adding autoload cookies back
+;
 ; Revision 1.9  1998/02/23 07:22:00  simmonmt
 ; Fixed intro comments.  Use add-hook, not bbdb-add-hook
 ;
@@ -219,6 +222,7 @@ Custom."
       (end                          (setq sc-mail-headers-end (point))))))
 
 ;; insert our hooks - call me from your Emacs initialization file
+;;;###autoload
 (defun bbdb-insinuate-sc ()
   "Call this function to hook BBDB into Supercite."
   

@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.57  1998/04/11 07:19:32  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back
+;;
 ;; Revision 1.56  1998/03/10 07:37:42  simmonmt
 ;; Protecting bbdb-default-area-code
 ;;
@@ -299,6 +302,7 @@ ignored and the null string is returned."
       ""
     (apply 'concat string more)))
 
+;;;###autoload
 (defun bbdb-print (visible-records to-file brief)
   "Make a TeX file for printing out the bbdb database.\\<bbdb-mode-map>
 If \"\\[bbdb-apply-next-command-to-all-records]\\[bbdb-print]\" is \

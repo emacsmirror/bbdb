@@ -22,6 +22,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.54  1998/04/11 07:18:33  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back
+;;
 ;; Revision 1.53  1998/02/23 07:13:01  simmonmt
 ;; Use add-hook, not bbdb-add-hook
 ;;
@@ -35,6 +38,7 @@
 ;(require 'rmailsum)   ; not provided, dammit!
 (if (not (fboundp 'rmail-make-summary-line)) (load-library "rmailsum"))
 
+;;;###autoload
 (defun bbdb/rmail-update-record (&optional offer-to-create)
   "returns the record corresponding to the current RMAIL message, creating or
 modifying it as necessary.  A record will be created if 
@@ -60,6 +64,7 @@ the user confirms the creation."
 	          (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
 		      offer-to-create))))))))))
 
+;;;###autoload
 (defun bbdb/rmail-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
 corresponding to the sender of this message.  If REPLACE is non-nil,
@@ -82,6 +87,7 @@ of the BBDB record corresponding to the sender of this message."
       (bbdb-record-edit-notes record t))))
 
 
+;;;###autoload
 (defun bbdb/rmail-show-sender ()
   "Display the contents of the BBDB for the sender of this message.
 This buffer will be in bbdb-mode, with associated keybindings."
@@ -126,6 +132,7 @@ Leaves original message, deleted, before the undigestified messages."
   (setq bbdb-message-cache nil)
   (bbdb-orig-undigestify-rmail-message))
 
+;;;###autoload
 (defun bbdb-insinuate-rmail ()
   "Call this function to hook BBDB into RMAIL."
   (define-key rmail-mode-map ":" 'bbdb/rmail-show-sender)

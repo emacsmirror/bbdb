@@ -25,6 +25,9 @@
 ;; $Revision$
 ;;
 ;; $Log$
+;; Revision 1.55  1998/04/11 07:21:39  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back
+;;
 ;; Revision 1.54  1998/02/23 07:00:18  simmonmt
 ;; Intro rewrite to say that EFS is also OK as a prereq
 ;;
@@ -125,6 +128,7 @@
 	  (substring string index))
       nil)))
 
+;;;###autoload
 (defun bbdb-ftp (bbdb-record)
   "Use ange-ftp to open an ftp-connection to a BBDB record's name.
 If this command is executed from the *BBDB* buffer, ftp the site of
@@ -194,6 +198,7 @@ collisions."
 		     (make-vector bbdb-cache-length nil))))
 	record))))
    
+;;;###autoload
 (defun bbdb-create-ftp-site (record)
   "Add a new ftp-site entry to the bbdb database; prompts for all relevant info
 using the echo area, inserts the new record in the db, sorted alphabetically."

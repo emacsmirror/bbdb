@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.2  1998/04/11 07:19:19  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back
+;;
 ;; Revision 1.1  1998/01/06 06:06:06  simmonmt
 ;; Initial revision
 ;;
@@ -39,6 +42,7 @@
   '((3 . "* Date format for `creation-date' and `timestamp' has changed,
   from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")))
 
+;;;###autoload
 (defun bbdb-migration-query (ondisk)
   "Ask if the database is to be migrated.  ONDISK is the version
 number of the database as currently stored on disk.  Returns the
@@ -78,6 +82,7 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
       (set-window-configuration wc)
       (if update bbdb-file-format ondisk))))
 
+;;;###autoload
 (defun bbdb-migrate (records)
   "Migrate the BBDB from the version on disk (the car of
 `bbdb-file-format-migration') to the current version (in
@@ -99,6 +104,7 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
    (t (error (format "BBDB Cannot migrate from unknown version %d"
 		     (car bbdb-file-format-migration))))))
 
+;;;###autoload
 (defun bbdb-unmigrate-record (record)
   "Reverse-migrate a single record from the current version (in
 `bbdb-file-format') to the version to be saved (the cdr of
@@ -204,7 +210,7 @@ argument."
 				 (aref parsed 1) (aref parsed 2)))
 	   field)
 	  (t
-	   (error "BBDB cannot parse %s header value %s for upgrade"
+	   (error "BBDB cannot parse %s header value %S for upgrade"
 		  field date)))))
 
 (defun bbdb-unmigrate-change-dates (rec)
@@ -226,6 +232,7 @@ as an argument."
 \"yyyy-mm-dd\"."
   (cons (car field) (bbdb-time-convert (cdr field) "%e %b %y")))
 
+;;;###autoload
 (defun bbdb-migrate-rewrite-all (message-p &optional records)
   "Rewrite each and every record in the bbdb file; this is necessary if we 
 are updating an old file format.  MESSAGE-P says whether to sound off
@@ -246,6 +253,7 @@ used as the list of records to update."
       (setq records (cdr records)))))
 (defalias 'bbdb-dry-heaves 'bbdb-migrate-rewrite-all)
 
+;;;###autoload
 (defun bbdb-migrate-update-file-version (old new)
   "Change the `file-version' string from the OLD version to the NEW
 version."

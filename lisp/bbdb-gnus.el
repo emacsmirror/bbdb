@@ -22,6 +22,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.59  1998/04/11 07:21:25  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back
+;;
 ;; Revision 1.58  1998/02/23 07:07:13  simmonmt
 ;; Changed comments for Gnus/GNUS-specific stuff and for stuff that
 ;; thought it was specific but is really not.
@@ -56,6 +59,7 @@
 (require 'bbdb)
 (require 'gnus)
 
+;;;###autoload
 (defun bbdb/gnus-update-record (&optional offer-to-create)
   "returns the record corresponding to the current GNUS message, creating 
 or modifying it as necessary.  A record will be created if 
@@ -82,6 +86,7 @@ the user confirms the creation."
 					    offer-to-create)
 					offer-to-create)))))
 
+;;;###autoload
 (defun bbdb/gnus-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
 corresponding to the sender of this message.  If REPLACE is non-nil,
@@ -101,6 +106,7 @@ of the BBDB record corresponding to the sender of this message."
 	(bbdb-record-edit-property record nil t)
       (bbdb-record-edit-notes record t))))
 
+;;;###autoload
 (defun bbdb/gnus-show-sender ()
   "Display the contents of the BBDB for the sender of this message.
 This buffer will be in bbdb-mode, with associated keybindings."
@@ -241,6 +247,7 @@ for `bbdb/gnus-summary-get-author'."
   :group 'bbdb-mua-specific-gnus
   :type 'symbol)
 
+;;;###autoload
 (defun bbdb/gnus-lines-and-from (header)
   "Useful as the value of gnus-optional-headers in *GNUS* (not Gnus).
 NOTE: This variable no longer seems to be present in Gnus.  It seems
@@ -399,6 +406,7 @@ gnus-score field."
   (if (bbdb-record-getprop rec bbdb/gnus-score-field)
       (setq bbdb/gnus-score-rebuild-alist t)))
 
+;;;###autoload
 (defun bbdb/gnus-score (group)
   "This returns a score alist for GNUS.  A score pair will be made for
 every member of the net field in records which also have a gnus-score
@@ -444,6 +452,7 @@ addresses better than the traditionally static global scorefile."
 ;; Insinuation
 ;;
 
+;;;###autoload
 (defun bbdb-insinuate-gnus ()
   "Call this function to hook BBDB into GNUS."
   (setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
@@ -501,6 +510,7 @@ Redefine `bbdb/gnus-summary-in-bbdb-format-letter' to a different letter."
 ;	  'bbdb/gnus-score))
   )
 
+;;;###autoload
 (defun bbdb-insinuate-message ()
   "Call this function to hook BBDB into message-mode."
   (define-key message-mode-map "\M-\t" 'bbdb-complete-name))

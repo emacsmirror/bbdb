@@ -25,6 +25,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.54  1998/04/11 07:20:03  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back
+;;
 ;; Revision 1.53  1998/02/23 07:09:59  simmonmt
 ;; Use add-hook
 ;;
@@ -55,6 +58,7 @@
 		  status-time-2
 		(car status-time-2))))))
 
+;;;###autoload
 (defun bbdb/mh-update-record (&optional offer-to-create)
   "Returns the record corresponding to the current MH message, creating or
 modifying it as necessary.  A record will be created if 
@@ -87,6 +91,7 @@ the user confirms the creation."
 		      offer-to-create)))))))))
 
 
+;;;###autoload
 (defun bbdb/mh-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
 corresponding to the sender of this message.  If REPLACE is non-nil,
@@ -120,6 +125,7 @@ of the BBDB record corresponding to the sender of this message."
     (goto-char p)))
 
 
+;;;###autoload
 (defun bbdb/mh-show-sender ()
   "Display the contents of the BBDB for the sender of this message.
 This buffer will be in bbdb-mode, with associated keybindings."
@@ -210,6 +216,7 @@ displaying the record corresponding to the sender of the current message."
 
 ;;; Install bbdb into mh-e's show-message function
 
+;;;###autoload
 (defun bbdb-insinuate-mh ()
   "Call this function to hook BBDB into MH-E."
   (define-key mh-folder-mode-map ":" 'bbdb/mh-show-sender)
