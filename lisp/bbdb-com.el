@@ -2646,7 +2646,7 @@ of all of those people."
           (if use-abbrev-p
               (define-mail-abbrev alias expansion)
             (define-mail-alias alias expansion))
-          (setq alias (or (intern-soft alias
+          (setq alias (or (intern-soft (downcase alias)
                                        (if use-abbrev-p
                                            mail-abbrevs mail-aliases))
                           (error "couldn't find the alias we just defined!")))
