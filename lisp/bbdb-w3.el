@@ -20,6 +20,11 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.3  1997/10/12 00:18:50  simmonmt
+;; Added bbdb-insinuate-w3 to set keyboard map correctly.  Merged
+;; bbdb-www-netscape into bbdb-www using browse-url-browser-function to
+;; differentiate.
+;;
 ;; Revision 1.2  1997/10/11 20:21:32  simmonmt
 ;; Modifications mailed in by David Carlton <carlton@math.mit.edu>.  They
 ;; look to be mostly adaptations for netscape
@@ -29,12 +34,7 @@
 ;;
 ;;
 
-;; Suggested mappings
-;(add-hook 'w3-mode-hooks
-;	  '(lambda () (define-key w3-mode-map ":" 'bbdb-grab-www-homepage)))
-;(add-hook 'bbdb-load-hook 
-;	   '(lambda () (define-key bbdb-mode-map "W" 'bbdb-www)))
-
+;;;###autoload
 (defun bbdb-www (all)
   "Visit URL's stored in `www' fields of the current record.
 \\[bbdb-apply-next-command-to-all-records]\\[bbdb-www] \
@@ -48,30 +48,13 @@ Non-interactively, do all records if arg is nonnil."
 	(got-one nil))
     (while urls
       (if (car urls)
-	  (w3-fetch (setq got-one (car urls))))
+	  (funcall browse-url-browser-function (setq got-one (car urls))))
       (setq urls (cdr urls)))
     (if (not got-one)
 	(error "No WWW field!"))))
 
-(defun bbdb-www-netscape (all)
-  "Visit URL's stored in `www' fields of the current record.
-\\[bbdb-apply-next-command-to-all-records]\\[bbdb-www] \
-means to try all records currently visible.
-Non-interactively, do all records if arg is nonnil."
-  (interactive (list (bbdb-do-all-records-p)))
-  (let ((urls (mapcar '(lambda (r) (bbdb-record-getprop r 'www))
-                      (if all
-                          (mapcar 'car bbdb-records)
-                        (list (bbdb-current-record)))))
-        (got-one nil))
-    (while urls
-      (if (car urls)
-          (browse-url-netscape (setq got-one (car urls))))
-      (setq urls (cdr urls)))
-    (if (not got-one)
-        (error "No WWW field!"))))
-
-(defun bbdb-grab-www-homepage (record)
+;;;###autoload
+(defun bbdb-www-grab-homepage (record)
   "Grab the current URL and store it in the bbdb database"
   (interactive (list (bbdb-completing-read-record "Add WWW homepage for: ")))
   ;; if there is no database record for this person, create one
@@ -84,19 +67,8 @@ Non-interactively, do all records if arg is nonnil."
   (bbdb-change-record record t)
   (bbdb-display-records (list record)))
 
-;;;; From Fran Litterio <franl@centerline.com>
-;;;; adapted for netscape by Josef Schneeberger <jws@forwiss.uni-erlangen.de>
-;(defun fetch-url (url)
-;  "Causes a running netscape process to fetch the document at the URL (which
-;is the contents of the region for interactive invocations)."
-;  (interactive (list (buffer-substring (region-beginning) (region-end))))
-;  (let ()
-;    (string-match "[ \t\n]*\\(.*[^ \t\n]\\)[ \t\n]*$" url)
-;    (setq url (substring url (match-beginning 1) (match-end 1)))
-;    (save-excursion
-;      (shell-command (concat "/usr/local/bin/NETSCAPE/netscape-1.1b3/netscape "
-;			     "-remote "
-;			     "'openURL("
-;			     url
-;			     ")'"))))
-;    (message (format "Told netscape to fetch \"%s\"" url)))
+;;;###autoload
+(defun bbdb-insinuate-w3 ()
+  "Call this function to hook BBDB into W3."
+  (add-hook 'w3-mode-hook
+	    '(lambda () (define-key w3-mode-map ":" 'bbdb-www-grab-homepage))))
