@@ -1,9 +1,16 @@
+2000-11-01  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb.el (bbdb-hashtable-size): new custom variable
+	(primep): define if not defined already
+	(bbdb-records): use `bbdb-hashtable-size' when initializing
+	`bbdb-hashtable'
+
 2000-10-27  Robert Fenk  <fenk@forwiss.de>
 
-	* lisp/bbdb-mhe.el (bbdb/mh-update-record): 
-	* lisp/bbdb-rmail.el (bbdb/rmail-update-record): 
+	* lisp/bbdb-mhe.el (bbdb/mh-update-record):
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-record):
 	* lisp/bbdb-gnus.el (bbdb/gnus-update-record):
-	* lisp/bbdb-vm.el (bbdb/vm-update-records): 
+	* lisp/bbdb-vm.el (bbdb/vm-update-records):
 	* lisp/bbdb.el (bbdb/prompt-for-create-p):
 	The new variable `bbdb/prompt-for-create-p' can be set to `t' in
 	order to force VM, Gnus, MHE, RMAIL to ask the user before adding a
@@ -11,7 +18,7 @@
 	(bbdb-pop-up-elided-display-name-end): A new variable which
 	controls for elided display where the "name - company" pair
 	usually ends and where we start to display phone numbers and the
-	like.  
+	like.
 	(bbdb-pop-up-elided-display-fields): A new variable controlling
 	what fields are displayed in elided display.  Users may write
 	their own formating functions.
@@ -21,13 +28,13 @@
 
 	* lisp/bbdb-vm.el (bbdb/vm-update-records): Searching for existing
 	records is limited to the net, as a search for a name may no
-	return the right record. 
+	return the right record.
 	Adding of new records can be controlled similar to query-replace,
-	with y,!,n,s,q 
+	with y,!,n,s,q
 	(vm-summary-function-B): Added decoding of mime-encoded strings.
 	(bbdb/vm-auto-add-label): Moved the docu on how to hook this
 	function into the function docu.
-	(bbdb/vm-update-records): 
+	(bbdb/vm-update-records):
 
 2000-10-20  Robert Fenk  <fenk@forwiss.de>
 
@@ -66,7 +73,7 @@
 
 2000-10-04  Waider  <waider@waider.ie>
 
-	* lisp/bbdb-com.el (bbdb-send-mail-internal): 
+	* lisp/bbdb-com.el (bbdb-send-mail-internal):
 	Added in compose-mail bits. Whoops.
 
 2000-09-20  Waider  <waider@waider.ie>
@@ -77,7 +84,7 @@
 
 2000-09-12  Robert Fenk  <fenk@forwiss.de>
 
-	* lisp/bbdb-vm.el (bbdb/vm-snarf-all): 
+	* lisp/bbdb-vm.el (bbdb/vm-snarf-all):
 	fixed wrong documentation
 
 2000-09-11  Waider  <waider@stepstone.ie>
@@ -88,11 +95,11 @@
 	Added new function, bbdb/vm-show-all-recipients, to do the
 	  necessary fandango to show recipients for the current
 	  message. Map it to something in vm-mode-map if you wish to use
-	  it. I'd suggest "'". 
+	  it. I'd suggest "'".
 
 2000-09-08  Sam Steingold  <sds@gnu.org>
 
-	* lisp/bbdb.el (bbdbq-mk): 
+	* lisp/bbdb.el (bbdbq-mk):
 	new function to create `subliminal' messages. Also, two new
 	messages.
 
@@ -130,7 +137,7 @@
 
 	* lisp/bbdb.el:
 	Moved bbdb-insinuate-message into this file to prevent gnus
-	startup looping 
+	startup looping
 	Changed \M-\t to [(meta tab)]
 
 2000-08-25  Waider  <waider@stepstone.ie>
@@ -163,7 +170,7 @@
 	`bbdb/vm-get-first-from-p' which is not so self explanatory.  The
 	default value is now `t' in order to keep the old BBDB behavior.
 	(bbdb/vm-get-from): partially rewritten in order to make it more
-	readable. 
+	readable.
 
 2000-08-14  Sam Steingold  <sds@gnu.org>
 

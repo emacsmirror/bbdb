@@ -255,6 +255,30 @@ When nil, you will be asked."
   :group 'bbdb-database
   :type 'boolean)
 
+(unless (fboundp 'primep)
+  (defun primep (num)
+    (let ((lim (sqrt num)) (nu 2) (prime t))
+      (while (and prime (< nu lim))
+        (setq prime (/= 0 (mod num nu))
+              nu (1+ nu)))
+      prime)))
+
+(defcustom bbdb-hashtable-size 1021
+  "*The size of the bbdb hashtable.
+BBDB hashtable is an obarray, so this must be a prime integer.
+Set this to a prime number (much) larger than the size of your database
+before loading it.
+If you change this variable outside `customize',
+you should reload `bbdb-file'."
+  :group 'bbdb-database
+  :type 'integer
+  :set (lambda (symb val)
+         (unless (primep val)
+           (error "`%s' must be prime, not %s" symb val))
+         (set symb val)
+         (bbdb-records)
+         val))
+
 (defcustom bbdb-default-area-code nil
   "*The default area code to use when prompting for a new phone number.
 This must be a number, not a string."
@@ -1717,7 +1741,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
              'bbdb-revert-buffer)
         (mapc (lambda (ff) (add-hook 'local-write-file-hooks ff))
               bbdb-write-file-hooks)
-        (setq bbdb-hashtable (make-vector 1021 0)))
+        (setq bbdb-hashtable (make-vector bbdb-hashtable-size 0)))
       (setq bbdb-modified-p (buffer-modified-p)
             buffer-read-only bbdb-readonly-p)
       (or bbdb-records
