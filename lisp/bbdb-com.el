@@ -1137,7 +1137,9 @@ function in `bbdb-address-editing-function'."
                                                 (bbdb-label-completion-list
                                                  "addresses"))))))
     (bbdb-address-set-location addr loc))
-  (funcall bbdb-address-editing-function addr))
+  (if current-prefix-arg
+      (bbdb-address-edit-default addr)
+    (funcall bbdb-address-editing-function addr)))
 
 (defun bbdb-record-edit-phone (phone-number &optional location)
   (let ((newl (or location
@@ -2433,7 +2435,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                        '(primary primary-or-name))
                                (member (intern-soft (downcase net) ht)
                                        all-the-completions))
-                          (setq nets nil))
+                          (setq nets nil)
+                          t)
                          ;; name
                          ((and name (member bbdb-completion-type
                                             '(nil name primary-or-name))
@@ -2453,7 +2456,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                (let ((cname (symbol-name sym)))
                                  (or (string= cname name)
                                      (member cname akas))))
-                          (setq nets nil))
+                          (setq nets nil)
+                          t)
                          )
                     (setq dwim-completions
                           (cons (bbdb-dwim-net-address rec net)
