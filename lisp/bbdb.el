@@ -2658,8 +2658,12 @@ before the record is created, otherwise it is created without confirmation
                            (equal (downcase lname)
                                   (and (setq tmp (bbdb-record-lastname record))
                                        (downcase tmp)))))))
+
           ;; have a message-name, not the same as old name.
-          (cond (bbdb-readonly-p nil)
+          (cond (bbdb-readonly-p nil) ;; skip if readonly
+
+                ;; ignore name mismatches?
+                ;; NB 'quiet' means 'don't ask', not 'don't mention'
         ((and bbdb-quiet-about-name-mismatches old-name)
          (let ((sit-for-secs
             (if (numberp bbdb-quiet-about-name-mismatches)
@@ -2678,34 +2682,41 @@ before the record is created, otherwise it is created without confirmation
              (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
                                                 old-name name)))))
          (setq change-p 'sort)
+
+         ;; Keep old name?
          (and old-name bbdb-use-alternate-names
-                      (if bbdb-silent-running
-                          (bbdb-record-set-aka record
-                                               (cons old-name
-                                                     (bbdb-record-aka record)))
-                          (if (bbdb-y-or-n-p
-                               (format "Keep name \"%s\" as an AKA? "
-                        old-name))
-             (bbdb-record-set-aka record
-                          (cons old-name
-                            (bbdb-record-aka record)))
-             (bbdb-remhash (downcase old-name) record))))
+              (not (member old-name (bbdb-record-aka record)))
+              ;; Silent mode: just add it.
+              (if bbdb-silent-running
+                  (bbdb-record-set-aka record
+                                       (cons old-name
+                                             (bbdb-record-aka record)))
+                ;; prompt user otherwise.
+                (if (bbdb-y-or-n-p
+                     (format "Keep name \"%s\" as an AKA? " old-name))
+                    (bbdb-record-set-aka record
+                                         (cons old-name
+                                               (bbdb-record-aka record)))
+                  (bbdb-remhash (downcase old-name) record))))
+
          (bbdb-record-set-namecache record nil)
          (bbdb-record-set-firstname record fname)
          (bbdb-record-set-lastname record lname)
          (bbdb-debug (or fname lname
                  (error "bbdb: should have a name by now")))
          (bbdb-puthash (downcase (bbdb-record-name record)) record))
-        ((and old-name
-                      bbdb-use-alternate-names)
-                 (if (not bbdb-silent-running)
+
+                ;; not quiet about mismatches
+        ((and old-name bbdb-use-alternate-names
+              (not (member old-name (bbdb-record-aka record)))) ;; dedupe
+         (if (not bbdb-silent-running)
              (bbdb-y-or-n-p
               (format "Make \"%s\" an alternate for \"%s\"? "
-                  name old-name)))
+                      name old-name)))
          (setq change-p 'sort)
          (bbdb-record-set-aka
-                  record (cons name (bbdb-record-aka record)))
-                 (bbdb-puthash (downcase name) record))))
+          record (cons name (bbdb-record-aka record)))
+         (bbdb-puthash (downcase name) record))))
 
       ;; It's kind of a kludge that the "redundancy" concept is built in.
       ;; Maybe I should just add a new hook here...  The problem is that the
