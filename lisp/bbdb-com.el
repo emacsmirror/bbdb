@@ -47,6 +47,7 @@
   (autoload 'mew-send "mew")
   (autoload 'bbdb-header-start "bbdb-hooks")
   (autoload 'bbdb-extract-field-value "bbdb-hooks")
+  (autoload 'bbdb-fontify-buffer "bbdb-gui")
   (autoload 'Info-goto-node "info")
   ;; this is very unpleasant, but saves me doing a lot of rewriting
   ;; for now. a big cleanup will happen for the next release, maybe.
@@ -2831,8 +2832,8 @@ a pause in the dial sequence."
           ((eq ?  d)
            ;; if we use sit-for, the user can interrupt!
            (sleep-for 1)) ;; configurable?
-          ((memq d '(0 1 2 3 4 5 6 7 8 9)
-                 (bbdb-play-sound d)))
+          ((memq d '(0 1 2 3 4 5 6 7 8 9))
+           (bbdb-play-sound d))
           (t)))) phone-string)
 
     ;; tell the user that we're dialed, if we're using the modem
