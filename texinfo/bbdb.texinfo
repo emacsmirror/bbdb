@@ -1,0 +1,1528 @@
+\input texinfo  @c -*-texinfo-*-
+@c %**start of header
+@setfilename bbdb.info
+@settitle Insidious Big Brother Database User Manual
+@c %**end of header
+
+@c
+@c
+
+This is edition 1.9 of the BBDB User Manual for BBDB version 1.51.
+This file documents the Insidious Big Brother Database
+Copyright (c) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@@netscape.com>
+
+Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
+Copyright (c) 1997-1998 Matt Simmons <simmonmt@@acm.org>
+@end ifinfo
+@subtitle A phone number and address database program for GNU Emacs
+@subtitle Edition 1.9, Feb 1994
+@title BBDB User Manual
+@author by Jamie Zawinski
+@subtitle Edition $Revision$, $Date$
+Copyright @copyright{} 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@@netscape.com>
+@author by Jamie Zawinski and Matt Simmons
+
+This is edition 1.9 of the @cite{BBDB User Manual} for BBDB version 1.51,
+Feb 1994.@refill
+@sp 2
+This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
+version 1.59unoff, $Date$.@refill
+
+@sp 2
+
+Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on fnord all copies.
+
+Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the author.
+
+@end titlepage
+@page
+
+@node Top, Installation,,_
+@chapter BBDB
+
+@b{BBDB} is a rolodex-like database program for GNU Emacs.  @b{BBDB} stands 
+for @b{@i{Insidious Big Brother Database}}, and is not, repeat, @emph{not} an
+obscure reference to the Buck Rogers TV series.
+
+It provides the following features:
+Tight integration with mail and news readers, with little or no
+@itemize @bullet
+@item
+Integration with mail and news readers, with little or no
+interaction by the user: @refill
+
+@itemize @bullet
+@item
+easy (or automatic) display of the record corresponding to the sender of
+the current message; @refill
+
+@item
+automatic creation of records based on the contents of the current
+message; @refill
+
+@item
+automatic addition of data to arbitrary fields of the record
+corresponding to the sender of the current message. @refill
+@end itemize
+
+@item
+Listing all records which match a regular expression;
+
+@item
+Listing all records which match a regular expression in a particular
+field (@samp{company} or @samp{notes,} for example); @refill
+@end itemize
+* Introduction::		Introduction
+@menu
+* Interfaces::			Interfaces
+* Interfaces::			Interfaces to various readers
+* The Mailing List::		info-bbdb-request@@xemacs.org
+* Internals::                   BBDB Internals
+* Todo List::			Todo List
+* Changes::                     New in this version
+* The Latest Version::		Where to Get It
+* The Future::                  Known Bugs and the TODO list
+* Thanks::			to the Ministry of Bugs
+
+* Concept Index::		Concept Index
+@node Installation, Introduction, Top, Top
+@end menu
+
+@node Installation, The BBDB, Top, Top
+@section Installation
+This program consists of eleven files:
+
+This program consists of several groups of files, organized by
+directory:
+     bbdb-Makefile - a makefile for compiling this with unix `make'
+     bbdb.texinfo  - the source to this documentation
+     bbdb.el       - implementation of the database
+     bbdb-com.el   - most of the user-level commands
+     bbdb-vm.el    - interface to VM (View Mail)
+     bbdb-rmail.el - interface to Rmail
+     bbdb-gnus.el  - interface to GNUS
+     bbdb-mhe.el   - interface to MH-E (Mail Handler)
+     bbdb-hooks.el - other optional functionality
+     mail-extr.el  - utilities for parsing RFC-822 email addresses
+                printing utility
+     texinfo  - the documentation files for the @b{BBDB}
+     utils    - miscellaneous external utility programs
+@end example
+@end ifinfo
+@item bbdb-Makefile
+a makefile for compiling this with unix @code{make}
+@item bbdb.texinfo
+the source to this documentation
+@item bbdb.el
+implementation of the database
+@item bbdb-com.el
+most of the user-level commands
+@item bbdb-vm.el
+interface to VM (View Mail)
+@item bbdb-rmail.el
+interface to Rmail
+@item bbdb-gnus.el
+interface to GNUS
+@item bbdb-mhe.el
+interface to MH-E (Mail Handler)
+@item bbdb-hooks.el
+other optional functionality
+@item mail-extr.el
+utilities for parsing RFC-822 email addresses
+the documentation files for the BBDB
+@item utils
+miscellaneous external utility programs
+@end table
+Put all of these files in some directory in your @code{load-path},
+and byte-compile them.  (If you don't compile these files, the
+@b{BBDB} will be so slow as to be virtually unusable.)@refill
+File Installation
+You can compile everything with the shell command 
+Initial Configuration
+After setting the paths (if necessary), run one of the following commands:
+make -f bbdb-Makefile all 
+     @code{make vm}    - Build the core components with @code{VM} support
+@end table
+@noindent
+but that won't work if you don't have @b{VM}.  In that case, you can instead
+say @refill
+build the @b{BBDB} with support for @code{Gnus} and @code{VM}, you can
+make -f bbdb-Makefile rmail vm mhe gnus
+
+@example
+@subsection XEmacs Package Installation
+(omitting the names of any packages you don't want to bother with).
+You will undoubtedly need to change some of the parameters at the
+top of the Makefile (see the comments there).@refill
+@b{NOTE:} XEmacs packages are currently supported only under XEmacs
+Put the following forms in your @file{.emacs} file.
+according to the instructions in @ref{Normal User}.
+@example
+(autoload 'bbdb         "bbdb-com" "Insidious Big Brother Database" t)
+(autoload 'bbdb-name    "bbdb-com" "Insidious Big Brother Database" t)
+(autoload 'bbdb-company "bbdb-com" "Insidious Big Brother Database" t)
+(autoload 'bbdb-net     "bbdb-com" "Insidious Big Brother Database" t)
+(autoload 'bbdb-notes   "bbdb-com" "Insidious Big Brother Database" t)
+(autoload 'bbdb-insinuate-vm       "bbdb-vm"    "Hook BBDB into VM")
+(autoload 'bbdb-insinuate-rmail    "bbdb-rmail" "Hook BBDB into RMAIL")
+(autoload 'bbdb-insinuate-mh       "bbdb-mhe"   "Hook BBDB into MH-E")
+(autoload 'bbdb-insinuate-gnus     "bbdb-gnus"  "Hook BBDB into GNUS")
+(autoload 'bbdb-insinuate-sendmail "bbdb"       "Hook BBDB into sendmail")
+@end example
+
+If you want to take advantage of the @b{VM} features of the @b{BBDB},
+then add the form @w{@code{(bbdb-insinuate-vm)}} to your @file{~/.vm}
+file. @refill
+
+If you want to take advantage of the @b{RMAIL} features of the
+@b{BBDB}, then add the following line to your @file{.emacs} file: @refill
+
+@example
+(setq rmail-mode-hook 'bbdb-insinuate-rmail)
+@end example
+
+If you want to take advantage of the @b{MH-E} features of the
+@b{BBDB}, then add the following line to your @file{.emacs} file: @refill
+User installation.  See @ref{Normal User}.
+To take advantage of the @b{MH-E} features of the @b{BBDB}, add the
+(setq mh-folder-mode-hook 'bbdb-insinuate-mh)
+
+@example
+If you want to take advantage of the @b{GNUS} features of the @b{BBDB}, then
+add one of the following lines to your @file{.emacs} file: @refill
+messages are loaded.  This notification is required if the @b{BBDB} is
+To take advantage of the @b{RMAIL} features of the @b{BBDB}, add the
+(setq gnus-Startup-hook 'bbdb-insinuate-gnus)	; for GNUS 3.14 or older
+(setq gnus-startup-hook 'bbdb-insinuate-gnus)	; for GNUS 3.15 or newer
+
+@example
+If you want to take advantage of send-mail-mode features of the @b{BBDB}, 
+then add the following line to your @file{.emacs} file: @refill
+messages are loaded.  This notification is required if the @b{BBDB} is
+mail}) features of the @b{BBDB}, add the following form to your Emacs
+(setq mail-setup-hook 'bbdb-insinuate-sendmail)
+
+@example
+@node Introduction, BBDB Mode, Installation, Top
+@section Introduction
+
+The database is a set of records, where each record corresponds to one
+person or organization.  Each record has several fields.  The built-in
+fields are: @refill
+@cindex Builtin fields
+
+@table @b
+@item name
+The name of this person, or none if it's an organization.
+The database itself lives in a file which is named by the variable
+@item AKA
+A list of other names of this person.
+
+@item company
+The name of this person's organization, or none.
+types are listed, followed by a description of how and why some types
+@item net
+A list of this person's network addresses.
+@item Type
+@item address
+A list of postal (physical) addresses for this person.
+@tab The name of this person, or none if the record corresponds to an
+@item phone
+A list of telephone numbers for this person.
+@item @code{company}
+@item notes
+Random commentary.
+@end table
+@item @code{AKA}
+@noindent
+In addition to these fields, you may define your own field-types, 
+with the @code{bbdb-insert-new-field} command.  (@xref{BBDB Mode}).@refill
+@item @code{net}
+The database itself lives in a file which is named by the variable
+@code{bbdb-file}, defaulting to @file{~/.bbdb}.  The first time you use
+one of the @b{BBDB} commands, this file is read into an emacs buffer, and
+remains there.  As you make changes to the database, this buffer is
+changed as well, ensuring that if it is auto-saved, it will be saved in
+its most current state. @refill
+@item @code{address}
+@node Basic Searching, Advanced Searching, Database Fields, The BBDB
+@subsection Basic searching commands
+
+You can list the contents of the database with the command 
+@w{@kbd{M-x bbdb}}.  You will be prompted for a regular expression, and all 
+records which match that regexp in the name, company, network address,
+or any notes fields will be displayed.@refill
+@cindex Searching the database
+@findex bbdb
+@findex bbdb-name
+@findex bbdb-company
+@findex bbdb-net
+@kbd{bbdb-company,} @kbd{bbdb-net,} or @kbd{bbdb-notes} instead,
+which limit their searches to the name, company, email address, and
+notes fields, respectively.  If these commands are given a prefix
+argument, the listing displayed will be one line per entry; otherwise,
+the full db entry will be shown on multiple lines.@refill
+fields, respectively.  If these commands are given a prefix argument,
+the listing displayed will be one line per entry; otherwise, the full
+database entry will be shown on multiple lines.@refill
+(@key{RET} for all).  In this way you can limit your searches to the
+@cindex User-defined fields
+The @code{bbdb-notes} command will prompt for the notes field to search
+(@kbd{RET} for all).  In this way you can limit your searches to the
+contents of one particular user-defined notes field.  (You can add 
+user-defined fields with the @code{bbdb-insert-new-field} command;
+@xref{BBDB Mode}.)@refill
+
+@node Manual Record Addition,  , Advanced Searching, The BBDB
+@subsection Manual record addition
+
+There are several ways to add new entries to the Insidious Big Brother 
+Database; the most straightforward is to use @w{@kbd{M-x bbdb-create}},
+which will prompt you for all relevant information.  However, the
+easiest way is to allow them to be added automatically by one of the
+mail or news-reading interfaces (@xref{Interfaces}). @refill
+
+@node BBDB Mode, Interfaces, Introduction, Top
+@cindex Adding new records
+
+The @samp{*BBDB*} buffer is in @b{BBDB mode,} which has keybindings for
+manipulating the database.  Letters no longer insert themselves.
+Numbers are prefix arguments.  You can move around using the usual
+cursor motion commands. @refill
+the key(s) corresponding to the desired command.  The output (if any) of
+the listed commands will be displayed in the @samp{*BBDB*} buffer, and
+can be navigated through using the usual cursor motion commands.
+@cindex BBDB Mode
+@cindex *BBDB* buffer
+
+@table @kbd
+@item e
+@findex bbdb-edit-current-field
+@cindex Editing fields
+@cindex Changing fields
+(@code{bbdb-edit-current-field})  Edit the field on the current line.  If
+the cursor is in the middle of a multi-line field, such as an address or
+comments section, then the entire field is edited, not just the current
+line. @refill
+
+@item ;
+@findex bbdb-edit-notes
+(@code{bbdb-edit-notes})  A shortcut for editing the @var{notes} field. @refill
+
+@item d, C-k
+(@code{bbdb-delete-current-field-or-record}) Delete the field on the current
+line.  If the current line is the first line of a record, then this
+deletes the entire record from the database (prompting first). @refill
+current line.  If the current line is the first line of a record, the
+@b{BBDB} will, after prompting the user, delete the entire record from
+the database.
+
+@item C-o
+@findex bbdb-insert-new-field
+(@code{bbdb-insert-new-field}) Inserts a new field into the current record, 
+as opposed to editing an existing one.  You are prompted (with
+completion) for the type of field to insert (@b{phone}, @b{address},
+@b{notes}, etc); if the string you type is not a known field type, you
+will be asked whether to add a new ``note'' field of that type.@refill
+insert (@b{phone}, @b{address}, @b{notes}, etc); if the string you type
+is not a known field type, you will be asked whether to add a new field
+with the entered name of type @code{notes}.
+
+@cindex Phone numbers
+@cindex North American phone numbers
+@cindex European phone numbers
+If you are inserting a new phone-number field, you can control whether
+number.  Otherwise, which style is used is controlled by the variable
+@code{bbdb-north-american-phone-numbers-p}. @refill
+any other prefix arg means it's to be a a structured North American
+number.  If no prefix argument is supplied, the style used is controlled
+by the variable @code{bbdb-north-american-phone-numbers-p}. @refill
+
+@item C-x C-t
+@findex bbdb-transpose-fields
+@cindex Reordering fields
+@cindex Transposing fields
+(@code{bbdb-transpose-fields}) This is like the @code{transpose-lines} 
+command, but it is for @b{BBDB} fields.  If the cursor is on a field of
+With argument @var{ARG}, takes previous line and moves it past @var{ARG}
+fields.  With argument 0, interchanges the field that @i{point} is in with
+the field that @i{mark} is in.@refill
+With non-zero numeric argument @var{ARG}, the previous field is moved
+past @var{ARG} fields.  With argument 0, the field indicated by
+@i{point} is interchanged with the one indicated by @i{mark}.
+
+Both fields must be in the same record, and must be of the same basic type
+(that is, you can use this command to change the order in which phone-number
+fields are listed, but you can't use it to make an address appear before a
+phone number; the order of field types is fixed.)@refill
+
+@item n, p
+@findex bbdb-next-record
+@findex bbdb-prev-record
+(@code{bbdb-next-record}, @code{bbdb-prev-record})  Move to the next and
+previous displayed record, respectively. @refill
+
+@item t
+@findex bbdb-elide-record
+(@code{bbdb-elide-record}) Toggles whether the current record is displayed
+in a one-line listing, or a full multi-line listing.  With a numeric argument
+of 0, the current record will unconditionally be made elided; with any
+other argument, the current record will unconditionally be shown
+expanded. @refill
+
+If @kbd{*t} is used instead of simply @kbd{t}, then the state of all
+records will be changed instead of just the one at point.  In this case,
+a numeric argument of 0 means that all records will unconditionally be
+made elided; any other numeric argument means that all of the records
+will unconditionally be shown expanded; and no numeric argument means
+that the records are made to be in the opposite state of the record
+under point. @refill
+
+@item o
+@findex bbdb-omit-record
+(@code{bbdb-omit-record}) Removes the current record from the display,
+but does not delete it from the database; it merely makes it seem as if
+the most recent search had not matched this record.  With a numeric
+argument, omit the next N records.  With a negative argument, go
+backwards. @refill
+
+@item m
+(@code{bbdb-send-mail})  Begin composing mail to the person represented
+@cindex Sending mail
+@vindex bbdb-send-mail-style
+(@code{bbdb-send-mail}) Begin composing mail to the person represented
+will be used; if @b{VM} is loaded, then @code{vm-mail} is used;
+otherwise, @code{mail} is used.  You can override this by setting the
+variable @code{bbdb-send-mail-style} to one of the symbols @code{vm}, 
+@code{mh}, or @code{mail}. @refill
+You can override this by setting the variable
+@code{bbdb-send-mail-style} to one of the symbols @code{vm}, @code{mh},
+@code{message}, or @code{mail}. @refill
+
+If @kbd{*m} is used instead of simply @kbd{m}, then mail will be sent to
+@code{compose-mail} and @code{mail-user-agent}.  In a future version of
+the @b{BBDB}, it will.
+
+@item s, C-x C-s
+@findex bbdb-save-db
+@cindex Saving your changes
+(@code{bbdb-save-db})  Saves the @b{BBDB} file to disk.
+
+@item r
+@findex bbdb-refile-record
+@cindex Fixing mistakes
+@cindex Merging records
+(@code{bbdb-refile-record})  Merge the current record into some other record;
+that is, delete the record under point after copying all of the data
+within it into some other record.  this is useful if you realize that
+somehow a redundant record has gotten into the database, and you want to
+merge it with another. @refill
+
+If both records have names and/or companies, you are asked which to use.
+Phone numbers, addresses, and network addresses are simply concatenated.
+The first record is the record under the point; the second is prompted 
+for.  Completion behavior is as dictated by the variable
+@code{bbdb-completion-type}. @refill
+
+@item M-d
+(@code{bbdb-dial}) If you are on a Sun SparcStation with the
+@samp{sound} option installed, this command will play the
+appropriate tones on the builtin speaker to dial the phone number
+corresponding to the current line.  If the point is at the beginning
+of a record, dial the first phone number.  This does not dial the
+extension.  This also does not dial the area code if it is the same as
+@code{bbdb-default-area-code}, unless a prefix argument is given. @refill
+This does not dial the extension.  This also does not dial the area code
+the first element of @code{bbdb-sound-files} for the digit @samp{0}, the 
+second for @samp{1}, the third for @samp{2}, and so on.
+
+@table @code
+@item bbdb-dial-local-prefix
+@vindex bbdb-dial-local-prefix
+Set this to a string of digits if your phone system requires you to dial
+some code to access an outside line.@refill
+
+@item bbdb-dial-long-distance-prefix
+@vindex bbdb-dial-long-distance-prefix
+Set this to a string of digits if your phone system requires you to dial
+some code before dialing a long-distance number (one not in your local 
+area code.)@refill
+@end table
+
+(@code{bbdb-finger})  This command ``fingers'' the network address of a
+@findex bbdb-finger
+@cindex Finger interface
+(@code{bbdb-finger})  This command fingers the network address of a
+@b{BBDB} record.  If this command is executed from the @samp{*BBDB*} buffer,
+it fingers the network address of the record which is at point; otherwise, 
+it prompts in the minibuffer (with completion) for a user to finger.  With a
+numeric prefix argument, it fingers the @i{N}th network address of the 
+current record; with a prefix argument of @kbd{^U}, it fingers all of them.
+The @samp{*finger*} buffer is filled asynchronously, meaning that you don't
+have to wait around for it to finish; but fingering another user before
+the first finger has finished could have unpredictable results.@refill
+
+If this command is executed from the @samp{*BBDB*} buffer, it may be prefixed
+with @kbd{*} (as in @kbd{*f} instead of simply @kbd{f}), meaning to
+@code{finger-host}.  The name of the field to be fingered can be changed 
+by setting @code{bbdb-finger-host-field}.
+(@code{bbdb-bury-buffer})  Gets the @samp{*BBDB*} buffer out of your face.
+@findex bbdb-bury-buffer
+(@code{bbdb-bury-buffer})  Hides the @samp{*BBDB*} buffer.  @b{Note:}
+This command does @b{not} kill the @samp{*BBDB*} buffer.
+
+@item ?
+@findex bbdb-help
+(@code{bbdb-help})  This displays a one-line help message in the
+minibuffer, showing some of the most common bbdb-mode commands.
+(@code{bbdb-info})  This jumps from the @samp{*BBDB*} buffer to this
+documentation.  If this documentation is installed in the standard place
+(the directory named by the variable @code{Info-directory}) in a file
+called @file{bbdb} or @file{bbdb.info}, then no further configuration is
+necessary to make this work.@refill
+(@code{bbdb-info})  This documentation is displayed.  Please note that
+either @file{bbdb} or @file{bbdb.info} must be installed in one of the
+info directories known to Emacs for this command to work.
+
+@table @code
+@item bbdb-info-file
+@vindex bbdb-info-file
+If this documentation is not installed in the standard Info directory,
+then you should set this variable to the name of the texinfo-formatted 
+(@code{bbdb-print})  Creates a TeX file that contains a pretty-printed version 
+of @b{BBDB} records.  If prefixed by @kbd{*}, only the records currently
+@node Interfaces, Options, BBDB Mode, Top
+@end table
+
+@node Interfaces, Reader-specific Features, BBDB Mode, Top
+@section Interfaces
+
+The @b{BBDB} interfaces itself with several message-handling packages, but
+certain parameters control its behavior depending on whether it is
+being used from within a mail reader or a news reader. @refill
+
+In all of these packages, two new keybindings will be added:
+
+@table @kbd
+@item :
+@cindex Showing the sender of the current message
+@findex bbdb/vm-show-sender
+(show-sender)  Displays the @b{BBDB} entry corresponding to the author of the
+current message.  If there is none, you will be asked whether to create
+one. @refill
+@code{bbdb/@i{package}-show-sender}, where @code{@i{package}} is either
+@code{gnus}, @code{mh}, @code{rmail}, or @code{vm}, depending on the
+mail or news program being used when the command is invoked. 
+
+@item ;
+@cindex Annotating the sender of the current message
+@findex bbdb/vm-annotate-sender
+(annotate-sender)  Lets you edit the @samp{notes} field of the @b{BBDB} record
+corresponding to the sender of the current message.  If there is no
+record for the current author, you will be asked whether to create one.@refill 
+@code{bbdb/@i{package}-annotate-sender}, where @code{@i{package}} is
+either @code{gnus}, @code{mh}, @code{rmail}, or @code{vm}, depending on
+available unless you call the appropriate ``insinuation''
+function; @xref{Installation}.@refill
+
+It is possible to configure @b{BBDB} so that it automatically creates a
+record when it sees a message from a person who is not in the database.
+It is also possible to have text automatically added to the notes field
+These keybindings (and several other features) will not be 
+available unless you call the appropriate ``insinuation''
+function; @xref{Installation}.@refill
+
+of the corresponding record depending on the contents of the message
+headers.  @xref{Customization Hooks} @refill
+
+@menu
+* Mail Reading Interfaces::		Mail Reading Interfaces
+* News Reading Interfaces::		News Reading Interfaces
+* Mail Sending Interfaces::		Mail Sending Interfaces
+@end menu
+
+@node Mail Reading Interfaces, News Reading Interfaces, Interfaces, Interfaces
+@subsection Mail Reading Interfaces
+
+There are BBDB interfaces for the following mail readers:
+@b{RMAIL}, from the standard emacs library;
+@item
+@b{MH-E}, the Emacs interface to @b{Mail Handler}, from the standard 
+emacs library.@refill
+@b{MH-E}, the Emacs interface to @b{Mail Handler} (@b{MH}), from the
+@b{RMAIL}, from the standard emacs library (packaged separately for
+XEmacs users as of 20.4);
+@item
+@b{View Mail}, by Kyle Jones, version 5.31 or newer;
+@end itemize
+
+The only news reader which @b{BBDB} supports is @b{GNUS}, by
+Masanobu Umeda.  If anyone wants to write a @b{BBDB} interface to
+@b{GNEWS} (probably quite easy to do), please send it to me. @refill
+@subsection News Reading Interfaces
+@node Mail Sending Interfaces,, News Reading Interfaces, Interfaces
+@end itemize
+
+@node Mail Sending Interfaces,  , News Reading Interfaces, Interfaces
+@subsection Mail Sending Interfaces
+
+@findex bbdb-complete-name
+@cindex Name completion
+@cindex Mail address completion
+@cindex Address completion
+When sending mail, the keystroke @kbd{M-TAB} is bound to the
+function @code{bbdb-complete-name}.  This will take the string that
+you have typed (from point back to the preceding colon, comma, or
+the beginning of the line) and will complete that against the
+with the common portion of the matches.  Typing @kbd{M-@key{TAB}} again will
+subsequence of a person's full name or network address; if it
+completes ambiguously, then what you have typed will be replaced
+with the common portion of the matches.  Typing @kbd{M-TAB} again will
+show a list of possible completions.  If it completes unambiguously,
+then an address of the form @w{@code{User Name <email-address>}} will
+be inserted.  The variable @code{bbdb-completion-type} controls
+You must call the function @code{bbdb-insinuate-sendmail} to get
+this key binding.  @xref{Installation}@refill
+This binding is automatically set by the various insinuation functions
+The above forms should be added to your Emacs initialization file,
+@code{mail-alias} property: if a record has a @code{mail-alias}
+property, then that is used instead of their @code{name} field.
+You can control what ``real name'' is inserted with the
+@code{mail-alias} field: if a record has a @code{mail-alias}
+field, then that is used instead of their @code{name} field.
+
+@vindex bbdb-completion-display-record
+If the variable @code{bbdb-completion-display-record} is true (the
+default) then when you successfully complete an address with
+@kbd{M-TAB}, the corresponding record will be appended to
+the @samp{*BBDB*} buffer.  The buffer will not be displayed if it
+is not already visible, but the record will be displayed there.
+
+@findex bbdb-yank-addresses
+@cindex Sending mail
+When sending mail, you can use the command @code{bbdb-yank-addresses} 
+to CC the current message to the people currently displayed in 
+the @samp{*BBDB*} buffer.  This is useful if you are in the midst of
+sending or replying to a message, and you decide to add some recipients.
+You can use one of the @kbd{M-x bbdb} commands to display the set of
+people that you want to CC the message to, and then execute this command
+to add them to the list.
+
+@cindex Mailing lists
+@cindex Mail Aliases
+If you are using my @file{mail-abbrevs.el} package, which uses the
+word-abbrev mechanism for mail aliases, then you can store your mail
+aliases in the BBDB instead of duplicating the information elsewhere.@refill
+uses the word-abbrev mechanism for mail aliases, then you can store your
+If you want a mail alias to be defined for a person, simply add 
+a @code{mail-alias} field to their record.  You may have multiple
+aliases for the same person; simply separate them with commas.@refill
+If you want a mail alias to be defined for a person, simply add a
+If more than one person has the same mail-alias, then that alias 
+expands to the addresses of all of those people; in this way you can
+maintain mailing lists within the BBDB.@refill
+If more than one person has the same mail-alias, then that alias expands
+to the addresses of all of those people; in this way you can maintain
+function @code{bbdb-define-all-aliases} from your @code{mail-setup-hook}.
+This will search the database, and call @code{define-mail-alias} to
+define each of the resulting aliases.@refill
+function @code{bbdb-define-all-aliases} from your
+@node Options, The Mailing List, Interfaces, Top
+currently being displayed in W3 to a user-specified @b{BBDB} record.
+
+@node Options, Utilities, Other Packages, Top
+@section Options
+
+There are many variables which control the behavior of the Insidious Big 
+Brother Database, and there are many hook-variables which can be used to
+modify its behavior in more complex ways.  Several pieces of functionality
+are included which use the hooks in this way. @refill
+
+@menu
+* Customization Parameters::	Customization Parameters
+* Customization Hooks::		Customization Hooks
+* Predefined Hooks::		Predefined Hooks
+@end menu
+
+@node Customization Parameters, Customization Hooks, Options, Options
+@subsection Customization Parameters
+
+@table @code
+@item bbdb-file
+@vindex bbdb-file
+The name of the file which contains your personal database.  Default:
+@file{~/.bbdb}.
+
+@item bbdb-default-area-code
+@vindex bbdb-default-area-code
+@cindex Phone numbers
+The default area code to use when prompting for a new phone number.
+Default: 415.  This must be a number, not a string.@refill
+
+@item bbdb-north-american-phone-numbers-p
+@vindex bbdb-north-american-phone-numbers-p
+@cindex North American phone numbers
+@cindex European phone numbers
+Whether syntax-checking of phone numbers should be enforced.  Default:
+@code{t}.  This only works for Bell-system phone numbers.  If this is true,
+then you can't enter invalid phone numbers, and all phone numbers are
+pretty-printed in the same way.  European phone numbers don't have as
+strict a syntax, however, so this is a harder problem for them (on which
+I am punting). @refill
+
+You can have both styles of phone number in your database by providing a
+prefix argument to the @code{bbdb-insert-new-field} command. @refill
+
+@item bbdb-electric-p
+@vindex bbdb-electric-p
+@cindex Electric display
+Whether bbdb mode should be @i{``electric''} like @code{electric-buffer-list}.
+Default: @code{t}.  Basically this means that when you type space after 
+@w{@kbd{M-x bbdb}}, your window configuration will be restored to what it was
+before you invoked the db list.  (The @code{bbdb-mode} commands still work as 
+well.) @refill
+
+There are some problems with electric modes; for example, keyboard
+macros and incremental search don't work.  (This is not a bug in BBDB,
+but in @file{electric.el}.)@refill
+
+@item bbdb-case-fold-search
+@vindex bbdb-case-fold-search
+Default: the same as @code{case-fold-search}.  @code{case-fold-search} is 
+bound to this by @w{@kbd{M-x bbdb}} and related commands.  This variable lets
+the case-sensitivity of @kbd{^S} and of the bbdb searching commands be
+different.
+
+@item bbdb/mail-auto-create-p
+@vindex bbdb/mail-auto-create-p
+If this is @code{t} (the default), then @b{VM}, @b{MH}, and @b{RMAIL}
+will automatically create new bbdb records for people you receive mail
+from.  If this variable is a function name or lambda expression, then it
+is called with no arguments to decide whether an entry should be
+automatically created.  You can use this to, for example, not create
+records for messages which have reached you through a particular mailing
+list, or to only create records automatically if the mail has a
+particular subject.  See the variables
+@code{bbdb-ignore-most-messages-alist} and
+@code{bbdb-ignore-some-messages-alist} (@xref{Predefined Hooks}) @refill
+
+@item bbdb/news-auto-create-p
+@vindex bbdb/news-auto-create-p
+@cindex Automatically creating records
+If this is @code{t} (default: @code{nil}), then @b{GNUS} will
+automatically create new @b{BBDB} records for people you read messages
+by.  If this is a function name or lambda expression, then it is called
+with no arguments to decide whether an entry should be automatically
+created.  You can use this to, for example, create or not create
+messages which have a particular subject.  See the variable
+@code{bbdb-auto-notes-alist} (@xref{Predefined Hooks}). @refill
+
+If you want to autocreate messages based on the current newsgroup, it's
+probably a better idea to set this variable to @code{t} or @code{nil} from your
+@code{gnus-select-group-hook} instead. @refill
+@example
+(setq gnus-select-group-hook
+  '(lambda ()
+     (setq bbdb/news-auto-create-p
+           (or (string= "some.news.group" gnus-newsgroup-name)
+               (string= "other.news.group" gnus-newsgroup-name)))))
+@end example
+@exdent            (or (string= "some.news.group" gnus-newsgroup-name)
+@exdent                (string= "other.news.group" gnus-newsgroup-name)))))
+@end example
+
+@item bbdb-quiet-about-name-mismatches
+@vindex bbdb-quiet-about-name-mismatches
+If this is false (the default), then @b{BBDB} will prompt you when it notices a
+name change, that is, when the ``real name'' in a message doesn't correspond
+to a record already in the database with the same network address.  As in,
+@w{@i{``John Smith <jqs@@frob.com>''}} versus
+@w{@i{``John Q. Smith <jqs@@frob.com>''.}}  If this is true, then you will
+not be asked if you want to change it (and it will not be changed.) @refill
+
+@item bbdb-use-alternate-names
+@vindex bbdb-use-alternate-names
+@cindex Alternate names
+@cindex AKA
+If this is false, then the @b{BBDB} will not use the @b{AKA} field.
+Otherwise (the default) then the mail and news interfaces will ask you
+if you want to add an alternate name when a name-change is noticed, and
+will ask you whether the new name should be made the primary one.
+Note that if @code{bbdb-quiet-about-name-mismatches} is true, you will
+not be asked any questions about alternate names.
+
+@item bbdb-readonly-p
+@vindex bbdb-readonly-p
+If this is true (default: @code{nil}), then nothing will attempt to change the
+database implicitly, and you will be prevented from doing it
+explicitly.  If you have more than one emacs running at the same time,
+you might want to arrange for this to be set to @code{t} in all but one of
+them. @refill
+
+@item bbdb-auto-revert-p
+@vindex bbdb-auto-revert-p
+If this variable is true (default: @code{nil}) and the @b{BBDB} file is noticed to
+have changed on disk, it will be automatically reverted without
+prompting you first.  Otherwise you will be asked.  (But if the file has
+changed and you have made changes in memory as well, you will always be
+asked.) @refill
+
+@item bbdb-notice-auto-save-file
+@vindex bbdb-notice-auto-save-file
+@cindex Auto-save files
+If this is true (default: @code{nil}), then the @b{BBDB} will notice when its
+auto-save file is newer than the file is was read from, and will offer
+to revert. @refill
+
+@item bbdb-use-pop-up
+@vindex bbdb-use-pop-up
+@cindex Automatic display of the corresponding record
+If true (the default), display a continuously-updating @b{BBDB}
+window while in @b{VM}, @b{MH}, @b{RMAIL}, or @b{GNUS}.
+Each time a new message is selected, the record corresponding to
+that message's sender will be displayed in another window.  The
+buffer in this other window will be in bbdb-mode, and all
+corresponding commands will be available. @refill
+
+This buffer will be positioned on the screen by finding the tallest
+of the windows present, and splitting it such that the bottom
+@code{bbdb-pop-up-target-lines} lines of the window display the
+@samp{*BBDB*} buffer.  With the default configurations of @b{VM},
+@b{MH}, @b{RMAIL}, and @b{GNUS}, this means that the bbdb-list
+buffer will be just below the message-body buffer. @refill
+
+If this is the symbol @code{horiz}, then the @b{BBDB} window will be
+stacked horizontally instead of vertically, if there is room to do that
+tastefully. @refill
+
+@item bbdb-pop-up-target-lines
+@vindex bbdb-pop-up-target-lines
+Desired number of lines in a @b{VM/MH/RMAIL/GNUS} pop-up @b{BBDB} window,
+default 5. @refill
+
+@item bbdb-completion-type
+@vindex bbdb-completion-type
+@cindex Completion
+@cindex Name completion
+@cindex Mail address completion
+@cindex Address completion
+Controls the behavior of the @code{bbdb-complete-name} command.  If @code{nil}
+(the default), completion is done across the set of all full-names and
+user-ids in the database; if the symbol @code{name}, completion is
+done on real-names only; if the symbol @code{net}, completion is done
+on network addresses only; if it is @code{primary}, then completion is
+done only across the set of primary network addresses (the first address
+in the list of addresses for a given user).  If it is
+@code{primary-or-name}, completion is done across primaries and real
+names. @refill
+
+@item bbdb-user-mail-names
+@vindex bbdb-user-mail-names
+A regular expression identifying the addresses that belong to you.  If a
+message from an address matching this is seen, the @b{BBDB} record for the
+@samp{To:} line will be shown instead of the one for the @samp{From:}
+line.  If this is @code{nil}, it will default to the value of
+@code{(user-login-name)}. @refill
+
+@item bbdb-always-add-addresses
+@vindex bbdb-always-add-addresses
+If this is @code{t}, then whenever the Insidious Big Brother Database
+notices a new email address corresponding to a person who is in the
+database, it will add it to the database.  If this is @code{nil} (the
+default), then whenever a new network address is noticed for a person in
+the database, you will be asked whether to add the address.  If this is
+the symbol @code{never} (really if it is not @code{t} and not @code{nil})
+then new network addresses will never be automatically added. @refill
+
+@item bbdb-new-nets-always-primary
+@vindex bbdb-new-nets-always-primary
+If this is @code{t}, then when the Insidious Big Brother Database adds a new
+address to a record, it will always add it to the front of the list of
+addresses, making it the primary address.  If this is @code{nil} (the default),
+then you will be asked.  If this is the symbol @code{never} (really if
+it is not @code{t} and not @code{nil}) then new network addresses will
+always be added to the end of the list. @refill
+
+@item bbdb-canonicalize-redundant-nets-p
+@vindex bbdb-canonicalize-redundant-nets-p
+If this is non-@code{nil}, redundant network addresses will be ignored.
+If a record has an address of the form @code{foo@@baz.com}, setting this
+to @code{t} will cause subsequently-noticed addresses 
+like @code{foo@@bar.baz.com} to be ignored (since we already have a more
+general form of that address.)  This is similar in function to one of
+the possible uses of the variable @code{bbdb-canonicalize-net-hook}
+but is somewhat more automatic.  (This can't quite be implemented in
+terms of the canonicalize-net-hook because it needs access to the
+database to determine whether an address is redundant, and the
+canonicalize-net-hook is purely a textual manipulation which is
+performed before any database access.)
+
+@item bbdb-message-caching-enabled
+@vindex bbdb-message-caching-enabled
+Whether caching of the message->bbdb-record association should be
+used for the interfaces which support it (@b{VM}, @b{MH}, and
+@b{RMAIL}).  This can speed things up a lot.  One implication of
+this variable being true (the default) is that the
+@code{bbdb-notice-hook} will not be called each time a message is
+selected, but only the first time.  Likewise, if selecting a message
+would generate a question (whether to add an address, change the
+name, etc) you will only be asked that question the very first time
+the message is selected. @refill
+
+@item bbdb-elided-display
+@vindex bbdb-elided-display
+Default: @code{nil}.  Set this to @code{t} to make the bbdb-display commands
+default to displaying one line per record instead of a full listing.
+Set this to a list of some of the symbols @code{'(address phone net
+notes)} to select those fields to be left out of the listing (you can't
+leave out the name field). @refill
+
+This is the default state for @w{@kbd{M-x bbdb}} and friends.  You can have a
+different default for when the @b{BBDB} buffer is automatically updated by the
+mail and news interfaces by setting the variable
+@code{bbdb-pop-up-elided-display}.  If that variable is unbound, this
+variable will be consulted instead.@refill
+
+@item bbdb-pop-up-elided-display
+@vindex bbdb-pop-up-elided-display
+Default: unbound.  Set this to @code{t} if to make the pop-up @b{BBDB} buffer
+default to displaying one line per record instead of a full listing.
+Set this to a list of some of the symbols @code{'(address phone net
+notes)} to select those fields to be left out of the listing (you can't
+leave out the name field). @refill
+
+The default state for @w{@kbd{M-x bbdb}} and friends is controlled by the
+variable @code{bbdb-elided-display}; this variable is the default for
+when the @b{BBDB} buffer is automatically updated by the mail and news
+interfaces.  If bbdb-pop-up-elided-display is unbound, then
+bbdb-elided-display the former will be consulted instead by mail and
+news.@refill
+
+@item bbdb-offer-save
+@vindex bbdb-offer-save
+If @code{t} (the default), then certain actions will cause the @b{BBDB} to
+ask you whether you wish to save the database.  If @code{nil}, then the
+offer to save will never be made.  If not @code{t} and not @code{nil}, then
+any time it would ask you, it will just save it without asking. @refill
+The following variables apply only to the @b{GNUS} interface to @b{BBDB}.  To
+make use of them, you must add this forms to your @file{.emacs} file:@refill
+
+@example
+(autoload 'bbdb/gnus-lines-and-from "bbdb-gnus")
+(setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
+@end example
+
+@table @code
+@item bbdb/gnus-mark-known-posters
+@vindex bbdb/gnus-mark-known-posters
+@cindex GNUS Subject-buffer
+If @code{t} (the default), then the @b{GNUS} subject list will contain an
+indication of those messages posted by people who have entries in
+the Insidious Big Brother Database (they will be marked with an
+asterisk.) @refill
+
+@cindex mark-char
+You can change the character used to mark records on a record-by-record
+basis by adding a @code{mark-char} property to the record, whose value 
+is be the string to display (preferably one character.) @refill
+
+@item bbdb/gnus-header-prefer-real-names
+@vindex bbdb/gnus-header-prefer-real-names
+Default: @code{nil}.  if @code{t}, then the @b{GNUS} subject list will
+display real names instead of network addresses. @refill
+
+@item bbdb/gnus-header-show-bbdb-names
+@vindex bbdb/gnus-header-show-bbdb-names
+Default: @code{t}.  If both this variable and 
+the @code{bbdb/gnus-header-prefer-real-names} variable are true, then
+for news messages from people who are in your database, the name displayed 
+will be the primary name from the database, rather than the one from
+the @samp{From:} line of the message.  This doesn't affect the names of
+people who aren't in the database, of course.@refill
+
+@item bbdb/gnus-lines-and-from-length
+@vindex bbdb/gnus-lines-and-from-length
+Default: 18.  The number of characters used to display @samp{From:} info in
+@b{GNUS}, if you have set @code{gnus-optional-headers} to
+@code{bbdb/gnus-lines-and-from}. @refill
+@end table
+
+
+@end table
+
+@node Customization Hooks, Predefined Hooks, Customization Parameters, Options
+@subsection Customization Hooks
+
+All of the hooks variables described below may be set to a symbol or
+lambda expression, which will be funcalled; or may be set to a list of
+symbols or lambda expressions, each of which will be funcalled in turn.
+Almost all hooks in Emacs work this way.  But notice that some of the
+hooks described below are called with arguments.
+
+@table @code
+@item bbdb-list-hook
+@vindex bbdb-list-hook
+Hook or hooks invoked after the bbdb-list-buffer is filled in.  Invoked
+with no arguments. @refill
+
+@item bbdb-create-hook
+@vindex bbdb-create-hook
+Hook or hooks invoked each time a new bbdb-record is created.  Invoked
+with one argument, the new record.  This is called @emph{before} the record is 
+added to the database.  Note that @code{bbdb-change-hook} will be called as
+well. @refill
+
+@item bbdb-change-hook
+@vindex bbdb-change-hook
+Hook or hooks invoked each time a bbdb-record is altered.  Invoked with
+one argument, the record.  This is called @emph{before} the database buffer
+is modified.  Note that if a new bbdb record is created, both this hook and
+@code{bbdb-create-hook} will be called. @refill
+
+@item bbdb-mode-hook
+@vindex bbdb-mode-hook
+Hook or hooks invoked when the @samp{*BBDB*} buffer is created.
+
+@item bbdb-notice-hook
+@vindex bbdb-notice-hook
+Hook or hooks invoked each time a bbdb-record is ``noticed,'' that
+is, each time it is displayed by the news or mail interfaces.
+Invoked with one argument, the new record.  The record need not have
+been modified for this to be called - use @code{bbdb-change-hook} for that.
+You can use this to, for example, add something to the notes field
+based on the subject of the current message.  It is up to your hook
+Also note that @code{bbdb-change-hook} will @emph{not} be called as a result of any
+modifications you may make to the record inside this hook. @refill
+Also note that @code{bbdb-change-hook} will @emph{not} be called as a
+result of any modifications you may make to the record inside this
+hook. @refill
+
+Beware that if the variable @code{bbdb-message-caching-enabled} is
+true (a good idea) then when you are using @b{VM}, @b{MH}, or
+@b{RMAIL}, this hook will be called only the first time that
+message is selected.  (The @b{GNUS} interface does not use caching.)
+When debugging the value of this hook, it is a good idea to set
+caching-enabled to @code{nil}. @refill
+
+@item bbdb-after-read-db-hook
+@vindex bbdb-after-read-db-hook
+Hook or hooks invoked (with no arguments) just after the Insidious Big 
+@example
+(setq bbdb-after-read-db-hook '(lambda () (rename-buffer " bbdb")))
+@end example
+
+@code{(setq bbdb-after-read-db-hook '(lambda () (rename-buffer " bbdb")))}
+
+@noindent
+will cause the buffer visiting the @code{bbdb-file} to be
+called @w{@code{" bbdb"}}.  The leading space in its name will prevent
+it from showing up in the buffer list.
+
+@item bbdb-load-hook
+@vindex bbdb-load-hook
+Hook or hooks invoked (with no arguments) when the Insidious Big Brother 
+Database code is first loaded. @refill
+
+@item bbdb-canonicalize-net-hook
+@vindex bbdb-canonicalize-net-hook
+If this is non-@code{nil}, it should be a function of one argument: a
+network address string.  (Note that, unlike the other hook-variables
+described above, this may not be a list of functions.)  Whenever the
+Insidious Big Brother Database ``notices'' a message, the corresponding
+network address will be passed to this function first, as a kind of
+``filter'' to do whatever transformations upon it you like before it is
+compared against or added to the database.  For example: it is the case
+that @code{CS.CMU.EDU} is a valid return address for all mail
+originating at a machine in the @code{.CS.CMU.EDU} domain.  So, if you
+wanted all such addresses to be canonically hashed as
+@code{user@@CS.CMU.EDU}, instead of as @code{user@@somehost.CS.CMU.EDU},
+you might set this variable to a function like this: @refill
+
+@example
+(setq bbdb-canonicalize-net-hook
+     '(lambda (addr)
+        (cond ((string-match
+                 "\\`\\([^@@]+@@\\).*\\.\\(CS\\.CMU\\.EDU\\)\\'"
+                 addr)
+               (concat (substring addr
+                         (match-beginning 1) (match-end 1))
+                       (substring addr
+                         (match-beginning 2) (match-end 2))))
+              (t addr))))
+@end example
+
+You could also use this function to rewrite UUCP-style addresses into
+domain-style addresses, or any number of other things.@refill
+
+This function will be called repeatedly until it returns a value EQ to the
+value passed in.  So multiple rewrite rules might apply to a single
+address.@refill
+
+There is an example of the use of this variable in the 
+file @file{bbdb-hooks.el}: the function
+@code{sample-bbdb-canonicalize-net-hook}.@refill
+@end table
+
+@vindex bbdb-change-hook
+@findex bbdb-delete-redundant-nets
+The @code{bbdb-canonicalize-net-hook} is powerful in that it allows
+arbitrary rewriting of addresses, however, in many cases that is
+overkill.  The function @code{bbdb-delete-redundant-nets} can be
+used as a value of @code{bbdb-change-hook} to cause network addresses
+which appear to be ``redundant'' to be deleted each time a modification
+is made to a record. @refill
+
+This works as follows: suppose one gets mail from @code{user@@foo.bar.com},
+and then later gets mail from @code{user@@bar.com}.  At this point, one 
+can generally delete the @code{user@@foo.bar.com} address, since the 
+@code{user@@bar.com} address is more general.  (See also the 
+variable `bbdb-canonicalize-redundant-nets-p', which has the effect of
+@vindex vm-summary-format
+@findex vm-summary-function-B
+@cindex %F
+@cindex %UB
+VM users can cause their summary buffer to display the name of the
+message sender according to BBDB data, instead of according to the
+contents of the current message's headers.  In VM 5.40 or later, use
+the summary format control @code{%UB"} instead of @code{"%F"}, and the
+current record name will be shown there if available.  If no entry is
+found it behaves like @code{"%F"}.  See the documentation for
+@code{vm-summary-format} for more details.  Warning, this may
+significantly slow down summary generation for large folders.
+
+
+@node Predefined Hooks,, Customization Hooks, Options
+address @code{user@@bar.com} is already known.)@refill
+
+@node Predefined Hooks,  , Customization Hooks, Options
+@subsection Predefined Hooks
+
+@code{bbdb-timestamp-hook}, then every record in the database will have
+a field named @samp{timestamp}, which will always contain the date and time
+at which this record was created or last modified. @refill
+database will have a field named @samp{timestamp}, which will always
+contain the date and time at which this record was created or last
+modified.
+@code{bbdb-creation-date-hook}, then every record in the database will have
+a field named @samp{creation-date}, which will contain the date and time
+at which this record was added to the database. @refill
+database will have a field named @samp{creation-date}, which will
+contain the date and time at which this record was added to the
+database.
+
+@findex bbdb-ignore-most-messages-hook
+@vindex bbdb-ignore-most-messages-alist
+@cindex Automatically creating records
+If the variable @code{bbdb/mail-auto-create-p} is set to the symbol 
+@code{bbdb-ignore-most-messages-hook}, then the variable 
+@code{bbdb-ignore-most-messages-alist} will determine which messages
+should have records automatically created for them.  The format of this
+alist is @refill
+@example
+(( @var{HEADER-NAME} . @var{REGEXP} ) @dots{} )
+@end example
+@noindent
+for example,
+@example
+(("From" . "@@.*\\.maximegalon\\.edu")
+ ("Subject" . "time travel"))
+@end example
+
+@noindent
+will cause @b{BBDB} entries to be made only for messages sent by
+people at Maximegalon U., or (that's @emph{or}) people posting
+about time travel. @refill
+
+There may be only one entry per header in this alist: that is, @refill
+
+@example
+(("From" . "addr1\\|addr2") @dots{} )
+@end example
+
+@noindent
+is legal, but
+
+@example
+(("From" . "addr1") ("From" . "addr2") @dots{} )
+@end example
+
+@noindent
+is not.
+
+@vindex bbdb/mail-auto-create-p
+@vindex bbdb/news-auto-create-p
+@findex bbdb-ignore-some-messages-hook
+@vindex bbdb-ignore-some-messages-alist
+If the variable @code{bbdb/mail-auto-create-p} is set to the symbol 
+@code{bbdb-ignore-some-messages-hook}, then the variable 
+@code{bbdb-ignore-some-messages-alist} will determine which messages
+should have records automatically created for them.  This is the exact
+inverse of the semantics of the @code{bbdb-ignore-most-messages-alist}:
+the alist specifies which messages should @emph{not} have records 
+automatically created for them, instead of which should.  For 
+example, @refill
+
+@example
+(("From" . "mailer.daemon")
+ ("To" . "mailing-list-1\\|mailing-list-2")
+ ("CC" . "mailing-list-1\\|mailing-list-2"))
+@end example
+
+@noindent
+will cause @b{BBDB} entries to not be made for messages from any mailer daemon,
+or messages sent to or @b{CC}ed to either of two mailing lists. @refill
+
+The variable @code{bbdb/news-auto-create-p} may be set to either of the 
+above-mentioned functions as well, to get this behavior for netnews 
+messages instead of mail messages.@refill
+
+@vindex bbdb-notice-hook
+@vindex bbdb-auto-notes-alist
+@cindex Automatically adding text to records
+If the variable @code{bbdb-notice-hook} is set to the symbol 
+@code{bbdb-auto-notes-hook}, then the variable @code{bbdb-auto-notes-alist}
+may be used to automatically add text to the notes fields of the records
+corresponding to certain messages.  The format of this alist is @refill
+
+@example
+(( @var{HEADER-NAME}
+   (@var{REGEXP} . @var{STRING}) @dots{} )
+    @dots{} )
+@end example
+
+@noindent
+for example,
+
+@example
+(("To" ("-vm@@" . "VM mailing list"))
+ ("Subject" ("sprocket" . "mail about sprockets")
+            ("you bonehead" . "called me a bonehead")))
+@end example
+
+@noindent
+will cause the text @code{"VM mailing list"} to be added to the notes field of
+the record corresponding to anyone you get mail from via one of the @b{VM}
+mailing lists.  If, that is, @code{bbdb/mail-auto-create-p} is set such
+that the record would have been created, or if the record already
+existed.@refill
+
+The format of elements of this list may also be 
+
+@example
+(@var{REGEXP} @var{FIELD-NAME} @var{STRING})
+@end example
+@noindent
+or
+@example
+(@var{REGEXP} @var{FIELD-NAME} @var{STRING} @var{REPLACE-P})
+@end example
+
+@noindent
+meaning add the given string to the named field.  The field-name may not
+be @samp{name}, @samp{aka}, @samp{address}, @samp{phone}, or @samp{net} 
+(builtin fields) but must be either @samp{notes}, @samp{company}, or the
+name of a user-defined note-field. @refill
+
+@example
+("pattern" . "string to add")
+@end example
+
+@noindent
+is equivalent to
+
+@example
+("pattern" notes "string to add")
+@end example
+
+@noindent
+@var{STRING} can contain @code{\&} or @code{\N} escapes like in the function
+@code{replace-match}.  For example, to automatically add the contents of the
+@b{organization} field of a message to the @code{company} field of a @b{BBDB}
+record, you can use this: @refill
+
+@example
+("Organization" (".*" company "\\&"))
+@end example
+
+@noindent
+(Note you need two \ to get a single \ into a lisp string literal.)
+
+If STRING is an integer @i{N}, the @i{N}th matching subexpression is
+used, so the above example could be written more efficiently as @refill
+
+@example
+("Organization" (".*" company 0))
+@end example
+
+If STRING is neither a string or an integer, it should be a function
+which is called with the contents of the field, and the result of the
+function call is used.
+
+If the @var{REPLACE-P} flag is true, then the string replaces the old
+contents instead of being appended to it.
+
+If multiple clauses match the message, all of the corresponding strings
+will be added. @refill
+
+If the string is being appended (@var{REPLACE-P} is false or not
+provided) then the new string is appended to the end of the existing
+field value, with an intervening newline.  So each piece of text
+automatically added to this field will go on its own line. @refill
+
+You can control what the separator is by putting a @code{field-separator}
+property on the symbol naming the field.  For example, to make text
+automatically added to a field named @code{newsgroups} be separated by
+commas, you could do @refill
+
+@example
+(put 'newsgroups 'field-separator "; ")
+@end example
+
+This variable works for news as well.  You might want to arrange for 
+this to have a different value when in mail as when in news. @refill
+
+There may be only one entry per header in this alist: that is,@refill
+
+@example
+ (("Subject" ("\\bfoo\\b" . "Foo!!")
+             ("bar" . "Bar!")))
+@end example
+
+@noindent
+will work, but
+
+@example
+ (("Subject" ("\\bfoo\\b" . "Foo!!"))
+  ("Subject" ("bar" . "Bar!")))
+@end example
+
+@noindent
+will not.
+
+Here's a more complicated example: some people include bitmaps of
+themselves in their mail messages in an @b{X-Face:} header field.
+You can capture this field into the @samp{*BBDB*} with the 
+following:
+
+@example
+(setq bbdb-auto-notes-alist
+      (append bbdb-auto-notes-alist
+              (list "x-face"
+                    (list (concat "[ \t\n]*\\([^ \t\n]*\\)"
+                                  "\\([ \t\n]+\\([^ \t\n]+\\)\\)?"
+                                  "\\([ \t\n]+\\([^ \t\n]+\\)\\)?"
+                                  "\\([ \t\n]+\\([^ \t\n]+\\)\\)?"
+                                  )
+                          'face
+                          "\\1\\3\\5\\7"))))
+@end example
+
+@noindent
+(The calls to @code{list} and @code{concat} are just for readability, it
+could easily be a constant.)  The tricky bit here is that it strips out
+the newlines and whitespace used for header continuation, which are not
+actually a part of the face data.  So though the mail message may have
+the face data on multiple lines, the entry in the @samp{*BBDB*} will
+be just one line.
+
+@vindex bbdb-auto-notes-ignore
+@code{bbdb-auto-notes-ignore} is an alist of headers and regexps to
+ignore in @code{bbdb-auto-notes-hook}.  Each element looks like @refill
+
+@example
+(@var{HEADER} . @var{REGEXP})
+@end example
+
+@noindent
+for example,
+
+@example
+("Organization" . "^Gatewayed from\\|^Source only")
+@end example
+
+@noindent
+would exclude the phony @code{Organization:} headers in GNU mailing-lists
+gatewayed to the @code{gnu.*} newsgroups.  Note that this exclusion
+applies only to a single field, not to the entire message.  For that,
+use the variable @code{bbdb-auto-notes-ignore-all}.
+
+@vindex bbdb-auto-notes-ignore-all
+@code{bbdb-auto-notes-ignore-all} is an alist of headers and regexps 
+which cause the entire message to be ignored in @code{bbdb-auto-notes-hook}.
+Each element looks like @refill
+
+@example
+(@var{HEADER} . @var{REGEXP})
+@end example
+
+@noindent
+for example,
+
+@example
+("From" . "BLAT\\.COM")
+@end example
+
+@noindent
+would exclude any notes recording for message coming from @code{BLAT.COM}.
+@node The Mailing List, The Latest Version, Options, Top
+@section The Mailing List
+
+There is a mailing list for discussing @b{BBDB}: @samp{info-bbdb@@xemacs.org}.
+To join, send mail to @samp{info-bbdb-request@@xemacs.org} (don't forget
+the @samp{-request} part or you'll look silly in front of lots of people
+who have the ability to remember it indefinitely...)
+There has been a version change in the @b{BBDB} database file.  The date
+There is also a second mailing list, to which only bug fixes and
+new version announcements are sent; to be added to it, send mail 
+to @samp{bbdb-announce-request@@xemacs.org}.  This is a very low volume list,
+and if you're using @b{BBDB}, you really should be on it.
+the database file} from the time of the older version's implementation.  It
+When joining these lists or reporting bugs, please mention which version
+you have.  You can find out with @kbd{M-x bbdb-version}.
+in the @code{.bbdb} buffer, but will be stored internally in the new format.
+@node The Latest Version, Todo List, The Mailing List, Top
+@end itemize
+
+The latest version is always available for anonymous FTP from 
+@file{ftp.xemacs.org:/pub/bbdb/bbdb.tar.gz}.@refill
+
+If you are on the @samp{bbdb-announce} mailing list, you will receive
+patches as I release new versions.
+
+@node Todo List, Thanks, The Latest Version, Top
+@section Todo List
+@c Anon-CVS: @code{cvs.xemacs.org}.  Use the following as the value for the CVS
+
+@item 
+Are there enough hooks?
+@itemize @bullet
+@item
+Should notice when there are @samp{Reply-To:} addresses.@refill
+@code{bbdb-create}, @code{bbdb-changed}, @code{bbdb}) courtesy of David
+Bakhash.  (@code{<199801192104.QAA04399@@Bulgaria.MIT.edu>}
+Should notice @samp{Real-Name:}, @samp{Full-Name:}, and
+@samp{Senders-Name:} fields. @refill
+name and the net address, as opposed to just completing the net
+address.  See thread starting with
+Should notice when there are @samp{Reply-To:} addresses.@refill
+
+@item
+Should have a command for merging together two divergent copies of
+a @file{.bbdb} file (in case you read mail on one machine and news on
+another, for instance.)@refill
+
+@item
+The @samp{*BBDB*} buffer should be resized to exactly fit what it's
+displaying, even when not in ``electric'' mode.@refill
+
+@item
+It should be possible to do completion on last names as well as first
+There should be better support for non-American addresses and phone
+numbers.@refill
+@item
+@subsubheading Not-So-Near Future
+BBDB should notice the addresses and/or subjects of @emph{outgoing} mail
+as well.@refill
+@itemize @bullet
+@item
+The interfaces should share more code. @refill
+
+@item
+Should reimplement ``electric'' mode to not be so broken.@refill
+
+@item
+Should notice phone numbers in .signatures (that shouldn't be hard;
+noticing postal addresses is real hard, though.)@refill
+
+@item
+Should have a command to snarf in the addresses in the CC line, and to
+search forward from point for an address and snarf that.@refill
+@item
+There should be better support for non-American addresses and phone
+The @code{bbdb-create-internal} function should be more forgiving.@refill
+
+@item
+Should reimplement ``electric'' mode to not be so broken.@refill
+
+@item
+The @kbd{*C-o} keystroke should add a field to all displayed records.
+@item
+More @kbd{*} commands in general, including @kbd{*d}.
+header data.
+@item
+The BBDB buffer is left at the top of the stack when GNUS is exited
+because GNUS runs its exit-hooks too early.  This should be fixed.@refill
+@end itemize
+@item 
+Should separate out the name and address namespaces.
+
+@item
+Everybody yell at Kyle until he adds @code{vm-select-message-hook}.
+
+@item
+This documentation should be written in NewSpeak.@refill
+
+@item
+@ifinfo
+@node Thanks,, Todo List, Top
+@end ifinfo
+@end itemize
+
+@node Thanks,  , , Top
+@section Thanks
+
+
+@subheading Thanks list for versions prior to and including 1.51.
+
+And special thanks to Sebastian Kremer, Joe Wells, Todd Kaufmann, Andy
+Norman, Ivan Vazquez, Stewart Clamen, Roland McGrath, Dave Brennan,
+Kimball Collins, Dirk Grunwald, Philippe Queinnec, Boris Putanec, Dave
+Disser, Francois Felix Ingrand, Sean Owens, Guido Bosch, Lance Brown,
+Tom Emerson, George Hartzell, Luis Miguel Silveira, Kimmo Suominen,
+@node _,,,(DIR)
+
+@ifinfo
+@node _,,,(dir)
+@unnumbered _
+@example
+in.sid.i.ous aj   \in-'sid-e-*s\
+   [L insidiosus, fr. insidiae ambush, fr. insidere to sit in, sit on, 
+      fr. in- + sedere to sit -- more at SIT]
+     1  a : awaiting a chance to entrap  TREACHEROUS
+        b : harmful but enticing  SEDUCTIVE
+     2  a : having a gradual and cumulative effect  SUBTLE
+        b of a disease
+          : developing so gradually as to be well established before
+            becoming apparent
+  in.sid.i.ous.ly av
+  in.sid.i.ous.ness n
+@end example
+
+
+
+@menu
+* Top::
+@end menu
+
+@end ifinfo
+
+@node Concept Index, Variable Index,, Top
+@node Variable Index,, Concept Index, Top
+@printindex cp
+
+@node Variable Index,  , Concept Index, Top
+@unnumbered Variable Index
+@printindex vr
+
+@contents
+@bye
