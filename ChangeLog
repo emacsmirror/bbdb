@@ -1,5 +1,19 @@
 2002-01-15  Waider  <waider@waider.ie>
 
+	* lisp/bbdb.el: 
+	  BBDB-2.35 - Let the games begin.
+
+	* html/bbdb_abt.html, html/bbdb_fot.html, html/bbdb_ovr.html,
+	  html/bbdb_toc.html, html/bbdb_3.html, html/bbdb_4.html,
+	  html/bbdb_1.html, html/bbdb_2.html, html/bbdb.html: 
+	  Updated manual for 2.34
+
+	* html/index.html: 
+	  2.34 release changes
+
+	* lisp/bbdb.el: 
+	  2.34 Release. Whee!
+
 	* testing/bbdb-test.el:
 	  New file
 
