@@ -287,6 +287,20 @@ commands be different."
   :group 'bbdb
   :type 'boolean)
 
+(defcustom bbdb/prompt-for-create-p nil
+  "*If this is t, then VM, Gnus, MH, and RMAIL will prompt you before
+automatically creating new bbdb records for people you read messages from.
+
+If this is a function name or lambda, then it is called with no arguments to
+decide whether an entry should be automatically created.  You can use this to,
+for example, not create records for messages which have reached you through a
+particular mailing list, or to only create records automatically if the mail
+has a particular subject."
+  :group 'bbdb-noticing-records
+  :type '(choice (const :tag "Prompt before creating a record" t)
+                 (const :tag "Do not prompt" nil)
+                 (function :tag "Prompt with function" bbdb-)))
+
 (defcustom bbdb/mail-auto-create-p t
   "*If this is t, then VM, MH, and RMAIL will automatically create new bbdb
 records for people you receive mail from.  If this is a function name
@@ -410,8 +424,11 @@ this is nil, it will default to the value of (user-login-name)."
   "*If this is true, then when the Insidious Big Brother Database notices
 a new email address for a person, it will automatically add it to the list
 of addresses.  If it is nil, you will be asked whether to add it.  If it is
-the symbol 'never (really, if it is any non-t, non-nil value) then new
-network addresses will never be automatically added.
+the symbol 'never (really, if it is any non-t, non-nil value which is no
+function name) then new network addresses will never be automatically added,
+but the user gets asked wheather to add it or not.
+
+When set to a function name the function should return one of these values.
 
 See also the variable `bbdb-new-nets-always-primary' for control of whether
 the addresses go at the front of the list or the back."
@@ -1145,16 +1162,37 @@ formatted and inserted into the current buffer.  This is used by
            (let ((phone (car (bbdb-record-phones record)))
                  (net (car (bbdb-record-net record)))
                  (notes (bbdb-record-raw-notes record)))
-             (if (or phone net notes)
-                 (progn (indent-to 48)
-                        (insert (if notes ". " "  "))))
-             (cond (phone (insert (bbdb-phone-string phone))
-                          (indent-to 70)
-                          (insert " ("); don't ask, it compiles better
-                          (insert (bbdb-phone-location phone))
-                          (insert ")"))
-                   (net   (insert net))))
-           (insert "\n"))
+	     (if bbdb-pop-up-elided-display-fields
+		 (let ((field-list bbdb-pop-up-elided-display-fields)
+		       field contentfun formatfun value)
+		   (indent-to bbdb-pop-up-elided-display-name-end)
+		   (insert " ") ; guarantee one space after name
+		   (while field-list
+		     (setq field (car field-list))
+		     (setq contentfun (intern (concat "bbdb-record-"
+						      (symbol-name field))))
+		     (if (fboundp contentfun)
+			 (setq value (eval (list contentfun record)))
+		       (setq value (bbdb-record-getprop record field)))
+		     (when value
+		       (setq formatfun (intern (concat "bbdb-format-popup"
+						       (symbol-name field))))
+		       (if (fboundp formatfun)
+			   (insert (funcall formatfun value))
+			 (insert (format "%s" value)))
+		       (insert "; "))
+		     (setq field-list (cdr field-list))))
+	       (if (or phone net notes)
+		   (progn (indent-to bbdb-pop-up-elided-display-name-end)
+			  (insert (if notes ". " "  "))))
+	       (cond (phone (insert (bbdb-phone-string phone))
+			    (indent-to 70)
+			    (insert " ("); don't ask, it compiles better
+			    (insert (bbdb-phone-location phone))
+			    (insert ")"))
+		     (net   (insert net)))))
+	   (insert "\n")
+	   )
           (t
            (insert "\n")
            (let* ((bbdb-elided-display brief) ;pfeh.
@@ -1264,6 +1302,24 @@ default for when the BBDB buffer is automatically updated by the mail and
 news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 `bbdb-elided-display' will be consulted instead by mail and news.")
 (makunbound 'bbdb-pop-up-elided-display) ; default unbound.
+
+(defcustom bbdb-pop-up-elided-display-name-end 48
+  "*Set this to the column where name and company should end in elided
+display."
+  :group 'bbdb
+  :type 'integer)
+
+(defcustom bbdb-pop-up-elided-display-fields nil
+  "*A the list of fields which should be displayed in elided display.
+E.g. set this to '(phones net addresses) in order to get the list of
+phone numbers, net addresses and addresses listed.
+
+You may use any valid BBDB field and write your own functions for formating
+them.  The formating functions should be named according to the following
+pattern bbdb-format-popup-<field>.  They should take one argument which is
+the raw field content and return a string."
+  :group 'bbdb
+  :type 'list)
 
 (defmacro bbdb-pop-up-elided-display ()
   '(if (boundp 'bbdb-pop-up-elided-display)
@@ -2563,13 +2619,14 @@ before the record is created, otherwise it is created without confirmation
       ;; first try to get a reasonable default name if not given
       ;; often I get things like <firstname>.<surname>@ ...
       (if (or (null name) (and (stringp name) (string= "" name)))
-      (if (string-match "^[^@]+" net)
-          (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
-      (setq record (if (or (null prompt-to-create-p)
-               (bbdb-y-or-n-p (format "%s is not in the db; add? "
-                          (or name net))))
-               (make-vector bbdb-record-length nil))
-        created-p (not (null record)))
+	  (if (string-match "^[^@]+" net)
+	      (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
+      (setq record (if (or (null
+			    (bbdb-invoke-hook-for-value prompt-to-create-p))
+			   (bbdb-y-or-n-p (format "%s is not in the db; add? "
+						  (or name net))))
+		       (make-vector bbdb-record-length nil))
+	    created-p (not (null record)))
       (if record
           (bbdb-record-set-cache record (make-vector bbdb-cache-length nil)))
       (if created-p (bbdb-invoke-hook 'bbdb-create-hook record)))
@@ -2664,31 +2721,39 @@ before the record is created, otherwise it is created without confirmation
                           rest-net (cdr rest-net)))
                   match)
                 nil
-              (if (cond
-                   ((eq bbdb-always-add-addresses t)
-                    t)
-                   (bbdb-always-add-addresses ; non-t and non-nil = never
-                    nil)
-                   (t
-                    (and
-                     (not (equal net "???"))
-                     (let ((the-first-bit
-                            (format "add address \"%s\" to \"" net))
-                           ;; this groveling is to prevent the "(y or n)" from
-                           ;; falling off the right edge of the screen.
-                           (the-next-bit (mapconcat 'identity
-                                                    (bbdb-record-net record)
-                                                    ", "))
-                           (w (window-width (minibuffer-window))))
-                       (if (> (+ (length the-first-bit)
-                                 (length the-next-bit) 15) w)
-                           (setq the-next-bit
-                                 (concat
-                                  (substring the-next-bit
-                                    0 (max 0 (- w (length the-first-bit) 20)))
-                                  "...")))
-                       (bbdb-y-or-n-p (concat the-first-bit the-next-bit
-                                              "\"? "))))))
+              (if (let ((bbdb-always-add-addresses bbdb-always-add-addresses))
+		    (if (functionp bbdb-always-add-addresses)
+			(setq bbdb-always-add-addresses
+			      (funcall bbdb-always-add-addresses)))
+		    (cond
+		     ;; add automatically it
+		     ((eq bbdb-always-add-addresses t)
+		      t)
+		     ;; do not add it
+		     (bbdb-always-add-addresses ; non-t and non-nil = never
+		      nil)
+		     ;; ask the user if it should be added
+		     (t
+		      (and
+		       (not (equal net "???"))
+		       (let ((the-first-bit
+			      (format "add address \"%s\" to \"" net))
+			     ;; this groveling is to prevent the "(y or n)"
+			     ;; from falling off the right edge of the screen.
+			     (the-next-bit (mapconcat 'identity
+						      (bbdb-record-net record)
+						      ", "))
+			     (w (window-width (minibuffer-window))))
+			 (if (> (+ (length the-first-bit)
+				   (length the-next-bit) 15) w)
+			     (setq the-next-bit
+				   (concat
+				    (substring
+				     the-next-bit
+				     0 (max 0 (- w (length the-first-bit) 20)))
+				    "...")))
+			 (bbdb-y-or-n-p (concat the-first-bit the-next-bit
+						"\"? ")))))))
                   (let ((front-p (cond ((null bbdb-new-nets-always-primary)
                                         (bbdb-y-or-n-p
                                          (format
