@@ -1030,7 +1030,7 @@ This alist is used in `bbdb-format-address'.
 
 See also `bbdb-address-print-formatting-alist'."
   :group 'bbdb-record-display
-  :type '(repeat (cons function function))
+  :type '(repeat (cons function function)))
 
 (defun bbdb-address-is-continental (addr)
   "Return non-nil if the address ADDR is a continental address.
