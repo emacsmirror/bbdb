@@ -124,7 +124,7 @@ C-g again it will stop scanning."
 
     (if cache
         (setq records (if bbdb-get-only-first-address-p
-                          (car cache)
+                          (list (car cache))
                         cache))
       
       (let ((bbdb-update-records-mode (or bbdb/vm-update-records-mode
