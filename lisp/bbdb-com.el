@@ -1,8 +1,9 @@
 ;;; -*- Mode:Emacs-Lisp -*-
 
-;;; This file is the part of the Insidious Big Brother Database (aka BBDB),
+;;; This file is part of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;;; Most of the user-level interactive commands for BBDB.  See bbdb.texinfo.
+;;; It contains most of the user-level interactive commands for BBDB.
+;;; See bbdb.texinfo.
 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -22,6 +23,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.57  1998/01/06 04:51:10  simmonmt
+;; Fixed copyright, moved customized finger variables into
+;; utilities-finger group (from finger).  Removed autoloads.
+;;
 ;; Revision 1.56  1997/12/01 04:54:52  simmonmt
 ;; Added sshteingold@cctrading.com's date-based database-manipulation
 ;; functions.  Customized variables.
@@ -1956,7 +1961,7 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
 
 (defcustom bbdb-finger-buffer-name "*finger*"
   "The buffer into which finger output should be directed."
-  :group 'bbdb-finger
+  :group 'bbdb-utilities-finger
   :type 'string)
 
 (defun bbdb-finger-internal (address)
@@ -2006,7 +2011,7 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
 
 (defcustom bbdb-finger-host-field 'finger-host
   "*The field for special net addresses used by \"\\[bbdb-finger]\"."
-  :group 'bbdb-finger
+  :group 'bbdb-utilities-finger
   :type 'symbol)
 
 (defun bbdb-record-finger-host (record)
@@ -2102,40 +2107,35 @@ Notes:  1. Records without timestamp fields will be ignored
 REC is returned if
          (COMPARE VALUE CMPVAL)
 is true, where VALUE is the value of the FIELD field of REC."
-  (list 'lambda '(rec)
-	(list 'let (list (list 'val (list 'bbdb-record-getprop 'rec field)))
-	      (list 'if (list 'and 'val (list compare 'val cmpval))
-		    'rec 'nil))))
+  `(lambda (rec)
+     (let ((val (bbdb-record-getprop rec ,field)))
+       (if (and val (,compare val ,cmpval))
+	   rec nil))))
 
-;;;###autoload
 (defun bbdb-timestamp-older (date)
   "*Display records with timestamp older than DATE.  DATE must be in
 yyyy-mm-dd format."
   (interactive "sOlder than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'timestamp string<)))
 
-;;;###autoload
 (defun bbdb-timestamp-newer (date)
   "*Display records with timestamp newer than DATE.  DATE must be in
 yyyy-mm-dd format."
   (interactive "sNewer than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'timestamp string>)))
 
-;;;###autoload
 (defun bbdb-creation-older (date)
   "*Display records with creation-date older than DATE.  DATE must be
 in yyyy-mm-dd format."
   (interactive "sOlder than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'creation-date string<)))
 
-;;;###autoload
 (defun bbdb-creation-newer (date)
   "*Display records with creation-date newer than DATE.  DATE must be
 in yyyy-mm-dd format."
   (interactive "sNewer than date (yyyy-mm-dd): ")
   (bbdb-display-some (bbdb-compare-records date 'creation-date string>)))
 
-;;;###autoload
 (defun bbdb-creation-no-change ()
   "*Display records that have the same timestamp and creation-date."
   (interactive)
