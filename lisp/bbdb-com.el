@@ -1802,19 +1802,21 @@ composition buffer.)"
 
     (if (null bbdb-completion-type)
         (setq ok 't)
-        (if (memq bbdb-completion-type
-                  '(name primary-or-name name-or-primary))
-            (setq ok (string= sym name)))
+      (if (memq bbdb-completion-type
+                '(name primary-or-name name-or-primary))
+            (setq ok (string= sym (if bbdb-case-fold-search
+                                      (downcase name)
+                                    name))))
 
-        ;; #### handle AKA, mail-name or mail-alias here?
-        (if ok '()
-            (when (eq bbdb-completion-type 'net)
-              (while (and nets (not ok))
-                (setq ok (string= sym (downcase (car nets)))
-                      nets (cdr nets))))
-            (when (memq bbdb-completion-type
-                        '(primary primary-or-name name-or-primary))
-              (setq ok (string= sym (downcase (car nets)))))))
+      ;; #### handle AKA, mail-name or mail-alias here?
+      (if ok '()
+        (when (eq bbdb-completion-type 'net)
+          (while (and nets (not ok))
+            (setq ok (string= sym (downcase (car nets)))
+                  nets (cdr nets))))
+        (when (memq bbdb-completion-type
+                    '(primary primary-or-name name-or-primary))
+          (setq ok (string= sym (downcase (car nets)))))))
     ok))
 
 
