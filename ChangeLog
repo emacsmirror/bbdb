@@ -1,10 +1,53 @@
+2001-06-28  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-mhe.el:
+	bbdb/mh-cache-key: cope with big inode numbers
+
+	* lisp/bbdb-vm.el:
+	Added Robert Fenk's bbdb/vm-force-create
+
+	* html/index.html: Added link to freshmeat page
+
+	* lisp/bbdb-gui.el:
+	Cleaned up a whole bunch of compiler warnings through judicious use of
+	eval-and-compile or eval-when-compile. If anyone has a good opinion on
+	use of these functions, please cast enlightenment in my direction.
+
+	* lisp/bbdb-gnus.el:
+	Rearranged the compiled quieting to actually be more-or-less the right
+	thing, i.e. it loads packages instead of defining arbitrary
+	variables.
+
+	Put in Matan Ninio's "From: " fix.
+
+	* lisp/bbdb.el:
+	bbdb-search-simple: don't use bbdb-record-name's result if it's empty.
+
 2001-06-23  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-mhe.el (bbdb/mh-update-record): 
 	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail):
 	  Fixed the faulty use of bbdb/prompt-for-create-p.
 
+2001-06-12  Waider  <waider@waider.ie>
+
+	* html/index.html:
+	Fix to yesterday's fixed URL. Not my fault, honest.
+
+	* bbdb/html/faq.html:
+	Initial cut. This has been sitting on my drive for almost a year;
+	perhaps if I put it in CVS I'll be "encouraged" to develop it further.
+
+2001-06-11  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el:
+	Better fix for char-int thing. This one works, for starters. Serves me
+	  right for that comment about code testing.
+
 2001-06-10  Waider  <waider@waider.ie>
+
+	* bits/gnus-bbdb.el:
+	Obsolete; contents rolled into bbdb-gnus.el
 
 	* lisp/bbdb.el 
 	  (bbdb-read-string): 
