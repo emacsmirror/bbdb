@@ -1,9 +1,12 @@
 2001-02-13  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-vm.el
+	(bbdb/vm-update-records): replaced display-message calls by
+	message calls which is more portable.
+
 	* lisp/bbdb.el:
 	Applied ShengHuos patch to fix the customize problems caused by
-	defining 'characterp as a mcaro im GNU Emacs
+	defining 'characterp as a mcaro im GNU Emacs.
 
 	* lisp/bbdb-com.el (bbdb-complete-name): 
 	(bbdb-complete-name-allow-cycling): Allow to enable/disable the
