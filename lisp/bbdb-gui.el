@@ -39,25 +39,26 @@
                                        (mouse-set-point e)
                                        (bbdb-elide-record nil))))
 
-(or (fboundp 'find-face)
-    (if (fboundp 'internal-find-face) ;; GRR.
-        (fset 'find-face 'internal-find-face)
-      (defun find-face(face)))) ;; XXX noop - you probably don't HAVE faces.
+(if (fboundp 'find-face)
+    (fset 'bbdb-find-face 'find-face)
+  (if (fboundp 'internal-find-face) ;; GRR.
+      (fset 'bbdb-find-face 'internal-find-face)
+    (defun bbdb-find-face(face)))) ;; XXX noop - you probably don't HAVE faces.
 
-(or (find-face 'bbdb-name)
+(or (bbdb-find-face 'bbdb-name)
     (face-differs-from-default-p (make-face 'bbdb-name))
     (set-face-underline-p 'bbdb-name t))
 
 (condition-case data
-    (or (find-face 'bbdb-company)
+    (or (bbdb-find-face 'bbdb-company)
         (face-differs-from-default-p (make-face 'bbdb-company))
         (make-face-italic 'bbdb-company)) ;; this can fail on emacs
   (error nil))
 
-(or (find-face 'bbdb-field-value)
+(or (bbdb-find-face 'bbdb-field-value)
     (make-face 'bbdb-field-value))
 
-(or (find-face 'bbdb-field-name)
+(or (bbdb-find-face 'bbdb-field-name)
     (face-differs-from-default-p (make-face 'bbdb-field-name))
     (copy-face 'bold 'bbdb-field-name))
 
@@ -93,10 +94,6 @@
 (if (fboundp 'extent-at)
     (fset 'bbdb-extent-at 'extent-at)
   (defun bbdb-extent-at (pos buf tag) "NOT FULL XEMACS IMPLEMENTATION"
-;; these lines upset VM, and are unnecessary for our use of bbdb-extent-at
-;;    (save-window-excursion
-;;      (save-excursion
-;;        (set-buffer buf)
     (let ((o (overlays-at pos))
           minpri retval)
       (while (car o)
