@@ -1,6 +1,11 @@
+2003-01-30  Greg Troxel <gdt@ir.bbn.com>
+
+	* bbdb-com.el, bbdb.el:
+	  Clean up stray uses of mapc (replace with bbdb-mapc)
+
 2003-01-02  Waider  <waider@waider.ie>
 
-	* bbdb-com.el: * lisp/bbdb-com.el (bbdb-complete-name):
+	* lisp/bbdb-com.el (bbdb-complete-name):
 	  Fix completion in the case of multiple addresses matching from a
 	  single record. Basically behaves as if you'd matched on the
 	  primary name.
