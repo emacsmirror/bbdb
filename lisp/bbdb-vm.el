@@ -181,7 +181,10 @@ Respects vm-summary-uninteresting-senders."
 
 (defun bbdb/vm-alternate-full-name (address)
   (if address 
-      (let ((entry (bbdb-search-simple nil address)))
+      (let ((entry (bbdb-search-simple nil
+				       (if (and address bbdb-canonicalize-net-hook)
+					   (bbdb-canonicalize-address address)
+					 address))))
 	(if entry
 	    (or (bbdb-record-getprop entry 'mail-name)
 		(bbdb-record-name entry))))))
