@@ -56,30 +56,31 @@ When it does not existm, create one an setup the key bindings."
 (defun bbdb-test/switch-to-test-bbdb ()
   "Edit the test BBDB"
   (interactive)
-  (let ((old-bbdb-file bbdb-file)
-        (bbdb-file bbdb-test/bbdb-file))
+  (let ((old-bbdb-file (expand-file-name bbdb-file))
+        (bbdb-file (expand-file-name bbdb-test/bbdb-file)))
 
     ;; cleanup for normal BBDB
     (bbdb-save-db)
-    (set-buffer bbdb-buffer)
-    (kill-buffer (current-buffer))
-    (find-file-noselect old-bbdb-file)
-    (kill-buffer (current-buffer))
+    (if bbdb-buffer
+        (kill-buffer bbdb-buffer))
+    (if (get-file-buffer old-bbdb-file)
+        (kill-buffer (get-file-buffer old-bbdb-file)))
 
     ;; now care for test BBDB
-    (condition-case nil
+    (condition-case err
         (progn
           (bbdb-initialize)
-          (recursive-edit)
-          (message "recursive-edit!! BBDB %s"
+          (message "recursive-edit of BBDB %s"
                    (abbreviate-file-name bbdb-file))
-          (sit-for 2))
+          (recursive-edit))
       (error
-       (message "Returned to BBDB %s"
-		(abbreviate-file-name old-bbdb-file)))
+       (message "Returned to BBDB %s due to %s"
+		(abbreviate-file-name old-bbdb-file)
+                err))
       (quit
-       (message "Returned to BBDB %s"
-		(abbreviate-file-name old-bbdb-file))))))
+       (message "Returned to BBDB %s due to %s"
+		(abbreviate-file-name old-bbdb-file)
+                err)))))
 
 (defvar bbdb-test/test-vars nil
   "User defined list of tests.")
@@ -353,6 +354,9 @@ starting with \"Test\""
                       nil)
                      ("ronan"
                       "Ronan Waide <waider@waider.ie>"
+                      nil)
+                     ("first"
+                      "First.Last@location1.org"
                       nil))
     (name-or-primary ("waider"
                       "Ronan Waide <waider@waider.ie>"
