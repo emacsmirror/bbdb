@@ -39,11 +39,11 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "2.00.06")
+(defconst bbdb-version "2.1")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
-(defconst bbdb-file-format 3)
+(defconst bbdb-file-format 4)
 (defvar bbdb-file-format-migration nil
   "A cons of two elements: the version read, and the version to write.
 nil if the database was read in and is to be written in the current
@@ -660,10 +660,10 @@ that holds the number of slots."
   )
 
 ;; Build reading and setting functions for location, street1, street2,
-;; street3, city, state, and zip.  These are for accessing the
+;; street3, city, state, zip and country.  These are for accessing the
 ;; elements of the individual address forms.
 (bbdb-defstruct bbdb-address-
-  location street1 street2 street3 city state zip
+  location street1 street2 street3 city state zip country
   )
 
 ;; Build reading and setting functions for namecache (the full name of
@@ -804,17 +804,48 @@ that holds the number of slots."
 		""))))
 
 (defun bbdb-address-zip-string (addr)
+  "Transform the zip data into a formated string."
+   ;; if a cons cell
   (if (consp (bbdb-address-zip addr))
-      (if (stringp (car (bbdb-address-zip addr)))
-	  (concat (car (bbdb-address-zip addr))
-		  " "
-		  (car (cdr (bbdb-address-zip addr))))
-	(format "%05d-%04d" (car (bbdb-address-zip addr))
-		(car (cdr (bbdb-address-zip addr)))))
+      ;; if a cons cell with two strings
+      (if (and (stringp (car (bbdb-address-zip addr)))
+	       (stringp (car (cdr (bbdb-address-zip addr)))))
+	  ;; if the second string starts with 4 digits
+	  (if (string-match "^[0-9][0-9][0-9][0-9]" 
+			    (car (cdr (bbdb-address-zip addr))))
+	      (concat (car (bbdb-address-zip addr)) 
+		      "-"
+		      (car (cdr (bbdb-address-zip addr))))
+	    ;; if ("abc" "efg")
+	    (concat (car (bbdb-address-zip addr))
+		    " "
+		    (car (cdr (bbdb-address-zip addr)))))
+	;; if ("SE" (123 45))
+	(if (and (stringp (nth 0 (bbdb-address-zip addr)))
+		 (consp (nth 1 (bbdb-address-zip addr)))
+		 (integerp (nth 0 (nth 1 (bbdb-address-zip addr))))
+		 (integerp (nth 1 (nth 1 (bbdb-address-zip addr)))))
+	    (format "%s-%d %d" 
+		    (nth 0 (bbdb-address-zip addr))
+		    (nth 0 (nth 1 (bbdb-address-zip addr)))
+		    (nth 1 (nth 1 (bbdb-address-zip addr))))
+	  ;; if a cons cell with two numbers
+	  (if (and (integerp (car (bbdb-address-zip addr)))
+		   (integerp (car (cdr (bbdb-address-zip addr)))))
+	      (format "%05d-%04d" (car (bbdb-address-zip addr))
+		      (car (cdr (bbdb-address-zip addr))))
+	    ;; else a cons cell with a string an a number (possible error
+	    ;; if a cons cell with a number and a string -- note the
+	    ;; order!)
+	    (format "%s-%d" (car (bbdb-address-zip addr))
+		    (car (cdr (bbdb-address-zip addr)))))))
+    ;; if nil or zero
     (if (or (eq 0 (bbdb-address-zip addr))
 	    (null (bbdb-address-zip addr)))
 	""
-      (format "%05d" (bbdb-address-zip addr)))))
+      ;; else a number, could be 3 to 5 digits (possible error: assuming
+      ;; no leading zeroes in zip codes)
+      (format "%d" (bbdb-address-zip addr)))))
 
 (defmacro bbdb-record-lessp (record1 record2)
   (list 'string< (list 'bbdb-record-sortkey record1)
@@ -915,6 +946,142 @@ lines, then the minibuffer is enlarged to fit it while editing."
       (not (or (eq bbdb-elided-display t)
 	       (memq field bbdb-elided-display)))))
 
+;;; Address formatting.
+
+(defvar bbdb-address-formatting-alist
+  '((bbdb-address-is-continental . bbdb-format-address-continental)
+    (nil . bbdb-format-address-default))
+  "Alist of address identifying and address formatting functions.
+The key is an identifying function which accepts an address.  The
+associated value is a formatting function which inserts the formatted
+address in the current buffer.  If the identifying function returns
+non-nil, the formatting function is called.  The nil key is a default
+value will allways calls the associated formatting function.  Therefore
+you should always have (nil . bbdb-format-address-default) as the last
+element in the alist.
+
+This alist is used in `bbdb-format-address'.
+
+See also `bbdb-address-print-formatting-alist'.")
+
+(defun bbdb-address-is-continental (addr)
+  "Return non-nil if the address ADDR is a continental address.
+A continental address has zip codes of the form
+CH-8052, NL-2300RA or SE-132 54.
+
+This is a possible identifying function for
+`bbdb-address-formatting-alist' and
+`bbdb-address-print-formatting-alist'."
+  (and (consp (bbdb-address-zip addr))
+       (stringp (car (bbdb-address-zip addr)))
+       (let ((z (car (cdr (bbdb-address-zip addr)))))
+	 (or (integerp z)
+	     (and (stringp z)
+		  (string-match "^[0-9][0-9][0-9][0-9]" z))
+	     (and (consp z)
+		  (integerp (nth 0 z))
+		  (integerp (nth 1 z)))))))
+
+(defun bbdb-format-streets (addr)
+  "Insert street subfields of address ADDR in current buffer.
+This may be used by formatting functions listed in 
+`bbdb-address-formatting-alist'."
+  (if (= 0 (length (setq str (bbdb-address-street1 addr)))) nil
+    (indent-to 17) (insert str "\n"))
+  (if (= 0 (length (setq str (bbdb-address-street2 addr)))) nil
+    (indent-to 17) (insert str "\n"))
+  (if (= 0 (length (setq str (bbdb-address-street3 addr)))) nil
+    (indent-to 17) (insert str "\n")))
+
+(defun bbdb-format-address-continental (addr)
+  "Insert formated continental address ADDR in current buffer.
+This format is used in western Europe, for example.
+
+This function is a possible formatting function for
+`bbdb-address-formatting-alist'.
+
+The result looks like this:
+       location: street1
+                 street2
+                 street3
+                 zip city, state
+                 country"
+  (insert (format " %14s: " (bbdb-address-location addr)))
+  (bbdb-format-streets addr)
+  (let ((c (bbdb-address-city addr))
+	(s (bbdb-address-state addr))
+	(z (bbdb-address-zip-string addr)))
+    (if (or (> (length c) 0)
+	    (> (length z) 0)
+	    (> (length s) 0))
+	(progn
+	  (indent-to 17)
+	  (insert z (if (and (> (length z) 0) 
+			     (> (length c) 0)) " " "")
+		  c (if (and (or (> (length z) 0)
+				 (> (length c) 0))
+			     (> (length s) 0)) ", " "")
+		  s "\n"))))
+  (if (= 0 (length (setq str (bbdb-address-country addr)))) nil
+    (indent-to 17) (insert str "\n")))
+
+(defun bbdb-format-address-default (addr)
+  "Insert formated address ADDR in current buffer.
+This is the default format; it is used in the US, for example.
+
+This function is a possible formatting function for
+`bbdb-address-formatting-alist'.
+
+The result looks like this:
+       location: street1
+                 street2
+                 street3
+                 city, state  zip
+                 country"
+  (insert (format " %14s: " (bbdb-address-location addr)))
+  (bbdb-format-streets addr)
+  (let ((c (bbdb-address-city addr))
+	(s (bbdb-address-state addr))
+	(z (bbdb-address-zip-string addr)))
+    (if (or (> (length c) 0)
+	    (> (length z) 0)
+	    (> (length s) 0))
+	(progn
+	  (indent-to 17)
+	  (insert c (if (and (> (length c) 0) 
+			     (> (length s) 0)) ", " "")
+		  s (if (and (or (> (length c) 0)
+				 (> (length s) 0))
+			     (> (length z) 0)) "  " "")
+		  z "\n"))))
+  (if (= 0 (length (setq str (bbdb-address-country addr)))) nil
+    (indent-to 17) (insert str "\n")))
+
+(defun bbdb-format-address (addr &optional printing)
+  "Call appropriate formatting function for address ADDR.
+
+If optional second argument PRINTING is non-nil, this uses the alist
+`bbdb-address-print-formatting-alist' to determine how the address is to
+formatted and inserted into the current buffer. This is used by
+`bbdb-print-format-record'.
+
+If second argument PRINTING is nil, this uses the alist
+`bbdb-address-formatting-alist' to determine how the address is to
+formatted and inserted into the current buffer.  This is used by
+`bbdb-format-record'."
+  ;; alist contains functions ((ident1 . format1) (ident2 . format2) ...)
+  ;; the first identifying-function is (caar alist)
+  ;; the first formatting-function is  (cdar alist)
+  (let ((alist (if printing bbdb-address-print-formatting-alist
+		 bbdb-address-formatting-alist)))
+    ;; while there a functions left and the current function does not
+    ;; identify the address, try the next function.
+    (while (and (caar alist)
+		(null (funcall (caar alist) addr)))
+      (setq alist (cdr alist)))
+    ;; if we haven't reached the end of functions, we got a hit.
+    (if alist
+	(funcall (cdar alist) addr))))
 
 (defun bbdb-format-record (record &optional brief)
   (bbdb-debug (if (bbdb-record-deleted-p record)
@@ -961,42 +1128,32 @@ lines, then the minibuffer is enlarged to fit it while editing."
 	     (insert (format " %14s: " (bbdb-phone-location phone)))
 	     (insert (bbdb-phone-string phone) "\n")
 	     (setq phones (cdr phones)))
-	   (let (addr c s)
+	   (let (addr)
+	     ;; check bbdb-address-format to see the available formats
+	     ;; of addresses.
 	     (while addrs
 	       (setq addr (car addrs))
-	       (insert (format " %14s: " (bbdb-address-location addr)))
-	       (if (= 0 (length (setq s (bbdb-address-street1 addr)))) nil
-		 (indent-to 17) (insert s "\n"))
-	       (if (= 0 (length (setq s (bbdb-address-street2 addr)))) nil
-		 (indent-to 17) (insert s "\n"))
-	       (if (= 0 (length (setq s (bbdb-address-street3 addr)))) nil
-		 (indent-to 17) (insert s "\n"))
-	       (indent-to 17)
-	       (insert (setq c (bbdb-address-city addr)))
-	       (setq s (bbdb-address-state addr))
-	       (if (and (> (length c) 0) (> (length s) 0)) (insert ", "))
-	       (insert s "  ")
-	       (insert (bbdb-address-zip-string addr) "\n")
+	       (bbdb-format-address addr)
 	       (setq addrs (cdr addrs))))
 	   (if (and (bbdb-record-net record)
 		    (bbdb-field-shown-p 'net))
 	       (insert (format " %14s: %s\n" "net"
 			       (mapconcat (function identity)
-					  (bbdb-record-net record)
-					  ", "))))
-	   (if (and aka
-		    (bbdb-field-shown-p 'aka))
-	       (insert (format " %14s: %s\n" "AKA"
+					    (bbdb-record-net record)
+					    ", "))))
+	     (if (and aka
+		      (bbdb-field-shown-p 'aka))
+		 (insert (format " %14s: %s\n" "AKA"
 			       (mapconcat (function identity)
 					  aka ", "))))
-	   (let ((notes (bbdb-record-raw-notes record))
-		 thisnote)
-	     (if (stringp notes)
-		 (setq notes (list (cons 'notes notes))))
-	     (while (setq thisnote (car notes))
-	       (if (bbdb-field-shown-p (car thisnote))
-		   (progn
-		     (insert (format " %14s: " (car thisnote)))
+	     (let ((notes (bbdb-record-raw-notes record))
+		   thisnote)
+	       (if (stringp notes)
+		   (setq notes (list (cons 'notes notes))))
+	       (while (setq thisnote (car notes))
+		 (if (bbdb-field-shown-p (car thisnote))
+		     (progn
+		       (insert (format " %14s: " (car thisnote)))
 		       (let ((p (point))
 			     notefun)
 			 (if (fboundp (setq notefun
@@ -1007,11 +1164,11 @@ lines, then the minibuffer is enlarged to fit it while editing."
 			 (save-excursion
 			   (save-restriction
 			     (narrow-to-region p (1- (point)))
-			   (goto-char (1+ p))
-			   (while (search-forward "\n" nil t)
-			     (insert (make-string 17 ?\ )))))
-		       (insert "\n"))))
-	       (setq notes (cdr notes)))))
+			     (goto-char (1+ p))
+			     (while (search-forward "\n" nil t)
+			       (insert (make-string 17 ?\ )))))
+			 (insert "\n"))))
+		 (setq notes (cdr notes)))))
 	   (insert "\n")))))
 
 (defcustom bbdb-time-display-format "%d %b %Y"
