@@ -54,9 +54,9 @@ The headers to search can be configured by `bbdb-get-addresses-headers'."
   (save-restriction
     (goto-char (point-min))
     (narrow-to-region (point-min)
-                      (if (search-forward "\n\n" nil 'force)
-                          (- (point) 2)
-                        (1+ (point))))
+		      (if (search-forward "\n\n" nil 'force)
+			  (match-end 0)
+			(point-max)))
 
     (let ((headers bbdb-get-addresses-headers)
           (uninteresting-senders (or (if (boundp 'gnus-ignored-from-addresses)

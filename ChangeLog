@@ -1,3 +1,8 @@
+2001-05-31  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): Fixed the bug which
+	was not really fixed with the commit from the 2001-03-29.
+
 2001-05-23  Didier Verna  <didier@xemacs.org>
 
 	* aclocal.m4 (BBDB_PROG_EMACS): fix Emacs detection problem when
@@ -5,10 +10,14 @@
 
 2001-05-21  Robert Fenk  <Robert.Fenk@gmx.de>
 
+	* lisp/bbdb.el (bbdb/news-auto-create-p): 
+		       (bbdb/mail-auto-create-p):
+	* lisp/bbdb-com.el (bbdb-update-records):
+	Fixed a typo.
+	
 	* lisp/bbdb-com.el (bbdb-complete-name):
 	(bbdb-complete-name-hooks): Instead of dinging when completing a
 	complete address (and with cycling disabled) call theses hook
-	functions.
 	(bbdb-update-records): Fixed a typo.
 
 2001-05-18  Robert Fenk  <Robert.Fenk@gmx.de>
@@ -108,7 +117,7 @@
 	* lisp/bbdb.el (bbdb-message-cache-lookup):
 	* lisp/bbdb-gnus.el (bbdb/gnus-update-records):
 	* lisp/bbdb-vm.el (bbdb/vm-update-records):
-	YABugfix: first record was lost when looking it up from the
+	Bugfix: first record was lost when looking it up from the
 	cache.
 
 2001-03-25  Robert Fenk  <Robert.Fenk@gmx.de>
