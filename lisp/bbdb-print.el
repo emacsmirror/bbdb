@@ -56,6 +56,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.54  1998/01/06 06:08:38  simmonmt
+;; Customized variables and removed autoloads
+;;
 ;; Revision 1.53  1997/12/01 05:02:28  simmonmt
 ;; Soren Dayton's fix to correct tilde printing
 ;;
@@ -88,14 +91,18 @@
 
 ;;; Variables:
 
-(defvar bbdb-print-file-name "~/bbdb.tex"
-  "*Default file name for printouts of BBDB database.")
+(defcustom bbdb-print-file-name "~/bbdb.tex"
+  "*Default file name for printouts of BBDB database."
+  :group 'bbdb-utilities-print
+  :type 'file)
 
-(defvar bbdb-print-elide '(tex-name aka mail-alias nic nic-updated)
+(defcustom bbdb-print-elide '(tex-name aka mail-alias nic nic-updated)
   "*List of fields NOT to print in address list.
-See also bbdb-print-require.")
+See also bbdb-print-require."
+  :group 'bbdb-utilities-print
+  :type '(repeat (symbol :tag "Field to exclude")))
 
-(defvar bbdb-print-require '(or address phone)
+(defcustom bbdb-print-require '(or address phone)
   "*What fields are required for printing a record.
 This is evaluated for each record, and the record will be printed only
 if it returns non-nil.  The symbols name, company, net, phone,
@@ -111,16 +118,89 @@ in the following simple examples:
   Print people whose names AND companies are known:
     (setq bbdb-print-require '(and name company))
   Print people whose names, and either addresses OR phone numbers are known:
-    (setq bbdb-print-require '(and name (or address phone))).")
+    (setq bbdb-print-require '(and name (or address phone)))."
+  :group 'bbdb-utilities-print
+  :type '(choice (const :tag "Print all records" t)
+		 (symbol :tag "Print all records with this field" phone)
+		 (sexp :tag "Print only when this evaluates to non-nil"
+		       '(or phone address phone))))
 
-(defvar bbdb-print-alist 
-  (cons (cons 'omit-area-code
-	      (concat "^(" (int-to-string bbdb-default-area-code) ") "))
-	'((phone-on-first-line . "^[ \t]*$")
-	  (ps-fonts . nil)
-	  (font-size . 6)
-	  (quad-hsize . "3.15in")
-	  (quad-vsize . "4.5in")))
+(define-widget 'bbdb-print-alist-widget 'repeat
+  "For use in Customize"
+  :args `((choice
+	   (cons :tag "Column specification" :value (column . 1)
+		 (const :tag "Column mode" column)
+		 (radio-button-choice (const :tag "One column" 1)
+				      (const :tag "Two columns" 2)
+				      (const :tag "Three columns" 3)
+				      (const :tag "Four columns" 4)
+				      (const :tag "Quad" quad)
+				      (const :tag "Grid" grid)))
+	   (cons :tag "Separator specification" :value (separator . 0)
+		 (const :tag "Separator" separator)
+		 (radio-button-choice (const :tag "None" 0)
+				      (const :tag "Line" 1)
+				      (const :tag "Boxed letters" 2)
+				      (const :tag "Large boxed letters" 3)
+				      (const :tag "Large letters" 4)
+				      (const :tag "Letters with lines" 5)
+				      (const :tag "Letters with suits" 6)
+				      (const :tag "Boxed letters with suits" 7)))
+	   (cons :tag "Omit certain area codes"
+		 :value (omit-area-code . ,(concat "^(" (int-to-string bbdb-default-area-code) ") "))
+		 (const :tag "Omit certain area codes" omit-area-code)
+		 (regexp :tag "Pattern to omit"))
+	   (cons :tag "Phone number location" :value (phone-on-first-line . t)
+		 (const :tag "Phone number location" phone-on-first-line)
+		 (choice (const :tag "First home number on same line as name" t)
+			 (const :tag "Don't put the phone number on the name line" nil)
+			 (regexp :tag "Use phone number whose location matches" "^work$")))
+	   (cons :tag "Limit included phone numbers" :value (n-phones . 3)
+		 (const :tag "Limit included phone numbers" n-phones)
+		 (integer :tag "Maximum number to include" 3))
+	   (cons :tag "Limit included addresses" :value (n-addresses . 3)
+		 (const :tag "Limit included addresses" n-addresses)
+		 (integer :tag "Maximum number to include" 3))
+	   (cons :tag "Include additional TeX input files" :value (include-files . nil)
+		 (const :tag "Additional TeX input files to include" include-files)
+		 (repeat (file :tag "TeX file to include")))
+	   (cons :tag "Font type selection" :value (ps-fonts . nil)
+		 (const :tag "Select font type" ps-fonts)
+		 (choice (const :tag "Use standard TeX fonts" nil)
+			 (const :tag "Use Postscript fonts" t)))
+	   (cons :tag "Font size selection" :value (font-size . 10)
+		 (const :tag "Select font size" font-size)
+		 (integer :tag "Font size in points" 10))
+	   (cons :tag "Page height selection" :value (v-size . nil)
+		 (const :tag "Select page height" v-size)
+		 (choice (const :tag "Use TeX default" nil)
+			 (string :tag "Height (must be valid TeX dimension)" "9in")))
+	   (cons :tag "Page width selection" :value (h-size . nil)
+		 (const :tag "Select page width" h-size)
+		 (choice (const :tag "Use TeX default" nil)
+			 (string :tag "Width (must be valid TeX dimension)" "6in")))
+	   (cons :tag "Vertical offset (top margin)" :value (voffset . nil)
+		 (const :tag "Select vertical offset (top margin)" voffset)
+		 (choice (const :tag "Use TeX default" nil)
+			 (string :tag "Vertical offset (must be valid TeX dimension)" "1in")))
+	   (cons :tag "Horizontal offset (left margin)" :value (hoffset . nil)
+		 (const :tag "Select horizontal offset (left margin)" hoffset)
+		 (choice (const :tag "Use TeX default" nil)
+			 (string :tag "Horizontal offset (must be valid TeX dimension)" "1in")))
+	   (cons :tag "Quad format height" :value (quad-vsize . "")
+		 (const :tag "Select height for quad format pages" quad-vsize)
+		 (string :tag "Height (must be valid TeX dimension)"))
+	   (cons :tag "Quad format width" :value (quad-hsize . "")
+		 (const :tag "Select width for quad format pages" quad-hsize)
+		 (string :tag "Width (must be valid TeX dimension)")))))
+
+(defcustom bbdb-print-alist
+  `((omit-area-code . ,(concat "^(" (int-to-string bbdb-default-area-code) ") "))
+    (phone-on-first-line . "^[ \t]*$")
+    (ps-fonts . nil)
+    (font-size . 6)
+    (quad-hsize . "3.15in")
+    (quad-vsize . "4.5in"))
   "*Formatting options for bbdb-print, all formats.
 This is an alist of the form ((option1 . value1) (option2 . value2) ...)
 
@@ -151,17 +231,21 @@ The possible options and legal values are:
    (any TeX dimension).  Nil or 0 uses TeX's default positioning.  
  - quad-hsize, quad-vsize: for the quad format, horizontal and
      vertical size of the little pages.  These must be strings which
-     are valid TeX dimensions, eg \"10cm\".")
+     are valid TeX dimensions, eg \"10cm\"."
+  :group 'bbdb-utilities-print
+  :type 'bbdb-print-alist-widget)
 
-(defvar bbdb-print-full-alist 
+(defcustom bbdb-print-full-alist 
   '((columns . 3) 
     (separator . 2)
     (include-files "bbdb-print" "bbdb-cols"))
   "*Extra options for bbdb-print non-brief format.
 These supplement or override entries in `bbdb-print-alist'; see description
-of possible contents there.")
+of possible contents there."
+  :group 'bbdb-utilities-print
+  :type 'bbdb-print-alist-widget)
 
-(defvar bbdb-print-brief-alist
+(defcustom bbdb-print-brief-alist
   '((columns . 1) 
     (separator . 1)
     (n-phones . 2)
@@ -169,7 +253,9 @@ of possible contents there.")
     (include-files "bbdb-print-brief" "bbdb-cols"))
   "*Extra Options for bbdb-print, brief format.
 These supplement or override entries in `bbdb-print-alist'; see description
-of possible contents there.")
+of possible contents there."
+  :group 'bbdb-utilities-print
+  :type 'bbdb-print-alist-widget)
 
 (defconst bbdb-print-filofax-alist 
   (append '((font-size . 12)
@@ -181,13 +267,17 @@ of possible contents there.")
   "Example setup for making pages for a Filofax binder.")
 
 
-(defvar bbdb-print-prolog 
+(defcustom bbdb-print-prolog
   (concat "%%%% ====== Phone/Address list in -*-TeX-*- Format =====\n"
 	  "%%%%        produced by bbdb-print, version 3.0\n\n")
-  "*TeX statements to include at the beginning of the bbdb-print file.")
+  "*TeX statements to include at the beginning of the bbdb-print file."
+  :group 'bbdb-utilities-print
+  :type '(text :format "%t:\n%v"))
 
-(defvar bbdb-print-epilog "\\endaddresses\n\\bye\n"
-  "*TeX statements to include at the end of the bbdb-print file.")
+(defcustom bbdb-print-epilog "\\endaddresses\n\\bye\n"
+  "*TeX statements to include at the end of the bbdb-print file."
+  :group 'bbdb-utilities-print
+  :type '(text :format "%t:\n%v"))
 
 ;;; Functions:
 
@@ -199,7 +289,6 @@ ignored and the null string is returned."
       ""
     (apply 'concat string more)))
 
-;;;###autoload
 (defun bbdb-print (visible-records to-file brief)
   "Make a TeX file for printing out the bbdb database.\\<bbdb-mode-map>
 If \"\\[bbdb-apply-next-command-to-all-records]\\[bbdb-print]\" is \
