@@ -184,11 +184,10 @@ C-g again it will stop scanning."
                (when (and (not bbdb-silent-running)
                       (not (eq bbdb/vm-offer-to-create 'quit))
                       (= 0 (% processed-addresses 5)))
-                 (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs))))
-                   (message message))
+                 (message "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs))
                  (sit-for 0)))
-               (quit (cond ((eq bbdb/vm-update-records-mode
-                    'annotating)
+             (quit (cond ((eq bbdb/vm-update-records-mode
+                              'annotating)
                     (setq bbdb/vm-update-records-mode
                       'searching))
                    ((eq bbdb/vm-update-records-mode 'searching)
