@@ -3066,7 +3066,7 @@ C-g again it will stop scanning."
 
 ;; GNU vs XEmacs again. GAH.
 (or (fboundp 'char-int)
-    (defmacro char-int( c ) (list 'string-to-char c))) ;; ick.
+    (fset 'char-int 'identity))
 
 (defun bbdb-prompt-for-create ()
   "This function is used by `bbdb-update-records' to ask the user how to
