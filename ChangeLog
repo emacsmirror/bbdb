@@ -1,3 +1,8 @@
+2001-02-01  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-vm.el (bbdb/vm-pop-up-bbdb-buffer): Fixed the pop-up
+	behaviour. 
+
 2001-01-30  Robert Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-com.el (bbdb-complete-name): Fixes completion problem

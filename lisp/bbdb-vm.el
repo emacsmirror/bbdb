@@ -328,28 +328,31 @@ configuration of what is being displayed."
     (let ((bbdb-gag-messages t)
           (bbdb-electric-p nil)
           (records (bbdb/vm-update-records offer-to-create))
-          (bbdb-elided-display (bbdb-pop-up-elided-display)))
-      (if (and bbdb-use-pop-up records)
-          (progn
-            (bbdb-pop-up-bbdb-buffer
-             (function (lambda (w)
-                         (let ((b (current-buffer)))
-                           (set-buffer (window-buffer w))
-                           (prog1 (eq major-mode 'vm-mode)
-                             (set-buffer b))))))
-            ))
+          (bbdb-elided-display (bbdb-pop-up-elided-display))
+          (bbdb-buffer-name bbdb-buffer-name))
 
-      ;; Always update the records; if there are no records, empty the
-      ;; BBDB window. This should be generic, not VM-specific.
-      (if records
-          (bbdb-display-records records)
-        (bbdb-undisplay-records))
+      (when (and bbdb-use-pop-up records)
+        (bbdb-pop-up-bbdb-buffer
+         (function (lambda (w)
+                     (let ((b (current-buffer)))
+                       (set-buffer (window-buffer w))
+                       (prog1 (eq major-mode 'vm-mode)
+                         (set-buffer b))))))
+
+        ;; Always update the records; if there are no records, empty the
+        ;; BBDB window. This should be generic, not VM-specific.
+        (bbdb-display-records records))
+      (when (not records) 
+        (bbdb-undisplay-records)
+        (if (get-buffer-window bbdb-buffer-name)
+            (delete-window (get-buffer-window bbdb-buffer-name))))
 
       ;; Without the following, VM's summary buffer tends to get upset
       ;; and stuck in a loop. This may well be an Emacs bug; it goes
       ;; away if you try to (debug) it.
       (sit-for 0)
       )))
+
 
 ;; By Alastair Burt <burt@dfki.uni-kl.de>
 ;; vm 5.40 and newer support a new summary format, %U<letter>, to call
