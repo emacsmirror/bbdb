@@ -1160,28 +1160,36 @@ phone number; the order of field types is fixed.\)"
 
 
 ;;;###autoload
-(defun bbdb-delete-current-field-or-record ()
+(defun bbdb-delete-current-field-or-record (&optional records noprompt)
   "Delete the line which the cursor is on; actually, delete the field which
 that line represents from the database.  If the cursor is on the first line
 of a database entry (the name/company line) then the entire entry will be
 deleted."
-  (interactive)
-  (let* ((record (bbdb-current-record t))
+  (interactive (list (if (bbdb-do-all-records-p)
+			 (mapcar 'car bbdb-records)
+		       (list (bbdb-current-record)))
+		     current-prefix-arg))
+  (let* ((do-all-p (> 1 (length records)))
          (field (bbdb-current-field t))
          (type (car field))
-         (uname (bbdb-record-name record))
+	 record
          (name (cond ((null field) (error "on an unfield"))
                      ((eq type 'property) (symbol-name (car (nth 1 field))))
                      (t (symbol-name type)))))
+  (while records
+    (setq record (car records))
     (if (eq type 'name)
-        (bbdb-delete-current-record record)
-        (if (not (bbdb-y-or-n-p (format "delete this %s field (of %s)? "
-                                        name uname)))
+	(bbdb-delete-current-record record noprompt)
+      (if (not (or noprompt
+		   (bbdb-y-or-n-p (format "delete this %s field (of %s)? "
+					  name
+					  (bbdb-record-name record)))))
             nil
             (cond ((memq type '(phone address))
-                   (bbdb-record-store-field-internal record type
-                                                     (delq (nth 1 field)
-                                                           (bbdb-record-get-field-internal record type))))
+	       (bbdb-record-store-field-internal
+		record type
+		(delq (nth 1 field)
+		      (bbdb-record-get-field-internal record type))))
                   ((memq type '(net aka))
                    (let ((rest (bbdb-record-get-field-internal record type)))
                      (while rest
@@ -1192,7 +1200,8 @@ deleted."
                    (bbdb-record-putprop record (car (nth 1 field)) nil))
                   (t (error "doubleplus ungood: unknown field type")))
             (bbdb-change-record record nil)
-            (bbdb-redisplay-one-record record)))))
+	(bbdb-redisplay-one-record record)))
+    (setq records (cdr records)))))
 
 ;;;###autoload
 (defun bbdb-delete-current-record (r &optional noprompt)
@@ -1624,10 +1633,10 @@ the name is always included."
               (load-library "vm") ; 5.32 or later
               (or (fboundp 'vm-mail-internal)
                   (load-library "vm-reply")))) ; 5.31 or earlier
-       (vm-mail-internal
-        (and records (format "mail to %s%s" (bbdb-record-name (car records))
-                             (if (cdr records) ", ..." "")))
-        to subj))
+      (vm-session-initialization)
+      (vm-mail-internal nil to subject)
+      (run-hooks 'vm-mail-hook)
+      (run-hooks 'vm-mail-mode-hook))
       ((eq type 'message)
        (or (fboundp 'message-mail) (autoload 'message-mail "message"))
        (message-mail to subj))
@@ -1635,7 +1644,6 @@ the name is always included."
        (mail nil to subj))
       (t
        (error "bbdb-send-mail-style must be vm, mh, message, or rmail")))))
-
 
 ;;;###autoload
 (defun bbdb-send-mail (bbdb-record &optional subject)
@@ -2140,9 +2148,16 @@ of all of those people."
          result record aliases match)
     (while records
       (setq record (car records))
-      (setq aliases (bbdb-split
-                     (bbdb-record-getprop record bbdb-define-all-aliases-field)
-                     ","))
+      (if (bbdb-record-net record)
+	  (setq aliases (bbdb-split
+			 (bbdb-record-getprop record
+					      bbdb-define-all-aliases-field)
+			 ","))
+	(if (not bbdb-silent-running)
+	    (warn "record \"\" unhas network addresses"
+		  (bbdb-record-name record)))
+	(setq aliases nil))
+      
       (while aliases
         (if (setq match (assoc (car aliases) result))
             (nconc match (cons record nil))
@@ -2173,7 +2188,8 @@ of all of those people."
         (fset alias (list 'lambda '()
                           (list 'bbdb-mail-abbrev-expand-hook
                                 (list 'quote
-                                      (mapcar (lambda (x) (car (bbdb-record-net x)))
+				      (mapcar (lambda (x)
+						(car (bbdb-record-net x)))
                                               (cdr (car result))))))))
       (setq result (cdr result)))))
 
@@ -2184,6 +2200,53 @@ of all of those people."
         (bbdb-display-records-1
          (mapcar (lambda (x) (bbdb-search-simple nil x)) records)
          t))))
+
+(defun bbdb-get-mail-aliases ()
+  "Return a list of mail aliases used in the BBDB.
+The format is suitable for `completing-read'." 
+  (let* ((target (cons bbdb-define-all-aliases-field "."))
+	 (records (bbdb-search (bbdb-records) nil nil nil target))
+	 result aliases)
+    (while records
+      (setq aliases (bbdb-split
+		     (bbdb-record-getprop (car records)
+					  bbdb-define-all-aliases-field)
+		     ","))
+      (while aliases
+	(add-to-list 'result (list (car aliases)))
+	(setq aliases (cdr aliases)))
+      (setq records (cdr records)))
+    result))
+
+;;;###autoload
+(defun bbdb-add-or-remove-mail-alias (&optional records newalias delete)
+  "Add NEWALIAS in all RECORDS or remove it if DELETE it t.
+When called with prefix argument it will remove the alias.
+We honor `bbdb-apply-next-command-to-all-records'!
+The new alias will only be added if it isn't there yet."
+  (interactive (list (if (bbdb-do-all-records-p) 'all 'one)
+		     (completing-read "Mail alias: " (bbdb-get-mail-aliases))
+		     current-prefix-arg))
+  (setq newalias (bbdb-string-trim newalias))
+  (setq newalias (if (string= "" newalias) nil newalias))
+  (let* ((propsym bbdb-define-all-aliases-field)
+	 (do-all-p (if (equal records 'one) nil t))
+	 (records (cond ((equal records 'all) (mapcar 'car bbdb-records))
+			((equal records 'one) (list (bbdb-current-record t)))
+			(t records))))
+    (while records
+      (setq record (car records)
+	    oldaliases (bbdb-record-getprop record propsym))
+      (if oldaliases (setq oldaliases (bbdb-split oldaliases ",")))
+      (if delete (setq oldaliases (delete newalias oldaliases))
+	(add-to-list 'oldaliases newalias))
+      (setq oldaliases (bbdb-join oldaliases ", "))
+      (bbdb-record-putprop record propsym oldaliases)
+      (setq records (cdr records)))
+  (if do-all-p
+      (bbdb-redisplay-records)
+    (bbdb-redisplay-one-record (bbdb-current-record)))))
+
 
 ;;; Sound
 
