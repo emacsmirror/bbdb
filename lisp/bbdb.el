@@ -2847,10 +2847,6 @@ function `y-or-n-p-with-timeout' is defined."
   (if (string-match "[@%!]" string)  ; ain't no user name!  It's an address!
       (bbdb-string-trim string)
    (let ((case-fold-search t))
-     ;; swap Lastname, Firstname
-     (when (string-match "^\\([^,]+\\)\\s-*,\\s-*\\([^,]+\\)$" string)
-       (setq string (concat (match-string 2 string) " "
-                            (match-string 1 string))))
      ;; Take off leading and trailing non-alpha chars \(quotes, parens,
      ;; digits, etc) and things which look like phone extensions \(like
      ;; "x1234" and "ext. 1234". \)
