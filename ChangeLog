@@ -1,5 +1,8 @@
 2002-01-22  Robert Fenk  <Robert.Fenk@gmx.de>
 
+	* lisp/bbdb-com.el (bbdb-delete-current-record): honor the
+	bbdb-do-all-records-p!
+
 	* lisp/bbdb.el (bbdb-mode-map): Bind bbdb-search-invert-set to "!"
 
 	* lisp/bbdb-com.el (bbdb): Reflect inverted search in search prompt.
