@@ -3,7 +3,6 @@
 ;;; This file is the part of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
 ;;; Most of the user-level interactive commands for BBDB.  See bbdb.texinfo.
-;;; last change 22-mar-96.
 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -18,6 +17,16 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+
+;;
+;; $Id$
+;;
+;; $Log$
+;; Revision 1.52  1997/09/28 05:57:13  simmonmt
+;; Fixed area code parsing for new US area codes.  Patches integrated:
+;; use of message-mail for sending mail, finger-host record for fingering
+;;
+;;
 
 (require 'bbdb)
 
@@ -242,7 +251,7 @@ If possible, you should call bbdb-redisplay-one-record instead."
 
 ;;; Parsing phone numbers
 
-(defconst bbdb-phone-area-regexp "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*\\([0-9][012][0-9]\\)[ \t]*)?[- \t]*")
+(defconst bbdb-phone-area-regexp "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*\\([2-9][0-9][0-9]\\)[ \t]*)?[- \t]*")
 (defconst bbdb-phone-main-regexp "\\([1-9][0-9][0-9]\\)[ \t]*-?[ \t]*\\([0-9][0-9][0-9][0-9]\\)[ \t]*")
 (defconst bbdb-phone-ext-regexp  "x?[ \t]*\\([0-9]+\\)[ \t]*")
 
@@ -1384,8 +1393,10 @@ address is used as-is."
 	to subj))
      ((or (eq type 'mail) (eq type 'rmail))
       (mail nil to subj))
+     ((or (eq type 'message))
+      (message-mail to subj))
      (t
-      (error "bbdb-send-mail-style must be vm, mh, or rmail")))))
+      (error "bbdb-send-mail-style must be vm, mh, message, or rmail")))))
 		   
 
 (defun bbdb-send-mail (bbdb-record &optional subject)
@@ -1928,6 +1939,15 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
       (goto-char (point-max))
       (message "Finger done."))))
 
+(defvar bbdb-finger-host-field 'finger-host
+  "*The field for special net addresses used by \"\\[bbdb-finger]\".")
+
+(defun bbdb-record-finger-host (record)
+  (let ((finger-host (and bbdb-finger-host-field
+			  (bbdb-record-getprop record bbdb-finger-host-field))))
+    (if finger-host
+	(bbdb-split finger-host ",")
+      (bbdb-record-net record))))
 
 (defun bbdb-finger (record &optional which-address)
   "Finger the network address of a BBDB record. 
@@ -1962,18 +1982,19 @@ at point.  The numeric prefix argument has the same interpretation."
       (cond ((null which-address)
 	     (setq addrs
 		   (nconc addrs
-			  (list (car (bbdb-record-net (car record)))))))
+			  (list (car (bbdb-record-finger-host (car record)))))))
 	    ((stringp which-address)
 	     (setq addrs (nconc addrs (list which-address))))
 	    ((numberp which-address)
 	     (setq addrs
 		   (nconc addrs
 			  (list (nth which-address
-				     (bbdb-record-net (car record)))))))
+				     (bbdb-record-finger-host (car record)))))))
 	    (t
 	     (setq addrs
 		   (nconc addrs
-			  (copy-sequence (bbdb-record-net (car record)))))))
+			  (copy-sequence (bbdb-record-finger-host
+					  (car record)))))))
       (setq record (cdr record)))
     (save-excursion
       (with-output-to-temp-buffer bbdb-finger-buffer-name
