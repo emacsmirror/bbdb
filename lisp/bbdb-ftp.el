@@ -92,7 +92,7 @@
 (defun-bbdb-raw-notes-accessor ftp-user)
 
 (defun bbdb-record-ftp-site (record)
-  "Acessor Function. Returns the ftp-site field of the BBDB record or nil."
+  "Accessor Function. Returns the ftp-site field of the BBDB record or nil."
   (let* ((name (bbdb-record-name record))
      (ftp-pfx-regexp (concat bbdb-ftp-site-name-designator-prefix " *"))
      (ftp-site
@@ -143,27 +143,42 @@ or update the hashtables, but does insure that there will not be name
 collisions."
   (bbdb-records) ; make sure database is loaded
   (if bbdb-readonly-p (error "The Insidious Big Brother Database is read-only."))
-  (let (site)
+  (let (site dir user)
     (bbdb-error-retry
      (progn
        (setq site (bbdb-read-string "Ftp Site: "))
+       ;; try and parse it out, in case the user typed in things like
+       ;; "ftp://user@site/directory/ or /user@site/directory
+       (if (string-match
+            "^\\([Ff][Tt][Pp]://\\|/\\)?\\([^@/]@\\)?\\([^/]+\\)\\(/[^/].*\\)?"
+            site)
+           (setq user (if (match-beginning 2)
+                          (substring site (match-beginning 2)
+                                     (match-end 2)))
+                 dir (if (match-beginning 4)
+                         (substring site (match-beginning 4)
+                                    (match-end 4)))
+                 site (substring site (match-beginning 3)
+                                 (match-end 3)))
+         (if (string-match "/" site)
+             (error "%s doesn't look like a valid site name." site)))
        (setq site (concat bbdb-ftp-site-name-designator-prefix site))
        (if (and bbdb-no-duplicates-p
         (bbdb-gethash (downcase site)))
         (error "%s is already in the database" site))))
-    (let* ((dir  (bbdb-read-string "Ftp Directory: "
-                   bbdb-default-ftp-dir))
-       (user  (bbdb-read-string "Ftp Username: "
-                    bbdb-default-ftp-user))
-       (company (bbdb-read-string "Company: "))
-       (notes (bbdb-read-string "Additional Comments: "))
-       (names  (bbdb-divide-name site))
-       (firstname (car names))
-       (lastname (nth 1 names)))
+    (let* ((dir (or dir (bbdb-read-string "Ftp Directory: "
+                                           bbdb-default-ftp-dir)))
+           (user (or user (bbdb-read-string "Ftp Username: "
+                                            bbdb-default-ftp-user)))
+           (company (bbdb-read-string "Company: "))
+           (notes (bbdb-read-string "Additional Comments: "))
+           (names  (bbdb-divide-name site))
+           (firstname (car names))
+           (lastname (nth 1 names)))
       (if (string= user bbdb-default-ftp-user) (setq user nil))
       (if (string= company "") (setq company nil))
       (if (or (string= dir bbdb-default-ftp-dir) (string= dir ""))
-      (setq dir nil))
+          (setq dir nil))
       (if (string= notes "")   (setq notes nil))
 
       (let ((record
