@@ -1,3 +1,26 @@
+1998-10-08  Colin Rafferty  <colin@xemacs.org>
+
+	* lisp/bbdb.el (bbdb-version): BBDB 2.00.02 released
+
+1998-07-19  SL Baur  <steve@altair.xemacs.org>
+
+	* lisp/bbdb-migrate.el (bbdb-migration-query): Don't pass an
+          integer to concat.
+
+	* lisp/bbdb.el (bbdb-y-or-n-p): raise-screen -> raise-frame,
+	  screen-visible-p -> frame-visible-p, selected-screen ->
+	  selected-frame.
+	* lisp/bbdb.el (bbdb-pop-up-bbdb-buffer-horizontally):
+	  screen-width -> frame-width.
+
+	* lisp/bbdb-xemacs.el (bbdb-fontify-buffer): set-extent-attribute
+          -> set-extent-property, set-extent-data -> set-extent-property.
+	* lisp/bbdb-xemacs.el (bbdb-hack-x-face): set-extent-data ->
+	  set-extent-property.
+
+	* lisp/bbdb-srv.el (bbdb/srv-handle-headers): Use new name for
+	  set-window-buffer-dedicated.
+
 Sat Apr 11 00:28:17 1998  Matt Simmons  <simmonmt@acm.org>
 
 	* lisp/bbdb.el: BBDB 2.00.01 released
