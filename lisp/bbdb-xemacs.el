@@ -67,8 +67,8 @@
 	      face (and (not elided-p) (bbdb-record-getprop record 'face))
 	      start (marker-position (nth 2 (car rest)))
 	      end (1- (or (nth 2 (car (cdr rest))) (point-max))))
-	(set-extent-attribute (setq e (make-extent start end)) 'highlight)
-	(set-extent-data e 'bbdb)
+	(set-extent-property (setq e (make-extent start end)) 'highlight t)
+	(set-extent-property e 'data 'bbdb)
 	(goto-char start)
 	(if elided-p
 	    (progn
@@ -80,15 +80,15 @@
 	(if (search-forward " - " p t)
 	    (progn
 	      (setq e (make-extent (point) p))
-	      (set-extent-data e 'bbdb)
+	      (set-extent-property e 'data 'bbdb)
 	      (set-extent-face e 'bbdb-company)
-	      (set-extent-attribute e 'highlight)
+	      (set-extent-property e 'highlight t)
 	      (forward-char -3))
 	  (goto-char p))
 	(setq e (make-extent start (point)))
-	(set-extent-data e 'bbdb)
+	(set-extent-property e 'data 'bbdb)
 	(set-extent-face e 'bbdb-name)
-	(set-extent-attribute e 'highlight)
+	(set-extent-property e 'highlight t)
 	(if face (bbdb-hack-x-face face e))
 	(forward-line 1)
 	(while (< (point) end)
@@ -98,13 +98,13 @@
 	       (progn
 		 (setq e (make-extent p (match-end 0)))
 		 (set-extent-face e 'bbdb-field-name)
-		 (set-extent-data e 'bbdb)))
+		 (set-extent-property e 'data 'bbdb)))
 	  (while (progn (forward-line 1)
 			(looking-at "^\\(\t\t \\|                 \\)")))
 	  (setq e (make-extent p (1- (point))))
-	  (set-extent-data e 'bbdb)
+	  (set-extent-property e 'data 'bbdb)
 	  (set-extent-face e 'bbdb-field-value)
-	  (set-extent-attribute e 'highlight))
+	  (set-extent-property e 'highlight t))
 	(setq rest (cdr rest))))))
 
 
@@ -138,7 +138,7 @@
 	     (setq extent (make-extent
 			   (extent-start-position extent)
 			   (extent-end-position extent)))
-	     (set-extent-data extent 'bbdb)))))))
+	     (set-extent-property extent 'data 'bbdb)))))))
 
 
 (defvar global-bbdb-menu-commands
