@@ -24,6 +24,11 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.3  1998/10/10 18:47:21  simmonmt
+;; From slbaur: Don't pass an integer to concat.
+;; Format dates with number format - not string - so we get leading
+;; zeros.
+;;
 ;; Revision 1.2  1998/04/11 07:19:19  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back
 ;;
@@ -70,13 +75,15 @@ changes introduced after version %d is shown below:\n\n" ondisk ondisk))
 	(if (> (caar newfeatures) ondisk)
 	  (insert-string (concat (if first (setq first nil) "\n\n")
 				 "New features in database version "
-				 (caar newfeatures)
+				 (format "%d" (caar newfeatures))
 				 ":\n\n" (cdar newfeatures))))
 	(setq newfeatures (cdr newfeatures)))
       (setq win (display-buffer buf))
       (shrink-window-if-larger-than-buffer win)
       (setq update
-	    (y-or-n-p (concat "Upgrade to version " bbdb-file-format "? ")))
+	    (y-or-n-p (concat "Upgrade to version "
+			      (format "%d" bbdb-file-format)
+			      "? ")))
       (delete-window win)
       (kill-this-buffer)
       (set-window-configuration wc)
@@ -206,7 +213,7 @@ argument."
 		(>= (timezone-last-day-of-month (aref parsed 1)
 						(aref parsed 0))
 		    (aref parsed 2)))
-	   (setcdr field (format "%04s-%02s-%02s" (aref parsed 0)
+	   (setcdr field (format "%04d-%02d-%02d" (aref parsed 0)
 				 (aref parsed 1) (aref parsed 2)))
 	   field)
 	  (t
