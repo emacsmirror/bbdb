@@ -147,13 +147,12 @@ more details."
   (save-excursion
     (let
         ((buf (get-buffer-create " *BBDB snarf*"))
-         (text (buffer-substring begin end))
+         (text (buffer-substring-no-properties begin end))
          phones nets web city state zip name address-lines
          address-vector notes)
       (set-buffer buf)
       (erase-buffer)
       (insert text)
-      (set-text-properties (point-min) (point-max) nil)
 
       ;; toss beginning and trailing space
       (goto-char (point-min))
