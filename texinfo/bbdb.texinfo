@@ -2270,8 +2270,8 @@ tastefully. @refill
 Desired number of lines in a @b{VM/MH/RMAIL/GNUS} pop-up @b{BBDB} window,
 default 5. @refill
 
-@item bbdb-pop-up-elided-display-fields
-@vindex bbdb-pop-up-elided-display-fields
+@item bbdb-elided-display-fields
+@vindex bbdb-elided-display-fields
 A the list of fields which should be displayed in elided display.
 E.g. set this to @code{'(phones net addresses)} in order to get the list of
 phone numbers, net addresses and addresses listed.
@@ -2282,8 +2282,8 @@ pattern @code{bbdb-format-popup-<field>}.  They should take one argument which
 is the raw field content and return a string.
 @refill
 
-@item bbdb-pop-up-elided-display-name-end
-@vindex bbdb-pop-up-elided-display-name-end
+@item bbdb-elided-display-name-end
+@vindex bbdb-elided-display-name-end
 Set this to the column where name and company should end in elided
 display.
 @refill
