@@ -2815,8 +2815,6 @@ passed as arguments to initiate the appropriate insinuations.
 (if (not (fboundp 'add-hook))
     (fset 'add-hook 'bbdb-add-hook))
 
-(run-hooks 'bbdb-load-hook)
-
 (defun bbdb-insinuate-sendmail ()
   "Call this function to hook BBDB into sendmail (that is, M-x mail)."
   (define-key mail-mode-map "\M-\t" 'bbdb-complete-name)
@@ -2824,6 +2822,8 @@ passed as arguments to initiate the appropriate insinuations.
 
 
 (provide 'bbdb)  ; provide before loading things which might require
+
+(run-hooks 'bbdb-load-hook)
 
 (defmacro safe-require (thing)
   (list 'condition-case nil (list 'require thing) '(file-error nil)))
