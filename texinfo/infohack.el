@@ -33,7 +33,8 @@
     (replace-match "")))
 
 (defun infohack (file)
-  (let ((dest-directory default-directory))
+  (let ((dest-directory default-directory)
+	(max-lisp-eval-depth (max max-lisp-eval-depth 600)))
     (find-file file)
     (infohack-remove-unsupported)
     (texinfo-every-node-update) 
