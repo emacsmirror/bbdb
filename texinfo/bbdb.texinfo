@@ -8,6 +8,9 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.20  1998/11/02 07:17:36  simmonmt
+@c Correct escaping of mailing list address
+@c
 @c Revision 1.19  1998/11/02 07:08:41  simmonmt
 @c Change mailing list address
 @c
@@ -3223,11 +3226,11 @@ where @var{NAME} is the symbol for the name of the note, and
 @section Mailing Lists
 
 There are two mailing lists for the @b{BBDB}.  The first is
-@code{bbdb-announce@xemacs.org}, and is used for new release announcements, and as a
-result has very low traffic.  To subscribe to @code{bbdb-announce@xemacs.org}, send mail
-to @code{bbdb-announce-request@xemacs.org} with @samp{subscribe} as the subject.
+@code{bbdb-announce@@xemacs.org}, and is used for new release announcements, and as a
+result has very low traffic.  To subscribe to @code{bbdb-announce@@xemacs.org}, send mail
+to @code{bbdb-announce-request@@xemacs.org} with @samp{subscribe} as the subject.
 
-The second mailing list, @code{bbdb-info@xemacs.org}, is gets moderate traffic, and is
+The second mailing list, @code{bbdb-info@@xemacs.org}, is gets moderate traffic, and is
 intended for the discussion and distribution of development versions of the
 @b{BBDB}.  Users of development versions of the @b{BBDB} should be subscribed
 to this list.  It is to this list that bugs should be reported.  @xref{Known
