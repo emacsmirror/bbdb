@@ -1982,7 +1982,7 @@ Currently only used by XEmacs."
           (cons (car l) (bbdb-remove-assoc-duplicates (cdr l))))))
 
 (defcustom bbdb-complete-name-allow-cycling nil
-  "Wheater to allow cycling of email addresses when calling
+  "Whether to allow cycling of email addresses when calling
 `bbdb-complete-name' on a completed address in a composition buffer."
   :group 'bbdb-mua-specific
   :type 'boolean)
@@ -3027,25 +3027,12 @@ C-g again it will stop scanning."
   (let ((b (get-buffer-create " *BBDB Help*"))
         (w (or (get-buffer-window " *BBDB Help*")
                (get-lru-window)))
-
-;;        (wl (window-list))
         (lines (let ((l 2) (s 0))
                  (while (setq s (string-match "\n" message s))
                    (setq s (1+ s) l (1+ l)))
                  l)))
 
-;;    (when (not w)
-;;      (setq w (car wl)
-;;            wl (cdr wl))
-;;
-;;      (while wl
-;;        (if (< (nth 1 (window-pixel-edges w))
-;;               (nth 1 (window-pixel-edges (car wl))))
-;;            (setq w (car wl)))
-;;        (setq wl (cdr wl)))
-
     (setq w (split-window w))
-
     (select-window w)
     (switch-to-buffer b)
     (erase-buffer)
