@@ -1724,6 +1724,8 @@ multi-line layout."
         '(bbdb-readonly-p "--%%%%-" (bbdb-modified-p "--**-" "-----"))))
 
 (defun bbdb-display-records-1 (records &optional append layout)
+  (setq append (or append (bbdb-add-next-search-results-p)))
+  
   (if (or (null records)
           (consp (car records)))
       nil
@@ -1745,7 +1747,8 @@ multi-line layout."
       (set-buffer bbdb-buffer-name)
 
       ;; If append is unset, clear the buffer.
-      (unless append (bbdb-undisplay-records))
+      (unless append
+        (bbdb-undisplay-records))
 
       ;; If we're appending these records to the ones already displayed,
       ;; then first remove any duplicates, and then sort them.
@@ -1790,7 +1793,8 @@ multi-line layout."
           (setq records (cdr records))))
       (and (not bbdb-gag-messages)
            (not bbdb-silent-running)
-           (message "Formatting...done.")))
+           (message "Formatting...done."))
+      )
     (set-buffer bbdb-buffer-name)
     (if (and append first)
         (let ((cons (assq first bbdb-records))
@@ -1881,7 +1885,7 @@ multi-line layout."
       (bbdb-done-command)
     (bury-buffer)))
 
-(defun bbdb-display-records (records &optional layout)
+(defun bbdb-display-records (records &optional layout append)
   (let ((bbdb-window (get-buffer-window bbdb-buffer-name)))
     (if (and bbdb-electric-p
              ;; never be electric if the buffer is already on screen.
@@ -1889,7 +1893,7 @@ multi-line layout."
         (progn
           (define-key bbdb-mode-map " " 'bbdb-done-command)
           (electric-bbdb-display-records records))
-      (bbdb-display-records-1 records nil layout)
+      (bbdb-display-records-1 records append layout)
       ;; don't smash keybinding if they invoked `bbdb-display'
       ;; from inside an electric loop.
       (unless bbdb-inside-electric-display
@@ -1970,7 +1974,7 @@ multi-line layout."
                                   (or ht '(bbdb-hashtable)))))
         (list 'and 's (list 'set 's (list 'bbdb-remove! record
                                           (list 'symbol-value 's))))))
-
+   
 (defsubst bbdb-search-intertwingle (name net)
   "Find bbdb records matching NAME and NET.
 
@@ -1984,14 +1988,14 @@ The name comes from
 http://www.mozilla.org/blue-sky/misc/199805/intertwingle.html, which
 any budding BBDB hacker should be at least vaguely familiar with."
   (bbdb-records t)
-  (if name (setq name (downcase name))
-    (setq name ""))
+  (if name (setq name (downcase name)))
   (if net (setq net (downcase net))
     (setq net ""))
   (let ((net-recs (bbdb-gethash (downcase net)))
         recs)
     (while net-recs
-      (if (string= name (downcase (bbdb-record-name (car net-recs))))
+      (if (or (and (not name) net)
+              (string= name (downcase (bbdb-record-name (car net-recs)))))
           (add-to-list 'recs (car net-recs)))
       (setq net-recs (cdr net-recs)))
     recs))
@@ -3521,6 +3525,7 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map [(S)]          'bbdb-mode-search-map)
 
   (define-key bbdb-mode-map [(*)]          'bbdb-apply-next-command-to-all-records)
+  (define-key bbdb-mode-map [(+)]          'bbdb-add-next-search-results)
   (define-key bbdb-mode-map [(a)]          'bbdb-add-or-remove-mail-alias)
   (define-key bbdb-mode-map [(e)]          'bbdb-edit-current-field)
   (define-key bbdb-mode-map [(n)]          'bbdb-next-record)
