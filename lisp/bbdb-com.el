@@ -291,8 +291,7 @@ in either the name(s), company, network address, or notes."
 the database was last saved."
   (interactive "P")
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
-        (changed-records  (bbdb-with-db-buffer bbdb-changed-records))
-        unchanged-records)
+        (changed-records  (bbdb-with-db-buffer bbdb-changed-records)))
     (if (bbdb-search-invert-p)
         (let ((recs (bbdb-records))
               unchanged-records
@@ -1352,45 +1351,47 @@ deleted."
       (setq records (cdr records)))))
 
 ;;;###autoload
-(defun bbdb-delete-current-record (r &optional noprompt)
+(defun bbdb-delete-current-record (recs &optional noprompt)
   "Delete the entire bbdb database entry which the cursor is within.
 Pressing \\<bbdb-mode-map>\\[bbdb-apply-next-command-to-all-records] will
 delete all records listed in th BBDB buffer."
-  (interactive (list (bbdb-current-record t)))
-  (if (bbdb-do-all-records-p)
-      (let ((recs bbdb-records) r)
-        (while recs
-          (setq r (car recs)
-                recs (cdr recs))
-          (bbdb-debug (if (bbdb-record-deleted-p r)
-                          (error "deleting deleted record")))
-          (bbdb-record-set-deleted-p r t)
-          (bbdb-delete-record-internal r)))
-    (if (or noprompt
-            (bbdb-y-or-n-p (format "delete the entire db entry of %s? "
-                                   (or (bbdb-record-name r)
-                                       (bbdb-record-company r)
-                                       (car (bbdb-record-net r))))))
-        (let* ((record-cons (assq r bbdb-records))
-               (next-record-cons (car (cdr (memq record-cons bbdb-records)))))
-          (bbdb-debug (if (bbdb-record-deleted-p r)
-                          (error "deleting deleted record")))
-          (bbdb-record-set-deleted-p r t)
-          (bbdb-delete-record-internal r)
-          (if (eq record-cons (car bbdb-records))
-              (setq bbdb-records (cdr bbdb-records))
-            (let ((rest bbdb-records))
-              (while (cdr rest)
-                (if (eq record-cons (car (cdr rest)))
-                    (progn
-                      (setcdr rest (cdr (cdr rest)))
-                      (setq rest nil)))
-                (setq rest (cdr rest)))))
-          (bbdb-redisplay-one-record r record-cons next-record-cons t)
-          (bbdb-with-db-buffer
-           (setq bbdb-changed-records (delq r bbdb-changed-records)))
-          ;; (bbdb-offer-save)
-          ))))
+  (interactive (list (if (bbdb-do-all-records-p)
+                         (mapcat 'car bbdb-records)
+                       (list (bbdb-current-record t)))
+                     current-prefix-arg))
+  (if (not (listp recs))
+      (setq recs (list recs)))
+  (while recs
+    (let ((r (car recs)))
+      (setq recs (cdr recs))
+      (bbdb-debug (if (bbdb-record-deleted-p r)
+                      (error "deleting deleted record")))
+      (if (or noprompt
+              (bbdb-y-or-n-p (format "delete the entire db entry of %s? "
+                                     (or (bbdb-record-name r)
+                                         (bbdb-record-company r)
+                                         (car (bbdb-record-net r))))))
+          (let* ((record-cons (assq r bbdb-records))
+                 (next-record-cons (car (cdr (memq record-cons
+                                                   bbdb-records)))))
+            (bbdb-debug (if (bbdb-record-deleted-p r)
+                            (error "deleting deleted record")))
+            (bbdb-record-set-deleted-p r t)
+            (bbdb-delete-record-internal r)
+            (if (eq record-cons (car bbdb-records))
+                (setq bbdb-records (cdr bbdb-records))
+              (let ((rest bbdb-records))
+                (while (cdr rest)
+                  (if (eq record-cons (car (cdr rest)))
+                      (progn
+                        (setcdr rest (cdr (cdr rest)))
+                        (setq rest nil)))
+                  (setq rest (cdr rest)))))
+            (bbdb-redisplay-one-record r record-cons next-record-cons t)
+            (bbdb-with-db-buffer
+             (setq bbdb-changed-records (delq r bbdb-changed-records)))
+            ;; (bbdb-offer-save)
+            )))))
 
 (defun bbdb-change-records-state-and-redisplay (desired-state records)
   (let (rec)
