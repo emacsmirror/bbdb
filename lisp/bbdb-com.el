@@ -2518,9 +2518,10 @@ of all of those people."
                                               bbdb-define-all-aliases-field)
                          ","))
         (if (not bbdb-silent-running)
-            (bbdb-warn (concat "record \"" (bbdb-record-name record)
-                               " (" (mapconcat 'identidy aliases ", ")
-                               ")\" unhas network addresses, but an alias!")))
+            (bbdb-warn "record %S has no network address, but the aliases: %s"
+                        (bbdb-record-name record)
+                        (bbdb-record-getprop record
+                                             bbdb-define-all-aliases-field)))
         (setq aliases nil))
       
       (while aliases
