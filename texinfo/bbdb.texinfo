@@ -16,13 +16,13 @@
 This file documents the Insidious Big Brother Database
 
 This is edition $Revision$ of the BBDB User Manual for BBDB
-version 2.2.
+version 2.34.
 
 Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
-Copyright (c) 2000-2001 The BBDB Development Team
+Copyright (c) 2000-2002 The BBDB Development Team
 @end ifinfo
 
 @titlepage
@@ -30,17 +30,17 @@ Copyright (c) 2000-2001 The BBDB Development Team
 @subtitle A phone number and address database program for Emacs
 @subtitle Edition $Revision$, $Date$
 
-@author by Jamie Zawinski and Matt Simmons
+@author by Jamie Zawinski, Matt Simmons and the BBDB Development Team
 @page
 Copyright @copyright{} 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright @copyright{} 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
-Copyright @copyright{} 2000-2001 The BBDB Development Team
+Copyright @copyright{} 2000-2002 The BBDB Development Team
 
 @sp 2
 This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
-version 2.2, $Date$.@refill
+version 2.34, $Date$.@refill
 
 @sp 2
 
@@ -1307,36 +1307,63 @@ for.  Completion behavior is as dictated by the variable
 
 @item M-d
 @findex bbdb-dial
-@cindex Sound support
-@cindex Dialing phone numbers
-(@code{bbdb-dial}) If you are on a machine with the ability to play
-sounds, this command will play the appropriate tones on the builtin
-speaker to dial the phone number corresponding to the current line.  If
-the point is at the beginning of a record, dial the first phone number.
-This does not dial the extension.  This also does not dial the area code
-if it is the same as @code{bbdb-default-area-code}, unless a prefix
-argument is given. @refill
+@cindex Dialling phone numbers
+(@code{bbdb-dial})  This command will attempt to dial the phone number
+currently at point, or if point is at the start of a record, the first
+phone number in the record.  An extension, if present, is disregarded.
+@refill
 
-The @b{BBDB} comes configured to play sounds on machines running
-Solaris.  If you are on another type of machine, you must set
-@code{bbdb-sound-player} to a string containing the name of the audio
-file player on your machine.  You must also set @code{bbdb-sound-files}
-to a vector of arguments to be passed to the program indicated by
-@code{bbdb-sound-player}.  @code{bbdb-sound-player} will be called with
-the first element of @code{bbdb-sound-files} for the digit @samp{0}, the
-second for @samp{1}, the third for @samp{2}, and so on.
+The method of dialling is controlled by @code{bbdb-modem-dial}. If this
+variable is nil, the @b{BBDB} will play touchtones corresponding to the
+number to be dialled.  Otherwise, this variable is treated as a modem
+command string to be prepended to the number prior to feeding it to
+@code{bbdb-modem-device}. @refill
+
+The @b{BBDB} plays touchtones using @code{bbdb-sound-player} to play the
+sounds and the elements of @code{bbdb-sound-files} as the audio to be
+played.  The first ten elements of @code{bbdb-sound-files} correspond to
+the touchtones for the digits @samp{0} to @samp{9}, while the eleventh
+and twelfth elements correspond to @samp{#} and @samp{*}
+respectively. The default configuration assumes a Solaris[tm]
+installation with the demonstration sound files in
+@code{/usr/demo/SOUND/sounds}. @refill
+
+The actual number dialled depends on the following variables:
 
 @table @code
+@item bbdb-dial-local-prefix-alist 
+@vindex bbdb-dial-local-prefix-alist
+This is a list of (SEXPR REPLACEMENT) pairs.  SEXPR is evaluated to
+produce a regular expression which is then applied to the number. If it
+matches, whatever it matches is replaced by REPLACEMENT.  The match and
+replace is performed using each item in the list that matches, in
+sequence, so that the output from one item may become input to another.
+The default value for this variable is to remove
+@code{(bbdb-default-area-code)} (i.e. the value of that variable, in
+parenthesis) from the start of the number to be dialled.@refill
+
+@b{Note:} If this procedure produces a transformed number then no
+further modifications (such as prefix additions, below) will be made to
+the number before dialling.@refill
+
+Using a prefix argument to @code{bbdb-dial} disables the processing of
+this variable. The other modifiers, below, are not affected by
+this.@refill
+
 @item bbdb-dial-local-prefix
 @vindex bbdb-dial-local-prefix
-Set this to a string of digits if your phone system requires you to dial
-some code to access an outside line.@refill
+If the number to be dialled starts with a zero, it is deemed to be a
+local number, and @code{bbdb-dial-local-prefix} is prepended to it (see
+note above concerning @code{bbdb-dial-local-prefix-alist} processing,
+however).@refill
 
 @item bbdb-dial-long-distance-prefix
 @vindex bbdb-dial-long-distance-prefix
-Set this to a string of digits if your phone system requires you to dial
-some code before dialing a long-distance number (one not in your local
-area code.)@refill
+If the number to be dialled starts with a plus sign (+), it is deemed to
+be a long distance number, and @code{bbdb-dial-long-distance-prefix} is
+prepended to it (see note above concerning
+@code{bbdb-dial-local-prefix-alist} processing, however).@refill
+
 @end table
 
 @item f
