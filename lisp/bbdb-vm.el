@@ -22,6 +22,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.57  2000/06/14 14:51:34  waider
+;; * Trying another way to get the from field, since the Presentation
+;;   buffer hack seems to be somewhat unusable.
+;;
 ;; Revision 1.56  2000/03/31 09:58:50  bbdb-writer
 ;; (bbdb/vm-get-from): If there's a presentation buffer, get the address
 ;; from there, since it will be MIME-decoded.
@@ -48,42 +52,21 @@
 (or (boundp 'vm-mode-map)
     (load-library "vm-vars"))
 
-(defun bbdb/vm-get-from (msg)
+(defun bbdb/vm-get-from (msg) 
+  "Get the \"From\" address of the specified message. If it's from the current
+user, return the recipient addresses instead."
   (setq msg (vm-real-message-of msg))
-  ;; Unfortunately the first arm of this if doesn't work because VM gloms
-  ;; the various names and addresses of multi-recipient messages together
-  ;; into one un-extractable mess.  We could use just the parts before the
-  ;; first comma in each string, but that loses when a user has a comma in
-  ;; their name ("Jr." etc).
-;  (if (and (boundp 'vm-chop-full-name-function)
-;	   (eq vm-chop-full-name-function 'mail-extract-address-components))
-;      ;; Good, VM is using mail-extr.el to do its parsing.  That means
-;      ;; we can trust the junk in the pre-parsed message data.
-;      (let ((n (vm-su-full-name msg))
-;	    (a (vm-su-from msg)))
-;	;; if logged in user sent this, use recipients.
-;	(if (string-match (bbdb-user-mail-names) (or a ""))
-;	    (setq n (vm-su-to-names msg)
-;		  a (vm-su-to msg)))
-;	(if (= (length n) 0) (setq n nil))
-;	(if (= (length a) 0) (setq a nil))
-;	(if (equal n a) (setq n nil))
-;	(list n a))
-  ;; Bad, VM isn't using mail-extr, so we need to find the folder buffer
-  ;; and parse out the From: field ourselves...
   (save-excursion
 	(save-restriction
 	  ;; Select the buffer containing the message.
 	  ;; Needed to handle VM virtual folders.
 	  (set-buffer (vm-buffer-of msg))
-	  ;; If the header is MIME-encoded, mail-extr goes bananas. We can
-	  ;; partly get around this by switching to VM's MIME-decoded
-	  ;; buffer, if present.
-	  (if vm-presentation-buffer
-		  (set-buffer vm-presentation-buffer)
-		(widen)
-		(narrow-to-region (vm-start-of msg) (vm-end-of msg)))
-	  (let ((from (mail-fetch-field "from")))
+	  ;; If the header is MIME-encoded, mail-extr goes
+	  ;; bananas. Actually, mail-extr can't really handle the decoded
+	  ;; headers either. Foo.
+	  (vm-decode-mime-message-headers msg)
+	  (let ((from (or (vm-get-header-contents msg "From:" ", ")
+					  (vm-grok-From_-author msg))))
 		(if (or (null from)
 				(string-match (bbdb-user-mail-names)
 							  ;; mail-strip-quoted-names is too broken!
@@ -93,9 +76,7 @@
 								  "")))
 			;; if logged in user sent this, use recipients.
 			(setq from (or (mail-fetch-field "to") from)))
-		from)))
-										;    )
-  )
+		from))))
 
 ;;;###autoload
 (defun bbdb/vm-update-record (&optional offer-to-create)
@@ -108,25 +89,25 @@ the user confirms the creation."
     (vm-check-for-killed-summary)
     (vm-error-if-folder-empty)
     (if bbdb-use-pop-up
-	(bbdb/vm-pop-up-bbdb-buffer offer-to-create)
+		(bbdb/vm-pop-up-bbdb-buffer offer-to-create)
       (let ((msg (car vm-message-pointer))
-	    (inhibit-local-variables nil) ; vm binds this to t...
-	    (enable-local-variables t)    ; ...or vm bind this to nil.
-	    (inhibit-quit nil))  ; vm damn well better not bind this to t!
-	;; this doesn't optimize the case of moving thru a folder where
-	;; few messages have associated records.
-	(or (bbdb-message-cache-lookup msg nil)	; nil = current-buffer
-	    (and msg
-		 (let ((from (bbdb/vm-get-from msg)))
-		   (if from
-		       (bbdb-encache-message
-			msg
-			(bbdb-annotate-message-sender
-			 from t
-			 (or (bbdb-invoke-hook-for-value
-			      bbdb/mail-auto-create-p)
-			     offer-to-create)
-			 offer-to-create))))))))))
+			(inhibit-local-variables nil) ; vm binds this to t...
+			(enable-local-variables t)    ; ...or vm bind this to nil.
+			(inhibit-quit nil))  ; vm damn well better not bind this to t!
+		;; this doesn't optimize the case of moving thru a folder where
+		;; few messages have associated records.
+		(or (bbdb-message-cache-lookup msg nil)	; nil = current-buffer
+			(and msg
+				 (let ((from (bbdb/vm-get-from msg)))
+				   (if from
+					   (bbdb-encache-message
+						msg
+						(bbdb-annotate-message-sender
+						 from t
+						 (or (bbdb-invoke-hook-for-value
+							  bbdb/mail-auto-create-p)
+							 offer-to-create)
+						 offer-to-create))))))))))
 
 ;;;###autoload
 (defun bbdb/vm-annotate-sender (string &optional replace)
@@ -221,26 +202,25 @@ Respects vm-summary-uninteresting-senders."
 (defun bbdb-insinuate-vm ()
   "Call this function to hook BBDB into VM."
   (cond ((boundp 'vm-select-message-hook) ; VM 5.36+
-	 (add-hook 'vm-select-message-hook 'bbdb/vm-update-record))
-	((boundp 'vm-show-message-hook)	; VM 5.32.L+
-	 (add-hook 'vm-show-message-hook 'bbdb/vm-update-record))
-	(t
-	 (error "vm versions older than 5.36 no longer supported")
+		 (add-hook 'vm-select-message-hook 'bbdb/vm-update-record))
+		((boundp 'vm-show-message-hook)	; VM 5.32.L+
+		 (add-hook 'vm-show-message-hook 'bbdb/vm-update-record))
+		(t
+		 (error "vm versions older than 5.36 no longer supported")
 
-	 ;; Hack on to vm-record-and-change-message-pointer, since VM 5.32
-	 ;; doesn't have vm-show-message-hook.
-	 (or (fboundp 'bbdb-orig-vm-record-and-change-message-pointer)
-	     (fset 'bbdb-orig-vm-record-and-change-message-pointer
-		   (symbol-function 'vm-record-and-change-message-pointer)))
-	 (fset 'vm-record-and-change-message-pointer
-	       (symbol-function 'bbdb/vm-record-and-change-message-pointer))
-	 ))
+		 ;; Hack on to vm-record-and-change-message-pointer, since VM 5.32
+		 ;; doesn't have vm-show-message-hook.
+		 (or (fboundp 'bbdb-orig-vm-record-and-change-message-pointer)
+			 (fset 'bbdb-orig-vm-record-and-change-message-pointer
+				   (symbol-function 'vm-record-and-change-message-pointer)))
+		 (fset 'vm-record-and-change-message-pointer
+			   (symbol-function 'bbdb/vm-record-and-change-message-pointer))
+		 ))
   (define-key vm-mode-map ":" 'bbdb/vm-show-sender)
   (define-key vm-mode-map ";" 'bbdb/vm-edit-notes)
   ;; VM used to inherit from mail-mode-map, so bbdb-insinuate-sendmail
   ;; did this.  Kyle, you loser.
   (if (boundp 'vm-mail-mode-map)
-      (define-key vm-mail-mode-map "\M-\t" 'bbdb-complete-name))
-  )
+      (define-key vm-mail-mode-map "\M-\t" 'bbdb-complete-name)))
 
 (provide 'bbdb-vm)
