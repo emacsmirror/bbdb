@@ -1,3 +1,47 @@
+2002-01-15  Waider  <waider@waider.ie>
+
+	* testing/bbdb-test.el:
+	  New file
+
+	* bits/make.bat:
+	  Merged in some changes from the mailing list. Note, this is
+	  still experimental.
+
+	* lisp/bbdb-com.el:
+	  Don't fset things that aren't ours
+	  Last of compiler warning cleanup
+	  Fixed one more completion bug
+
+	* Makefile.in:
+	  Ignore 'testing' directory when making tarball
+
+2002-01-14  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-hooks.el:
+	  Conditionalise the rmail load
+
+	* lisp/bbdb-gui.el:
+	  Make X/Emacs compatibility less intrusive
+
+2002-01-13  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-hooks.el:
+	  Don't force VM on people, even if it is a great mailer...
+
+2002-01-10  Waider  <waider@waider.ie>
+
+	* bbdb-com.el:
+	  Last few fixes (hopefully) to completion
+
+	* lisp/bbdb-snarf.el:
+	  Make bbdb-rfc822-addresses the default address parser
+	  Remove test-harness code to elsewhere (i.e. not in user code!)
+
+	* lisp/bbdb.el:
+	  Changed the workaround for set-keymap-prompt, as it seemed to be
+	  clashing with VM. Ideally, all this Emacs/XEmacs stuff should go
+	  in a separate file, or at least all in one part of bbdb.el.
+
 2002-01-06  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-xemacs.el, lisp/bbdb-srv.el, lisp/bbdb-sc.el,
@@ -15,7 +59,7 @@
 	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
 	Replaced the call of bbdb-clean-username bt a call to
 	mail-extract-address-components in order to handle addresses of
-	the form "Lastname, Fistname" and "Firstnam Lastname, Jr" in the
+	the form "Lastname, Firstname" and "Firstname Lastname, Jr" in the
 	right way.
 	(bbdb-test/bbdb-extract-address-components): New test function to
 	check if everything is working as it should.
