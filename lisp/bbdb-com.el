@@ -286,7 +286,7 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
       (setq next-record-cons (car (cdr (memq record-cons bbdb-records)))))
   (let ((position (point))
         (marker (nth 2 record-cons))
-        (next-marker (nth 2 next-record-cons))
+        next-marker
         (buffer-read-only nil))
     (bbdb-debug
      (if (null record-cons) (error "doubleplus ungood: record unexists!"))
@@ -295,10 +295,11 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
     (goto-char marker)
     (if delete-p nil
       (bbdb-format-record (car record-cons) (car (cdr record-cons))))
-    (delete-region (point) (or next-marker (point-max)))
-    (if (< position (or next-marker (point-max)))
+    (setq next-marker (or (nth 2 next-record-cons) (point-max)))
+    (delete-region (point) next-marker)
+    (if (< position next-marker)
         (goto-char position)
-      (goto-char (- (or next-marker (point-max)) 2)))
+      (goto-char (- (point-max) 2)))
     
     (save-excursion
       (run-hooks 'bbdb-list-hook))

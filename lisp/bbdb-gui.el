@@ -191,12 +191,16 @@
               start (marker-position (nth 2 (car rest)))
               end (1- (or (nth 2 (car (cdr rest))) (point-max))))
 
+        (if (< start (point-min)) (setq start (point-min)))
+        (if (> end (point-max)) (setq end (point-max)))
+        
         (mapcar (function (lambda(o)
                             (if o  ;; may start with nil
                                 (if (eq (bbdb-extent-property o 'data) 'bbdb)
                                     (bbdb-delete-extent o)))))
                 (bbdb-extents-in start end))
 
+        
         (bbdb-set-extent-property (setq e (bbdb-make-extent start end))
                                   'highlight t)
         (bbdb-set-extent-property e 'data 'bbdb)
