@@ -23,7 +23,7 @@ Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
-Copyright (c) 2000-2004 The BBDB Development Team
+Copyright (c) 2000-present The BBDB Development Team
 @end ifinfo
 
 @titlepage
@@ -37,7 +37,7 @@ Copyright @copyright{} 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
 Copyright @copyright{} 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
-Copyright @copyright{} 2000-2004 The BBDB Development Team
+Copyright @copyright{} 2000-present The BBDB Development Team
 
 @sp 2
 This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
@@ -1157,6 +1157,10 @@ mail or news-reading interfaces (@xref{Interfaces}.). @refill
 
 @cindex Creating new records
 @cindex Adding new records
+
+There is als @w{@kbd{bbdb-snarf}} (@xref{bbdb-snarf}), which will
+attempt to create a record from a text block. Note that this depends
+on particular formatting and may not do exactly what you want.
 
 @node BBDB Mode, Interfaces, The BBDB, Top
 @section BBDB Mode
