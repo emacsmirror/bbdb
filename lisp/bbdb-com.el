@@ -2032,7 +2032,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                     (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
                     (goto-char (match-end 0))
                     (point))))
-         (typed (downcase (buffer-substring beg end)))
+         (orig (buffer-substring beg end))
+         (typed (downcase orig))
          (pattern (bbdb-string-trim typed))
          (ht (bbdb-hashtable))
          ;; make a unique set of matching records (yeah-yeah-this-one),
@@ -2048,8 +2049,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                  (let* ((recs (and (boundp sym) (symbol-value sym)))
                         nets)
                    (while (and (not nets) recs)
-                     (if (not (setq nets (bbdb-record-net (car recs))))
-                         ()
+                     (when (setq nets (bbdb-record-net (car recs)))
                        (if (memq (car recs) yeah-yeah-this-one)
                            (setq nets '()) ;; already have it...
                          ;; only zero out only-one-p if we've already
@@ -2062,11 +2062,12 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                  (cons sym all-the-completions))))
                      (setq recs (cdr recs)))
                    nets))))
-         (completion (try-completion pattern ht pred)))
+         (completion (try-completion pattern ht pred))
+         (exact-match (eq completion t)))
 
     ;; Danger, Will Robinson! try-completion returns 't' for an exact
     ;; match. We correct for that here.
-    (if (eq completion t)
+    (if exact-match
         (setq yeah-yeah-this-one (bbdb-gethash pattern ht)
               only-one-p (= (length yeah-yeah-this-one) 1)
               completion pattern
@@ -2093,7 +2094,11 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
      ;; No matches found OR you're trying completion on an
      ;; already-completed record. In the latter case, we might have to
      ;; cycle through the nets for that record.
-     ((null completion)
+     ((or (null completion)
+          (and exact-match;; which is a net of the record
+               (member orig
+                       (bbdb-record-net
+                        (car (symbol-value (intern-soft pattern ht)))))))
       ;; Clean up the completion buffer, if it exists
       (bbdb-complete-name-cleanup)
       ;; Check for cycling
@@ -2103,9 +2108,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                 (throw 'bbdb-cycling-exit nil))
 
             ;; find the record we're working on.
-            (let* ((addr (funcall
-                          bbdb-extract-address-components-func
-                          pattern))
+            (let* ((addr (funcall bbdb-extract-address-components-func orig))
                    (rec
                     (if (listp addr)
                         ;; for now, we're ignoring the case where this
@@ -2118,24 +2121,36 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
               (or rec
                   (throw 'bbdb-cycling-exit nil))
 
-              (let* ((addrs (mapcar 'downcase (bbdb-record-net rec)))
-                     (this-addr (or (cadr (member (cadar addr) addrs))
-                                    (nth 0 addrs))))
-                (if (= (length addrs) 1)
-                    ;; no alternatives. don't signal an error.
-                    (throw 'bbdb-cycling-exit t)
-                  ;; replace with new mail address
-                  (delete-region beg end)
-                  (insert (bbdb-dwim-net-address rec this-addr))
-                  (throw 'bbdb-cycling-exit t)))))
+              (if current-prefix-arg
+                  ;; use completion buffer
+                  (let ((standard-output (get-buffer-create "*Completions*")))
+                    ;; a previously existing buffer has to be cleaned first
+                    (save-excursion (set-buffer standard-output)
+                                    (setq buffer-read-only nil)
+                                    (erase-buffer))
+                    (display-completion-list
+                     (mapcar (lambda (n) (bbdb-dwim-net-address rec n))
+                             (bbdb-record-net rec)))
+                    (delete-region beg end)
+                    (switch-to-buffer standard-output))
+                ;; use next address 
+                (let* ((addrs (bbdb-record-net rec))
+                       (this-addr (or (cadr (member (cadar addr) addrs))
+                                      (nth 0 addrs))))
+                  (if (= (length addrs) 1)
+                      ;; no alternatives. don't signal an error.
+                      (throw 'bbdb-cycling-exit t)
+                    ;; replace with new mail address
+                    (delete-region beg end)
+                    (insert (bbdb-dwim-net-address rec this-addr))
+                    (throw 'bbdb-cycling-exit t))))))
 
           ;; FALL THROUGH
           ;; Check mail aliases
-          (if (and bbdb-expand-mail-aliases (expand-abbrev))
-              ()
-            (when bbdb-complete-name-hooks
-              (message "completion for \"%s\" unfound." pattern)
-              (ding))))) ;; no matches, sorry!
+          (when (and (not (and bbdb-expand-mail-aliases (expand-abbrev)))
+                     bbdb-complete-name-hooks)
+            (message "completion for \"%s\" unfound." pattern)
+            (ding)))) ;; no matches, sorry!
 
      ;; Perfect match for a single record
      ((and only-one-p (string= completion pattern))
@@ -2147,8 +2162,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
         ;;(error "recs is longer than expected"))
 
         (while recs
-          (if (not (bbdb-record-net (car recs)))
-              ()
+          (when (bbdb-record-net (car recs))
             (if (string= pattern
                          (downcase (or (bbdb-record-name (car recs)) "")))
                 (setq match-recs (cons (car recs) match-recs)
@@ -2218,7 +2232,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
         (while (and (stringp completion)
                     (not (string= completion last))
                     (setq last completion
-                          pattern (downcase (buffer-substring beg end))
+                          pattern (downcase orig)
                           completion (try-completion pattern ht pred)))
           (if (stringp completion)
               (progn (delete-region beg end)
