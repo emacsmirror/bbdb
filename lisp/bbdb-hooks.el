@@ -35,6 +35,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.57  1998/04/11 07:20:59  simmonmt
+;; Colin Rafferty's patch adding autoload cookies back.
+;; Made `format-time-string' take two arguments for XEmacs 19.15.
+;;
 ;; Revision 1.56  1998/03/10 07:37:13  simmonmt
 ;; Fixed customization of bbdb-auto-notes-alist
 ;;
@@ -68,19 +72,23 @@
 (defvar bbdb-time-internal-format "%Y-%m-%d"
   "The internal date format.")
 
+;;;###autoload
 (defun bbdb-timestamp-hook (record)
   "For use as a bbdb-change-hook; maintains a notes-field called `timestamp'
 for the given record which contains the time when it was last modified.  If
 there is such a field there already, it is changed, otherwise it is added."
   (bbdb-record-putprop record 'timestamp (format-time-string
-					  bbdb-time-internal-format)))
+					  bbdb-time-internal-format
+					  (current-time))))
 
+;;;###autoload
 (defun bbdb-creation-date-hook (record)
   "For use as a bbdb-create-hook; adds a notes-field called `creation-date'
 which is the current time string."
   ;; hey buddy, we've known about your antics since the eighties...
   (bbdb-record-putprop record 'creation-date (format-time-string
-					      bbdb-time-internal-format)))
+					      bbdb-time-internal-format
+					      (current-time))))
 
 
 ;;; Determining whether to create a record based on the content of the 
@@ -109,6 +117,7 @@ message.  This will not necessarily be in the current buffer."
 	))
 
 
+;;;###autoload
 (defun bbdb-extract-field-value (field-name)
   "Given the name of a field (like \"Subject\") this returns the value of
 that field in the current message, or nil.  This works whether you're in
@@ -176,6 +185,7 @@ See also bbdb-ignore-most-messages-alist, which has the opposite effect."
 		  (regexp :tag "Regex to match on header value"))))
 
 
+;;;###autoload
 (defun bbdb-ignore-most-messages-hook (&optional invert-sense)
   "For use as the value of bbdb/news-auto-create-p or bbdb/mail-auto-create-p.
 This will automatically create BBDB entries for messages which match
@@ -207,6 +217,7 @@ the bbdb-ignore-some-messages-alist (which see) and *no* others."
 	done)))
 
 
+;;;###autoload
 (defun bbdb-ignore-some-messages-hook ()
   "For use as a bbdb/news-auto-create-hook or bbdb/mail-auto-create-hook.
 This will automatically create BBDB entries for messages which do *not*
@@ -323,6 +334,7 @@ only to a particular header field, rather than the entire message."
 		  (regexp :tag "Regexp to match on header value"))))
 
 
+;;;###autoload
 (defun bbdb-auto-notes-hook (record)
   "For use as a bbdb-notice-hook.  This might automatically add some text
 to the notes field of the BBDB record corresponding to the current record
@@ -494,6 +506,7 @@ which behave the same way."
   (list 'substring string
 	(list 'match-beginning match) (list 'match-end match)))
 
+;;;###autoload
 (defun sample-bbdb-canonicalize-net-hook (addr)
   (cond
    ;;
