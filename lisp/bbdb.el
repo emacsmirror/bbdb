@@ -1337,7 +1337,9 @@ the raw field content and return a string."
   (setq mode-line-buffer-identification
         (if (> n 0)
             (list 24
-                  (replace-in-string bbdb-buffer-name "^\\*\\|\\*$" "")
+                  (if (string-match "^\\*\\(.+\\)\\*$"  bbdb-buffer-name)
+                      (match-string 1 bbdb-buffer-name)
+                    "BBDB")
                   ": "
                   (list 10
                         (format "%d/%d" n (length (bbdb-records))))
