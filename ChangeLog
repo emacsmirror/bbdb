@@ -1,3 +1,18 @@
+2004-03-22  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-migrate.el: * Minor docstring fix (Stefan Monnier)
+	* Catch error if attempting to kill only window in frame 
+	 (Stefan Monnier)
+
+	* lisp/bbdb-snarf.el:
+	  Namespace pollution fix (digit => bbdb-digit) (Stefan Monnier)
+
+	* lisp/bbdb.el: * restore auto-create behaviour (Robert Widhopf-Fenk)
+
+	* lisp/bbdb-com.el:
+	* Bugfix for bug caused by previous patch (Robert Widhopf-Fenk)
+	* Additions to alias generation (Robert Widhopf-Fenk)
+
 2004-02-01  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-snarf.el (bbdb-merge-interactively):
