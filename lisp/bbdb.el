@@ -1,5 +1,4 @@
 ;;; -*- Mode:Emacs-Lisp -*-
-
 ;;; This file is the core of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
 ;;; See the file bbdb.texinfo for documentation.
@@ -290,7 +289,9 @@ gnus-Select-group-hook for GNUS) instead."
 name change, that is, when the \"real name\" in a message doesn't correspond
 to a record already in the database with the same network address.  As in,
 \"John Smith <jqs@frob.com>\" versus \"John Q. Smith <jqs@frob.com>\".
-Normally you will be asked if you want to change it."
+Normally you will be asked if you want to change it.
+If set to a number it is the nuber of seconds to sit for while displaying the
+mismatch message."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Prompt for name changes" nil)
                  (const :tag "Do not prompt for name changes" t)))
@@ -1262,7 +1263,7 @@ news interfaces.  If `bbdb-pop-up-elided-display' is unbound, then
 (defmacro bbdb-pop-up-elided-display ()
   '(if (boundp 'bbdb-pop-up-elided-display)
        bbdb-pop-up-elided-display
-       bbdb-elided-display))
+     bbdb-elided-display))
 
 (defun bbdb-frob-mode-line (n)
   (setq mode-line-buffer-identification
@@ -1544,8 +1545,8 @@ a list of strings (the new way of doing things.)  Returns the new list."
   (bbdb-record-set-net record (bbdb-split (bbdb-record-net record) ",")))
 
 (defun bbdb-split (string separators)
-  "Splits a string into a list of strings, splitting on the characters in
-separators.  Returns the list."
+  "Return a list by splitting STRING at SEPARATORS.
+The inverse function of `bbdb-join'."
   (let (result
         (not-separators (concat "^" separators)))
     (save-excursion
@@ -1567,6 +1568,12 @@ separators.  Returns the list."
       (erase-buffer))
     (nreverse result)))
 
+(defun bbdb-join (list separator)
+  "Join a LIST to a string where the list elements are separated by SEPARATOR.
+The inverse function of `bbdb-split'."
+  (let (string)
+    (if (null list) nil
+      (mapconcat 'identity list separator))))
 
 (defsubst bbdb-hash-record (record)
   "Insert the record in the appropriate hashtables.  This must be called
@@ -2546,11 +2553,16 @@ before the record is created, otherwise it is created without confirmation
         ;; no further action required
         nil
       ;; otherwise, the db is writable, and we may create a record.
+      ;; first try to get a reasonable default name if not given
+      ;; often I get things like <firstname>.<surname>@ ... 
+      (if (or (null name) (and (stringp name) (string= "" name)))
+	  (if (string-match "^[^@]+" net)
+	      (setq name (bbdb-snarf-nice-real-name (match-string 0 net)))))
       (setq record (if (or (null prompt-to-create-p)
-                           (bbdb-y-or-n-p (format "%s is not in the db; rectify? "
-                                                  (or name net))))
-                       (make-vector bbdb-record-length nil))
-            created-p (not (null record)))
+			   (bbdb-y-or-n-p (format "%s is not in the db; add? "
+						  (or name net))))
+		       (make-vector bbdb-record-length nil))
+	    created-p (not (null record)))
       (if record
           (bbdb-record-set-cache record (make-vector bbdb-cache-length nil)))
       (if created-p (bbdb-invoke-hook 'bbdb-create-hook record)))
@@ -2575,47 +2587,50 @@ before the record is created, otherwise it is created without confirmation
                                        (downcase tmp)))))))
           ;; have a message-name, not the same as old name.
           (cond (bbdb-readonly-p nil)
-                ((and bbdb-quiet-about-name-mismatches
-                      old-name)
-                 (if (not bbdb-silent-running)
-                     (message "name mismatch: \"%s\" has changed to \"%s\""
-                              (bbdb-record-name record) name)
-                   (sit-for 1)))
+		((and bbdb-quiet-about-name-mismatches old-name)
+		 (let ((sit-for-secs
+			(if (numberp bbdb-quiet-about-name-mismatches)
+			    bbdb-quiet-about-name-mismatches
+			  2)))
+		   (if (or bbdb-silent-running (= 0 sit-for-secs)) nil
+ 		     (message "name mismatch: \"%s\" changed to \"%s\""
+ 			      (bbdb-record-name record) name)
+		     (sit-for sit-for-secs))))
                 ((or created-p
                      (if bbdb-silent-running t
-                       (if (null old-name)
-                           (bbdb-y-or-n-p
-                            (format "Assign name \"%s\" to address \"%s\"? "
-                                    name (car (bbdb-record-net record))))
-                         (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
+		       (if (null old-name)
+			   (bbdb-y-or-n-p
+			    (format "Assign name \"%s\" to address \"%s\"? "
+				    name (car (bbdb-record-net record))))
+			 (bbdb-y-or-n-p (format "Change name \"%s\" to \"%s\"? "
                                                 old-name name)))))
-                 (setq change-p 'sort)
-                 (and old-name bbdb-use-alternate-names
+ 		 (setq change-p 'sort)
+ 		 (and old-name bbdb-use-alternate-names
                       (if bbdb-silent-running
                           (bbdb-record-set-aka record
                                                (cons old-name
                                                      (bbdb-record-aka record)))
                           (if (bbdb-y-or-n-p
                                (format "Keep name \"%s\" as an AKA? "
-                                       old-name))
-                              (bbdb-record-set-aka record
-                                                   (cons old-name
-                                                         (bbdb-record-aka record)))
-                              (bbdb-remhash (downcase old-name) record))))
-                 (bbdb-record-set-namecache record nil)
-                 (bbdb-record-set-firstname record fname)
-                 (bbdb-record-set-lastname record lname)
-                 (bbdb-debug (or fname lname
-                                 (error "bbdb: should have a name by now")))
-                 (bbdb-puthash (downcase (bbdb-record-name record)) record))
-                ((and old-name
+ 						old-name))
+ 			 (bbdb-record-set-aka record
+					      (cons old-name
+						    (bbdb-record-aka record)))
+			 (bbdb-remhash (downcase old-name) record))))
+ 		 (bbdb-record-set-namecache record nil)
+ 		 (bbdb-record-set-firstname record fname)
+ 		 (bbdb-record-set-lastname record lname)
+ 		 (bbdb-debug (or fname lname
+ 				 (error "bbdb: should have a name by now")))
+		 (bbdb-puthash (downcase (bbdb-record-name record)) record))
+ 		((and old-name
                       bbdb-use-alternate-names)
                  (if (not bbdb-silent-running)
-                     (bbdb-y-or-n-p
-                      (format "Make \"%s\" an alternate for \"%s\"? "
-                              name old-name)))
-                 (setq change-p 'sort)
-                 (bbdb-record-set-aka
+		     (bbdb-y-or-n-p
+		      (format "Make \"%s\" an alternate for \"%s\"? "
+			      name old-name)))
+ 		 (setq change-p 'sort)
+ 		 (bbdb-record-set-aka
                   record (cons name (bbdb-record-aka record)))
                  (bbdb-puthash (downcase name) record))))
 
@@ -2696,6 +2711,7 @@ before the record is created, otherwise it is created without confirmation
           (bbdb-change-record record (eq change-p 'sort)))
       (bbdb-invoke-hook 'bbdb-notice-hook record)
       record))))
+
 
 
 ;;; window configuration hackery
@@ -2872,7 +2888,7 @@ passed as arguments to initiate the appropriate insinuations.
   (fset 'advertized-bbdb-delete-current-field-or-record
         'bbdb-delete-current-field-or-record)
 
-  (load "bbdb-autoloads" t)
+  (require 'bbdb-autoloads)
 
   (while to-insinuate
     (let* ((feature (car to-insinuate))
@@ -2912,6 +2928,7 @@ passed as arguments to initiate the appropriate insinuations.
   (define-key bbdb-mode-map [(S)]          'bbdb-mode-search-map)
 
   (define-key bbdb-mode-map [(*)]          'bbdb-apply-next-command-to-all-records)
+  (define-key bbdb-mode-map [(a)]          'bbdb-add-or-remove-mail-alias)
   (define-key bbdb-mode-map [(e)]          'bbdb-edit-current-field)
   (define-key bbdb-mode-map [(n)]          'bbdb-next-record)
   (define-key bbdb-mode-map [(p)]          'bbdb-prev-record)
