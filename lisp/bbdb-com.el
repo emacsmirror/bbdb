@@ -801,7 +801,7 @@ With any other argument append will be enabled once."
 
 ;;;###autoload
 (defun bbdb-insert-new-field (record name contents)
-  "Add a new field to the current record ; the field type and contents
+  "Add a new field to the current record; the field type and contents
 are prompted for if not supplied.
 
 If you are inserting a new phone-number field, you can control whether
@@ -818,7 +818,6 @@ depending on your environment, (getenv \"DOMAINNAME\")), and
 \"@mycompany.com\" will be appended to an address that is entered as
 just a username.  A prefix arg of ^U (or a `bbdb-default-domain'
 value of \"\", the default) means do not alter the address."
-
   (interactive (let ((record (or (bbdb-current-record t)
                                  (error "current record unexists!")))
                      (name "")
@@ -2770,10 +2769,11 @@ when dialling (international dialing prefix.)"
   :type '(choice (const :tag "No digits required" nil)
                  (string :tag "Dial this first" "1")))
 
-(defcustom bbdb-sound-player "/usr/demo/SOUND/play"
+(defcustom bbdb-sound-player nil
   "The program to be used to play the sounds for the touch-tone digits."
   :group 'bbdb-phone-dialing
-  :type 'file)
+  :type '(choice (const :tag "No External Player" nil)
+                 (file :tag "Sound Player" "/usr/local/bin/play")))
 
 (defcustom bbdb-sound-files
   '["/usr/demo/SOUND/sounds/touchtone.0.au"
@@ -2814,18 +2814,18 @@ This is only used if bbdb-modem-dial is set to nil."
   :group 'bbdb-phone-dialing
   :type 'integer)
 
-(defun bbdb-play-sound( num &optional volume )
+(defun bbdb-play-sound (num &optional volume)
   "Play the specified touchtone number NUM at VOLUME.
-Tries to use internal sound if available; falls back to
-bbdb-sound-player."
-  (if (featurep 'native-sound)
+Uses external program `bbdb-sound-player' if set, otherwise
+try to use internal sound if available."
+  (if (and (not bbdb-sound-player) (featurep 'native-sound))
       ;; This requires the sound files to be loaded via bbdb-xemacs.
-      (funcall 'play-sound (intern (concat "touchtone" num))
+      (funcall 'play-sound (intern (format "touchtone%d" num))
                bbdb-sound-volume)
     (if (and bbdb-sound-player
              (file-exists-p bbdb-sound-player))
         (call-process bbdb-sound-player nil nil nil
-                      (aref bbdb-sound-files (string-to-int num)))
+                      (aref bbdb-sound-files num))
       (error "BBDB has no means of playing sound."))))
 
 (eval-and-compile
@@ -2858,8 +2858,8 @@ a pause in the dial sequence."
           ((eq ?  d)
            ;; if we use sit-for, the user can interrupt!
            (sleep-for 1)) ;; configurable?
-          ((memq d '(0 1 2 3 4 5 6 7 8 9))
-           (bbdb-play-sound d))
+          ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+           (bbdb-play-sound (- (char-int d) (char-int ?0))))
           (t)))) phone-string)
 
     ;; tell the user that we're dialed, if we're using the modem
@@ -2875,7 +2875,7 @@ a pause in the dial sequence."
           (write-region (point-min) (point-max) bbdb-modem-device t)))))
 
 ;;;###autoload
-(defun bbdb-dial(phone force-area-code)
+(defun bbdb-dial (phone force-area-code)
   "Dial the number at point.
 If the point is at the beginning of a record, dial the first
 phone number.  Does not dial the extension.  Does not apply the
