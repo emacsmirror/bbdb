@@ -1,3 +1,27 @@
+2002-10-19  Steve Youngs  <youngs@xemacs.org>
+
+	* bits/bbdb-pgp.el
+	(bbdb-utilities-pgp): New.
+	(bbdb/pgp-field): defvar -> defcustom.
+	(bbdb/pgp-method): Ditto.
+	(bbdb/pgp-default-action): Ditto.
+
+2002-10-20  Waider  <waider@waider.ie>
+
+	* bits/bbdb-pgp.el:
+	Allow bbdb-pgp.el to be configured to use message.el MML tags to perform
+          the signing and encryption, instead of only plain Mailcrypt which is not
+          MIME-aware. (Michael Shields)
+
+2002-09-17  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el:
+	Treat bbdb-canonicalize-net-hook as an actual hook. Some prompting &
+	code from Micha Wiedenmann. NB documentation not yet updated.
+
+	* texinfo/bbdb.texinfo:
+	Added dircategory (Jochen Küpper)
+
 2002-08-19  Jim Blandy  <jimb@redhat.com>
 
 	* lisp/bbdb-com.el (bbdb-complete-name): Don't choke if the
