@@ -115,7 +115,8 @@ prompt the users on how to merge records when duplicates are detected.")
    (concat "BBDB " bbdb-version)
    (append
     ;; non user variables
-    '(bbdb-version-date
+    '(emacs-version
+      bbdb-version-date
       bbdb-file-format
       bbdb-no-duplicates-p)
     ;; user variables
@@ -335,6 +336,18 @@ This must be a number, not a string."
   :group 'bbdb-record-creation
   :type '(choice (const :tag "none" nil)
                  (integer :tag "Area code" :value "312")))
+
+(defcustom bbdb-default-domain nil
+  "*The default domain to append when prompting for a new net address.
+If the address entered does not contain `[@%!]', `@bbdb-default-domain'
+will be appended to it.
+
+The address will not be altered if bbdb-default-domain remains at its
+default value of nil, or if one provides a prefix argument to the
+bbdb-insert-new-field command."
+  :group 'bbdb-record-creation
+  :type '(choice (const :tag "none" nil)
+                 (string :tag "Domain" :value nil)))
 
 (defcustom bbdb-north-american-phone-numbers-p t
   "*Set this to nil if you want to enter phone numbers that aren't the same
@@ -2289,6 +2302,7 @@ Variables of note:
 \t bbdb-case-fold-search
 \t bbdb-completion-type
 \t bbdb-default-area-code
+\t bbdb-default-domain
 \t bbdb-electric-p
 \t bbdb-elided-display
 \t bbdb-file
