@@ -37,6 +37,9 @@
 
 (require 'bbdb)
 
+(defvar rmail-buffer)
+(defvar mh-show-buffer)
+
 (defmacro the-v18-byte-compiler-sucks-wet-farts-from-dead-pigeons ()
   ;; no such thing as eval-when, no way to conditionally require something
   ;; at compile time (except this!! <evil laughter> )
@@ -195,10 +198,9 @@ the bbdb-ignore-most-messages-alist (which see) and *no* others."
     done)))
 
 ;;; Provided by Bill Carpenter.
-(defvar bbdb-ignore-selected-messages-confirmation
-  "*If bbdb-ignore-selected-messages-hook is used as an
-auto-create-hook, this variable governs whether you are prompted for
-creation of BBDB entries." nil)
+(defvar bbdb-ignore-selected-messages-confirmation nil
+  "*If bbdb-ignore-selected-messages-hook is used as an auto-create-hook, this
+  variable governs whether you are prompted for creation of BBDB entries.")
 
 ;;;###autoload
 (defun bbdb-ignore-selected-messages-hook ()
@@ -209,7 +211,7 @@ bbdb-ignore-most-messages-alist.  It first looks at the SOME list.  If
 that doesn't disqualify a message, then it looks at the MOST list.  If
 that qualifies the message, the record is auto-created, but a
 confirmation is conditionally sought, based on the value of
-bbdb-ignore-selected-messages-confirmation."
+`bbdb-ignore-selected-messages-confirmation'."
   (if (bbdb-ignore-some-messages-hook)
       ;; wasn't ruled out
       (if (bbdb-ignore-most-messages-hook)
@@ -367,7 +369,7 @@ the variables `bbdb-auto-notes-alist' and `bbdb-auto-notes-ignore'."
          (marker (bbdb-header-start))
          field pairs fieldval  ; do all bindings here for speed
          regexp string notes-field-name notes
-         replace-p replace-or-add-msg)
+         replace-p)
     (set-buffer (marker-buffer marker))
     (save-restriction
       (widen)
@@ -612,5 +614,33 @@ For use as a value of `bbdb-change-hook'.  See `bbdb-net-redundant-p'."
        (setq new (nreverse new))
        (bbdb-record-set-net record new)
        t))))
+
+
+
+;;;###autoload
+(defun bbdb-force-record-create ()
+  "Force automatic creation of a BBDB records for the current message.
+You might add this to the reply hook of your MUA in order to automatically
+get records added for those people you reply to."
+  (interactive)
+  (let ((bbdb/mail-auto-create-p t)
+        (bbdb/news-auto-create-p t)
+        (bbdb-message-caching-enabled nil)
+        (bbdb/gnus-update-records-mode 'annotating)
+        (bbdb/rmail-update-records-mode 'annotating)
+        (bbdb/mhe-update-records-mode 'annotating)
+        (bbdb/vm-update-records-mode 'annotating))
+    (save-excursion
+      (cond ((member major-mode '(vm-mode vm-virtual-mode vm-summary-mode
+                                          vm-presentation-mode))
+             (bbdb/vm-pop-up-bbdb-buffer))
+            ((member major-mode '(gnus-summary-mode gnus-article-mode
+                                                    gnus-tree-mode))
+             (bbdb/gnus-pop-up-bbdb-buffer))
+            ((member major-mode '(rmail-mode rmail-summary-mode))
+             (bbdb/rmail-pop-up-bbdb-buffer))
+            ((member major-mode '(mhe-mode mhe-summary-mode))
+             (bbdb/gnus-pop-up-bbdb-buffer))
+            ))))
 
 (provide 'bbdb-hooks)
