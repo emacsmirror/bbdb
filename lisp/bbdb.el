@@ -84,13 +84,11 @@ prompt the users on how to merge records when duplicates are detected.")
 (eval-when-compile              ; pacify the compiler
  (defvar bbdb-address-print-formatting-alist) ; "bbdb-print"
  (defvar mail-mode-map)         ; "sendmail"
+ (autoload 'widget-group-match "wid-edit")
+ (autoload 'Electric-pop-up-window "electric")
+ (autoload 'Electric-command-loop "electric")
+ (autoload 'bbdb-snarf-nice-real-name "bbdb-snarf")
  )
-
-(autoload 'widget-group-match "wid-edit")
-(autoload 'Electric-pop-up-window "electric")
-(autoload 'Electric-command-loop "electric")
-(autoload 'bbdb-snarf-nice-real-name "bbdb-snarf")
-
 
 ;; Make custom stuff work even without customize
 ;;   Courtesy of Hrvoje Niksic <hniksic@srce.hr>
