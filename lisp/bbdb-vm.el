@@ -22,6 +22,10 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.56  2000/03/31 09:58:50  bbdb-writer
+;; (bbdb/vm-get-from): If there's a presentation buffer, get the address
+;; from there, since it will be MIME-decoded.
+;;
 ;; Revision 1.55  1998/04/11 07:06:47  simmonmt
 ;; Colin Rafferty's patch adding autoload cookies back
 ;;
@@ -65,27 +69,32 @@
 ;	(if (= (length a) 0) (setq a nil))
 ;	(if (equal n a) (setq n nil))
 ;	(list n a))
-    ;; Bad, VM isn't using mail-extr, so we need to find the folder buffer
-    ;; and parse out the From: field ourselves...
-    (save-excursion
-      (save-restriction
-	;; Select the buffer containing the message.
-	;; Needed to handle VM virtual folders.
-	(set-buffer (vm-buffer-of msg))
-	(widen)
-	(narrow-to-region (vm-start-of msg) (vm-end-of msg))
-	(let ((from (mail-fetch-field "from")))
-	  (if (or (null from)
-		  (string-match (bbdb-user-mail-names)
-				;; mail-strip-quoted-names is too broken!
-				;;(mail-strip-quoted-names from)
-				(or (car (cdr (mail-extract-address-components
-					       from)))
-				    "")))
-	      ;; if logged in user sent this, use recipients.
-	      (setq from (or (mail-fetch-field "to") from)))
-	  from)))
-;    )
+  ;; Bad, VM isn't using mail-extr, so we need to find the folder buffer
+  ;; and parse out the From: field ourselves...
+  (save-excursion
+	(save-restriction
+	  ;; Select the buffer containing the message.
+	  ;; Needed to handle VM virtual folders.
+	  (set-buffer (vm-buffer-of msg))
+	  ;; If the header is MIME-encoded, mail-extr goes bananas. We can
+	  ;; partly get around this by switching to VM's MIME-decoded
+	  ;; buffer, if present.
+	  (if vm-presentation-buffer
+		  (set-buffer vm-presentation-buffer)
+		(widen)
+		(narrow-to-region (vm-start-of msg) (vm-end-of msg)))
+	  (let ((from (mail-fetch-field "from")))
+		(if (or (null from)
+				(string-match (bbdb-user-mail-names)
+							  ;; mail-strip-quoted-names is too broken!
+							  ;;(mail-strip-quoted-names from)
+							  (or (car (cdr (mail-extract-address-components
+											 from)))
+								  "")))
+			;; if logged in user sent this, use recipients.
+			(setq from (or (mail-fetch-field "to") from)))
+		from)))
+										;    )
   )
 
 ;;;###autoload
