@@ -2698,7 +2698,7 @@ displayed record, respectively.
 \\[bbdb-create]\t Create a new record.
 \\[bbdb-toggle-records-display-layout]\t Toggle whether the current record is displayed in a \
 one-line\n\t listing, or a full multi-line listing.
-\\[bbdb-apply-next-command-to-all-records]\\[bbdb-elide-record]\t Do that \
+\\[bbdb-apply-next-command-to-all-records]\\[bbdb-toggle-records-display-layout]\t Do that \
 for all displayed records.
 \\[bbdb-refile-record]\t Merge the contents of the current record with \
 some other, and then\n\t delete the current record.  See this command's \
