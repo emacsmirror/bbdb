@@ -145,9 +145,6 @@ the user confirms the creation."
         records cache)
     (save-excursion
       (set-buffer (get-buffer gnus-article-buffer))
-      (message ">>%s<<<<<< flags"
-               (gnus-summary-article-mark
-                (gnus-summary-article-number)))
       (if (and msg-id (not bbdb/gnus-offer-to-create))
           (setq cache (bbdb-message-cache-lookup msg-id)))
       (if cache
