@@ -143,13 +143,13 @@
 (defvar global-bbdb-menu-commands
   '(["Save BBDB" bbdb-save-db t]
     ["Elide All Records" bbdb-elide-record t]
-    ["Finger All Records" bbdb-finger-record t]
+    ["Finger All Records" (bbdb-finger (mapcar 'car bbdb-records)) t]
     ["BBDB Manual" bbdb-info t]
     ["BBDB Quit" bbdb-bury-buffer t]
     ))
 
 (defun build-bbdb-finger-menu (record)
-  (let ((addrs (bbdb-record-net record)))
+  (let ((addrs (bbdb-record-finger-host record)))
     (if (cdr addrs)
 	(cons "Finger..."
 	      (nconc
@@ -288,5 +288,21 @@
 	 (build-bbdb-menu record field))))))
 
 (bbdb-add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
+
+;; Utility functions that mask others to provide XEmacs-specific functionality
+(defun bbdb-xemacs-display-completion-list (list &optional callback data)
+  "Wrapper for display-completion-list.  Allows callbacks on XEmacs
+display-completion-list is called with `:activate-callback CALLBACK'
+if CALLBACK is non-nil. `:user-data DATA' is also used if DATA is
+non-nil.  Neither are used if CALLBACK is nil."
+  (cond ((and callback data)
+	 (display-completion-list list
+				  :activate-callback callback
+				  :user-data data))
+	(callback
+	 (display-completion-list list
+				  :activate-callback callback))
+	(t
+	 (display-completion-list list))))
 
 (provide 'bbdb-xemacs)
