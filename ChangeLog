@@ -1,7 +1,32 @@
+2001-04-16  Waider  <waider@waider.ie>
+
+	* configure.in Makefile.in lisp/Makefile.in tex/Makefile.in 
+	  texinfo/Makefile.in utils/Makefile.in
+	Make sure RM is set, since apparently it's not set in BSD Make by
+	default.
+	
+	* lisp/bbdb-com.el: 
+	Whoops. Stray quote mark.
+
+2001-04-15  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el:
+	Added John F. Whitehead's default mail domain patch.
+	Hack around some silliness in GNU Emacs completion code
+
+	* lisp/bbdb.el:
+	Added emacs-version to bug report text.
+	Added John F. Whitehead's default-domain patch.
+
+2001-03-30  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-gnus.el:
+	Fix list-vs-not bug in bbdb/gnus-edit-notes
+
 2001-03-29  Robert Fenk  <fenk@forwiss.de>
 
-	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): Fixed a bug in
-	gettiung the header content.  mail-fetch-field requires a final
+	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): Fixed a bug in 
+	getting the header content.  mail-fetch-field requires a final
 	newline! 
 
 2001-03-26  Robert Fenk  <fenk@forwiss.de>
