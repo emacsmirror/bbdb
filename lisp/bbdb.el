@@ -3116,9 +3116,16 @@ passed as arguments to initiate the appropriate insinuations.
   (beep 1)
   (apply 'message args))
 
-;; Hook in GUI hacks
-(or (eq window-system nil)
-    (add-hook 'bbdb-list-hook 'bbdb-fontify-buffer))
+(defcustom bbdb-gui (not (null window-system))
+  "*Should the *BBDB* buffer be fontified?
+This variable has no effect if set outside of customize."
+  :group 'bbdb
+  :type 'boolean
+  :set (lambda (symb val)
+         (set symb val)
+         (if val
+             (add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
+             (remove-hook 'bbdb-list-hook 'bbdb-fontify-buffer))))
 
 (provide 'bbdb)  ; provide before loading things which might require
 
