@@ -31,6 +31,10 @@
 (require 'bbdb-com)
 
 (define-key bbdb-mode-map 'button3 'bbdb-menu)
+(define-key bbdb-mode-map 'button2 '(lambda (e)
+                                      (interactive "e")
+                                      (mouse-set-point e)
+                                      (bbdb-elide-record nil)))
 
 (or (find-face 'bbdb-name)
     (face-differs-from-default-p (make-face 'bbdb-name))
