@@ -36,79 +36,10 @@
 ;;
 ;; $Id$
 ;;
-;; $Log$
-;; Revision 1.65  1998/11/02 07:07:50  simmonmt
-;; Change mailing list address
-;;
-;; Revision 1.64  1998/10/10 18:49:27  simmonmt
-;; From slbaur - Switch from `screen' functions to `frame' functions
-;;
-;; Revision 1.63  1998/04/11 07:26:05  simmonmt
-;; Changed documentation for bbdb-load-hook, added bbdb-initialize hook.
-;; Began to remove support for advertized-bbdb-delete-current-field-or-record.
-;; Moved everything except the insinuation code out of bbdb-initialize.
-;; Added bbdb-mode-search-map for search commands in BBDB buffer prefixed
-;; by S.  Added more bindings to BBDB buffer
-;;
-;; Revision 1.62  1998/03/16 07:48:00  simmonmt
-;; Released 2.00
-;;
-;; Revision 1.61  1998/03/13 09:53:38  simmonmt
-;; Colin's changes for the error message and for field size
-;;
-;; Revision 1.60  1998/03/10 07:45:44  simmonmt
-;; Fixed defface standin.  Created widget (bbdb-alist-with-header) for
-;; bbdb-auto-notes-alist customization fix.  Changed defaults for
-;; bbdb-create-hook and bbdb-change-hook to create timestamp and
-;; creation-date fields.  Added autoload for bbdb-srv.
-;;
-;; Revision 1.59  1998/02/23 07:20:44  simmonmt
-;; Created deffaces standing macro, added to bbdb-initialize for
-;; bbdb-print and bbdb-ftp, added autoload for bbdb-com, use native
-;; add-hook if we can, fset it to bbdb-add-hook otherwise.
-;;
-;; Revision 1.58  1998/01/06 06:39:49  simmonmt
-;; Added define-widget definition for users without Custom.  Added Custom
-;; groups for utilities (print, finger, etc).  Moved migration code to
-;; bbdb-migrate.el.  Commented some code (mostly code dealing with the
-;; manipulation of the internal database representation).  Added code to
-;; `bbdb-initialize' that allows for the selective insinuation of the
-;; BBDB into various external packages.
-;;
-;;
-;; Revision 1.57.1.1  1997/12/01 15:10:58  simmonmt
-;; BBDB 1.57A (documentation)
-;;
-;; Revision 1.57  1997/12/01 05:15:01  simmonmt
-;; Added migration code, customized variables, created record-copying
-;; function, moved automatically-executing code into bbdb-initialize
-;; function, documented defstruct.
-;;
-;; Revision 1.56  1997/11/02 07:45:31  simmonmt
-;; Added bbdb-warn and code to avoid it for XEmacs users.  Reformatted
-;; autoloads (again).  Autoloads for sc.
-;;
-;; Revision 1.55  1997/10/26 05:25:00  simmonmt
-;; New autoloads.  Override bbdb-display-completion-list for XEmacs users
-;;
-;; Revision 1.54  1997/10/12 00:04:42  simmonmt
-;; Added documentation and keymap definition for bbdb-www.  Added
-;; autoloads for bbdb-www (and friends), bbdb-snarf, and
-;; bbdb-insinuate-message
-;;
-;; Revision 1.53  1997/10/06 01:12:49  simmonmt
-;; Version number format changes
-;;
-;; Revision 1.52  1997/09/28 05:54:24  simmonmt
-;; Began to fix some obsolete functions to shut up the compiler,
-;; integrated some patches (see ChangeLog) to allow use of message-mail
-;; for sending mail and nil names.
-;;
-;;
 
 (require 'timezone)
 
-(defconst bbdb-version "2.00.03")
+(defconst bbdb-version "2.00.04")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
@@ -2570,12 +2501,18 @@ the window will be split vertically rather than horizontally."
 	  (set-buffer b)
 	  t)))))
 
-(defun bbdb-version ()
-  (interactive)
+(defun bbdb-version (&optional arg)
+  "Return string describing the version of the BBDB that is running.
+When called interactively with a prefix argument, insert string at point."
+  (interactive "P")
   (let ((version-string (format "BBDB version %s (%s)"
 			       bbdb-version bbdb-version-date)))
-    (if (interactive-p) (message version-string)
-      version-string)))
+    (cond
+     (arg
+      (insert (message version-string)))
+     ((interactive-p)
+      (message version-string))
+     (t version-string))))
 
 ;;; resorting, which really shouldn't be necesary...
 
