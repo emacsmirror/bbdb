@@ -8,20 +8,22 @@
 #
 # If you don't have VM, the "VM=" line *must* be commented out.
 
-VMDIR   	= /usr/local/lib/xemacs-19.14/lisp/vm/
-GNUSDIR 	= /usr/local/lib/xemacs-19.14/lisp/gnus/
-MHEDIR 		= /usr/local/lib/xemacs-19.14/lisp/mh-e/
+VMDIR   	= /p/local/xemacs-20.3/lib/xemacs-20.3-b24/lisp/vm
+GNUSDIR 	= /home/simmonmt/gnus/lisp
+MHEDIR 		= /p/local/xemacs-20.3/lib/xemacs-20.3-b24/lisp/mh-e
 
 # use this line for VM versions 5.31 and earlier
-#VM	= -l $(VMDIR)vm-version.elc -l $(VMDIR)vm-vars.elc -l $(VMDIR)vm.elc
+#VM	= -l $(VMDIR)/vm-version.elc -l $(VMDIR)/vm-vars.elc -l $(VMDIR)/vm.elc
 
 # use this line for VM versions 5.32 and later
-VM	= -l $(VMDIR)vm.elc
+VM	= -l $(VMDIR)/vm.elc
 
-GNUS	= -l $(GNUSDIR)nntp.elc -l $(GNUSDIR)gnus.elc
-MHE	= -l $(MHEDIR)mh-e.elc
+GNUS	= -eval '(setq load-path (cons "$(GNUSDIR)" load-path))' \
+	  -l $(GNUSDIR)/nntp.elc -l $(GNUSDIR)/gnus.elc
+MHE	= -l $(MHEDIR)/mh-e.elc
 
         EMACS = xemacs
+     MAKEINFO = makeinfo
           TAR = tar
      COMPRESS = gzip --verbose --best
  COMPRESS_EXT = gz
@@ -33,45 +35,45 @@ MHE	= -l $(MHEDIR)mh-e.elc
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
 DEPSRCS=	bbdb-com.el  bbdb-hooks.el  bbdb-gnus.el  bbdb-mhe.el \
-		bbdb-rmail.el  bbdb-vm.el bbdb-415-510.el bbdb-213-310.el \
-		bbdb-ftp.el  bbdb-whois.el  bbdb-xemacs.el  bbdb-print.el \
-		bbdb-srv.el
-DEPBINS=	bbdb-com.elc bbdb-hooks.elc bbdb-gnus.elc bbdb-mhe.elc \
-		bbdb-rmail.elc bbdb-vm.elc bbdb-415-510.elc bbdb-213-310.elc \
-		bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc bbdb-print.elc \
-		bbdb-srv.elc
-SRCS=		bbdb.el  $(DEPSRCS) mail-abbrevs.el \
-		mail-extr.el advice.el
-BINS=		bbdb.elc $(DEPBINS) mail-abbrevs.elc \
-		mail-extr.elc
+		bbdb-rmail.el bbdb-vm.el bbdb-ftp.el bbdb-whois.el \
+		bbdb-xemacs.el bbdb-print.el bbdb-srv.el bbdb-reportmail.el
+
+DEPBINS=	${DEPSRCS:.el=.elc}
+SRCS=		bbdb.el  $(DEPSRCS)
+BINS=		bbdb.elc $(DEPBINS)
 
 syntax:
 	@echo "" ;\
 	echo "*** make one or more of: rmail vm mhe gnus all bbdb" ;\
 	echo "" ;\
-	exit 1
 
-all:	rmail gnus vm mhe
+all:	rmail gnus vm mhe info
 
-mail-extr.elc: mail-extr.el
-	$(EMACS) -batch -q -f batch-byte-compile $(@:.elc=.el)
+info:	bbdb.info
 
-mail-abbrevs.elc: mail-abbrevs.el
-	$(EMACS) -batch -q -f batch-byte-compile $(@:.elc=.el)
+bbdb.info: bbdb.texinfo
+	$(MAKEINFO) bbdb.texinfo
 
-advice.elc: advice.el
-	$(EMACS) -batch -q -f batch-byte-compile $(@:.elc=.el)
+auto-autoloads.elc: auto-autoloads.el
+	$(EMACS) -batch -q -f batch-byte-compile ./auto-autoloads.el
+
+install-pkg: all auto-autoloads.elc bbdb.info
+	mkdir -p ../etc/bbdb
+
+bbdb.elc:            bbdb.el
+bbdb-com.elc:        bbdb.elc bbdb-com.el
+bbdb-ftp.elc:        bbdb.elc bbdb-ftp.el
+bbdb-print.elc:      bbdb.elc bbdb-print.el
+bbdb-reportmail.elc: bbdb.elc bbdb-reportmail.el
+bbdb-srv.elc:        bbdb.elc bbdb-srv.el
+bbdb-whois.elc:      bbdb.elc bbdb-whois.el
+bbdb-xemacs.elc:     bbdb.elc bbdb-xemacs.el
+
+.el.elc:
+	$(EMACS) -batch -q -l ./bbdb.elc -f batch-byte-compile $<
 
 bbdb.elc:	bbdb.el
 	$(EMACS) -batch -q -f batch-byte-compile ./bbdb.el
-
-
-#$(DEPBINS):
-#	$(EMACS) -batch -q -l ./bbdb.elc $(OLOADS) -f batch-byte-compile $(@:.elc=.el)
-
-
-bbdb-com.elc:	bbdb.elc bbdb-com.el
-	$(EMACS) -batch -q -l ./bbdb.elc -f batch-byte-compile $(@:.elc=.el)
 
 bbdb-gnus.elc:	bbdb.elc bbdb-gnus.el
 	$(EMACS) -batch -q -l ./bbdb.elc $(GNUS) -f batch-byte-compile $(@:.elc=.el)
@@ -82,25 +84,15 @@ bbdb-rmail.elc:	bbdb.elc bbdb-rmail.el
 bbdb-vm.elc:	bbdb.elc bbdb-vm.el
 	$(EMACS) -batch -q -l ./bbdb.elc $(VM) -f batch-byte-compile $(@:.elc=.el)
 
-bbdb-xemacs.elc: bbdb.elc bbdb-com.elc bbdb-xemacs.el
-	$(EMACS) -batch -q -l ./bbdb.elc -l ./bbdb-com.elc -f batch-byte-compile $(@:.elc=.el)
-bbdb-print.elc:	bbdb.elc bbdb-com.elc bbdb-print.el
-	$(EMACS) -batch -q -l ./bbdb.elc -l ./bbdb-com.elc -f batch-byte-compile $(@:.elc=.el)
-bbdb-ftp.elc:	bbdb.elc bbdb-com.elc bbdb-ftp.el
-	$(EMACS) -batch -q -l ./bbdb.elc -l ./bbdb-com.elc -f batch-byte-compile $(@:.elc=.el)
-bbdb-whois.elc:	bbdb.elc bbdb-com.elc bbdb-whois.el
-	$(EMACS) -batch -q -l ./bbdb.elc -l ./bbdb-com.elc -f batch-byte-compile $(@:.elc=.el)
-bbdb-srv.elc:	bbdb.elc bbdb-com.elc bbdb-srv.el
-	$(EMACS) -batch -q -l ./bbdb.elc -l ./bbdb-com.elc -f batch-byte-compile $(@:.elc=.el)
-
 # bbdb-hooks uses VM macros if it can find VM.  If you don't have VM,
 # then the $(VM) makefile variable should be undefined or empty.
 bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
 	$(EMACS) -batch -q -l ./bbdb.elc $(VM) -f batch-byte-compile $(@:.elc=.el)
 
 
-extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc mail-abbrevs.elc bbdb-xemacs.elc bbdb-srv.elc
-bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc mail-extr.elc extras
+extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc bbdb-srv.elc \
+	bbdb-reportmail.elc
+bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc extras
 rmail:	bbdb bbdb-rmail.elc
 vm:	bbdb bbdb-vm.elc
 mhe:	bbdb bbdb-mhe.elc
@@ -110,11 +102,10 @@ mh:	mhe
 mh-e:	mhe
 
 clean:
-	$(RM) bbdb.elc bbdb-*.elc mail-extr.elc mail-abbrevs.elc
+	$(RM) bbdb.elc bbdb-*.elc bbdb.info auto-autoloads.elc
 
 TARFILES=	bbdb-Makefile bbdb.texinfo bbdb.el $(DEPSRCS) \
-		mail-abbrevs.el mail-extr.el bbdb-print.tex \
-		multicol.tex
+		bbdb-print.tex multicol.tex
 
 tar: $(TARFILES)
 	@NAME=`sed -n							     \
