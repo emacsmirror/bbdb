@@ -17,7 +17,7 @@ up-to-date and OVERRIDE to decide who gets precedence if two dates
 match. DATE can be extracted from a notes if it's an alist with an
 element marked timestamp. Set OVERRIDE to 'new to allow the new record
 to stomp on existing data, 'old to preserve existing data or nil to
-merge both together . If it can't find a record to merge with, it will
+merge both together. If it can't find a record to merge with, it will
 create a new record. If MERGE-RECORD is set, it's a record discovered
 by other means that should be merged with.
 
@@ -217,5 +217,45 @@ If s1 doesn't contain s2, return s1+sep+s2."
             new-records))
   ;; hack
   (setq bbdb-buffer (or (get-file-buffer bbdb-file) nil)))
+
+(defun bbdb-add-or-update-phone ( record location phone-string )
+  "Add or update a phone number in the current record.
+
+Insert into RECORD phone number for LOCATION consisting of
+PHONE-STRING. Will automatically overwrite an existing phone entry for
+the same location."
+  (let* ((phone (make-vector (if bbdb-north-american-phone-numbers-p
+                                 bbdb-phone-length
+                               2)
+                             nil)))
+    (if (= 2 (length phone))
+        (aset phone 1 phone-string)
+      (let ((newp (bbdb-parse-phone-number phone-string)))
+        (bbdb-phone-set-area phone (nth 0 newp))
+        (bbdb-phone-set-exchange phone (nth 1 newp))
+        (bbdb-phone-set-suffix phone (nth 2 newp))
+        (bbdb-phone-set-extension phone (or (nth 3 newp) 0))))
+    (bbdb-phone-set-location phone location)
+
+    ;; "phone" now contains a suitable record
+    ;; we need to check if this is already in the phones list
+    (let ((phones (bbdb-record-phones record))
+          phones-list)
+      (setq phones-list phones)
+      (while (car phones-list)
+        (if (string= (bbdb-phone-location (car phones-list))
+                     location)
+            (setq phones (delete (car phones-list) phones)))
+        (setq phones-list (cdr phones-list)))
+
+
+      (bbdb-record-set-phones record
+                              (nconc phones (list phone))))
+    (bbdb-change-record record nil)
+
+    ;; update display if record is visible
+    (and (get-buffer-window bbdb-buffer-name)
+         (bbdb-display-records (list record)))
+    nil))
 
 (provide 'bbdb-merge)
