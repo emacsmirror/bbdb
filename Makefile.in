@@ -84,7 +84,7 @@ cvsclean:
 
 # tarball
 tar: $(TARFILES)
-	@if test "x$(TAR)" = "x" ; then                                    \
+	@if test "x$(TAR)" = "x" ; then                                        \
           echo "Sorry, no \`tar' program available." ;                     \
         else                                                               \
           name=`sed -n 's/^(defconst bbdb-version "\([0-9]\.[0-9][0-9]*\).*/bbdb-\1/p' lisp/bbdb.el` ;                                                    \
@@ -93,7 +93,8 @@ tar: $(TARFILES)
             echo "Sorry, no compression program available." ;              \
             echo "The tarball will not be compressed." ;                   \
             echo "creating tar file $${name}.tar..." ;                     \
-            $(TAR) --exclude=CVS  --exclude=".*" -vchf $${name}.tar        \
+            $(TAR) --exclude=CVS --exclude=testing  --exclude=".*"         \
+            -vchf $${name}.tar                                             \
             `echo $(TARFILES) | sed "s|^|$${name}/|g; s| | $${name}/|g"` ; \
           else                                                             \
             echo "creating tar file $${name}.tar.$(COMPEXT)..." ;          \
