@@ -37,6 +37,13 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.63  1998/04/11 07:26:05  simmonmt
+;; Changed documentation for bbdb-load-hook, added bbdb-initialize hook.
+;; Began to remove support for advertized-bbdb-delete-current-field-or-record.
+;; Moved everything except the insinuation code out of bbdb-initialize.
+;; Added bbdb-mode-search-map for search commands in BBDB buffer prefixed
+;; by S.  Added more bindings to BBDB buffer
+;;
 ;; Revision 1.62  1998/03/16 07:48:00  simmonmt
 ;; Released 2.00
 ;;
@@ -95,7 +102,7 @@
 
 (require 'timezone)
 
-(defconst bbdb-version "2.00")
+(defconst bbdb-version "2.00.01")
 (defconst bbdb-version-date "$Date$")
 
 ;; File format
@@ -580,6 +587,15 @@ the BBDB is reverted."
   :type 'hook)
 
 (defcustom bbdb-load-hook nil
+  "*Hook or hooks invoked when the BBDB code is first loaded.
+
+WARNING:  This hook will be run the first time you traverse the Custom menus
+          for the BBDB.  As a result, nothing slow should be added to
+          this hook."
+  :group 'bbdb-hooks
+  :type 'hook)
+
+(defcustom bbdb-initialize-hook nil
   "*Hook or hooks invoked (with no arguments) when the Insidious Big Brother 
 Database initialization function `bbdb-initialize' is run."
   :group 'bbdb-hooks
@@ -587,6 +603,8 @@ Database initialization function `bbdb-initialize' is run."
 
 (defvar bbdb-mode-map nil
   "Keymap for Insidious Big Brother Database listings.")
+(defvar bbdb-mode-search-map nil
+  "Keymap for Insidious Big Brother Database searching")
 
 
 ;;; These are the buffer-local variables we use.
@@ -1904,7 +1922,7 @@ You can move around using the usual cursor motion commands.
 \\<bbdb-mode-map>
 \\[bbdb-edit-current-field]\t edit the field on the current line.
 \\[bbdb-record-edit-notes]\t shortcut for editing the 'notes' field.
-\\[advertized-bbdb-delete-current-field-or-record]\t delete the field on the \
+\\[bbdb-delete-current-field-or-record]\t delete the field on the \
 current line.  If the current line is the\n\t first line of a record, then \
 this deletes the entire record from\n\t the database.
 \\[bbdb-insert-new-field]\t inserts a new field into the current record, as \
@@ -2618,140 +2636,7 @@ passed as arguments to initiate the appropriate insinuations.
    w3         Initialize BBDB support for Web browsers."
   
   (fset 'advertized-bbdb-delete-current-field-or-record
-	'bbdb-delete-current-field-or-record)
-
-  (if bbdb-mode-map
-      nil
-    (setq bbdb-mode-map (make-keymap))
-    (suppress-keymap bbdb-mode-map)
-    (define-key bbdb-mode-map "*"      'bbdb-apply-next-command-to-all-records)
-    (define-key bbdb-mode-map "e"      'bbdb-edit-current-field)
-    (define-key bbdb-mode-map "n"      'bbdb-next-record)
-    (define-key bbdb-mode-map "p"      'bbdb-prev-record)
-    (define-key bbdb-mode-map "d"      'advertized-bbdb-delete-current-field-or-record)
-    (define-key bbdb-mode-map "\^K"    'bbdb-delete-current-field-or-record)
-    (define-key bbdb-mode-map "\^O"    'bbdb-insert-new-field)
-    (define-key bbdb-mode-map "s"      'bbdb-save-db)
-    (define-key bbdb-mode-map "\^X\^S" 'bbdb-save-db)
-    (define-key bbdb-mode-map "r"      'bbdb-refile-record)
-    (define-key bbdb-mode-map "t"      'bbdb-elide-record)
-    (define-key bbdb-mode-map "o"      'bbdb-omit-record)
-    (define-key bbdb-mode-map ";"      'bbdb-record-edit-notes)
-    (define-key bbdb-mode-map "m"      'bbdb-send-mail)
-    (define-key bbdb-mode-map "\M-d"   'bbdb-dial)
-    (define-key bbdb-mode-map "f"      'bbdb-finger)
-    (define-key bbdb-mode-map "i"      'bbdb-info)
-    (define-key bbdb-mode-map "?"      'bbdb-help)
-    (define-key bbdb-mode-map "q"      'bbdb-bury-buffer)
-    (define-key bbdb-mode-map "\^X\^T" 'bbdb-transpose-fields)
-    (define-key bbdb-mode-map "W"      'bbdb-www)
-    (define-key bbdb-mode-map "P"      'bbdb-print)
-
-  )
-
-  (let ((bbdbid "Insidious Big Brother Database autoload"))
-
-    ;; tie it all together...
-    ;;
-    (autoload 'bbdb	    "bbdb-com" bbdbid t)
-    (autoload 'bbdb-name    "bbdb-com" bbdbid t)
-    (autoload 'bbdb-company "bbdb-com" bbdbid t)
-    (autoload 'bbdb-net	    "bbdb-com" bbdbid t)
-    (autoload 'bbdb-notes   "bbdb-com" bbdbid t)
-    (autoload 'bbdb-changed "bbdb-com" bbdbid t)
-    (autoload 'bbdb-create  "bbdb-com" bbdbid t)
-    (autoload 'bbdb-dial    "bbdb-com" bbdbid t)
-    (autoload 'bbdb-finger  "bbdb-com" bbdbid t)
-    (autoload 'bbdb-info    "bbdb-com" bbdbid t)
-    (autoload 'bbdb-help    "bbdb-com" bbdbid t)
-    
-    (autoload 'bbdb-insinuate-vm      "bbdb-vm"    "Hook BBDB into VM")
-    (autoload 'bbdb-insinuate-rmail   "bbdb-rmail" "Hook BBDB into RMAIL")
-    (autoload 'bbdb-insinuate-mh      "bbdb-mhe"   "Hook BBDB into MH-E")
-    (autoload 'bbdb-insinuate-gnus    "bbdb-gnus"  "Hook BBDB into GNUS")
-    (autoload 'bbdb-insinuate-message "bbdb-gnus"  "Hook BBDB into message")
-    
-    (autoload 'bbdb-apply-next-command-to-all-records "bbdb-com" bbdbid t)
-    
-    (autoload 'bbdb-insert-new-field               "bbdb-com" bbdbid t)
-    (autoload 'bbdb-edit-current-field             "bbdb-com" bbdbid t)
-    (autoload 'bbdb-transpose-fields               "bbdb-com" bbdbid t)
-    (autoload 'bbdb-record-edit-notes              "bbdb-com" bbdbid t)
-    (autoload 'bbdb-delete-current-field-or-record "bbdb-com" bbdbid t)
-    (autoload 'bbdb-delete-current-record          "bbdb-com" bbdbid t)
-    (autoload 'bbdb-refile-record                  "bbdb-com" bbdbid t)
-    (autoload 'bbdb-elide-record                   "bbdb-com" bbdbid t)
-    (autoload 'bbdb-omit-record                    "bbdb-com" bbdbid t)
-    (autoload 'bbdb-send-mail                      "bbdb-com" bbdbid t)
-    (autoload 'bbdb-show-all-recipients            "bbdb-com" bbdbid t)
-    (autoload 'bbdb-complete-name                  "bbdb-com" bbdbid t)
-    (autoload 'bbdb-yank                           "bbdb-com" bbdbid t)
-    (autoload 'bbdb-completion-predicate           "bbdb-com" bbdbid)
-    (autoload 'bbdb-dwim-net-address               "bbdb-com" bbdbid)
-    (autoload 'bbdb-redisplay-records              "bbdb-com" bbdbid)
-    (autoload 'bbdb-define-all-aliases             "bbdb-com" bbdbid)
-    (autoload 'bbdb-read-addresses-with-completion "bbdb-com" bbdbid)
-    (autoload 'bbdb-record-edit-property           "bbdb-com" bbdbid t)
-    (autoload 'bbdb-timestamp-older                "bbdb-com" bbdbid t)
-    (autoload 'bbdb-timestamp-newer                "bbdb-com" bbdbid t)
-    (autoload 'bbdb-creation-older                 "bbdb-com" bbdbid t)
-    (autoload 'bbdb-creation-newer                 "bbdb-com" bbdbid t)
-    (autoload 'bbdb-creation-no-change             "bbdb-com" bbdbid t)
-    
-    (autoload 'bbdb/vm-show-sender              "bbdb-vm"    bbdbid t)
-    (autoload 'bbdb/vm-annotate-sender          "bbdb-vm"    bbdbid t)
-    (autoload 'bbdb/vm-update-record            "bbdb-vm"    bbdbid t)
-    (autoload 'bbdb/rmail-show-sender           "bbdb-rmail" bbdbid t)
-    (autoload 'bbdb/rmail-annotate-sender       "bbdb-rmail" bbdbid t)
-    (autoload 'bbdb/rmail-update-record         "bbdb-rmail" bbdbid t)
-    (autoload 'bbdb/mh-show-sender              "bbdb-mhe"   bbdbid t)
-    (autoload 'bbdb/mh-annotate-sender          "bbdb-mhe"   bbdbid t)
-    (autoload 'bbdb/mh-update-record            "bbdb-mhe"   bbdbid t)
-    (autoload 'bbdb/gnus-show-sender            "bbdb-gnus"  bbdbid t)
-    (autoload 'bbdb/gnus-annotate-sender        "bbdb-gnus"  bbdbid t)
-    (autoload 'bbdb/gnus-update-record          "bbdb-gnus"  bbdbid t)
-    (autoload 'bbdb/gnus-lines-and-from         "bbdb-gnus"  bbdbid nil)
-    (autoload 'bbdb/gnus-score                  "bbdb-gnus"  bbdbid nil)
-    
-    (autoload 'bbdb-extract-field-value          "bbdb-hooks" bbdbid nil)
-    (autoload 'bbdb-timestamp-hook               "bbdb-hooks" bbdbid nil)
-    (autoload 'bbdb-ignore-most-messages-hook    "bbdb-hooks" bbdbid nil)
-    (autoload 'bbdb-ignore-some-messages-hook    "bbdb-hooks" bbdbid nil)
-    (autoload 'bbdb-auto-notes-hook              "bbdb-hooks" bbdbid nil)
-    (autoload 'sample-bbdb-canonicalize-net-hook "bbdb-hooks" bbdbid nil)
-    (autoload 'bbdb-creation-date-hook	         "bbdb-hooks" bbdbid nil)
-    
-    (autoload 'bbdb-fontify-buffer                 "bbdb-xemacs" bbdbid nil)
-    (autoload 'bbdb-menu                           "bbdb-xemacs" bbdbid t)
-    (autoload 'bbdb-xemacs-display-completion-list "bbdb-xemacs" bbdbid nil)
-    
-    (autoload 'bbdb-www               "bbdb-w3" bbdbid nil)
-    (autoload 'bbdb-www-grab-homepage "bbdb-w3" bbdbid nil)
-    (autoload 'bbdb-insinuate-w3      "bbdb-w3" bbdbid nil)
-    
-    (autoload 'bbdb-migration-query             "bbdb-migrate" bbdbid nil)
-    (autoload 'bbdb-migrate                     "bbdb-migrate" bbdbid nil)
-    (autoload 'bbdb-migrate-rewrite-all         "bbdb-migrate" bbdbid nil)
-    (autoload 'bbdb-migrate-update-file-version "bbdb-migrate" bbdbid nil)
-    (autoload 'bbdb-unmigrate-record            "bbdb-migrate" bbdbid nil)
-
-    (autoload 'bbdb-ftp             "bbdb-ftp" bbdbid t)
-    (autoload 'bbdb-create-ftp-site "bbdb-ftp" bbdbid t)
-
-    (autoload 'bbdb-print                "bbdb-print"      bbdbid t)
-    (autoload 'bbdb-insinuate-reportmail "bbdb-reportmail" bbdbid nil)
-    (autoload 'bbdb-insinuate-sc         "bbdb-sc"         bbdbid nil)
-    (autoload 'bbdb-snarf                "bbdb-snarf"      bbdbid t)
-    (autoload 'bbdb-whois                "bbdb-whois"      bbdbid t)
-    (autoload 'bbdb-srv                  "bbdb-srv"        bbdbid t)
-
-    ;;; RMAIL, MHE, and VM interfaces might need these.
-    (autoload 'mail-strip-quoted-names "mail-utils")
-    (autoload 'mail-fetch-field "mail-utils")
-
-    ;;; All of the interfaces need this.
-    (autoload 'mail-extract-address-components "mail-extr")
-    )
+  	'bbdb-delete-current-field-or-record)
 
   ;; Mail/News readers
   (cond ((member 'Gnus to-insinuate)         ;; Gnus 3.14 or older
@@ -2807,28 +2692,187 @@ passed as arguments to initiate the appropriate insinuations.
   (if to-insinuate
       (while to-insinuate
 	(bbdb-warn "Unknown symbol %s in initialization arguments" (car to-insinuate))
-	(setq to-insinuate (cdr to-insinuate))))
+	(setq to-insinuate (cdr to-insinuate)))))
 
-  ;;; Support for the various Emacsen.  This is for features that the
-  ;;; BBDB adds to itself for different Emacsen.  For definitions of
-  ;;; functions that aren't present in various Emacsen (for example,
-  ;;; cadr for Emacs 19.34), see below
-  (cond ((string-match "XEmacs\\|Lucid" emacs-version)
-	 (bbdb-add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
-	 (define-key bbdb-mode-map 'button3 'bbdb-menu)
-
-	 ;; Above
-	 (fset 'bbdb-warn 'warn)
-	 
-	 ;; bbdb-com.el
-	 (fset 'bbdb-display-completion-list 'bbdb-xemacs-display-completion-list)
-	 ))
-  (if (not (fboundp 'add-hook))
-      (fset 'add-hook 'bbdb-add-hook))
-
-  (run-hooks 'bbdb-load-hook)
+;; Initialize keymaps
+(if bbdb-mode-search-map
+    nil
+  (define-prefix-command 'bbdb-mode-search-map)
+  (if (fboundp 'set-keymap-prompt)
+      (set-keymap-prompt bbdb-mode-search-map
+			 "(Search [n]ame, [c]ompany, net [a]ddress, n[o]tes)?"))
+  
+  (define-key bbdb-mode-search-map [(n)] 'bbdb-name)
+  (define-key bbdb-mode-search-map [(c)] 'bbdb-company)
+  (define-key bbdb-mode-search-map [(a)] 'bbdb-net)
+  (define-key bbdb-mode-search-map [(o)] 'bbdb-notes)
+  
   )
 
+(if bbdb-mode-map
+    nil
+  (setq bbdb-mode-map (make-keymap))
+  (suppress-keymap bbdb-mode-map)
+  
+  (define-key bbdb-mode-map [(S)]          'bbdb-mode-search-map)
+  
+  (define-key bbdb-mode-map [(*)]          'bbdb-apply-next-command-to-all-records)
+  (define-key bbdb-mode-map [(e)]          'bbdb-edit-current-field)
+  (define-key bbdb-mode-map [(n)]          'bbdb-next-record)
+  (define-key bbdb-mode-map [(p)]          'bbdb-prev-record)
+  (define-key bbdb-mode-map [(d)]          'bbdb-delete-current-field-or-record)
+  (define-key bbdb-mode-map [(control k)]  'bbdb-delete-current-field-or-record)
+  (define-key bbdb-mode-map [(control o)]  'bbdb-insert-new-field)
+  (define-key bbdb-mode-map [(s)]          'bbdb-save-db)
+  (define-key bbdb-mode-map [(control x) (control s)]
+                                           'bbdb-save-db)
+  (define-key bbdb-mode-map [(r)]          'bbdb-refile-record)
+  (define-key bbdb-mode-map [(t)]          'bbdb-elide-record)
+  (define-key bbdb-mode-map [(o)]          'bbdb-omit-record)
+  (define-key bbdb-mode-map [(?\;)]        'bbdb-record-edit-notes)
+  (define-key bbdb-mode-map [(m)]          'bbdb-send-mail)
+  (define-key bbdb-mode-map [(meta d)]     'bbdb-dial)
+  (define-key bbdb-mode-map [(f)]          'bbdb-finger)
+  (define-key bbdb-mode-map [(i)]          'bbdb-info)
+  (define-key bbdb-mode-map [(??)]         'bbdb-help)
+  (define-key bbdb-mode-map [(q)]          'bbdb-bury-buffer)
+  (define-key bbdb-mode-map [(control x) (control t)]
+                                           'bbdb-transpose-fields)
+  (define-key bbdb-mode-map [(W)]          'bbdb-www)
+  (define-key bbdb-mode-map [(P)]          'bbdb-print)
+  (define-key bbdb-mode-map [(h)]          'other-window)
+  (define-key bbdb-mode-map [(c)]          'bbdb-create)
+  (define-key bbdb-mode-map [(C)]          'bbdb-changed)
+  (define-key bbdb-mode-map [(b)]          'bbdb)
+  )
+
+;; Set up autoloads if they've not been done already
+(if (not (featurep 'bbdb-autoloads))
+    (let ((bbdbid "Insidious Big Brother Database autoload"))
+      
+      ;; tie it all together...
+      ;;
+      (autoload 'bbdb	    "bbdb-com" bbdbid t)
+      (autoload 'bbdb-name    "bbdb-com" bbdbid t)
+      (autoload 'bbdb-company "bbdb-com" bbdbid t)
+      (autoload 'bbdb-net	    "bbdb-com" bbdbid t)
+      (autoload 'bbdb-notes   "bbdb-com" bbdbid t)
+      (autoload 'bbdb-changed "bbdb-com" bbdbid t)
+      (autoload 'bbdb-create  "bbdb-com" bbdbid t)
+      (autoload 'bbdb-dial    "bbdb-com" bbdbid t)
+      (autoload 'bbdb-finger  "bbdb-com" bbdbid t)
+      (autoload 'bbdb-info    "bbdb-com" bbdbid t)
+      (autoload 'bbdb-help    "bbdb-com" bbdbid t)
+      
+      (autoload 'bbdb-insinuate-vm      "bbdb-vm"    "Hook BBDB into VM")
+      (autoload 'bbdb-insinuate-rmail   "bbdb-rmail" "Hook BBDB into RMAIL")
+      (autoload 'bbdb-insinuate-mh      "bbdb-mhe"   "Hook BBDB into MH-E")
+      (autoload 'bbdb-insinuate-gnus    "bbdb-gnus"  "Hook BBDB into GNUS")
+      (autoload 'bbdb-insinuate-message "bbdb-gnus"  "Hook BBDB into message")
+      
+      (autoload 'bbdb-apply-next-command-to-all-records "bbdb-com" bbdbid t)
+      
+      (autoload 'bbdb-insert-new-field               "bbdb-com" bbdbid t)
+      (autoload 'bbdb-edit-current-field             "bbdb-com" bbdbid t)
+      (autoload 'bbdb-transpose-fields               "bbdb-com" bbdbid t)
+      (autoload 'bbdb-record-edit-notes              "bbdb-com" bbdbid t)
+      (autoload 'bbdb-delete-current-field-or-record "bbdb-com" bbdbid t)
+      (autoload 'bbdb-delete-current-record          "bbdb-com" bbdbid t)
+      (autoload 'bbdb-refile-record                  "bbdb-com" bbdbid t)
+      (autoload 'bbdb-elide-record                   "bbdb-com" bbdbid t)
+      (autoload 'bbdb-omit-record                    "bbdb-com" bbdbid t)
+      (autoload 'bbdb-send-mail                      "bbdb-com" bbdbid t)
+      (autoload 'bbdb-show-all-recipients            "bbdb-com" bbdbid t)
+      (autoload 'bbdb-complete-name                  "bbdb-com" bbdbid t)
+      (autoload 'bbdb-yank                           "bbdb-com" bbdbid t)
+      (autoload 'bbdb-completion-predicate           "bbdb-com" bbdbid)
+      (autoload 'bbdb-dwim-net-address               "bbdb-com" bbdbid)
+      (autoload 'bbdb-redisplay-records              "bbdb-com" bbdbid)
+      (autoload 'bbdb-define-all-aliases             "bbdb-com" bbdbid)
+      (autoload 'bbdb-read-addresses-with-completion "bbdb-com" bbdbid)
+      (autoload 'bbdb-record-edit-property           "bbdb-com" bbdbid t)
+      (autoload 'bbdb-timestamp-older                "bbdb-com" bbdbid t)
+      (autoload 'bbdb-timestamp-newer                "bbdb-com" bbdbid t)
+      (autoload 'bbdb-creation-older                 "bbdb-com" bbdbid t)
+      (autoload 'bbdb-creation-newer                 "bbdb-com" bbdbid t)
+      (autoload 'bbdb-creation-no-change             "bbdb-com" bbdbid t)
+      
+      (autoload 'bbdb/vm-show-sender              "bbdb-vm"    bbdbid t)
+      (autoload 'bbdb/vm-annotate-sender          "bbdb-vm"    bbdbid t)
+      (autoload 'bbdb/vm-update-record            "bbdb-vm"    bbdbid t)
+      (autoload 'bbdb/rmail-show-sender           "bbdb-rmail" bbdbid t)
+      (autoload 'bbdb/rmail-annotate-sender       "bbdb-rmail" bbdbid t)
+      (autoload 'bbdb/rmail-update-record         "bbdb-rmail" bbdbid t)
+      (autoload 'bbdb/mh-show-sender              "bbdb-mhe"   bbdbid t)
+      (autoload 'bbdb/mh-annotate-sender          "bbdb-mhe"   bbdbid t)
+      (autoload 'bbdb/mh-update-record            "bbdb-mhe"   bbdbid t)
+      (autoload 'bbdb/gnus-show-sender            "bbdb-gnus"  bbdbid t)
+      (autoload 'bbdb/gnus-annotate-sender        "bbdb-gnus"  bbdbid t)
+      (autoload 'bbdb/gnus-update-record          "bbdb-gnus"  bbdbid t)
+      (autoload 'bbdb/gnus-lines-and-from         "bbdb-gnus"  bbdbid nil)
+      (autoload 'bbdb/gnus-score                  "bbdb-gnus"  bbdbid nil)
+      
+      (autoload 'bbdb-extract-field-value          "bbdb-hooks" bbdbid nil)
+      (autoload 'bbdb-timestamp-hook               "bbdb-hooks" bbdbid nil)
+      (autoload 'bbdb-ignore-most-messages-hook    "bbdb-hooks" bbdbid nil)
+      (autoload 'bbdb-ignore-some-messages-hook    "bbdb-hooks" bbdbid nil)
+      (autoload 'bbdb-auto-notes-hook              "bbdb-hooks" bbdbid nil)
+      (autoload 'sample-bbdb-canonicalize-net-hook "bbdb-hooks" bbdbid nil)
+      (autoload 'bbdb-creation-date-hook	         "bbdb-hooks" bbdbid nil)
+      
+      (autoload 'bbdb-fontify-buffer                 "bbdb-xemacs" bbdbid nil)
+      (autoload 'bbdb-menu                           "bbdb-xemacs" bbdbid t)
+      (autoload 'bbdb-xemacs-display-completion-list "bbdb-xemacs" bbdbid nil)
+      
+      (autoload 'bbdb-www               "bbdb-w3" bbdbid nil)
+      (autoload 'bbdb-www-grab-homepage "bbdb-w3" bbdbid nil)
+      (autoload 'bbdb-insinuate-w3      "bbdb-w3" bbdbid nil)
+      
+      (autoload 'bbdb-migration-query             "bbdb-migrate" bbdbid nil)
+      (autoload 'bbdb-migrate                     "bbdb-migrate" bbdbid nil)
+      (autoload 'bbdb-migrate-rewrite-all         "bbdb-migrate" bbdbid nil)
+      (autoload 'bbdb-migrate-update-file-version "bbdb-migrate" bbdbid nil)
+      (autoload 'bbdb-unmigrate-record            "bbdb-migrate" bbdbid nil)
+      
+      (autoload 'bbdb-ftp             "bbdb-ftp" bbdbid t)
+      (autoload 'bbdb-create-ftp-site "bbdb-ftp" bbdbid t)
+      
+      (autoload 'bbdb-print                "bbdb-print"      bbdbid t)
+      (autoload 'bbdb-insinuate-reportmail "bbdb-reportmail" bbdbid nil)
+      (autoload 'bbdb-insinuate-sc         "bbdb-sc"         bbdbid nil)
+      (autoload 'bbdb-snarf                "bbdb-snarf"      bbdbid t)
+      (autoload 'bbdb-whois                "bbdb-whois"      bbdbid t)
+      (autoload 'bbdb-srv                  "bbdb-srv"        bbdbid t)
+      
+      ;;; RMAIL, MHE, and VM interfaces might need these.
+      (autoload 'mail-strip-quoted-names "mail-utils")
+      (autoload 'mail-fetch-field "mail-utils")
+
+      ;;; All of the interfaces need this.
+      (autoload 'mail-extract-address-components "mail-extr")
+      )
+  )
+
+
+
+;;; Support for the various Emacsen.  This is for features that the
+;;; BBDB adds to itself for different Emacsen.  For definitions of
+;;; functions that aren't present in various Emacsen (for example,
+;;; cadr for Emacs 19.34), see below
+(cond ((string-match "XEmacs\\|Lucid" emacs-version)
+       (bbdb-add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
+       (define-key bbdb-mode-map 'button3 'bbdb-menu)
+       
+       ;; Above
+       (fset 'bbdb-warn 'warn)
+       
+       ;; bbdb-com.el
+       (fset 'bbdb-display-completion-list 'bbdb-xemacs-display-completion-list)
+       ))
+(if (not (fboundp 'add-hook))
+    (fset 'add-hook 'bbdb-add-hook))
+
+(run-hooks 'bbdb-load-hook)
 
 (defun bbdb-insinuate-sendmail ()
   "Call this function to hook BBDB into sendmail (that is, M-x mail)."
