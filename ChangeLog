@@ -1,3 +1,8 @@
+2001-01-24  Sam Steingold  <sds@gnu.org>
+
+	* lisp/bbdb-merge.el (bbdb-merge-file): bugfix:
+	the parameter for `match-fun' is `rec', not `r'
+
 2001-01-18  Ronan Waide  <waider@waider.ie>
 
 	* lisp/bbdb-vm.el: Proper fix for VM windowing bug
@@ -7,8 +12,8 @@
 	* lisp/bbdb.el (bbdb-always-add-addresses): Docfix
 
 	* lisp/bbdb-vm.el (bbdb/vm-update-record):
-	Restored old behavior of returning one record 
-	(bbdb/vm-update-records-mode): 
+	Restored old behavior of returning one record
+	(bbdb/vm-update-records-mode):
 	(bbdb/vm-update-records):
 	Enhanced in order to allow annotating only new messages, which is
 	now the default.  This avoids the annoying questions repetition
@@ -18,8 +23,8 @@
 	* lisp/bbdb-w3.el (bbdb-www-grab-homepage):
 	Fix to read just one record not a list of records
 
-	* lisp/bbdb-xemacs.el (bbdb-sounds-directory): 
-	(bbdb-sound-volume): 
+	* lisp/bbdb-xemacs.el (bbdb-sounds-directory):
+	(bbdb-sound-volume):
 	(bbdb-load-touchtones):
 	Added variables & functions for Xemacs native sound support
 	used by	bbdb-dialing stuff
@@ -69,7 +74,7 @@
 	* texinfo/bbdb.texinfo:
 	  Removed some things from the TODO list
 	  Removed the Log section
-	  Added xref from 'BBDB Mailing Lists' to 'Using BBDB to implement 
+	  Added xref from 'BBDB Mailing Lists' to 'Using BBDB to implement
 	      Mailing Lists'
 	  A few other minor tweaks
 

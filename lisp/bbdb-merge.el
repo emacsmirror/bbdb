@@ -9,7 +9,7 @@
 ;;; smarter phone, notes and address merging.
 
 ;;;###autoload
-(defun bbdb-merge-record( new-record &optional merge-record override )
+(defun bbdb-merge-record (new-record &optional merge-record override)
   "Generic merge function.
 
 Merges new-record into your bbdb, using DATE to check who's more
@@ -170,15 +170,16 @@ Returns the Grand Unified Record."
     merge-record))
 
 ;; fixme this could be a macro, I guess.
-(defun bbdb-merge-strings( s1 s2 &optional sep )
-  "Merge two strings together uniquely. If s1 doesn't contain s2, return s1+sep+s2."
+(defun bbdb-merge-strings (s1 s2 &optional sep)
+  "Merge two strings together uniquely.
+If s1 doesn't contain s2, return s1+sep+s2."
   (cond ((or (null s1) (string-equal s1 "")) s2)
         ((or (null s2) (string-equal s2 "")) s1)
         (t (if (string-match s2 s1) s1
              (concat s1 (or sep "") s2)))))
 
 ;;;###autoload
-(defun bbdb-merge-file( &optional bbdb-new override match-fun)
+(defun bbdb-merge-file (&optional bbdb-new override match-fun)
   "Merge a bbdb file into the in-core bbdb."
   (interactive "fMerge bbdb file: ")
   (or bbdb-gag-messages
@@ -198,12 +199,12 @@ Returns the Grand Unified Record."
          (bbdb-refile-notes-default-merge-function 'bbdb-merge-strings))
 
     ;; merge everything
-    (mapcar (function (lambda(rec)
-                        (bbdb-merge-record rec
-                                           (if match-fun
-                                               (funcall match-fun r)
-                                             nil)
-                                           override))) new-records))
+    (mapcar (lambda(rec)
+              (bbdb-merge-record rec
+                                 (and match-fun
+                                      (funcall match-fun rec))
+                                 override))
+            new-records))
   ;; hack
   (setq bbdb-buffer (or (get-file-buffer bbdb-file) nil)))
 
