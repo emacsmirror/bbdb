@@ -1654,10 +1654,10 @@ all of the
 folks listed in the *BBDB* buffer instead of just the person at point."
   (interactive (list (if (bbdb-do-all-records-p)
                          (mapcar 'car bbdb-records)
-                         (bbdb-current-record))))
+                       (bbdb-current-record))))
   (if (consp bbdb-record)
       (bbdb-send-mail-many bbdb-record subject)
-      (bbdb-send-mail-1 bbdb-record subject)))
+    (bbdb-send-mail-1 bbdb-record subject)))
 
 
 (defun bbdb-send-mail-1 (bbdb-record &optional subject)
@@ -1927,6 +1927,8 @@ Currently only used by XEmacs."
 preceeding newline, colon, or comma).  If what has been typed is unique,
 insert an entry of the form \"User Name <net-addr>\".  If it is a valid
 completion but not unique, a list of completions is displayed.
+If the completion is done then cycle thru the nets or when called with a
+prefix arg then display a list of all nets.
 
 Completion behaviour can be controlled with `bbdb-completion-type'."
   (interactive)
@@ -1962,7 +1964,8 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                    (cons (car recs) yeah-yeah-this-one)))
                          (if (not (memq sym all-the-completions))
                              (setq all-the-completions
-                                   (cons (symbol-name sym) all-the-completions))))
+                                   (cons (symbol-name sym)
+                                         all-the-completions))))
                      (setq recs (cdr recs)))
                    nets))))
          (completion (try-completion pattern ht pred)))
@@ -1988,21 +1991,34 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
 
     ;; If there is no completion or the address is already a completed one,
     ;; then cycle though the list of addresses.
-    (let ((addr (bbdb-extract-address-components (buffer-substring beg end) t))
-      name the-net rec nets)
-      (when (and (or (null completion) (eq completion t)) ; no or exact match
-         (not (boundp 'bbdb-complete-name-recursion)) ; avoid recursion
-         addr
-         (setq addr (car addr))
-         (setq name (car addr)
-               the-net (cadr addr))
-         (setq rec (bbdb-search-simple name the-net))
-         (setq nets (bbdb-record-net rec))
-         (setq the-net (member the-net nets)))
-    (setq the-net (if (cdr the-net) (cadr the-net) (car nets)))
-    (delete-region beg end)
-    (insert (bbdb-dwim-net-address rec the-net))
-    (setq completion 'done)))
+    (when (and (or (null completion) (eq completion t)) ; no or exact match
+               (not (boundp 'bbdb-complete-name-recursion))) ; avoid recursion
+      (let* ((sym (intern-soft pattern ht))
+             (rec (car (symbol-value sym)))
+             (pattern (buffer-substring beg end))
+             name the-net nets)
+        (setq the-net (bbdb-extract-address-components pattern)
+              the-net (car the-net)
+              name (car the-net)
+              the-net (cadr the-net))
+        (if (not rec)
+            (setq rec (bbdb-search-simple name the-net)))
+        (when rec 
+          (setq nets (bbdb-record-net rec))
+          (delete-region beg end)
+          (if current-prefix-arg
+              (let ((standard-output (get-buffer-create "*Completions*")))
+                ;; a previously existing buffer has to be cleaned first 
+                (save-excursion (set-buffer standard-output)
+                                (setq buffer-read-only nil)
+                                (erase-buffer))
+                (display-completion-list
+                 (mapcar (lambda (n) (bbdb-dwim-net-address rec n)) nets))
+                (switch-to-buffer standard-output))
+            (setq the-net (member the-net nets))
+            (setq the-net (if (cdr the-net) (cadr the-net) (car nets)))
+            (insert (bbdb-dwim-net-address rec the-net)))
+          (setq completion 'done))))
 
     (cond
      ;; We have switched to another net
@@ -2099,8 +2115,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
        (delete-region beg end)
        (insert completion)
        (setq end (point))
-       (let ((last "")
-         (bbdb-complete-name-recursion t))
+       (let ((last ""))
          (while (and (stringp completion)
                      (not (string= completion last))
                      (setq last completion
@@ -2275,6 +2290,18 @@ The new alias will only be added if it isn't there yet."
 
 ;;; Sound
 
+(defcustom bbdb-dial-local-prefix-alist
+  '(((if bbdb-default-area-code (format "(%03d)" bbdb-default-area-code) "")
+     ""))
+        "*If this is non-nil, it should be a alist with elements of the form
+  (PREFIX-REGEXP . REPLACEMENT)
+e.g. matching prefix which your local phone system (in company) has. 
+The first matching one will be replaced by is REPLACEMENT in order to use the
+shorter number for dialing.  This might reduce cost by using a intern
+telephone system."
+  :group 'bbdb-phone-dialing
+  :type 'sexp)
+
 (defcustom bbdb-dial-local-prefix nil
   "*If this is non-nil, it should be a string of digits which your phone
 system requires before making local calls (for example, if your phone system
@@ -2289,7 +2316,7 @@ system requires before making a long distance call (one not in your local
 area code).  For example, in some areas you must dial 1 before an area code."
   :group 'bbdb-phone-dialing
   :type '(choice (const :tag "No digits required" nil)
-          (integer :tag "Dial this first" 1)))
+                 (integer :tag "Dial this first" 1)))
 
 
 (defcustom bbdb-sound-player "/usr/demo/SOUND/play"
@@ -2307,11 +2334,76 @@ area code).  For example, in some areas you must dial 1 before an area code."
     "/usr/demo/SOUND/sounds/touchtone.6.au"
     "/usr/demo/SOUND/sounds/touchtone.7.au"
     "/usr/demo/SOUND/sounds/touchtone.8.au"
-    "/usr/demo/SOUND/sounds/touchtone.9.au"]
+    "/usr/demo/SOUND/sounds/touchtone.9.au"
+    "/usr/demo/SOUND/sounds/touchtone.pound.au"
+    "/usr/demo/SOUND/sounds/touchtone.star.au"]
   "A vector of ten sound files to be used for dialing.  They
-correspond to the 0, 1, 2, ... 9 digits, respectively."
+correspond to the 0, 1, 2, ... 9 digits, pound and star, respectively."
   :group 'bbdb-phone-dialing
   :type 'vector)
+
+(defcustom bbdb-modem-dial nil
+  "Whether to use the modem for dialing.  Actually this is the modem command
+used to dial.  You may set it to a different value in order to initialize your
+modem or the like."
+  :group 'bbdb-phone-dialing
+  :type '(choice (const  :tag "no" nil)
+                 (string :tag "tone dialing" "ATDT ")
+                 (string :tag "pulse dialing" "ATDP ")))
+
+(defcustom bbdb-modem-device "/dev/modem"
+  "Wheather to use the modem for dialing."
+  :group 'bbdb-phone-dialing
+  :type 'string)
+
+(defun bbdb-dial-number (phone-string)
+  "Play the touchtone corresponding to the numbers in string."
+  (interactive "sTelephonenumber: ")
+  (let ((length (length phone-string))
+        (position 0)
+        (modem-command bbdb-modem-dial)
+        number)
+    
+    (while (< position length)
+      (setq number (aref phone-string position))
+      (setq number
+            (cond ((and (<= ?0 number) (>= ?9 number)) (char-to-string number))
+                  ((= ?# number) "10")
+                  ((= ?* number) "11")
+                  ((= ?  number) 1)
+                  (t nil)))
+      (if (stringp number)
+          (cond (bbdb-modem-dial
+                 (if (= 1 (length number))
+                     (setq modem-command (concat modem-command number))))
+                ((and (boundp 'xemacsp) (featurep 'native-sound))
+                 (play-sound (intern (concat "touchtone" number))
+                             bbdb-sound-volume))
+                (t
+                 (or (file-exists-p bbdb-sound-player)
+                     (error "no sound player program"))
+                 (call-process bbdb-sound-player nil nil nil
+                               (aref bbdb-sound-files (string-to-int number)))
+                 (sit-for 0)))
+        (if (numberp number)
+            (if bbdb-modem-dial
+                ;; "," is a pause 
+                (setq modem-command (concat modem-command ","))
+              (sit-for number))))
+      (setq position (1+ position)))
+    
+    (if bbdb-modem-dial
+        (with-temp-buffer
+          (insert modem-command ";\r\n")
+          (write-region (point-min) (point-max) bbdb-modem-device t)
+          (message "%s dialed. Pick up the phone now and hit any key ..."
+                   phone-string)
+          (next-event)
+          (erase-buffer)
+          (insert "ATH\r\n")
+          (write-region (point-min) (point-max) bbdb-modem-device t)
+          ))
+    ))
 
 ;;;###autoload
 (defun bbdb-dial (phone force-area-code)
@@ -2329,43 +2421,33 @@ is given."
   (if (eq (car-safe phone) 'phone)
       (setq phone (car (cdr phone))))
   (or (vectorp phone) (error "not on a phone field"))
-;;  (or window-system (error "You're not under window system."))
-  (or (file-exists-p bbdb-sound-player)
-      (error "no sound player program"))
-  (let* ((str (bbdb-phone-string phone))
-         L (i 0))
-    (or force-area-code (not (integerp bbdb-default-area-code))
-        (if (string-match (format "^(%03d)" bbdb-default-area-code) str)
-            (setq str (substring str (match-end 0)))))
-    (if (string-match "x[0-9]+$" str)
-        (setq str (substring str 0 (match-beginning 0))))
-    (if bbdb-dial-local-prefix
-        (let ((d (append bbdb-dial-local-prefix nil)))
-          (or (string-match "\\`[0-9]*\\'" bbdb-dial-local-prefix)
-              (error "bbdb-dial-local-prefix contains non-digits"))
-          (while d
-            (call-process bbdb-sound-player nil nil nil
-                          (aref bbdb-sound-files (- (car d) ?0)))
-            (sleep-for 1)
-            (setq d (cdr d)))))
-    (if (and bbdb-dial-long-distance-prefix
-             (string-match "^([0-9][0-9][0-9])" str))
-        (let ((d (append bbdb-dial-long-distance-prefix nil)))
-          (or (string-match "\\`[0-9]*\\'" bbdb-dial-long-distance-prefix)
-              (error "bbdb-dial-long-distance-prefix contains non-digits"))
-          (while d
-            (call-process bbdb-sound-player nil nil nil
-                          (aref bbdb-sound-files (- (car d) ?0)))
-            (sleep-for 1)
-            (setq d (cdr d)))))
-    (setq L (length str))
-    (while (< i L)
-      (if (and (<= ?0 (aref str i))
-               (>= ?9 (aref str i)))
-          (call-process bbdb-sound-player nil nil nil
-                        (aref bbdb-sound-files (- (aref str i) ?0)))
-          (sit-for 0))
-      (setq i (1+ i)))))
+
+  (let* ((number (bbdb-phone-string phone)) shortnumber)
+    (when (not force-area-code)
+      (let ((alist bbdb-dial-local-prefix-alist))
+        (while alist
+          (if (string-match (concat "^" (eval (caar alist))) number)
+              (setq shortnumber (concat (cadar alist)
+                                        (substring number (match-end 0)))
+                    alist nil))
+          (setq alist (cdr alist)))))
+    (if (string-match "x[0-9]+$" number)
+        (setq number (substring number 0 (match-beginning 0))))
+    (if (and (not shortnumber) bbdb-dial-local-prefix
+             (string-match "^0" number))
+        (if (not (string-match "^[0-9#* ]+$" bbdb-dial-local-prefix))
+            (error "bbdb-dial-local-prefix contains non-digits")
+          (setq number (concat bbdb-dial-local-prefix number))))
+    (if (and (not shortnumber) bbdb-dial-long-distance-prefix
+             (string-match "^\+" number))
+        (if (not (string-match "^[0-9#* ]+$" bbdb-dial-long-distance-prefix))
+            (error "bbdb-dial-long-distance-prefix contains non-digits")
+          (setq number (concat bbdb-dial-long-distance-prefix " "
+                               (substring number 1)))))
+    (setq number (or shortnumber number))
+    (if (not bbdb-silent-running)
+        (message "Dialing %s" number))
+    (bbdb-dial-number number)))
 
 
 (defun bbdb-get-record (prompt)
