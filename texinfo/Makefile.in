@@ -28,8 +28,14 @@ bbdb.pdf: bbdb.texinfo
          fi
 
 clean:
-	-rm -f *.aux *.cp *.cps *.dvi *.pdf *.fn *.fns *.ky *.log *.pg \
+	$(RM) -f *.aux *.cp *.cps *.dvi *.pdf *.fn *.fns *.ky *.log *.pg \
 	  *.toc *.tp *.vr *.vrs
 
-reallyclean: clean
-	-rm -f bbdb.info*
+reallyclean: distclean
+
+distclean: clean
+	$(RM) -f bbdb.info*
+
+cvsclean: distclean
+	$(RM) -f Makefile
+
