@@ -3,7 +3,6 @@
 ;;; This file is the part of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
 ;;; Interface to VM (View Mail) 5.31 or greater.  See bbdb.texinfo.
-;;; last change  1-may-94.
 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -18,6 +17,15 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+
+;;
+;; $Id$
+;;
+;; $Log$
+;; Revision 1.53  1997/11/02 07:40:18  simmonmt
+;; bbdb/vm-annotate-sender now takes REPLACE argument
+;;
+;;
 
 (require 'bbdb)
 (require 'vm)
@@ -104,14 +112,15 @@ the user confirms the creation."
 			     offer-to-create)
 			 offer-to-create))))))))))
 
-(defun bbdb/vm-annotate-sender (string)
+(defun bbdb/vm-annotate-sender (string &optional replace)
   "Add a line to the end of the Notes field of the BBDB record 
-corresponding to the sender of this message."
+corresponding to the sender of this message.  If REPLACE is non-nil,
+replace the existing notes entry (if any)."
   (interactive (list (if bbdb-readonly-p
 			 (error "The Insidious Big Brother Database is read-only.")
 			 (read-string "Comments: "))))
   (vm-follow-summary-cursor)
-  (bbdb-annotate-notes (bbdb/vm-update-record t) string))
+  (bbdb-annotate-notes (bbdb/vm-update-record t) string 'notes replace))
 
 
 (defun bbdb/vm-edit-notes (&optional arg)
