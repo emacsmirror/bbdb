@@ -178,10 +178,11 @@ C-g again it will stop scanning."
 				 processed-addresses (+ processed-addresses 1))
 			   (when (and (not (eq bbdb/vm-offer-to-create 'quit))
 				      (= 0 (% processed-addresses 5)))
-			     (display-message 'progress
-			       (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs)))
-			     (sit-for 0))
-			   )
+			     (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed." bbdb/vm-update-records-mode processed-addresses (length addrs))))
+			       (if vm-xemacs-p
+				   (display-message 'progress mess)
+				 (message mess))
+			       (sit-for 0))))
 		       (quit (cond ((eq bbdb/vm-update-records-mode
 					'annotating)
 				    (setq bbdb/vm-update-records-mode
