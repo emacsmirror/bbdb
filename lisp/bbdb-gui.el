@@ -107,11 +107,11 @@
       (let ((o (overlay-lists))) (nconc (car o) (cdr o)))))
 
   (if (fboundp 'mapcar-extents)
-      (defmacro bbdb-extents-in (s e) 
+      (defmacro bbdb-extents-in (s e)
         (list 'mapcar-extents ''identity nil nil s e))
     (defmacro bbdb-extents-in (s e)
       (list 'overlays-in s e)))
-  
+
   (if (fboundp 'set-extent-property)
       (fset 'bbdb-set-extent-property 'set-extent-property)
     (defun bbdb-set-extent-property( e p v )
@@ -174,8 +174,6 @@
 ;;;###autoload
 (defun bbdb-fontify-buffer (&optional records)
   (interactive)
-  (if (not bbdb-silent-running)
-      (message "Fontifying ..."))
   (save-excursion
     (set-buffer bbdb-buffer-name)
     (if (featurep 'scrollbar)
@@ -183,11 +181,11 @@
 
     (let ((rest (or records bbdb-records))
           record face
-          start end  s e 
+          start end  s e
           multi-line-p
           property
           extent)
-      
+
       (while rest
         (setq record (car (car rest))
               multi-line-p (string-match "multi-line"
@@ -198,9 +196,9 @@
 
         (if (< start (point-min)) (setq start (point-min)))
         (if (> end (point-max)) (setq end (point-max)))
-        
+
         (mapcar (function (lambda(o)
-                            (if (and o  
+                            (if (and o
                                      (eq (bbdb-extent-property o 'data)
                                          'bbdb))
                                 (bbdb-delete-extent o))))
@@ -247,12 +245,10 @@
                                     (cadr (member 'bbdb-field
                                                   (text-properties-at s))))))
             (setq s (next-single-property-change s 'bbdb-field))))
-          
+
         (setq rest (cdr rest))
         (if (null (caar rest))
-            (setq rest nil)))))
-  (if (not bbdb-silent-running)
-      (message "Fontifying done")))
+            (setq rest nil))))))
 
 ;;; share the xface cache data with VM if it's around
 (defvar vm-xface-cache (make-vector 29 0))
