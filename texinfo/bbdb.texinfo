@@ -227,6 +227,8 @@ directory:
      texinfo  - the documentation files for the @b{BBDB}
      utils    - miscellaneous external utility programs
      misc     - things that don't fall into the above categories
+     bits     - things that have been written as add-ons for @b{BBDB}
+                but have not yet been merged with the main codebase
 @end example
 @end ifinfo
 @iftex
@@ -240,6 +242,9 @@ the main program code for the BBDB
 the documentation files for the BBDB
 @item utils
 miscellaneous external utility programs
+@item bits
+things that have been written as add-ons for @b{BBDB} but have not yet
+been merged with the main codebase
 @end table
 @egroup
 @end iftex
@@ -322,7 +327,7 @@ packages will not affect core @b{BBDB} functionality.
 @tab @center B
 
 @item @code{bbdb-vm}
-@tab VM
+@tab VM[4]
 @tab
 @tab
 @tab @center B
@@ -341,15 +346,18 @@ packages will not affect core @b{BBDB} functionality.
 @b{NOTES:}
 @enumerate
 @item 
-The three year old GNUS mail/newsreader should still
-work.  Please keep in mind that you have a relatively recent Emacs (GNU
-19.34 or later, XEmacs 19.15 or later), you are probably using Gnus.
+The old GNUS mail/newsreader should still work.  Please keep in mind
+that you have a relatively recent Emacs (GNU 19.34 or later, XEmacs
+19.15 or later), you are probably using Gnus. 
 @item
 As of this writing, Reportmail is available as
 part of the @code{edit-utils} package.
 @item
 As of this writing, @code{browse-url} is
 available as part of the @code{mail-lib} package.
+@item
+The source release of VM is currently required due to the use of macros
+from the VM codebase in @b{BBDB}'s VM integration.
 @end enumerate
 
 Please also note that the XEmacs package locations are as of this
@@ -772,8 +780,9 @@ send-mail-mode.
 @node VM Prep, Message Prep, Sendmail Prep, Initial Configuration
 @subsubsection Initializing @b{BBDB} support for VM
 
-To take advantage of the @b{VM} features of the @b{BBDB}, add the
-following form to your @file{~/.vm} file:
+To take advantage of the @b{VM} features of the @b{BBDB}, either add
+@code{'vm} to the parameters of the @code{(bbdb-initialize)} form, or
+add the following form to your @file{~/.vm} file: 
 
 @example
 @code{(bbdb-insinuate-vm)}
