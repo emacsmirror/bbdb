@@ -48,8 +48,8 @@
 (defvar bbdb-snarf-zip-regexp
   (concat
    "\\<"
-   digit digit digit digit digit
-   "\\(-" digit digit digit digit "\\)?"
+   bbdb-digit bbdb-digit bbdb-digit bbdb-digit bbdb-digit
+   "\\(-" bbdb-digit bbdb-digit bbdb-digit bbdb-digit "\\)?"
    "\\>$")
   "regexp matching zip.")
 
