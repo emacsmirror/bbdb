@@ -8,8 +8,12 @@
 @c $Id$
 @c
 @c $Log$
-@c Revision 1.13  1997/12/01 14:51:57  simmonmt
-@c Documented new startup procedure
+@c Revision 1.14  1998/01/06 06:53:22  simmonmt
+@c Changed to `setq' to `add-hook' in setup instructions.  Added to
+@c Internals section.
+@c
+@c Changed to `setq' to `add-hook' in setup instructions.  Added to
+@c Internals section.
 @c
 @c Revision 1.13  1997/12/01 14:51:57  simmonmt
 @c Documented new startup procedure
@@ -502,12 +506,12 @@ section below is the same as than executed by @code{bbdb-initialize}
 To take advantage of the @b{Gnus} features of the @b{BBDB}, add one of
 the following forms to your Emacs configuration file: @refill
 
-@code{(setq gnus-Startup-hook 'bbdb-insinuate-gnus)}
+@noindent
 For Gnus 3.14 or older:
 
 @code{(add-hook 'gnus-Startup-hook 'bbdb-insinuate-gnus)}
 
-@code{(setq gnus-startup-hook 'bbdb-insinuate-gnus)}
+@noindent
 For Gnus 3.15 or newer:
 
 @code{(add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus)}
@@ -522,7 +526,7 @@ to be able to display @b{BBDB} entries for messages displayed in
 @subsubsection Initializing @b{BBDB} support for MH-E
 
 To take advantage of the @b{MH-E} features of the @b{BBDB}, add the
-(setq mh-folder-mode-hook 'bbdb-insinuate-mh)
+following form to your Emacs configuration file: @refill
 
 @example
 (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh)
@@ -538,7 +542,7 @@ to be able to display @b{BBDB} entries for messages displayed in
 @subsubsection Initializing @b{BBDB} support for RMAIL
 
 To take advantage of the @b{RMAIL} features of the @b{BBDB}, add the
-(setq rmail-mode-hook 'bbdb-insinuate-rmail)
+following form to your Emacs configuration file: @refill
 
 @example
 (add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail)
@@ -555,7 +559,7 @@ to be able to display @b{BBDB} entries for messages displayed in
 
 To take advantage of send-mail-mode (the one invoked with @code{M-x
 mail}) features of the @b{BBDB}, add the following form to your Emacs
-(setq mail-setup-hook 'bbdb-insinuate-sendmail)
+configuration file: @refill
 
 @example
 (add-hook 'mail-setup-hook 'bbdb-insinuate-sendmail)
@@ -2087,10 +2091,10 @@ vectors used by some of the fields.
 @tab  List of Strings
 @tab  @code{bbdb-record-net}@*
       @code{bbdb-record-set-net}
-@tab  Alist
+@tab  List of network addresses
 
 @item Notes
-@tab  Association list of note fields (strings)
+@tab  String or Alist
 @tab  @code{bbdb-record-raw-notes}@*
       @code{bbdb-record-set-raw-notes}
 @tab  String or Association list of note fields (strings)
@@ -2287,8 +2291,18 @@ built, stored in the Name Cache field, and returned.
 Return the name it the Sort Key field of the cache (if set).  If the
 Sort Key field has not yet been set (if the field is @code{nil}), the
 Sort Key is built, stored in the Sort Key field, and returned.
-@subsubsection Notes Alist
+
 @end table
+
+@subsubsection Notes String or Alist
+
+If there is only a single note for a given record, the notes field for
+that record will be a string.  If there is more than one note, the notes 
+field will be an association list (alist) with elements of the form
+
+@center ( @var{NAME} . @var{VALUE} )
+
+@noindent
 where @var{NAME} is the symbol for the name of the note, and
 @var{VALUE} is the value of the note.
 @node Utilities, The Mailing List, Internals, Top
