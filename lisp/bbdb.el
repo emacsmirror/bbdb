@@ -2495,7 +2495,6 @@ If CREATE-P is true, then a record may be created, otherwise it won't.
 If PROMPT-TO-CREATE-P is true, then the user will be asked for confirmation
 before the record is created, otherwise it is created without confirmation
 \(assuming that CREATE-P is true\).  "
-  (message "bbdb-annotate-message-sender")
   (let* ((data (if (consp from)
                    from ; if from is a cons, it's pre-parsed (hack hack)
                  (mail-extract-address-components from)))
