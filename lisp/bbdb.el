@@ -1190,7 +1190,7 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
  (indentation . INTEGER)         -               +              14
 
 - toggle: controls if this layout is included when toggeling the display layout
-- order: defines a user specific order for the fields, while `t' is a place
+- order: defines a user specific order for the fields, where `t' is a place
   holder for all remaining fields
 - omit: is a list of fields which should not be displayed or `t' to exclude all
   fields except those listed in the order option
@@ -1322,7 +1322,7 @@ The result looks like this:
   (setq indent (or indent 14))
   (let ((fmt (format " %%%ds: " indent))
         (indent (+ 3 indent)))
-    (insert (format fmt (bbdb-address-location addr)))
+    ;(insert (format fmt (bbdb-address-location addr)))
     (bbdb-format-streets addr indent)
     (let ((c (bbdb-address-city addr))
           (s (bbdb-address-state addr))
@@ -1358,7 +1358,7 @@ The result looks like this:
   (setq indent (or indent 14))
   (let ((fmt (format " %%%ds: " indent))
         (indent (+ 3 indent)))
-    (insert (format fmt (bbdb-address-location addr)))
+;    (insert (format fmt (bbdb-address-location addr)))
     (bbdb-format-streets addr indent)
     (let ((c (bbdb-address-city addr))
           (s (bbdb-address-state addr))
@@ -1429,14 +1429,13 @@ formatted and inserted into the current buffer.  This is used by
     (setq start (point))
     (insert (format "(%s)" (aref phone 0)))
     (put-text-property start (point) 'bbdb-field
-                       (list 'phone phone))))
+                       (list 'phone phone 'field-name))))
 
 (defun bbdb-format-record-one-line-net (layout record net)
   "Return a formatted list of nets for one-line display."
   (let ((start (point)))
     (insert net)
-    (put-text-property start (point) 'bbdb-field
-                       (list 'net net))))
+    (put-text-property start (point) 'bbdb-field (list 'net net))))
 
 (defun bbdb-format-record-layout-one-line (layout record field-list)
   ;; name and company
@@ -1449,7 +1448,7 @@ formatted and inserted into the current buffer.  This is used by
       (beginning-of-line)
       (setq start (point)))
     (when (> (- end start -1) name-end)
-      (put-text-property (+ start name-end -4) end  'invisible t)
+      (put-text-property (+ start name-end -4) end 'invisible t)
       (insert "..."))
     ;; guarantee one space after name - company
     (insert " ")
@@ -1482,7 +1481,7 @@ formatted and inserted into the current buffer.  This is used by
                                       (list 'phone value)))
                   ((memq field '(name net aka))
                    (put-text-property start (point) 'bbdb-field
-                                      (list field value)))
+                                      (list field value )))
                   (t
                    (put-text-property start (point) 'bbdb-field
                                       (list 'property (list field value))))))
@@ -1517,12 +1516,14 @@ formatted and inserted into the current buffer.  This is used by
                  (setq phone (car phones)
                        start (point))
                  (setq loc (format fmt (bbdb-phone-location phone)))
-                 (insert loc (bbdb-phone-string phone) "\n")
+                 (insert loc)
                  (put-text-property start (point) 'bbdb-field
+                                    (list 'phone phone 'field-name))
+                 (setq start (point))
+                 (insert (bbdb-phone-string phone) "\n")
+                 (put-text-property start (+ start (length loc)) 'bbdb-field
                                     (list 'phone phone
                                           (bbdb-phone-location phone)))
-                 (put-text-property start (+ start (length loc)) 'bbdb-field
-                                    (list 'phone phone nil))
                  (setq phones (cdr phones))))
              (setq start nil))
             ((eq field 'addresses)
@@ -1532,34 +1533,43 @@ formatted and inserted into the current buffer.  This is used by
                  (setq addr (car addrs)
                        start (point))
                  (setq loc (format fmt (bbdb-address-location addr)))
-                 (bbdb-format-address addr nil indent)
+                 (insert loc)
                  (put-text-property start (point) 'bbdb-field
-                                    (list 'address addr
-                                          (bbdb-address-location addr)))
+                                    (list 'address addr 'field-name))
+                 (setq start (point))
+                 (bbdb-format-address addr nil indent)
                  (put-text-property start (+ start (length loc)) 'bbdb-field
-                                    (list 'address addr nil))
+                                    (list 'address addr 
+                                          (bbdb-address-location addr)))
                  (setq addrs (cdr addrs))))
              (setq start nil))
             ((eq field 'net)
              (let ((net (bbdb-record-net record)))
-               (if net
-                   (insert (format fmt "net")
-                           (mapconcat (function identity) net ", ")
-                           "\n")))
-             (put-text-property start (point) 'bbdb-field '(net)))
+               (when net
+                 (insert (format fmt "net"))
+                 (put-text-property start (point) 'bbdb-field
+                                    '(net field-name))
+                 (setq start (point))
+                 (insert (mapconcat (function identity) net ", ") "\n")
+                 (put-text-property start (point) 'bbdb-field '(net)))))
             ((eq field 'aka)
              (let ((aka (bbdb-record-aka record)))
-               (if aka
-                   (insert (format fmt "AKA")
-                           (mapconcat (function identity) aka ", ")
-                           "\n")))
-             (put-text-property start (point) 'bbdb-field '(aka)))
+               (when aka
+                 (insert (format fmt "AKA"))
+                 (put-text-property start (point) 'bbdb-field
+                                    '(aka field-name))
+                 (insert (mapconcat (function identity) aka ", ") "\n")
+                 (setq start (point))
+                 (put-text-property start (point) 'bbdb-field '(aka)))))
             (t
              (let ((note (assoc field notes))
                    (indent (length (format fmt "")))
                    p notefun)
                (when note
                  (insert (format fmt field))
+                 (put-text-property start (point) 'bbdb-field
+                                    (list 'property note 'field-name))
+                 (setq start (point))
                  (setq p (point)
                        notefun (intern (format "bbdb-format-record-%s" field)))
                  (if (fboundp notefun)
