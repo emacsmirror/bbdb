@@ -928,12 +928,12 @@ State:           state
 Zip Code:        zip
 Country:         country"
   (let* ((str (let ((l) (s) (n 0))
-		(while (not (string= "" (setq s (bbdb-read-string
-						 (format "Street, line %d: " (+ 1 n))
-						 (nth n (bbdb-address-streets addr))))))
-		  (setq l (append l (list s)))
-		  (setq n (1+ n)))
-		l))
+        (while (not (string= "" (setq s (bbdb-read-string
+                         (format "Street, line %d: " (+ 1 n))
+                         (nth n (bbdb-address-streets addr))))))
+          (setq l (append l (list s)))
+          (setq n (1+ n)))
+        l))
          (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
          (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
          (zip (bbdb-error-retry
@@ -1176,30 +1176,30 @@ that line represents from the database.  If the cursor is on the first line
 of a database entry (the name/company line) then the entire entry will be
 deleted."
   (interactive (list (if (bbdb-do-all-records-p)
-			 (mapcar 'car bbdb-records)
-		       (list (bbdb-current-record)))
-		     current-prefix-arg))
+             (mapcar 'car bbdb-records)
+               (list (bbdb-current-record)))
+             current-prefix-arg))
   (let* ((do-all-p (> 1 (length records)))
          (field (bbdb-current-field t))
          (type (car field))
-	 record
+     record
          (name (cond ((null field) (error "on an unfield"))
                      ((eq type 'property) (symbol-name (car (nth 1 field))))
                      (t (symbol-name type)))))
   (while records
     (setq record (car records))
     (if (eq type 'name)
-	(bbdb-delete-current-record record noprompt)
+    (bbdb-delete-current-record record noprompt)
       (if (not (or noprompt
-		   (bbdb-y-or-n-p (format "delete this %s field (of %s)? "
-					  name
-					  (bbdb-record-name record)))))
+           (bbdb-y-or-n-p (format "delete this %s field (of %s)? "
+                      name
+                      (bbdb-record-name record)))))
             nil
             (cond ((memq type '(phone address))
-	       (bbdb-record-store-field-internal
-		record type
-		(delq (nth 1 field)
-		      (bbdb-record-get-field-internal record type))))
+           (bbdb-record-store-field-internal
+        record type
+        (delq (nth 1 field)
+              (bbdb-record-get-field-internal record type))))
                   ((memq type '(net aka))
                    (let ((rest (bbdb-record-get-field-internal record type)))
                      (while rest
@@ -1210,7 +1210,7 @@ deleted."
                    (bbdb-record-putprop record (car (nth 1 field)) nil))
                   (t (error "doubleplus ungood: unknown field type")))
             (bbdb-change-record record nil)
-	(bbdb-redisplay-one-record record)))
+    (bbdb-redisplay-one-record record)))
     (setq records (cdr records)))))
 
 ;;;###autoload
@@ -1545,7 +1545,7 @@ Can be used in `bbdb-change-hook'."
   (flet ((kk (nt) (or (cdr (assq (car nt) bbdb-notes-sort-order)) 100)))
     (bbdb-record-set-raw-notes
      rec (sort (bbdb-record-raw-notes rec)
-	       (lambda (aa bb) (< (kk aa) (kk bb)))))))
+           (lambda (aa bb) (< (kk aa) (kk bb)))))))
 
 ;;;###autoload
 (defun bbdb-sort-phones (rec)
@@ -1553,7 +1553,7 @@ Can be used in `bbdb-change-hook'."
 Can be used in `bbdb-change-hook'."
   (bbdb-record-set-phones
    rec (sort (bbdb-record-phones rec)
-	     (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
+         (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
 
 ;;;###autoload
 (defun bbdb-sort-addresses (rec)
@@ -1561,7 +1561,7 @@ Can be used in `bbdb-change-hook'."
 Can be used in `bbdb-change-hook'."
   (bbdb-record-set-addresses
    rec (sort (bbdb-record-addresses rec)
-	     (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
+         (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
 
 
 ;;; Send-Mail interface
@@ -1794,8 +1794,9 @@ composition buffer.)"
 
 ;;;###autoload
 (defun bbdb-completion-check-record (sym rec)
-  (let ((name (downcase (or (bbdb-record-name rec)
-                            (bbdb-record-company rec))))
+  (let ((name (or (bbdb-record-name rec)
+                  (bbdb-record-company rec)
+                  ""))
         (nets (bbdb-record-net rec))
         ok)
 
@@ -2159,14 +2160,14 @@ of all of those people."
     (while records
       (setq record (car records))
       (if (bbdb-record-net record)
-	  (setq aliases (bbdb-split
-			 (bbdb-record-getprop record
-					      bbdb-define-all-aliases-field)
-			 ","))
-	(if (not bbdb-silent-running)
-	    (bbdb-warn "record \"\" unhas network addresses"
+      (setq aliases (bbdb-split
+             (bbdb-record-getprop record
+                          bbdb-define-all-aliases-field)
+             ","))
+    (if (not bbdb-silent-running)
+        (bbdb-warn "record \"\" unhas network addresses"
                        (bbdb-record-name record)))
-	(setq aliases nil))
+    (setq aliases nil))
 
       (while aliases
         (if (setq match (assoc (car aliases) result))
@@ -2198,8 +2199,8 @@ of all of those people."
         (fset alias (list 'lambda '()
                           (list 'bbdb-mail-abbrev-expand-hook
                                 (list 'quote
-				      (mapcar (lambda (x)
-						(car (bbdb-record-net x)))
+                      (mapcar (lambda (x)
+                        (car (bbdb-record-net x)))
                                               (cdr (car result))))))))
       (setq result (cdr result)))))
 
@@ -2215,16 +2216,16 @@ of all of those people."
   "Return a list of mail aliases used in the BBDB.
 The format is suitable for `completing-read'."
   (let* ((target (cons bbdb-define-all-aliases-field "."))
-	 (records (bbdb-search (bbdb-records) nil nil nil target))
-	 result aliases)
+     (records (bbdb-search (bbdb-records) nil nil nil target))
+     result aliases)
     (while records
       (setq aliases (bbdb-split
-		     (bbdb-record-getprop (car records)
-					  bbdb-define-all-aliases-field)
-		     ","))
+             (bbdb-record-getprop (car records)
+                      bbdb-define-all-aliases-field)
+             ","))
       (while aliases
-	(add-to-list 'result (list (car aliases)))
-	(setq aliases (cdr aliases)))
+    (add-to-list 'result (list (car aliases)))
+    (setq aliases (cdr aliases)))
       (setq records (cdr records)))
     result))
 
@@ -2235,15 +2236,15 @@ When called with prefix argument it will remove the alias.
 We honor `bbdb-apply-next-command-to-all-records'!
 The new alias will only be added if it isn't there yet."
   (interactive (list (if (bbdb-do-all-records-p) 'all 'one)
-		     (completing-read "Mail alias: " (bbdb-get-mail-aliases))
-		     current-prefix-arg))
+             (completing-read "Mail alias: " (bbdb-get-mail-aliases))
+             current-prefix-arg))
   (setq newalias (bbdb-string-trim newalias))
   (setq newalias (if (string= "" newalias) nil newalias))
   (let* ((propsym bbdb-define-all-aliases-field)
-	 (do-all-p (if (equal records 'one) nil t))
-	 (records (cond ((equal records 'all) (mapcar 'car bbdb-records))
-			((equal records 'one) (list (bbdb-current-record t)))
-			(t records))))
+     (do-all-p (if (equal records 'one) nil t))
+     (records (cond ((equal records 'all) (mapcar 'car bbdb-records))
+            ((equal records 'one) (list (bbdb-current-record t)))
+            (t records))))
     (while records
       (let* ((record (car records))
              (oldaliases (bbdb-record-getprop record propsym)))
@@ -2356,7 +2357,7 @@ it is the same as `bbdb-default-area-code' unless a prefix arg is given."
 To be used in `interactive' like this:
   (interactive (list (bbdb-get-record \"look up ...\")))"
   (if (and (boundp 'bbdb-buffer-name)
-	   (string= bbdb-buffer-name (buffer-name)))
+       (string= bbdb-buffer-name (buffer-name)))
       (bbdb-current-record)
       (let (re (pr ""))
         (while (not re)
