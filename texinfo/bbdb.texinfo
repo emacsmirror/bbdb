@@ -8,6 +8,9 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.17  1998/03/13 10:17:18  simmonmt
+@c This is for version 2.00
+@c
 @c Revision 1.16  1998/03/10 07:46:43  simmonmt
 @c Finished revision
 @c
@@ -41,7 +44,7 @@
 @ifinfo
 This file documents the Insidious Big Brother Database
 
-This is edition $Revision$ of the BBDB User Manual for BBDB version 1.59unoff.
+This is edition $Revision$ of the BBDB User Manual for BBDB version 2.00.
 
 Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 Copyright (c) 1997-1998 Matt Simmons <simmonmt@@acm.org>
@@ -60,7 +63,7 @@ Copyright @copyright{} 1997-1998 Matt Simmons <simmonmt@@acm.org>
 
 @sp 2
 This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
-version 1.59unoff, $Date$.@refill
+version 2.00, $Date$.@refill
 
 @sp 2
 
