@@ -55,13 +55,9 @@
   (if (featurep 'xemacs)
       (progn
         (fset 'bbdb-extent-string 'extent-string)
-        (fset 'bbdb-play-sound 'play-sound)
-        (fset 'bbdb-next-event 'next-event)
         (fset 'bbdb-display-message 'display-message)
         (fset 'bbdb-event-to-character 'event-to-character))
     (fset 'bbdb-extent-string 'ignore)
-    (fset 'bbdb-play-sound 'ignore)
-    (fset 'bbdb-next-event 'ignore)
     (fset 'bbdb-display-message 'ignore)
     (fset 'bbdb-event-to-character 'ignore)))
 
@@ -91,7 +87,7 @@ To set it on again, use `bbdb-search-invert-set'."
 
 ;;;###autoload
 (defun bbdb-search-invert-set ()
-  "Typing \\<bbdb-mode-map>\\[bbdb-append-records] inverts the meaning of the next search command.
+  "Typing \\<bbdb-mode-map>\\[bbdb-search-invert-set] inverts the meaning of the next search command.
 Sets `bbdb-search-invert' to t.
 You will have to call this function again, if you want to
 do repeated inverted searches."
@@ -196,16 +192,16 @@ If you want to reverse the search, bind `bbdb-search-invert' to t."
                    nil))
              (case-fold-search bbdb-case-fold-search)
              (records (, records))
-	     (invert (bbdb-search-invert-p))
+         (invert (bbdb-search-invert-p))
              record)
          (while records
            (setq record (car records))
-	   (if (or (and invert
-			(not (or (,@ clauses))))
-		   (and (not invert)
-			(or (,@ clauses))))
-	       (setq matches (cons record matches)))
-	   (setq records (cdr records)))
+       (if (or (and invert
+            (not (or (,@ clauses))))
+           (and (not invert)
+            (or (,@ clauses))))
+           (setq matches (cons record matches)))
+       (setq records (cdr records)))
          (nreverse matches)))))
 
 (defun bbdb-search-prompt (prompt &rest rest)
@@ -303,7 +299,7 @@ the database was last saved."
             (when (not (member r changed-records))
               (setq changed-records (delete r changed-records)
                     unchanged-records (cons r unchanged-records))))
-          (bbdb-display-records unchanged-records)) 
+          (bbdb-display-records unchanged-records))
       (bbdb-display-records changed-records))))
 
 (defun bbdb-display (records)
@@ -362,7 +358,7 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
     (delete-region (point) next-marker)
     (if (< position next-marker)
         (goto-char position))
-    
+
     (if (and bbdb-gui (not delete-p))
         (bbdb-fontify-buffer (list record-cons
                                    ;; the record ends here
@@ -371,6 +367,11 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
       (run-hooks 'bbdb-list-hook))))
 
 ;;; Parsing phone numbers
+;;; XXX this needs expansion to handle international prefixes properly
+;;; i.e. +353-number without discarding the +353 part. Problem being
+;;; that this will necessitate yet another change in the database
+;;; format for people who are using north american numbers.
+
 
 (defconst bbdb-phone-area-regexp "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*\\([2-9][0-9][0-9]\\)[ \t]*)?[- /\.\t]*")
 (defconst bbdb-phone-main-regexp "\\([2-9][0-9][0-9]\\)[ \t]*-?[ \.\t]*\\([0-9][0-9][0-9][0-9]\\)[ \t]*")
@@ -752,7 +753,7 @@ certain commands.\)"
          (setq bbdb-append-records nil)
          t)
         (t nil)))
-  
+
 ;;;###autoload
 (defun bbdb-append-records (arg)
   "Typing \\<bbdb-mode-map>\\[bbdb-append-records] \
@@ -2047,11 +2048,11 @@ composition buffer.)"
 
     (if (null bbdb-completion-type)
         (setq ok 't)
-      
+
       (if (memq bbdb-completion-type
                 '(name primary-or-name name-or-primary))
           (setq ok (string= sym (downcase name))))
-      
+
       ;; #### handle AKA, mail-name or mail-alias here?
       (if ok '()
         (when (eq bbdb-completion-type 'net)
@@ -2206,13 +2207,6 @@ Currently only used by XEmacs."
   :group 'bbdb-mua-specific
   :type 'boolean)
 
-(defcustom bbdb-complete-name-full-completion 5
-  "Show full expanded completion rather than partial matches.
-If t then do it always; if a number then do it if the number of
-completions for a specific match is below that number."
-  :group 'bbdb-mua-specific
-  :type 'boolean)
-
 (defcustom bbdb-complete-name-hooks '(ding)
   "List of functions called after a sucessful completion."
   :group 'bbdb-mua-specific
@@ -2316,7 +2310,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                     (delete-region beg end)
                     (insert (bbdb-dwim-net-address rec this-addr))
                     (throw 'bbdb-cycling-exit t))))))
-            
+
           ;; FALL THROUGH
           ;; Check mail aliases
           (if (and bbdb-expand-mail-aliases (expand-abbrev))
@@ -2467,7 +2461,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                   (setq nets (cdr nets)))))
             (symbol-value sym)))
          all-the-completions)
-        
+
         ;; if, after all that, we've only got one matching record...
         (if (and dwim-completions (null (cdr dwim-completions)))
             (progn
@@ -2507,7 +2501,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
 
 (defcustom bbdb-define-all-aliases-mode 'first
   "*The type of alias which are created.
-first: Default is to generate an abbrev which is \"alias\" and expands to the 
+first: Default is to generate an abbrev which is \"alias\" and expands to the
        primary net.
 star:  Generate an extra alias \"<alias>*\" whic expands to all nets of an
        record.
@@ -2550,7 +2544,7 @@ of all of those people."
       (defadvice sendmail-pre-abbrev-expand-hook
         (before bbdb-rebuilt-all-aliases activate)
         (bbdb-rebuilt-all-aliases)))
-    
+
     ;; collect an alist of (alias rec1 [rec2 ...])
     (while records
       (setq record (car records))
@@ -2565,7 +2559,7 @@ of all of those people."
                         (bbdb-record-getprop record
                                              bbdb-define-all-aliases-field)))
         (setq aliases nil))
-      
+
       (while aliases
         (if (setq match (assoc (car aliases) result))
             (nconc match (cons record nil))
@@ -2573,13 +2567,13 @@ of all of those people."
         (setq aliases (cdr aliases)))
       (setq records (cdr records)))
 
-    ;; iterate over the results and create the aliases 
+    ;; iterate over the results and create the aliases
     (while result
       (let* ((aliasstem (caar result))
              (rec (cadar result))
              (group-alias-p (cddar result))
              (nets (if (not group-alias-p) (bbdb-record-net rec)))
-             (expansions  
+             (expansions
               (if group-alias-p
                   (mapcar (lambda (r) (bbdb-dwim-net-address r)) (cdar result))
                 (mapcar (lambda (net) (bbdb-dwim-net-address rec net))
@@ -2588,7 +2582,7 @@ of all of those people."
                           (list (car nets))))))
              (count 1)
              alias expansion)
-        
+
         (if group-alias-p
             ;; for group aliases we just take all the primary nets and define
             ;; just one expansion!
@@ -2607,17 +2601,17 @@ of all of those people."
                                 expansions)
                           count 0))))
 
-        ;; create the aliases for each expansion 
+        ;; create the aliases for each expansion
         (while expansions
           (cond ((= count 0);; all the nets of a record
                  (setq alias (concat aliasstem "*")))
-                ((= count 1);; expansion as usual 
+                ((= count 1);; expansion as usual
                  (setq alias aliasstem))
                 (t;; alias# for each net of a record
                  (setq alias (format "%s%s" aliasstem count))))
           (setq count (1+ count))
           (setq expansion (car expansions))
-          
+
           (if use-abbrev-p
               (define-mail-abbrev alias expansion)
             (define-mail-alias alias expansion))
@@ -2625,7 +2619,7 @@ of all of those people."
                                        (if use-abbrev-p
                                            mail-abbrevs mail-aliases))
                           (error "couldn't find the alias we just defined!")))
-          
+
           (or (eq (symbol-function alias) 'mail-abbrev-expand-hook)
               (error "mail-aliases contains unexpected hook %s"
                      (symbol-function alias)))
@@ -2641,7 +2635,7 @@ of all of those people."
                                                 (cdr (car result)))))))
           (setq expansions (cdr expansions))))
       (setq result (cdr result)))
-    
+
     (when (not use-abbrev-p)
       (modify-syntax-entry ?* "w" mail-mode-header-syntax-table)
       (sendmail-pre-abbrev-expand-hook))))
@@ -2656,7 +2650,7 @@ of all of those people."
 
 (defun bbdb-mail-abbrev-expand-hook (records)
   (mail-abbrev-expand-hook)
-  
+
   (when bbdb-completion-display-record
     (bbdb-pop-up-bbdb-buffer bbdb-use-pop-up)
     (let ((bbdb-gag-messages t))
@@ -2712,38 +2706,42 @@ The new alias will only be added if it isn't there yet."
         (bbdb-redisplay-records)
       (bbdb-redisplay-one-record (bbdb-current-record))))
   (setq bbdb-define-all-aliases-needs-rebuilt  (if delete "deleted" "new")))
-
-
-;;; Sound
-
+
+;;; Dialing numbers from BBDB
 (defcustom bbdb-dial-local-prefix-alist
-  '(((if bbdb-default-area-code (format "(%03d)" bbdb-default-area-code) "")
+  '(((if (integerp bbdb-default-area-code)
+         (format "(%03d)" bbdb-default-area-code)
+       (or bbdb-default-area-code ""))
      ""))
-  "*If this is non-nil, it should be a alist with elements of the form
-(PREFIX-REGEXP . REPLACEMENT)
-e.g. matching prefix which your local phone system (in company) has.
-The first matching one will be replaced by is REPLACEMENT in order to use the
-shorter number for dialing.  This might reduce cost by using a intern
-telephone system."
+  "Mapping to remove local prefixes from numbers.
+If this is non-nil, it should be an alist of
+(PREFIX REPLACEMENT) elements. The first part of a phone number
+matching the regexp returned by evaluating PREFIX will be replaced by
+the corresponding REPLACEMENT when dialing."
   :group 'bbdb-phone-dialing
   :type 'sexp)
 
 (defcustom bbdb-dial-local-prefix nil
-  "*If this is non-nil, it should be a string of digits which your phone
+  "Local prefix digits.
+If this is non-nil, it should be a string of digits which your phone
 system requires before making local calls (for example, if your phone system
-requires you to dial 9 before making outside calls.)"
+requires you to dial 9 before making outside calls.) In BBDB's
+opinion, you're dialing a local number if it starts with a 0 after
+processing bbdb-dial-local-prefix-alist."
   :group 'bbdb-phone-dialing
   :type '(choice (const :tag "No digits required" nil)
-                 (integer :tag "Dial this first" 9)))
+                 (string :tag "Dial this first" "9")))
 
 (defcustom bbdb-dial-long-distance-prefix nil
-  "*If this is non-nil, it should be a string of digits which your phone
+  "Long distance prefix digits.
+If this is non-nil, it should be a string of digits which your phone
 system requires before making a long distance call (one not in your local
-area code).  For example, in some areas you must dial 1 before an area code."
+area code).  For example, in some areas you must dial 1 before an area
+code. Note that this is used to replace the + sign in phone numbers
+when dialling (international dialing prefix.)"
   :group 'bbdb-phone-dialing
   :type '(choice (const :tag "No digits required" nil)
-                 (integer :tag "Dial this first" 1)))
-
+                 (string :tag "Dial this first" "1")))
 
 (defcustom bbdb-sound-player "/usr/demo/SOUND/play"
   "The program to be used to play the sounds for the touch-tone digits."
@@ -2769,83 +2767,97 @@ correspond to the 0, 1, 2, ... 9 digits, pound and star, respectively."
   :type 'vector)
 
 (defcustom bbdb-modem-dial nil
-  "Whether to use the modem for dialing.  Actually this is the modem command
-used to dial.  You may set it to a different value in order to initialize your
-modem or the like."
+  "Type of dialing to use.
+If this value is nil, the audio device is used for dialing. Otherwise,
+this string is fed to the modem before the phone number digits."
   :group 'bbdb-phone-dialing
-  :type '(choice (const  :tag "no" nil)
+  :type '(choice (const  :tag "audio" nil)
                  (string :tag "tone dialing" "ATDT ")
                  (string :tag "pulse dialing" "ATDP ")))
 
 (defcustom bbdb-modem-device "/dev/modem"
-  "Whether to use the modem for dialing."
+  "The name of the modem device.
+This is only used if bbdb-modem-dial is set to something other than nil."
   :group 'bbdb-phone-dialing
   :type 'string)
 
-(defvar bbdb-sound-volume) ;; XXX
+(defcustom bbdb-sound-volume 50
+  "The volume to play back dial tones at. The range is 0 to 100.
+This is only used if bbdb-modem-dial is set to nil."
+  :group 'bbdb-phone-dialing
+  :type 'integer)
+
+(defun bbdb-play-sound( num &optional volume )
+  "Play the specified touchtone number NUM at VOLUME.
+Tries to use internal sound if available; falls back to
+bbdb-sound-player."
+  (if (featurep 'native-sound)
+      ;; This requires the sound files to be loaded via bbdb-xemacs.
+      (funcall 'play-sound (intern (concat "touchtone" num))
+               bbdb-sound-volume)
+    (if (and bbdb-sound-player
+             (file-exists-p bbdb-sound-player))
+        (call-process bbdb-sound-player nil nil nil
+                      (aref bbdb-sound-files (string-to-int num)))
+      (error "BBDB has no means of playing sound."))))
+
+(eval-and-compile
+  (if (fboundp 'next-event)
+      (fset 'bbdb-next-event 'next-event)
+    (fset 'bbdb-next-event 'read-event)))
 
 (defun bbdb-dial-number (phone-string)
-  "Play the touchtone corresponding to the numbers in string."
-  (interactive "sTelephonenumber: ")
-  (let ((length (length phone-string))
-        (position 0)
-        (modem-command bbdb-modem-dial)
-        number)
+  "Dial the number specified by PHONE-STRING.
+The number is dialed either by playing touchtones through the audio
+device using bbdb-sound-player, or by sending a dial sequence to
+bbdb-modem-device. # and * are dialed as-is, and a space is treated as
+a pause in the dial sequence."
+  (interactive "sDial number: ")
+  (let ((dialed ""))
+    (mapcar
+     (lambda(d)
+       (if bbdb-modem-dial
+           (setq dialed
+                 (concat dialed
+                         (cond ((eq ?  d) ",")
+                               ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?* ?#))
+                                (format "%c" d))
+                               (t ""))))
+         (cond
+          ((eq ?# d)
+           (bbdb-play-sound 10))
+          ((eq ?* d)
+           (bbdb-play-sound 11))
+          ((eq ?  d)
+           ;; if we use sit-for, the user can interrupt!
+           (sleep-for 1)) ;; configurable?
+          ((memq d '(0 1 2 3 4 5 6 7 8 9)
+                 (bbdb-play-sound d)))
+          (t)))) phone-string)
 
-    (while (< position length)
-      (setq number (aref phone-string position))
-      (setq number
-            (cond ((and (<= ?0 number) (>= ?9 number)) (char-to-string number))
-                  ((= ?# number) "10")
-                  ((= ?* number) "11")
-                  ((= ?  number) 1)
-                  (t nil)))
-      (if (stringp number)
-          (cond (bbdb-modem-dial
-                 (if (= 1 (length number))
-                     (setq modem-command (concat modem-command number))))
-                ((and (boundp 'xemacsp) (featurep 'native-sound))
-                 (bbdb-play-sound (intern (concat "touchtone" number))
-                             bbdb-sound-volume))
-                (t
-                 (or (file-exists-p bbdb-sound-player)
-                     (error "no sound player program"))
-                 (call-process bbdb-sound-player nil nil nil
-                               (aref bbdb-sound-files (string-to-int number)))
-                 (sit-for 0)))
-        (if (numberp number)
-            (if bbdb-modem-dial
-                ;; "," is a pause
-                (setq modem-command (concat modem-command ","))
-              (sit-for number))))
-      (setq position (1+ position)))
-
+    ;; tell the user that we're dialed, if we're using the modem
     (if bbdb-modem-dial
         (with-temp-buffer
-          (insert modem-command ";\r\n")
+          (insert bbdb-modem-dial dialed ";\r\n")
           (write-region (point-min) (point-max) bbdb-modem-device t)
           (message "%s dialed. Pick up the phone now and hit any key ..."
                    phone-string)
           (bbdb-next-event)
           (erase-buffer)
           (insert "ATH\r\n")
-          (write-region (point-min) (point-max) bbdb-modem-device t)
-          ))
-    ))
+          (write-region (point-min) (point-max) bbdb-modem-device t)))))
 
 ;;;###autoload
-(defun bbdb-dial (phone force-area-code)
-  "On an audio-equipped workstation, play the appropriate tones on the
-builtin speaker to dial the phone number corresponding to the current
-line.  If the point is at the beginning of a record, dial the first
-phone number.  Does not dial the extension.  Does not dial the area
-code if it is the same as `bbdb-default-area-code' unless a prefix arg
+(defun bbdb-dial(phone force-area-code)
+  "Dial the number at point.
+If the point is at the beginning of a record, dial the first
+phone number.  Does not dial the extension.  Does not apply the
+transformations from bbdb-dial-local-prefix-alist if a prefix arg
 is given."
-
   (interactive (list (bbdb-current-field)
                      current-prefix-arg))
   (if (eq (car-safe phone) 'name)
-      (setq phone (car (bbdb-record-phones (car (cdr phone))))))
+      (setq phone (car (bbdb-record-phones (bbdb-current-record)))))
   (if (eq (car-safe phone) 'phone)
       (setq phone (car (cdr phone))))
   (or (vectorp phone) (error "not on a phone field"))
@@ -2859,25 +2871,31 @@ is given."
                                         (substring number (match-end 0)))
                     alist nil))
           (setq alist (cdr alist)))))
+
+    ;; cut off the extension
     (if (string-match "x[0-9]+$" number)
         (setq number (substring number 0 (match-beginning 0))))
+
+    ;; This is terrifically Americanized...
+    ;; Leading 0 => local number (?)
     (if (and (not shortnumber) bbdb-dial-local-prefix
              (string-match "^0" number))
-        (if (not (string-match "^[0-9#* ]+$" bbdb-dial-local-prefix))
-            (error "bbdb-dial-local-prefix contains non-digits")
-          (setq number (concat bbdb-dial-local-prefix number))))
+        (setq number (concat bbdb-dial-local-prefix number)))
+
+    ;; Leading + => long distance/international number
     (if (and (not shortnumber) bbdb-dial-long-distance-prefix
              (string-match "^\+" number))
-        (if (not (string-match "^[0-9#* ]+$" bbdb-dial-long-distance-prefix))
-            (error "bbdb-dial-long-distance-prefix contains non-digits")
-          (setq number (concat bbdb-dial-long-distance-prefix " "
-                               (substring number 1)))))
+        (setq number (concat bbdb-dial-long-distance-prefix " "
+                             (substring number 1))))
+
+    ;; use the short number if it's available
     (setq number (or shortnumber number))
     (if (not bbdb-silent-running)
         (message "Dialing %s" number))
     (bbdb-dial-number number)))
 
-
+
+;; not sure what this is doing here...
 (defun bbdb-get-record (prompt)
   "Get the current record or ask the user.
 To be used in `interactive' like this:
@@ -3032,7 +3050,7 @@ The results of the search is returned as a list of records."
         rec hash ret)
     (while records
       (setq rec (car records))
-      
+
       (when (and (memq 'name fields)
                  (bbdb-record-name rec)
                  (setq hash (bbdb-gethash (downcase (bbdb-record-name rec))))
@@ -3041,7 +3059,7 @@ The results of the search is returned as a list of records."
         (message "BBDB record `%s' causes duplicates, maybe it is equal to a company name."
                  (bbdb-record-name rec))
         (sit-for 0))
-      
+
       (if (memq 'net fields)
           (let ((nets (bbdb-record-net rec)))
             (while nets
@@ -3052,7 +3070,7 @@ The results of the search is returned as a list of records."
                          (bbdb-record-name rec) (car nets))
                 (sit-for 0))
               (setq nets (cdr nets)))))
-      
+
       (if (memq 'aka fields)
           (let ((aka (bbdb-record-aka rec)))
             (while aka
@@ -3319,7 +3337,7 @@ C-g again it will stop scanning."
     ;; add-to-list adds at the front so we have to reverse the list in order
     ;; to reflect the order of the records as they appear in the headers.
     (setq records (nreverse records))
-    
+
     records))
 
 (defun bbdb-get-help-window (message)
