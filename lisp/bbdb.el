@@ -3451,7 +3451,10 @@ When called interactively with a prefix argument, insert string at point."
   (bbdb-record-lessp record1 record2))
 
 (defun bbdb-resort-database ()
-  ;; only as a last resort, ha ha
+  "*Resort BBDB database as a last resort.
+This is not be needed when using BBDB itself.  It might be necessary
+after having used inferior software to add entries to the BBDB, however."
+  (interactive)
   (let* ((records (copy-sequence (bbdb-records))))
     (bbdb-with-db-buffer
      (setq bbdb-records (sort bbdb-records 'bbdb-record-lessp-fn))
