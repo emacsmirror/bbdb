@@ -6,6 +6,8 @@
 	* lisp/bbdb-com.el (bbdb-phones): Prompt indicates inverted search now.
 	(bbdb-update-records): No useless "Updating of BBDB records
 	finished" message any more.
+	(bbdb-define-all-aliases): Fixed warning message for records
+	without net, but with alias field. 
 
 	* lisp/bbdb.el (bbdb-display-layout-alist): Fixed the docs, typos
 	and default values.
