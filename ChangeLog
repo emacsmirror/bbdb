@@ -1,3 +1,15 @@
+2002-01-06  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-xemacs.el, lisp/bbdb-srv.el, lisp/bbdb-sc.el,
+	  lisp/bbdb-gui.el, lisp/bbdb-ftp.el, lisp/bbdb-com.el,
+	  lisp/bbdb-hooks.el, lisp/bbdb-w3.el, lisp/bbdb.el,
+	  lisp/bbdb-snarf.el:
+	Compiler cleanup
+
+	* lisp/Makefile.in:
+	Put the 'custom' hacks in bbdb-autoloads
+	Less noise while building
+
 2002-01-04  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
@@ -15,6 +27,28 @@
 	Added code for C-u M-TAB which lists all possible nets of current
 	completed addess. 
 
+2002-01-01  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el (bbdb-complete-name):
+	Two fixes based on further testing with completion-type.
+
+2001-12-27  Waider  <waider@waider.ie>
+
+	* lisp/bbdb-com.el 
+	(bbdb-completing-read-one-record):
+	Correctly handle case where no records are selected
+	(bbdb-complete-name): 
+	Whoops. Small logic error in cycling code
+
+	* lisp/bbdb.el (bbdb-send-mail-style), 
+	  lisp/bbdb-com.el (bbdb-send-mail-internal): 
+	Add Mew as an option for bbdb-send-mail-style
+
+2001-12-27  Jeff Bigler  <jcb@mit.edu>
+
+	* lisp/bbdb-com.el (bbdb-phone-area-regexp):
+	Allow / and . as separators when parsing a phone number.
+
 2001-12-26  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-com.el (bbdb-complete-name):
@@ -24,6 +58,16 @@
 	* lisp/bbdb.el (bbdb-search-intertwingle):
 	New function. More stringent version of bbdb-search-simple,
 	intended for internal bbdb use only
+
+2001-12-10  Karl Fogel <kfogel@red-bean.com>
+
+	* bbdb.texinfo
+	(Mail Sending Interfaces):
+	Use `add-hook' instead of `setq' in the examples, so users won't
+	clobber existing hooks.
+	(Known Bugs):
+	Reference mailing lists, as is done in other places where the
+	`bbdb-info' list is mentioned.
 
 2001-11-19  Waider  <waider@waider.ie>
 
