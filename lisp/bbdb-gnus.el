@@ -21,47 +21,6 @@
 ;;
 ;; $Id$
 ;;
-;; $Log$
-;; Revision 1.61  1998/12/05 16:44:21  simmonmt
-;; bbdb/gnus-show-sender should refer to summary buffer, not article
-;; buffer.
-;;
-;; Revision 1.60  1998/12/05 16:41:38  simmonmt
-;; Honor bbdb-user-mail-names.
-;;
-;; Revision 1.59  1998/04/11 07:21:25  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back
-;;
-;; Revision 1.58  1998/02/23 07:07:13  simmonmt
-;; Changed comments for Gnus/GNUS-specific stuff and for stuff that
-;; thought it was specific but is really not.
-;; bbdb/gnus-summary-author-in-bbdb now uses `bbdb-message-marker-field'
-;; as it said it did.  Using add-hook instead of bbdb-add-hook.
-;;
-;; Revision 1.57  1998/01/06 05:42:11  simmonmt
-;; Removed autoloads and when statements
-;;
-;; Revision 1.56  1997/12/01 04:57:50  simmonmt
-;; Customized variables, changed some comments, changed user format code
-;; error message
-;;
-;; Revision 1.55  1997/11/02 07:37:44  simmonmt
-;; Added REPLACE argument to bbdb/gnus-annotate-sender.  Variable to
-;; catch changes to bbdb/gnus-score-default.  Commented out most of score
-;; insinuation code.  Variable aliases.  Added in-bbdb format letter.
-;;
-;; Revision 1.54  1997/10/26 04:56:51  simmonmt
-;; Integration of Brian Edmonds <edmonds@cs.ubc.ca>'s gnus-bbdb.el.  Got
-;; scoring and summary buffer stuff.  Need to do splitting
-;;
-;; Revision 1.53  1997/10/11 23:57:24  simmonmt
-;; Created bbdb-insinuate-message to set M-TAB binding in message-mode so I
-;; don't have to load gnus first.
-;;
-;; Revision 1.52  1997/09/28 06:00:17  simmonmt
-;; Fix to accomodate nil gnus-single-article-buffer
-;;
-;;
 
 (require 'bbdb)
 (require 'gnus)
@@ -380,6 +339,21 @@ This function is meant to be used with the user function defined in
 	(or (bbdb-record-getprop
 	     record bbdb-message-marker-field)
 	    bbdb/gnus-summary-known-poster-mark) " ")))
+
+;;
+;; Gnus-specific snarfing (see also bbdb-snarf.el)
+;;
+
+;;;###autoload
+(defun bbdb/gnus-snarf-signature ()
+  "Snarf signature from the corresponding *Article* buffer."
+  (interactive)
+  (save-excursion
+    (or gnus-article-buffer (error "Not in Gnus!"))
+    (set-buffer gnus-article-buffer)
+    (save-restriction
+      (or (gnus-article-narrow-to-signature) (error "No signature!"))
+      (bbdb-snarf-region (point-min) (point-max)))))
 
 ;;
 ;; Scoring
