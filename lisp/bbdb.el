@@ -37,6 +37,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.55  1997/10/26 05:25:00  simmonmt
+;; New autoloads.  Override bbdb-display-completion-list for XEmacs users
+;;
 ;; Revision 1.54  1997/10/12 00:04:42  simmonmt
 ;; Added documentation and keymap definition for bbdb-www.  Added
 ;; autoloads for bbdb-www (and friends), bbdb-snarf, and
@@ -52,7 +55,7 @@
 ;;
 ;;
 
-(defconst bbdb-version "1.54unoff")
+(defconst bbdb-version "1.55unoff")
 (defconst bbdb-version-date "$Date$")
 (defconst bbdb-file-format 2)
 
@@ -332,8 +335,8 @@ Database code is first loaded.")
       (cond ((and bbdb-force-dialog-boxes
 		  (fboundp 'yes-or-no-p-dialog-box))
 	     (if (and (fboundp 'raise-screen)
-		      (not (frame-visible-p (selected-frame))))
-		 (raise-frame (selected-frame)))
+		      (not (screen-visible-p (selected-screen))))
+		 (raise-screen (selected-screen)))
 	     (yes-or-no-p-dialog-box prompt))
 	    (t
 	     (y-or-n-p prompt)))
@@ -2242,19 +2245,21 @@ the window will be split vertically rather than horizontally."
 (autoload 'bbdb-read-addresses-with-completion	"bbdb-com" bbdbid)
 (autoload 'bbdb-record-edit-property		"bbdb-com" bbdbid t)
 
-(autoload 'bbdb/vm-show-sender        "bbdb-vm"    bbdbid t)
-(autoload 'bbdb/vm-annotate-sender    "bbdb-vm"    bbdbid t)
-(autoload 'bbdb/vm-update-record      "bbdb-vm"    bbdbid t)
-(autoload 'bbdb/rmail-show-sender     "bbdb-rmail" bbdbid t)
-(autoload 'bbdb/rmail-annotate-sender "bbdb-rmail" bbdbid t)
-(autoload 'bbdb/rmail-update-record   "bbdb-rmail" bbdbid t)
-(autoload 'bbdb/mh-show-sender        "bbdb-mhe"   bbdbid t)
-(autoload 'bbdb/mh-annotate-sender    "bbdb-mhe"   bbdbid t)
-(autoload 'bbdb/mh-update-record      "bbdb-mhe"   bbdbid t)
-(autoload 'bbdb/gnus-show-sender      "bbdb-gnus"  bbdbid t)
-(autoload 'bbdb/gnus-annotate-sender  "bbdb-gnus"  bbdbid t)
-(autoload 'bbdb/gnus-update-record    "bbdb-gnus"  bbdbid t)
-(autoload 'bbdb/gnus-lines-and-from   "bbdb-gnus"  bbdbid nil)
+(autoload 'bbdb/vm-show-sender          "bbdb-vm"    bbdbid t)
+(autoload 'bbdb/vm-annotate-sender      "bbdb-vm"    bbdbid t)
+(autoload 'bbdb/vm-update-record        "bbdb-vm"    bbdbid t)
+(autoload 'bbdb/rmail-show-sender       "bbdb-rmail" bbdbid t)
+(autoload 'bbdb/rmail-annotate-sender   "bbdb-rmail" bbdbid t)
+(autoload 'bbdb/rmail-update-record     "bbdb-rmail" bbdbid t)
+(autoload 'bbdb/mh-show-sender          "bbdb-mhe"   bbdbid t)
+(autoload 'bbdb/mh-annotate-sender      "bbdb-mhe"   bbdbid t)
+(autoload 'bbdb/mh-update-record        "bbdb-mhe"   bbdbid t)
+(autoload 'bbdb/gnus-show-sender        "bbdb-gnus"  bbdbid t)
+(autoload 'bbdb/gnus-annotate-sender    "bbdb-gnus"  bbdbid t)
+(autoload 'bbdb/gnus-update-record      "bbdb-gnus"  bbdbid t)
+(autoload 'bbdb/gnus-lines-and-from     "bbdb-gnus"  bbdbid nil)
+(autoload 'bbdb/gnus-summary-get-author "bbdb-gnus"  bbdbid nil)
+(autoload 'bbdb/gnus-score              "bbdb-gnus"  bbdbid nil)
 
 (autoload 'bbdb-extract-field-value          "bbdb-hooks" bbdbid nil)
 (autoload 'bbdb-timestamp-hook               "bbdb-hooks" bbdbid nil)
@@ -2264,8 +2269,9 @@ the window will be split vertically rather than horizontally."
 (autoload 'sample-bbdb-canonicalize-net-hook "bbdb-hooks" bbdbid nil)
 (autoload 'bbdb-creation-date-hook	     "bbdb-hooks" bbdbid nil)
 
-(autoload 'bbdb-fontify-buffer	"bbdb-xemacs" bbdbid nil)
-(autoload 'bbdb-menu		"bbdb-xemacs" bbdbid t)
+(autoload 'bbdb-fontify-buffer                 "bbdb-xemacs" bbdbid nil)
+(autoload 'bbdb-menu                           "bbdb-xemacs" bbdbid t)
+(autoload 'bbdb-xemacs-display-completion-list "bbdb-xemacs" bbdbid nil)
 
 (autoload 'bbdb-www "bbdb-w3"               bbdbid nil)
 (autoload 'bbdb-www-grab-homepage "bbdb-w3" bbdbid nil)
@@ -2299,10 +2305,12 @@ the window will be split vertically rather than horizontally."
 (if (featurep 'vm)    (safe-require 'bbdb-vm))
 (if (featurep 'mh-e)  (safe-require 'bbdb-mhe))
 
-;;; elucidate
+;;; Support for the various Emacsen
 (cond ((string-match "XEmacs\\|Lucid" emacs-version)
        (bbdb-add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
        (define-key bbdb-mode-map 'button3 'bbdb-menu)
+
+       (fset 'bbdb-display-completion-list 'bbdb-xemacs-display-completion-list)
        ))
 
 (run-hooks 'bbdb-load-hook)
