@@ -148,13 +148,14 @@
 		    (bbdb-address-set-city addr city)
 		    (bbdb-address-set-state addr state)
 		    (bbdb-address-set-zip addr zip)
-		    (setq lines (nreverse lines))
-		    (bbdb-address-set-street1 addr (or (car lines) ""))
-		    (setq lines (cdr lines))
-		    (bbdb-address-set-street2 addr (or (car lines) ""))
-		    (setq lines (cdr lines))
-		    (bbdb-address-set-street3 addr (or (car lines) ""))
-		    (setq lines (cdr lines))
+; FIXME whois in general is busted.
+; 		    (setq lines (nreverse lines))
+; 		    (bbdb-address-set-street1 addr (or (car lines) ""))
+; 		    (setq lines (cdr lines))
+; 		    (bbdb-address-set-street2 addr (or (car lines) ""))
+; 		    (setq lines (cdr lines))
+; 		    (bbdb-address-set-street3 addr (or (car lines) ""))
+; 		    (setq lines (cdr lines))
 		    (bbdb-add-to-field rec addresses addr)))
 
 	      ;; Snarf any random notes.
