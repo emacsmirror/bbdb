@@ -1,10 +1,19 @@
 2003-03-07  Robert Fenk  <Robert.Fenk@gmx.de>
 
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): use
+	gnus-fetch-field instead of mail-fetch-field.  Fixes problems
+	reported by Klaus Zeitler.
+
 	* lisp/bbdb.el (bbdb-display-records-1): Do not use the function
 	with-output-to-temp-buffer since on recent GNU Emacses the local
 	variables get killed.
 	(bbdb-encache-message): Fix from Dan Debertin to avoid caching of
 	nil, i.e. empty record list, causing problems later.
+	(bbdb-canonicalize-address): Use equal instead of eq, since this
+	is the right thing to do! Fix from Matt Armstrong.
+	(bbdb-display-records-1): call bbdb-pop-up-buffer to ensure we get
+	a buffer in the current frame. 
+
 
 	* lisp/bbdb-vm.el (bbdb/vm-set-auto-folder-alist): added missing
 	local vars to avoid cluttering global namespace.
