@@ -24,6 +24,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.15  2000/08/05 15:38:04  waider
+;; When converting the streets to a list, delete "nil" as well as "".
+;;
 ;; Revision 1.14  2000/07/11 21:28:44  sds
 ;; (bbdb-migrate-record-lambda): `mapcar', not `mapc' here!
 ;;
@@ -90,10 +93,10 @@ number of the database as currently stored on disk.  Returns the
 version for the saved database."
   (save-excursion
     (let ((wc (current-window-configuration))
-	  (buf (get-buffer-create "*BBDB Migration Info*"))
-	  (newfeatures bbdb-migration-features)
-	  (first t)
-	  win update)
+      (buf (get-buffer-create "*BBDB Migration Info*"))
+      (newfeatures bbdb-migration-features)
+      (first t)
+      win update)
       (set-buffer buf)
       (erase-buffer)
       (goto-char (point-min))
@@ -107,18 +110,18 @@ any changes made to your data using features intended for the newer
 versions will be lost.  For your convenience, a list of file format
 changes introduced after version %d is shown below:\n\n" ondisk ondisk))
       (while newfeatures
-	(if (> (caar newfeatures) ondisk)
-	  (insert-string (concat (if first (setq first nil) "\n\n")
-				 "New features in database version "
-				 (format "%d" (caar newfeatures))
-				 ":\n\n" (cdar newfeatures))))
-	(setq newfeatures (cdr newfeatures)))
+    (if (> (caar newfeatures) ondisk)
+      (insert-string (concat (if first (setq first nil) "\n\n")
+                 "New features in database version "
+                 (format "%d" (caar newfeatures))
+                 ":\n\n" (cdar newfeatures))))
+    (setq newfeatures (cdr newfeatures)))
       (setq win (display-buffer buf))
       (shrink-window-if-larger-than-buffer win)
       (setq update
-	    (y-or-n-p (concat "Upgrade BBDB to version "
-			      (format "%d" bbdb-file-format)
-			      "? ")))
+        (y-or-n-p (concat "Upgrade BBDB to version "
+                  (format "%d" bbdb-file-format)
+                  "? ")))
       (delete-window win)
       (kill-buffer buf)
       (set-window-configuration wc)
@@ -205,59 +208,59 @@ argument."
   "Migrate the date field (the cdr of FIELD) from \"dd mmm yy\" to
 \"yyyy-mm-dd\"."
   (let ((date (cdr field))
-	parsed)
+    parsed)
     ;; Verify and extract - this is fairly hideous
     (and (equal (setq parsed (timezone-parse-date (concat date " 00:00:00")))
-		["0" "0" "0" "0" nil])
-	 (equal (setq parsed (timezone-parse-date date))
-		["0" "0" "0" "0" nil])
-	 (cond ((string-match
-		 "^\\([0-9]\\{4\\}\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)" date)
-		(setq parsed (vector (string-to-int (match-string 1 date))
-				     (string-to-int (match-string 2 date))
-				     (string-to-int (match-string 3 date))))
-		;; This should be fairly loud for GNU Emacs users
-		(bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
-			   (car field) (cdr field)
-			   (upcase-initials
-			    (downcase (car (rassoc (aref parsed 1)
-						   timezone-months-assoc))))
-			   (aref parsed 2) (aref parsed 0)))
-	       ((string-match
-		 "^\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([0-9]\\{4\\}\\)" date)
-		(setq parsed (vector (string-to-int (match-string 3 date))
-				     (string-to-int (match-string 1 date))
-				     (string-to-int (match-string 2 date))))
-		;; This should be fairly loud for GNU Emacs users
-		(bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
-			   (car field) (cdr field)
-			   (upcase-initials
-			    (downcase (car (rassoc (aref parsed 1)
-						   timezone-months-assoc))))
-			   (aref parsed 2) (aref parsed 0)))
-	       (t ["0" "0" "0" "0" nil])))
+        ["0" "0" "0" "0" nil])
+     (equal (setq parsed (timezone-parse-date date))
+        ["0" "0" "0" "0" nil])
+     (cond ((string-match
+         "^\\([0-9]\\{4\\}\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)" date)
+        (setq parsed (vector (string-to-int (match-string 1 date))
+                     (string-to-int (match-string 2 date))
+                     (string-to-int (match-string 3 date))))
+        ;; This should be fairly loud for GNU Emacs users
+        (bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
+               (car field) (cdr field)
+               (upcase-initials
+                (downcase (car (rassoc (aref parsed 1)
+                           timezone-months-assoc))))
+               (aref parsed 2) (aref parsed 0)))
+           ((string-match
+         "^\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([0-9]\\{4\\}\\)" date)
+        (setq parsed (vector (string-to-int (match-string 3 date))
+                     (string-to-int (match-string 1 date))
+                     (string-to-int (match-string 2 date))))
+        ;; This should be fairly loud for GNU Emacs users
+        (bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
+               (car field) (cdr field)
+               (upcase-initials
+                (downcase (car (rassoc (aref parsed 1)
+                           timezone-months-assoc))))
+               (aref parsed 2) (aref parsed 0)))
+           (t ["0" "0" "0" "0" nil])))
 
     ;; I like numbers
     (and (stringp (aref parsed 0))
-	 (aset parsed 0 (string-to-int (aref parsed 0))))
+     (aset parsed 0 (string-to-int (aref parsed 0))))
     (and (stringp (aref parsed 1))
-	 (aset parsed 1 (string-to-int (aref parsed 1))))
+     (aset parsed 1 (string-to-int (aref parsed 1))))
     (and (stringp (aref parsed 2))
-	 (aset parsed 2 (string-to-int (aref parsed 2))))
+     (aset parsed 2 (string-to-int (aref parsed 2))))
 
     ;; Sanity check
     (cond ((and (< 0 (aref parsed 0))
-		(< 0 (aref parsed 1)) (>= 12 (aref parsed 1))
-		(< 0 (aref parsed 2))
-		(>= (timezone-last-day-of-month (aref parsed 1)
-						(aref parsed 0))
-		    (aref parsed 2)))
-	   (setcdr field (format "%04d-%02d-%02d" (aref parsed 0)
-				 (aref parsed 1) (aref parsed 2)))
-	   field)
-	  (t
-	   (error "BBDB cannot parse %s header value %S for upgrade"
-		  field date)))))
+        (< 0 (aref parsed 1)) (>= 12 (aref parsed 1))
+        (< 0 (aref parsed 2))
+        (>= (timezone-last-day-of-month (aref parsed 1)
+                        (aref parsed 0))
+            (aref parsed 2)))
+       (setcdr field (format "%04d-%02d-%02d" (aref parsed 0)
+                 (aref parsed 1) (aref parsed 2)))
+       field)
+      (t
+       (error "BBDB cannot parse %s header value %S for upgrade"
+          field date)))))
 
 (defun bbdb-unmigrate-change-dates (rec)
   "Change date formats is timestamp and creation-date fields from
@@ -295,10 +298,10 @@ as an argument."
   "Convert the streets to a list."
   (mapcar (lambda (addr)
             (vector (aref addr 0) ; tag
-                    (delete "" ; nuke empties
-                            (list (aref addr 1) ; street1
-                                  (aref addr 2) ; street2
-                                  (aref addr 3)));street3
+                    (delete nil (delete "" ; nuke empties
+                                        (list (aref addr 1) ; street1
+                                              (aref addr 2) ; street2
+                                              (aref addr 3))));street3
                     (aref addr 4) ; city
                     (aref addr 5) ; state
                     (aref addr 6) ; zip
@@ -340,8 +343,8 @@ used as the list of records to update."
     (while records
       (bbdb-overwrite-record-internal (car records) nil)
       (if message-p (message "Updating %d: %s %s" (setq i (1+ i))
-			     (bbdb-record-firstname (car records))
-			     (bbdb-record-lastname  (car records))))
+                 (bbdb-record-firstname (car records))
+                 (bbdb-record-lastname  (car records))))
       (setq records (cdr records)))))
 (defalias 'bbdb-dry-heaves 'bbdb-migrate-rewrite-all)
 
@@ -353,6 +356,6 @@ version."
   (if (re-search-forward (format "^;;; file-version: %d$" old) nil t)
       (replace-match (format ";;; file-version: %d" new))
     (error (format "Can't find file-version string in %s buffer for v%d migration"
-		   bbdb-file new))))
+           bbdb-file new))))
 
 (provide 'bbdb-migrate)
