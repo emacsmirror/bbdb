@@ -69,45 +69,29 @@ however, been optimized for use with one.</p>
 
 <h2><a name="get">Getting the BBDB</a></h2>
 
-<p><a href="bbdb-2.00.06.tar.gz">BBDB 2.00.06</a> is the current
-released version.  It fixes a number of things that emacs 20.x breaks in
-BBDB 2.00, such as key mappings.</p>
+<p><a href="bbdb-2.20.tar.gz">BBDB 2.20</a> is the current
+released version, released on January 24, 2001.</p>
 
-<h3>Current development version: 2.2</h3>
-
-<p>This is as-yet untagged; the change in minor revision number
-reflects the following caveat:
-
-<p><strong>WARNING</strong>: this modifies the BBDB file format.
-Anything which relies on BBDB's current file format will no longer work.
-Alex has also written a function to revert the file format to the
-2.00.06 variant - see the <a href="#links">links</a> section below.
-I've modified it to handle the further hack I've inflicted on the
-streets field.</p>
-
-<p>This is now in CVS at the head of the tree; you can grab the
-<a href="bbdb-2.2.tar.gz">tarball</a>. This is updated from CVS at
+<p>The current development version, 2.3, is the head of the CVS
+tree. If you wish to try it out, you can grab the <a
+href="bbdb-2.3.tar.gz">tarball</a>. This is updated from CVS at
 midnight Pacific Time on the <a
 href="http://www.sourceforge.net/">SourceForge</a> site.</p>
 
 <h3>Compilation notes:</h3>
 
 <ol>
- <li>Compilation is known to work with Solaris make and with GNU
-  make.  If you discover compilation problems with other
-  versions of make, please submit a bug report to <a
-  href="mailto:bbdb-info@lists.sourceforge.net">bbdb-info@lists.sourceforge.net</a>.
-  The make binary shipped with IRIX 6.2 is known not to work
-  with BBDB version 2.00. Also, some of the test targets don't
-  work with GNU make, since MAKEFLAGS doesn't include "-".<br>
-  <br>
-  Didier Verna is currently working on <tt>autoconf</tt> support, so
-  that the above problem should go away.</li>
+ <li>BBDB uses autoconf to generate its Makefiles, so it should work
+     anywhere that autoconf works. The tarballed version comes with
+     prebuild configure script and Makefiles; the CVS version will
+     require you to use autoconf to generate the configure
+     script.</li>
 
  <li>Texinfo 3.11 (or later) is required to compile the texinfo
-  documentation.  It is available at <a
-  href="ftp://ftp.gnu.org/pub/gnu">the GNU FTP site</a>.
-  Precompiled info files are included in the tarball.
+     documentation.  It is available at <a
+     href="ftp://ftp.gnu.org/pub/gnu">the GNU FTP
+     site</a>. Precompiled info files are included in the
+     tarball.</li>
 </ol>
 
 <h2>CVS tree</h2>
@@ -151,10 +135,10 @@ To retrieve version 1.90, use the following argument:<br>
 -r BBDB_1_90unoff
 </pre>
 
-To retrieve version 2.00.06, use the following argument:<br>
+To retrieve version 2.20, use the following argument:<br>
 
 <pre>
--r BBDB_2_00_06
+-r BBDB_2_20
 </pre>
 
 <h2><a name="manual">Manual</a></h2>
@@ -220,7 +204,8 @@ before attempting to use them!</p>
   DeWeese</a> has a <a
   href="http://www.moshpit.org/pilotmgr/">PilotManager</a> plugin
   called <a
-  href="http://home.rochester.rr.com/tsdeweese/SyncBBDB.html">SyncBBDB</a>.</li>
+  href="http://home.rochester.rr.com/tsdeweese/SyncBBDB.html">SyncBBDB</a>.
+  Thomas also implemented the multiple-same-name-records support.</li>
 
  <li><a href="http://www.splode.com/~friedman/">Noah Friedman</a> is
  currently maintaining <a href="http://www.jwz.org/">jwz</a>'s <a
@@ -239,7 +224,7 @@ before attempting to use them!</p>
 
  <li><href="http://t2100cdt.kippona.net/linux/emacs/mew/">Chris
   Beggy</a> has managed to get BBDB working with Mew, a mailreader
-  with Japanese language support. There's a bbdb-mew.el on this page
+  with Japanese language support. There's a bbdb-mew.el on his page
   which should probably make it into the official tree at some
   point.</li>
 
@@ -250,7 +235,7 @@ before attempting to use them!</p>
 </ul>
 
 <hr>
-<address><a href="http://www.waider.ie/">Waider</a>(based on Matt
+<address><a href="http://www.waider.ie/">Waider</a> (based on Matt
 Simmons' BBDB page</a>)</address>
 
 
