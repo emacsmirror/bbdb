@@ -1,3 +1,8 @@
+2001-02-14  Robert Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb-vm.el (bbdb/vm-update-records): Fixed bug of calling
+	message with wrong argument.
+
 2001-02-14  Waider  <waider@waider.ie>
 
 	* lisp/bbdb-com.el:
