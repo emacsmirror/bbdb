@@ -1,4 +1,48 @@
-2001-04-19  Robert Fenk  <fenk@forwiss.de>
+2001-05-17  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb-invoke-hook-for-value): Return symbols just
+	as they are, do not eval them.
+
+	* lisp/bbdb-com.el (bbdb-update-records-mode): 
+	* lisp/bbdb-vm.el (bbdb/vm-update-records-mode):
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records-mode): 
+	Removed extra quote from the defcustom arguments.	
+
+	* lisp/bbdb-com.el (bbdb-complete-clicked-name): Fixed a cycling
+	bug when choosing a completion which ia already complete.
+
+2001-05-14  Robert Fenk  <Robert.Fenk@gmx.de>
+
+	* lisp/bbdb.el (bbdb/mail-auto-create-p): 
+	(bbdb/news-auto-create-p): When set to 'promt then ask the user
+	before automatically creating a record.
+
+	* lisp/bbdb.el (bbdb*prompt-for-auto-create-p): Removed the 
+	variable and packed its functionality into the
+	bbdb/*-auto-create-p variables.
+
+	* lisp/bbdb-snarf.el (bbdb-extract-address-components): Allow also
+	nil as name or email address, not only strings.
+
+	* lisp/bbdb-rmail.el (bbdb/rmail-pop-up-bbdb-buffer): Remove the
+	BBDB buffer window when empty.
+
+	* lisp/bbdb-migrate.el (bbdb-unmigrate-zip-codes-to-strings):
+	Fixed the faulty use of let instead of let*.
+
+	* lisp/bbdb-hooks.el
+	(bbdb-ignore-selected-messages-confirmation): Added the missing
+	default value nil. 
+	(bbdb-force-record-create): New hook function for automatic adding
+	of addresses when replying to a message. 
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): 
+	* lisp/bbdb-vm.el (bbdb/vm-update-records): Fixed documentation.
+
+	* lisp/bbdb-com.el (bbdb-update-records): Fixed search for nets
+	and documentation.
+
+2001-04-19  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-gui.el (bbdb-fontify-buffer): 
 	* lisp/bbdb.el (bbdb-elided-display-fields):
@@ -35,13 +79,13 @@
 	* lisp/bbdb-gnus.el:
 	Fix list-vs-not bug in bbdb/gnus-edit-notes
 
-2001-03-29  Robert Fenk  <fenk@forwiss.de>
+2001-03-29  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-gnus.el (bbdb/gnus-get-addresses): Fixed a bug in 
 	getting the header content.  mail-fetch-field requires a final
 	newline! 
 
-2001-03-26  Robert Fenk  <fenk@forwiss.de>
+2001-03-26  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb.el (bbdb-message-cache-lookup): 
 	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): 
@@ -49,7 +93,7 @@
 	YABugfix: first record was lost when looking it up from the
 	cache. 
 
-2001-03-25  Robert Fenk  <fenk@forwiss.de>
+2001-03-25  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb.el (bbdb-message-cache-lookup):
 	Removed the faulty single record code for Rmail/MHE
@@ -86,7 +130,7 @@
 	  Fix priorities thing so that you can access per-field menus on
 	  GNU Emacs.
 
-2001-03-23  Robert Fenk  <fenk@forwiss.de>
+2001-03-23  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-vm.el (bbdb/vm-update-records): 
 	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): 
@@ -94,18 +138,18 @@
 	offer-to-create flag and removed the faulty *-auto-create-p which
 	was added by the last commit.
 
-2001-03-22  Robert Fenk  <fenk@forwiss.de>
+2001-03-22  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-vm.el (bbdb/vm-show-records): bbdb/mail-auto-create-p
 	is loacally set to t in order to force creation of records when
 	explicitly showing them.
 
-2001-03-21  Robert Fenk  <fenk@forwiss.de>
+2001-03-21  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-prompt-for-create): fix a bug with GNU
 	Emacs.
 
-2001-03-19  Robert Fenk  <fenk@forwiss.de>
+2001-03-19  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-update-records): honors now
 	bbdb-gag-messages; fixed the overall number in the progress
@@ -117,7 +161,7 @@
 	  gnus-ignored-from-addresses is not defined in the Gnus that
 	  comes with Emacs 20.7. Check for boundness before using.
 
-2001-03-17  Robert Fenk  <fenk@forwiss.de>
+2001-03-17  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-whois.el: Definition of some variable in order to
 	avoid warnings during compilation 
@@ -227,7 +271,7 @@
 	* lisp/bbdb.el:
 	bbdb-search-simple: check that the name actually matches (not company)
 
-2001-03-01  Robert Fenk  <fenk@forwiss.de>
+2001-03-01  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb.el (bbdb-submit-bug-report): A function for submitting bug
 	reports, which should make it easier for reportes and maintaines
@@ -290,7 +334,7 @@
 	Quick fix for LN_S not being defined. Perhaps it's even the
 	correct fix.
 
-2001-02-14  Robert Fenk  <fenk@forwiss.de>
+2001-02-14  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-vm.el (bbdb/vm-update-records): Fixed bug of calling
 	message with wrong argument.
@@ -308,7 +352,7 @@
 	* texinfo/bbdb.texinfo
 	Zipcode stuff (Alex Schroeder)
 	
-2001-02-13  Robert Fenk  <fenk@forwiss.de>
+2001-02-13  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-vm.el
 	(bbdb/vm-update-records): replaced display-message calls by
@@ -343,7 +387,7 @@
 
 	* lisp/bbdb-com.el: doc fixes
 
-2001-02-08  Robert Fenk  <fenk@forwiss.de>
+2001-02-08  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb.el (bbdb-annotate-message-sender):
 	Applied bugfix for adding new net addresses, which was broken by
@@ -363,20 +407,20 @@
 	* lisp/bbdb-vm.el:
 	Only call the sit-for bugfix in fsfemacs.
 
-2001-02-07  Robert Fenk  <fenk@forwiss.de>
+2001-02-07  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-com.el (bbdb-complete-name): Fixed bug which showed
 	its effect only with GNU Emacs.
 	(bbdb-add-or-remove-mail-alias): Better prompt.
 
-2001-02-05  Robert Fenk  <fenk@forwiss.de>
+2001-02-05  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/Makefile.in (bbdb-hooks.elc): removed need to load VM.
 
 	* lisp/bbdb.el (bbdb-frob-mode-line): Removed faulty
 	replace-in-string.
 
-2001-02-03  Robert Fenk  <fenk@forwiss.de>
+2001-02-03  Robert Fenk  <Robert.Fenk@gmx.de>
 
 	* lisp/bbdb-snarf.el (bbdb-extract-address-component-regexps):
 	removed bbdb-snarf-nice-real-name-* variables and function and
