@@ -59,14 +59,26 @@
   :type 'symbol)
 
 (defun bbdb-snarf-address-lines ()
-  (let
-      ((lines (bbdb-split (buffer-string) "\n")))
-    (while (< (length lines) 3)
-	(setq lines (append lines (list nil))))
-    (if (> (length lines) 3)
-	(error "bbdb-snarf-address-lines: too many lines in address."))
+  (let ((lines (bbdb-split (buffer-string) "\n")))
+    (if (>= bbdb-file-format 5) nil
+      (while (< (length lines) 3)
+ 	(setq lines (append lines (list nil))))
+      (if (> (length lines) 3)
+	  (error "bbdb-snarf-address-lines: too many lines in address.")))
     (delete-region (point-min) (point-max))
     lines))
+
+(defun bbdb-snarf-make-address
+  (label address-lines city state zip country)
+  (if (>= bbdb-file-format 4)
+      (vector label address-lines city state zip country)
+    (if (>= bbdb-file-format 3)
+	(vector label address-lines city state zip)
+      (vector label 
+	      (nth 0 address-lines)
+	      (nth 1 address-lines)
+	      (nth 2 address-lines)
+	      city state zip))))
 
 (defun bbdb-snarf-prune-empty-lines ()
   (goto-char (point-min))
@@ -141,6 +153,7 @@ more details."
       (set-buffer buf)
       (erase-buffer)
       (insert text)
+      (set-text-properties (point-min) (point-max) nil)
 
       ;; toss beginning and trailing space
       (goto-char (point-min))
@@ -224,14 +237,14 @@ more details."
 	      ;; address lines
 	      (goto-char (point-min))
 	      (setq address-lines (bbdb-snarf-address-lines)
-		    address-vector (list (vector
+		    address-vector (list (bbdb-snarf-make-address
 					  "address"
-					  (nth 0 address-lines)
-					  (nth 1 address-lines)
-					  (nth 2 address-lines)
+					  address-lines
 					  city
 					  state
-					  zip)))))))
+					  zip
+					  "" ;; FIXME: snarf country
+					  )))))))
        ;; try for just city, state
        ((re-search-forward "^\\(.*\\), \\([A-Z][A-Za-z]\\)$"
 			   (point-max) t)
@@ -242,14 +255,14 @@ more details."
 	    (narrow-to-region (point-min) (match-end 0))
 	    (goto-char (point-min))
 	    (setq address-lines (bbdb-snarf-address-lines)
-		  address-vector (list (vector
+		  address-vector (list (bbdb-snarf-make-address
 					"address"
-					(nth 0 address-lines)
-					  (nth 1 address-lines)
-					  (nth 2 address-lines)
-					  city
-					  state
-					  nil))))))
+					address-lines
+					city
+					state
+					0
+					"" ;; FIXME: snarf country
+					))))))
        (t
 	(setq address-lines '(nil nil nil)
 	      address-vector nil)))
