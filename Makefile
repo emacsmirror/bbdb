@@ -4,6 +4,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.54  1997/10/11 23:48:40  simmonmt
+# Removed my paths from VMDIR and MHEDIR.  Seems I had broken the
+# documented 'if these are blank and the packages live on load-path,
+# Emacs will find them' behavior by dying if VMDIR, MHEDIR and GNUSDIR
+# weren't set.  It's fixed now.
+#
 # Revision 1.53  1997/10/06 01:15:13  simmonmt
 # Fixed for new grand reorg.  Rewrote XEmacs package installation code.
 #
@@ -19,9 +25,9 @@
 # otherwise "require" won't work in the batch emacs.
 #
 # Set the ones you've got, and comment out the rest.
-VMDIR   	= /p/local/xemacs-20.3/lib/xemacs-20.3-b27/lisp/vm
+VMDIR   	= 
 GNUSDIR 	= /home/simmonmt/gnus/lisp
-MHEDIR 		= /p/local/xemacs-20.3/lib/xemacs-20.3-b27/lisp/mh-e
+MHEDIR 		= 
 
 # **************************
 # XEmacs Packagization (sp?)
