@@ -8,11 +8,14 @@
 @c $Id$
 @c
 @c $Log$
+@c Revision 1.11  1997/11/02 06:31:00  simmonmt
+@c Rewrite Part 2 (through MUA-specific features)
+@c
+@c Revision 1.11  1997/11/02 06:31:00  simmonmt
+@c Rewrite Part 2 (through MUA-specific features)
+@c
 @c Revision 1.10  1997/10/26 05:17:56  simmonmt
 @c Rewrite part 1
-@c
-@c
-@c Revision 1.10  1997/10/26 05:17:56  simmonmt
 @c
 @c
 @c
@@ -97,7 +100,8 @@ field (@samp{company} or @samp{notes,} for example); @refill
 @end itemize
 * Introduction::		Introduction
 @menu
-* Interfaces::			Interfaces
+* Installation::		Installation
+* The BBDB::		        Overview
 * Interfaces::			Interfaces to various readers
 * Reader-specific Features::    Features only available to specific readers
 * Other Packages::              Using the BBDB with other packages
@@ -155,7 +159,7 @@ Initial Configuration
 locations may change without warning.
 
 @node Normal User, XEmacs Package, General Prerequisites, Installation
-@heading Byte Compiling the Lisp files
+@subsection Normal User Installation
 @cindex Normal User Installation
 
 @subheading Byte Compiling the Lisp files
@@ -209,9 +213,9 @@ build the @b{BBDB} with support for @code{Gnus} and @code{VM}, you can
 do so by typing:
 
 @example
-@heading Moving the files to their final destination
+make gnus vm
 @end example
-@subheading Lisp files
+
 @subheading Moving the files to their final destination
 
 @subsubheading Lisp files
@@ -246,7 +250,7 @@ directory under @file{site-lisp} (or put it somewhere else and link it into
 @code{load-path} when Emacs starts.  This is the best of the three listed here,
 as it allows for a degree of separation between the (possibly changing) source
 tree and the production code.
-@subheading TeX files
+@end itemize
 
 @ifinfo
 bbdb-print, the @b{BBDB} database printing utility (@xref{bbdb-print}).
@@ -258,7 +262,7 @@ The three support files, @file{bbdb-cols.tex}, @file{bbdb-print.tex}, and
 either on the default TeX search path or is listed in the
 @code{TEXINPUTS} environment variable.  If neither of these two options
 is taken, TeX will not be able to process the file output by
-@subheading @TeX files
+@code{bbdb-print}.
 @end ifinfo
 @iftex
 bbdb-print, the @b{BBDB} database printing utility (@xref{bbdb-print}).
@@ -270,7 +274,7 @@ The three support files, @file{bbdb-cols.tex}, @file{bbdb-print.tex}, and
 either on the default @TeX search path or is listed in the
 @code{TEXINPUTS} environment variable.  If neither of these two options
 is taken, @TeX will not be able to process the file output by
-@subheading texinfo files
+@code{bbdb-print}.
 @end iftex
 
 @subsubheading texinfo files
@@ -286,7 +290,7 @@ the @code{INFOPATH} environment variable.
 versions of XEmacs 20.4.  If you are not running a 20.4 beta, you should 
 install the @b{BBDB} according to the instructions in @ref{Normal User}.
 @b{NOTE:} XEmacs packages are currently supported only under XEmacs
-@heading Byte Compiling the Lisp files
+20.5.  If you are not running 20.5, you should install the @b{BBDB}
 according to the instructions in @ref{Normal User}.
 First, you need to byte-compile the appropriate @b{BBDB} Lisp files.
 While this is in theory an optional step, it is virtually required in
@@ -340,7 +344,7 @@ do so by typing:
 make gnus vm
 @end example
 
-@heading Moving the files to their final destination
+The byte-compilation procedure is the same as that used in the Normal
 User installation.  See @ref{Normal User}.
 
 @subheading Moving the files to their final destination
@@ -417,18 +421,18 @@ Put the following forms in your Emacs configuration
 file@footnote{@file{.emacs} for FSF Emacs and XEmacs <= 20.3,
 @file{.xemacs/init.el} for XEmacs >= 20.3}:
 
-@format
-@code{(autoload 'bbdb         "bbdb-com" "Insidious Big Brother Database" t)}
-@code{(autoload 'bbdb-name    "bbdb-com" "Insidious Big Brother Database" t)}
-@code{(autoload 'bbdb-company "bbdb-com" "Insidious Big Brother Database" t)}
-@code{(autoload 'bbdb-net     "bbdb-com" "Insidious Big Brother Database" t)}
-@code{(autoload 'bbdb-notes   "bbdb-com" "Insidious Big Brother Database" t)}
-@code{(autoload 'bbdb-insinuate-vm       "bbdb-vm"    "Hook BBDB into VM")}
-@code{(autoload 'bbdb-insinuate-rmail    "bbdb-rmail" "Hook BBDB into RMAIL")}
-@code{(autoload 'bbdb-insinuate-mh       "bbdb-mhe"   "Hook BBDB into MH-E")}
-@code{(autoload 'bbdb-insinuate-gnus     "bbdb-gnus"  "Hook BBDB into GNUS")}
-@code{(autoload 'bbdb-insinuate-sendmail "bbdb"       "Hook BBDB into sendmail")}
-@end format
+The simplest way to configure the @b{BBDB} is to include the following
+@exdent (autoload 'bbdb         "bbdb-com" "Insidious Big Brother Database" t)
+@exdent (autoload 'bbdb-name    "bbdb-com" "Insidious Big Brother Database" t)
+@exdent (autoload 'bbdb-company "bbdb-com" "Insidious Big Brother Database" t)
+@exdent (autoload 'bbdb-net     "bbdb-com" "Insidious Big Brother Database" t)
+@exdent (autoload 'bbdb-notes   "bbdb-com" "Insidious Big Brother Database" t)
+@exdent (autoload 'bbdb-insinuate-vm       "bbdb-vm"    "Hook BBDB into VM")
+@exdent (autoload 'bbdb-insinuate-rmail    "bbdb-rmail" "Hook BBDB into RMAIL")
+@exdent (autoload 'bbdb-insinuate-mh       "bbdb-mhe"   "Hook BBDB into MH-E")
+@exdent (autoload 'bbdb-insinuate-gnus     "bbdb-gnus"  "Hook BBDB into GNUS")
+@exdent (autoload 'bbdb-insinuate-sendmail "bbdb"       "Hook BBDB into sendmail")
+@example
 @code{(require 'bbdb)}
 Next, you need to add mailer-specific forms to your Emacs configuration
 file to configure your mailer(s) to use the @b{BBDB}.  The sections
@@ -617,6 +621,17 @@ fields that do not fall into one of the other three categories.  To
 create one of these user-defined types, use the
 @code{bbdb-insert-new-field} command.  (@xref{BBDB Mode}).
 addition, several of the user-defined field names are "special".  That
+Several of the user-defined field names are "special".  That is, the
+@b{BBDB} treats the values of these "special" fields differently than it 
+does other user-defined fields  The "special" fieldes are:
+
+than it does other user-defined fields.  The "special" fields are:
+Address used in place of the listed net address for fingering the entity 
+@b{Gnus} scoring adjustment for this person.  @xref{Gnus Features}.
+@b{Gnus} scoring adjustment for this person.  For initialization details, see
+Value used instead of @code{name} for completion.  @xref{Mail Sending Interfaces}.
+are with @code{bbdb-snarf} (@pxref{bbdb-snarf}) and the @b{BBDB}/Web Browser
+functionality (for initialization details, see @ref{Web Browser Prep}.  For
 @end table
 
 @node Basic Searching, Advanced Searching, Database Fields, The BBDB
@@ -887,7 +902,7 @@ If this documentation is not installed in the standard Info directory,
 then you should set this variable to the name of the texinfo-formatted 
 (@code{bbdb-print})  Creates a TeX file that contains a pretty-printed version 
 of @b{BBDB} records.  If prefixed by @kbd{*}, only the records currently
-@node Interfaces, Options, BBDB Mode, Top
+
 @end table
 
 @node Interfaces, Reader-specific Features, BBDB Mode, Top
@@ -941,8 +956,6 @@ headers.  @xref{Customization Hooks} @refill
 @menu
 * Mail Reading Interfaces::		Mail Reading Interfaces
 * News Reading Interfaces::		News Reading Interfaces
-@c ----  Editing ends here ----
-
 * Mail Sending Interfaces::		Mail Sending Interfaces
 @end menu
 
@@ -950,21 +963,32 @@ headers.  @xref{Customization Hooks} @refill
 @subsection Mail Reading Interfaces
 
 There are BBDB interfaces for the following mail readers:
-@b{RMAIL}, from the standard emacs library;
+
+@itemize @bullet
 @item
-@b{MH-E}, the Emacs interface to @b{Mail Handler}, from the standard 
-emacs library.@refill
+@b{Gnus}, a news- and email- reader written by Lars Magne Ingebrigtsen
+(based on @b{GNUS} by Mansanobu Umeda).
+@item
 @b{MH-E}, the Emacs interface to @b{Mail Handler} (@b{MH}), from the
+standard emacs library, but packaged separately from XEmacs since
+version 20.4.@refill
+@item
 @b{RMAIL}, from the standard emacs library (packaged separately for
 XEmacs users as of 20.4);
 @item
 @b{View Mail}, by Kyle Jones, version 5.31 or newer;
 @end itemize
 
-The only news reader which @b{BBDB} supports is @b{GNUS}, by
-Masanobu Umeda.  If anyone wants to write a @b{BBDB} interface to
-@b{GNEWS} (probably quite easy to do), please send it to me. @refill
+@node News Reading Interfaces, Mail Sending Interfaces, Mail Reading Interfaces, Interfaces
 @subsection News Reading Interfaces
+
+There are BBDB interfaces for the following news readers:
+
+@itemize @bullet
+@item
+@b{GNUS}, a newsreader written by Masanobu Umeda. @refill
+@item
+@b{Gnus}, the modern news- and email-reading incarnation of @b{GNUS}.
 @b{Gnus} is written by Lars Magne Ingebrigtsen.@refill
 @end itemize
 
@@ -986,12 +1010,31 @@ with the common portion of the matches.  Typing @kbd{M-TAB} again will
 show a list of possible completions.  If it completes unambiguously,
 then an address of the form @w{@code{User Name <email-address>}} will
 be inserted.  The variable @code{bbdb-completion-type} controls
-You must call the function @code{bbdb-insinuate-sendmail} to get
-this key binding.  @xref{Installation}@refill
+whether completion is done on real names, or network addresses, or
+both. @refill
+
 This binding is automatically set by the various insinuation functions
+documented earlier in this manual.  (@xref{Initial Configuration})
+Briefly, the forms for these functions are:
+
+@table @b
+@item Gnus
+@code{(setq gnus-Startup-hook 'bbdb-insinuate-gnus)} @i{for Gnus 3.14 or older}@*
+@code{(setq gnus-startup-hook 'bbdb-insinuate-gnus)} @i{for Gnus 3.15 or newer}
+@item MH-E
+@code{(setq mh-folder-mode-hook 'bbdb-insinuate-mh)}
+@item RMAIL
+@code{(setq rmail-mode-hook 'bbdb-insinuate-rmail)}
+@item sendmail
+@code{(setq mail-setup-hook 'bbdb-insinuate-sendmail)}
+@item VM
+@code{(bbdb-insinuate-vm)} @i{Add to @file{~/.vm} file}
+@end table
+
+@noindent
 The above forms should be added to your Emacs initialization file,
-@code{mail-alias} property: if a record has a @code{mail-alias}
-property, then that is used instead of their @code{name} field.
+except where otherwise noted.
+
 You can control what ``real name'' is inserted with the
 @code{mail-alias} field: if a record has a @code{mail-alias}
 field, then that is used instead of their @code{name} field.
@@ -1032,7 +1075,200 @@ function @code{bbdb-define-all-aliases} from your @code{mail-setup-hook}.
 This will search the database, and call @code{define-mail-alias} to
 define each of the resulting aliases.@refill
 function @code{bbdb-define-all-aliases} from your
-@node Options, Internals, Interfaces, Top
+@node Reader-specific Features, Options, Interfaces, Top
+@code{define-mail-alias} to define each of the resulting aliases.@refill
+
+@node Reader-specific Features, Other Packages, Interfaces, Top
+@section Reader-specific Features
+
+There are features of the @b{BBDB} that are available only for specific
+mail- and news-readers.  These features are described below.
+
+@menu
+* Gnus Features::                       Gnus-specific Features
+* VM Features::                         VM-specific Features
+@end menu
+
+@node Gnus Features, VM Features, Reader-specific Features, Reader-specific Features
+@subsection Gnus-specific Features
+
+The @b{BBDB} can be used to provide score information, or to integrate
+database information into the @b{Gnus} Summary buffer or the @b{GNUS}
+Subject List. 
+
+@menu
+* Gnus Scoring::                        Store score adjustments in the @b{BBDB}
+* Gnus Summary Buffer::                 @b{BBDB} information in the Summary buffer
+* GNUS Subject List::                   @b{BBDB} information in the Subject List
+@end menu
+
+@node Gnus Scoring, Gnus Summary Buffer, Gnus Features, Gnus Features
+@subsubsection Scoring
+@vindex bbdb/gnus-score-field
+@vindex bbdb/gnus-score-default
+@vindex gnus-score-find-score-files-function
+
+The @b{BBDB} can provide scoring information to @b{Gnus} in one of two
+ways.
+
+@enumerate
+@item
+Articles whose authors appear in the @b{BBDB} and who have
+@code{gnus-score} fields will have their scores adjusted by the value
+contained in that field.
+@item
+Articles whose authors appear in the @b{BBDB} but who do not have
+@code{gnus-score} fields will have their scores adjusted by
+@code{bbdb/gnus-score-default}.  If @code{bbdb/gnus-score-default} is
+@code{nil}, no score adjustment will be made.
+@end enumerate
+
+The @b{BBDB} by default searches the field contained in
+@code{bbdb/gnus-score-field} for score values.  To have the @b{BBDB} use 
+a different field, change the value of this variable.
+
+To enable @b{BBDB}-assisted scoring, add the @code{bbdb/gnus-score}
+function to @code{gnus-score-find-score-files-function}.  Assuming that
+you want to preserve the default value of this variable, use a form
+similar to the following:
+
+@example
+(setq gnus-score-find-score-files-function
+      '(gnus-score-find-bnews bbdb/gnus-score))
+@end example
+
+@b{Note:} The default value in @b{Gnus} 5.5 is @code{gnus-score-find-bnews}.
+Check your configuration before using the above code, as your values may
+be different.
+
+@node Gnus Summary Buffer, GNUS Subject List, Gnus Scoring, Gnus Features
+@subsubsection Gnus Summary Buffer Enhancements
+
+@b{Gnus} can use the @b{BBDB} to do one of two things:
+
+a user-defined mark character.  See the documentation for
+@code{bbdb/gnus-summary-in-bbdb-format-letter} below.
+@item
+Mark authors in the Summary Buffer who have records in the @b{BBDB} with
+a user-defined mark character.  See Marking Posters, below.
+stored in the @b{BBDB}.  In addition, the replaced name is marked with a
+user-defined mark character.  See the documentation for
+@code{bbdb/gnus-summary-user-format-letter} below.
+For authors in the Summary Buffer who also have records in the @b{BBDB},
+replace their name as listed in the Summary Buffer with their name as
+The variables that affect the above Summary Buffer enhancements are as
+follows:
+@end itemize
+@c The text below should be ripped out, burned, and rewritten
+by concatenating @samp{%u} with the value of
+@table @code
+@c I'd rather say it twice and risk over-explaining it than not explain
+@c it enough.
+@item bbdb/gnus-summary-in-bbdb-format-letter
+This determines the user format code to be used in
+@code{gnus-summary-line-format} for tagging authors with records in the
+@b{BBDB}.  This indication is provided by
+@code{bbdb/gnus-summary-author-in-bbdb}.  This variable's value should
+be one letter, subject to the restrictions outlined in the documentation
+for @code{gnus-summary-line-format}.  If set to @code{nil}, no format
+function will be installed for @code{bbdb/gnus-summary-author-in-bbdb}.
+This variable defaults to @samp{b}, so by default the user format code
+@code{%ub} is installed by @code{bbdb-insinuate-gnus}.
+@c See previous comment
+@item bbdb/gnus-summary-user-format-letter
+This determines the user format code to be used in
+@code{gnus-summary-line-format} for indicating authors' names as stored
+in the @b{BBDB}.  This format code is intended to be used as a
+replacement for the codes that are used to indicate the authors' name or
+network address (usually @samp{%a}, @samp{%n}, and @samp{%N}.  The code
+is replaced by the output of @code{bbdb/gnus-summary-get-author}.  This
+variable's value should be one letter, subject to the restrictions
+outlined in the documentation for @code{gnus-summary-line-format}.  If
+set to @code{nil}, no format function will be installed for
+@code{bbdb/gnus-summary-get-author}.  This variable defaults to
+@samp{B}, so by default the user format code @code{%uB} is installed by
+@code{bbdb-insinuate-gnus}.
+changed.}  If no such field is present, the value of
+@end table
+author is not in the @b{BBDB}, a space will be used as the mark character.
+@i{more to come}
+is intended to @b{replace} the format code previously used in the Summary
+@c ---- stopped here ----
+and the posters have entries in the @b{BBDB}.  When this variable is
+@tab @center Matt
+@end multitable
+
+@node GNUS Subject List,  , Gnus Summary Buffer, Gnus Features
+@subsubsection GNUS Summary Buffer Enhancements
+
+@i{This section is remarkably terse, as I don't have a copy of @b{GNUS}.
+If anybody can provide more descriptive information, please let me
+know.}
+
+@example
+(autoload 'bbdb/gnus-lines-and-from "bbdb-gnus")
+(setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
+@end example
+
+@table @code
+@item bbdb/gnus-mark-known-posters
+@vindex bbdb/gnus-mark-known-posters
+@cindex GNUS Subject-buffer
+If @code{t} (the default), then the @b{GNUS} subject list will contain an
+indication of those messages posted by people who have entries in
+the Insidious Big Brother Database (they will be marked with an
+asterisk.) @refill
+
+@cindex mark-char
+You can change the character used to mark records on a record-by-record
+basis by adding a @code{mark-char} property to the record, whose value 
+is be the string to display (preferably one character.) @refill
+
+@item bbdb/gnus-header-prefer-real-names
+@vindex bbdb/gnus-header-prefer-real-names
+Default: @code{nil}.  if @code{t}, then the @b{GNUS} subject list will
+display real names instead of network addresses. @refill
+
+@item bbdb/gnus-header-show-bbdb-names
+@vindex bbdb/gnus-header-show-bbdb-names
+Default: @code{t}.  If both this variable and 
+the @code{bbdb/gnus-header-prefer-real-names} variable are true, then
+for news messages from people who are in your database, the name displayed 
+will be the primary name from the database, rather than the one from
+the @samp{From:} line of the message.  This doesn't affect the names of
+people who aren't in the database, of course.@refill
+
+@item bbdb/gnus-lines-and-from-length
+@vindex bbdb/gnus-lines-and-from-length
+Default: 18.  The number of characters used to display @samp{From:} info in
+@b{GNUS}, if you have set @code{gnus-optional-headers} to
+@code{bbdb/gnus-lines-and-from}. @refill
+@end table
+
+@node VM Features,  , Gnus Features, Reader-specific Features
+@subsection VM-specific features
+
+The @b{BBDB} can be used to integrate database information into the
+message summary.
+
+@menu
+* VM Message Summary::                  @b{BBDB} information in message summary
+@end menu
+
+@node VM Message Summary,  , VM Features, VM Features
+@subsubsection VM Message Summary Enhancements
+
+@vindex vm-summary-format
+@findex vm-summary-function-B
+@cindex %F
+@cindex %UB
+VM users can cause their summary buffer to display the name of the
+message sender according to BBDB data, instead of according to the
+contents of the current message's headers.  In VM 5.40 or later, use
+the summary format control @code{%UB"} instead of @code{"%F"}, and the
+current record name will be shown there if available.  If no entry is
+found it behaves like @code{"%F"}.  See the documentation for
+@node Options, Internals, Reader-specific Features, Top
 currently being displayed in W3 to a user-specified @b{BBDB} record.
 
 @node Options, Utilities, Other Packages, Top
@@ -1125,13 +1361,13 @@ messages which have a particular subject.  See the variable
 If you want to autocreate messages based on the current newsgroup, it's
 probably a better idea to set this variable to @code{t} or @code{nil} from your
 @code{gnus-select-group-hook} instead. @refill
-@format
-@code{(setq gnus-select-group-hook}
-@code{  '(lambda ()}
-@code{     (setq bbdb/news-auto-create-p}
-@code{           (or (string= "some.news.group" gnus-newsgroup-name)}
-@code{               (string= "other.news.group" gnus-newsgroup-name)))))}
-@end format
+
+To automatically remember users in certain groups, you can do something 
+like @refill
+@example
+@exdent (setq gnus-select-group-hook
+@exdent   '(lambda ()
+@exdent      (setq bbdb/news-auto-create-p
 @exdent            (or (string= "some.news.group" gnus-newsgroup-name)
 @exdent                (string= "other.news.group" gnus-newsgroup-name)))))
 @end example
@@ -1309,49 +1545,6 @@ If @code{t} (the default), then certain actions will cause the @b{BBDB} to
 ask you whether you wish to save the database.  If @code{nil}, then the
 offer to save will never be made.  If not @code{t} and not @code{nil}, then
 any time it would ask you, it will just save it without asking. @refill
-The following variables apply only to the @b{GNUS} interface to @b{BBDB}.  To
-make use of them, you must add this forms to your @file{.emacs} file:@refill
-
-@example
-(autoload 'bbdb/gnus-lines-and-from "bbdb-gnus")
-(setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
-@end example
-
-@table @code
-@item bbdb/gnus-mark-known-posters
-@vindex bbdb/gnus-mark-known-posters
-@cindex GNUS Subject-buffer
-If @code{t} (the default), then the @b{GNUS} subject list will contain an
-indication of those messages posted by people who have entries in
-the Insidious Big Brother Database (they will be marked with an
-asterisk.) @refill
-
-@cindex mark-char
-You can change the character used to mark records on a record-by-record
-basis by adding a @code{mark-char} property to the record, whose value 
-is be the string to display (preferably one character.) @refill
-
-@item bbdb/gnus-header-prefer-real-names
-@vindex bbdb/gnus-header-prefer-real-names
-Default: @code{nil}.  if @code{t}, then the @b{GNUS} subject list will
-display real names instead of network addresses. @refill
-
-@item bbdb/gnus-header-show-bbdb-names
-@vindex bbdb/gnus-header-show-bbdb-names
-Default: @code{t}.  If both this variable and 
-the @code{bbdb/gnus-header-prefer-real-names} variable are true, then
-for news messages from people who are in your database, the name displayed 
-will be the primary name from the database, rather than the one from
-the @samp{From:} line of the message.  This doesn't affect the names of
-people who aren't in the database, of course.@refill
-
-@item bbdb/gnus-lines-and-from-length
-@vindex bbdb/gnus-lines-and-from-length
-Default: 18.  The number of characters used to display @samp{From:} info in
-@b{GNUS}, if you have set @code{gnus-optional-headers} to
-@code{bbdb/gnus-lines-and-from}. @refill
-@end table
-
 
 @end table
 
@@ -1483,20 +1676,6 @@ and then later gets mail from @code{user@@bar.com}.  At this point, one
 can generally delete the @code{user@@foo.bar.com} address, since the 
 @code{user@@bar.com} address is more general.  (See also the 
 variable `bbdb-canonicalize-redundant-nets-p', which has the effect of
-@vindex vm-summary-format
-@findex vm-summary-function-B
-@cindex %F
-@cindex %UB
-VM users can cause their summary buffer to display the name of the
-message sender according to BBDB data, instead of according to the
-contents of the current message's headers.  In VM 5.40 or later, use
-the summary format control @code{%UB"} instead of @code{"%F"}, and the
-current record name will be shown there if available.  If no entry is
-found it behaves like @code{"%F"}.  See the documentation for
-@code{vm-summary-format} for more details.  Warning, this may
-significantly slow down summary generation for large folders.
-
-
 ignoring subsequent addresses from @code{user@@quux.bar.com} if the
 address @code{user@@bar.com} is already known.)@refill
 
