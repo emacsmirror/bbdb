@@ -9,7 +9,7 @@
 ;; Use the function bbdb-test/switch-to-test-bbdb to use the BBDB with the
 ;; default test cases and exit-recursive-edit to come back to the original
 ;; BBDB.  Eventually this should happen automatically, but it is nice to edit
-;; the test BBDB also manually. 
+;; the test BBDB also manually.
 ;;
 ;; Authors: Waider & Robert Fenk
 ;;
@@ -21,7 +21,9 @@
 (defvar bbdb-test/bbdb-file
   (expand-file-name
    "bbdb-test"
-   (file-name-directory (locate-library "bbdb-test"))))
+   (file-name-directory
+    (or (locate-library "bbdb-test")
+        (concat (getenv "HOME") "/src/emacs/bbdb/testing/bbdb-test")))))
 
 (defun bbdb-test/initialize ()
   (setq bbdb-file bbdb-test/bbdb-file)
@@ -89,16 +91,19 @@ When it does not existm, create one an setup the key bindings."
       (error
        (bbdb-test/kill-bbdb-buffers bbdb-file)
        (message "Returned to BBDB %s due to %s"
-		(abbreviate-file-name old-bbdb-file)
+        (abbreviate-file-name old-bbdb-file)
                 err))
       (quit
        (bbdb-test/kill-bbdb-buffers bbdb-file)
        (message "Returned to BBDB %s due to %s"
-		(abbreviate-file-name old-bbdb-file)
+        (abbreviate-file-name old-bbdb-file)
                 err)))))
 
 (defvar bbdb-test/test-vars nil
   "User defined list of tests.")
+
+(defvar bbdb-test/batchmode nil
+  "Batchmode active?")
 
 (defun bbdb-test/test-vars (&optional matching)
   "Return all test variables.
@@ -128,20 +133,24 @@ starting with \"Test\""
     (bbdb-test/log-result "Test vars are:\n")
     (mapcar (lambda (v) (bbdb-test/log-result "\t%s\n" (symbol-name v)))
             bbdb-test/test-vars)))
-  
+
 ;;;###autoload
-(defun bbdb-test/run-all-tests ()
+(defun bbdb-test/run-all-tests(&optional batch)
   "Run all BBDB tests."
   (interactive)
-  (let (bbdb-test/test-vars)
-    (bbdb-test/run-tests)))
+  (let (bbdb-test/test-vars
+        (bbdb-test/batchmode batch))
+    (bbdb-test/run-tests)
+    (and bbdb-test/batchmode
+         (set-buffer (bbdb-test/log-buffer))
+         (write-file "bbdb-test-results"))))
 
 ;;;###autoload
 (defun bbdb-test/run-tests ()
   "Run BBDB tests."
   (interactive)
   (let ((test-vars (bbdb-test/test-vars)))
-    
+
     (bbdb-initialize)
     (bbdb-test/log-clear)
     (bbdb-test/log-result "Testing started at %s\n\n"
@@ -168,7 +177,7 @@ starting with \"Test\""
   (let ((bbdb-var (intern (substring (symbol-name test-var) 10)))
         (vals (symbol-value test-var))
         test-func)
-    
+
     ;; Peel the test function off the top of the variable, and
     ;; adjust the variable upward.
     (setq test-func (car vals)
@@ -185,16 +194,16 @@ starting with \"Test\""
         (bbdb-test/with-var-set
          bbdb-var val
          (bbdb-test/log-result "  %s:\n" (symbol-value bbdb-var))
-                                        
+
          (if par
              (while par
                (bbdb-test/log-result "\t%s\n"
                                      (apply test-func (car par)))
                (setq par (cdr par)))
            (funcall test-func)))
-      
+
         (bbdb-test/log-result "\n"))
-      
+
       ;; next set of values
       (setq vals (cdr vals)))
 
@@ -229,12 +238,12 @@ starting with \"Test\""
         (bbdb-dwim-net-address-allow-redundancy nil) ;; need this
         bbdb-completion-display-record
         result completions)
-    
+
     ;; Try completing
     (with-current-buffer (get-buffer-create "*BBDB_TEST*")
       (erase-buffer)
       (insert input)
-      
+
       ;; Try completion. Disable beeping so that we don't get noise
       ;; while testing uncompletables.
       (flet ((beep nil ())
@@ -243,14 +252,14 @@ starting with \"Test\""
              (bbdb-display-completion-list
               (list &optional cb data)
               (setq completions list)))
-	(save-excursion 
-	  (bbdb-complete-name)))
+    (save-excursion
+      (bbdb-complete-name)))
 
       (setq result (buffer-substring (point-min) (point-max)))
 
       (if (get-buffer-window "*Completions*")
           (kill-buffer "*Completions*"))
-      
+
       ;; Check the output
       (if (and (equal result output)
                (equal completions ocompletions))
@@ -277,8 +286,6 @@ starting with \"Test\""
         (format "PASSED %S => \n\t\t%S" input result)
       (format "FAILED got `%S' expected `%S'" result output))))
 
-;; Test string trimming. Should possibly be combined with the above!
-
 
 ;; These are setup variables for the testing
 (defvar bbdb-test/bbdb-clean-username-dummy
@@ -289,7 +296,102 @@ starting with \"Test\""
          ("Ronan Waide (Just This Guy)" "Ronan Waide")
          ))
   "Test")
+
+;; Dialing tests
+;; This is for low-level testing directly via bbdb-dial-number
+(defun bbdb-test/bbdb-dial-number(input output)
+  (let ((bbdb-modem-dial (or bbdb-modem-dial ""))
+        (bbdb-modem-device (make-temp-name "bbdb-dial"))
+        result)
+    (if (file-exists-p bbdb-modem-device)
+        (delete-file bbdb-modem-device)) ;; so we don't get false negatives
+    (flet ((bbdb-next-event nil ())) ;; don't wait
+      (bbdb-dial-number input))
+    (save-excursion
+      (let ((buf (find-file bbdb-modem-device)))
+        (setq result (buffer-substring (point-min) (point-max)))
+        (kill-buffer buf)))
+    (if (file-exists-p bbdb-modem-device) (delete-file bbdb-modem-device))
+    (if (and result (equal output result))
+        (format "PASSED %S => \n\t\t%S" input result)
+      (format "FAILED %S => got `%S' expected `%S'" input result output))))
 
+;; This is for high-level testing via the bbdb-dial UI
+(defun bbdb-test/bbdb-dial(input output)
+  (let ((bbdb-modem-dial "")
+        (bbdb-modem-device (make-temp-name "bbdb-dial"))
+        result)
+
+    ;; prevent these guys from interfering with other tests that use
+    ;; this code
+    (or (eq bbdb-var 'bbdb-default-area-code)
+        (setq bbdb-default-area-code nil))
+    (or (eq bbdb-var 'bbdb-dial-local-prefix-alist)
+        (if (eq bbdb-var 'bbdb-default-area-code)
+            () ;; bbdb-default-area-code cascades into
+               ;; bbdb-dial-local-prefix-alist
+          (setq bbdb-dial-local-prefix-alist nil)))
+
+
+    (if (file-exists-p bbdb-modem-device) (delete-file bbdb-modem-device))
+    (flet ((bbdb-next-event nil ()))
+      (save-excursion
+        (bbdb-display-records (bbdb-records))
+        (set-buffer bbdb-buffer-name)
+        (goto-char (point-min))
+        (re-search-forward input)
+        (call-interactively 'bbdb-dial)))
+    (save-excursion
+      (let ((buf (find-file bbdb-modem-device)))
+        (setq result (buffer-substring (point-min) (point-max)))
+        (kill-buffer buf)))
+    (if (file-exists-p bbdb-modem-device) (delete-file bbdb-modem-device))
+    (if (and result (equal output result))
+        (format "PASSED %S => \n\t\t%S" input result)
+      (format "FAILED %S => got `%S' expected `%S'" input result output))))
+
+(defvar bbdb-test/bbdb-modem-dial
+  '(bbdb-test/bbdb-dial-number
+    (nil ("012345678" "012345678;\nATH\n"))
+    ("ATDT" ("012345678" "ATDT012345678;\nATH\n"))
+    ("ATDP" ("012345678" "ATDP012345678;\nATH\n")))
+  "Test")
+
+;; XXX input number is taken from the BBDB for these tests; input
+;; parameter is used to decide which phone number to use.
+(defvar bbdb-test/bbdb-default-area-code
+  '(bbdb-test/bbdb-dial
+    (nil ("national" "0223334444;\nATH\n"))
+    ("022" ("national" "3334444;\nATH\n")) ;; 022 is our dummy area code
+    )
+  "Test")
+
+(defvar bbdb-test/bbdb-dial-local-prefix-alist
+  '(bbdb-test/bbdb-dial
+    (nil ("national" "0223334444;\nATH\n"))
+    ((("022" "")) ("national" "3334444;\nATH\n"))
+    ((("022" "021")) ("national" "0213334444;\nATH\n"))
+    )
+  "Test")
+
+(defvar bbdb-test/bbdb-dial-local-prefix
+  '(bbdb-test/bbdb-dial
+    (nil ("national" "0223334444;\nATH\n"))
+    ("9" ("national" "90223334444;\nATH\n"))
+    )
+  "Test")
+
+(defvar bbdb-test/bbdb-dial-long-distance-prefix
+  '(bbdb-test/bbdb-dial
+    (nil ("inter" "111223334444;\nATH\n"))
+    ("00" ("inter" "00,111223334444;\nATH\n")) ;; comma is wacky, but hey.
+    )
+  "Test")
+
+;; End of dialing tests
+;; IGNORING: bbdb-sound-player, bbdb-sound-files, bbdb-sound-volume
+;; (not dialing, strictly speaking, except for the sound-files array)
+
 (defvar bbdb-test/bbdb-extract-address-components-func
   (let ((test-cases '(("Robert Fenk <fenk@users.sourceforge.net>"
                        (("Robert Fenk" "fenk@users.sourceforge.net")))
@@ -314,7 +416,7 @@ starting with \"Test\""
   "Test")
 
 ;; Things to test bbdb-completion-type with
-(defvar bbdb-test/bbdb-completion-type 
+(defvar bbdb-test/bbdb-completion-type
   '(bbdb-test/bbdb-complete-name ;; test function
     ;; variable setting, (input output completions)
     (nil ("waider"
@@ -427,9 +529,9 @@ starting with \"Test\""
 ;;                bbdb-test/bbdb-default-domain
 ;;                bbdb-test/bbdb-default-label-list
 ;;                bbdb-test/bbdb-define-all-aliases-field
-;;                bbdb-test/bbdb-dial-local-prefix
-;;                bbdb-test/bbdb-dial-local-prefix-alist
-;;                bbdb-test/bbdb-dial-long-distance-prefix
+;; DONE           bbdb-test/bbdb-dial-local-prefix
+;; DONE           bbdb-test/bbdb-dial-local-prefix-alist
+;; DONE           bbdb-test/bbdb-dial-long-distance-prefix
 ;;                bbdb-test/bbdb-display-buffer
 ;;                bbdb-test/bbdb-display-layout
 ;;                bbdb-test/bbdb-display-layout-alist
@@ -547,5 +649,4 @@ starting with \"Test\""
 ;;                bbdb-test/bbdb-window
 ;;                bbdb-test/bbdb-write-file-hooks
 
-;; not strictly necessary!
 (provide 'bbdb-test)
