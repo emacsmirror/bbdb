@@ -23,6 +23,9 @@
 ;; $Id$
 ;;
 ;; $Log$
+;; Revision 1.59  1998/03/13 09:54:22  simmonmt
+;; Colin's fix for properly counting the size of notes fields
+;;
 ;; Revision 1.58  1998/03/10 07:35:09  simmonmt
 ;; Colin's new refiling code, protecting default-area-code
 ;;
@@ -650,8 +653,13 @@ NOTES is a string, or an alist associating symbols with strings."
 			  (if (bbdb-field-shown-p (car note))
 			      (let* ((L (list 'property note))
 				     (LL (list L))
-				     (i 0))
-				(while (string-match "\n" (cdr note) i)
+				     (i 0)
+				     (notefun (intern (concat "bbdb-format-record-"
+							      (symbol-name (car note)))))
+				     (text (if (fboundp notefun)
+						 (funcall notefun (cdr note))
+					     (cdr note))))
+				(while (string-match "\n" text i)
 				  (setq i (match-end 0)
 					LL (cons L LL)))
 				LL))))
