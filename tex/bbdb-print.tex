@@ -64,6 +64,7 @@
   \font\bf=cmbx#1
   \font\it=\ifnum #1=6 cmti7 \else cmti#1\fi
   \font\bigbf=cmbx10 scaled \magstep3
+  \font\tt=cmtt#1
   \rm
   \baselineskip=#1pt
   \ifnum #1>9 \advance\baselineskip by 1pt \fi
@@ -87,7 +88,7 @@
     \def\separator##1{\hrule\smallskip\mark{##1}}
   \else \ifnum #1=2
     \def\separator##1{\hbox{\vrule\hskip -0.4pt\vbox{\hrule\smallskip
-	    \centerline{\bf{##1}}\smallskip\hrule}\hskip -0.4pt\vrule
+            \centerline{\bf{##1}}\smallskip\hrule}\hskip -0.4pt\vrule
             \mark{##1}}}
   \else \ifnum #1=3
     \def\separator##1{\hbox{\vrule\hskip -0.4pt\vbox{\hrule\smallskip
@@ -97,7 +98,7 @@
     \def\separator##1{\smallskip\centerline{\bigbf{##1}}\medskip\mark{##1}}
   \else \ifnum #1=5
     \def\separator##1{\hrule\smallskip
-	    \centerline{\bigbf{##1}}\smallskip\hrule\medskip\mark{##1}}
+            \centerline{\bigbf{##1}}\smallskip\hrule\medskip\mark{##1}}
   \else \ifnum #1=6
     \def\cute{$\sya\syb\syc\syd$}
     \def\revcute{$\syd\syc\syb\sya$}
