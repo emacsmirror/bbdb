@@ -1,0 +1,474 @@
+;;; -*- Mode:Emacs-Lisp -*-
+;;; This file contains font and menu hacks for BBDB.
+
+;;; This file is the part of the Insidious Big Brother Database (aka BBDB),
+;;; copyright (c) 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
+
+;;; The Insidious Big Brother Database is free software; you can redistribute
+;;; it and/or modify it under the terms of the GNU General Public License as
+;;; published by the Free Software Foundation; either version 2, or (at your
+;;; option) any later version.
+;;;
+;;; BBDB is distributed in the hope that it will be useful, but WITHOUT ANY
+;;; WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+;;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+;;; details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with GNU Emacs; see the file COPYING.  If not, write to
+;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+
+;;; This code is kind of kludgey, mostly because it needs to parse the contents
+;;; of the *BBDB* buffer, since BBDB doesn't save the buffer-positions of the
+;;; various fields when it fills in that buffer (doing that would be slow and
+;;; cons a lot, so it doesn't seem to be worth it.)
+
+(require 'bbdb)
+(require 'bbdb-com)
+
+(if (string-match "XEmacs\\|Lucid" emacs-version)
+    (progn
+      (define-key bbdb-mode-map 'button3 'bbdb-menu)
+      (define-key bbdb-mode-map 'button2 '(lambda (e)
+                                            (interactive "e")
+                                            (mouse-set-point e)
+                                            (bbdb-elide-record nil))))
+  (define-key bbdb-mode-map [mouse-3] 'bbdb-menu)
+  (define-key bbdb-mode-map [mouse-2] '(lambda (e)
+                                       (interactive "e")
+                                       (mouse-set-point e)
+                                       (bbdb-elide-record nil))))
+
+(or (fboundp 'find-face)
+    (if (fboundp 'internal-find-face) ;; GRR.
+        (fset 'find-face 'internal-find-face)
+      (defun find-face(face)))) ;; XXX noop - you probably don't HAVE faces.
+
+(or (find-face 'bbdb-name)
+    (face-differs-from-default-p (make-face 'bbdb-name))
+    (set-face-underline-p 'bbdb-name t))
+
+(condition-case data
+    (or (find-face 'bbdb-company)
+        (face-differs-from-default-p (make-face 'bbdb-company))
+        (make-face-italic 'bbdb-company)) ;; this can fail on emacs
+  (error nil))
+
+(or (find-face 'bbdb-field-value)
+    (make-face 'bbdb-field-value))
+
+(or (find-face 'bbdb-field-name)
+    (face-differs-from-default-p (make-face 'bbdb-field-name))
+    (copy-face 'bold 'bbdb-field-name))
+
+;;; Extents vs. Overlays unhappiness
+;;; FIXME: see if VM is around, and call its extents code instead;
+;;; change bbdb-foo-extents below to vm-foo-extents, etc.
+(if (fboundp 'make-extent)
+    (fset 'bbdb-make-extent 'make-extent)
+  (fset 'bbdb-make-extent 'make-overlay))
+
+(if (fboundp 'delete-extent)
+    (fset 'bbdb-delete-extent 'delete-extent)
+  (fset 'bbdb-delete-extent 'delete-overlay))
+
+(if (fboundp 'mapcar-extents)
+    (defun bbdb-list-extents() (mapcar-extents 'identity))
+  (defun bbdb-list-extents()
+    (let ((o (overlay-lists)))(append (car o) (cdr o)))))
+
+(if (fboundp 'set-extent-property)
+    (defun bbdb-set-extent-property 'set-extent-property)
+  (defun bbdb-set-extent-property( e p v )
+    (if (eq 'highlight p)
+        (if v
+            (overlay-put e 'mouse-face 'highlight)
+          (overlay-put e 'mouse-face nil)))
+    (overlay-put e p v)))
+
+(if (fboundp 'extent-property)
+    (fset 'bbdb-extent-property 'extent-property)
+  (fset 'extent-property 'overlay-get))
+
+(if (fboundp 'extent-at)
+    (fset 'bbdb-extent-at 'extent-at)
+  (defun bbdb-extent-at (pos buf tag) "NOT FULL XEMACS IMPLEMENTATION"
+    (save-window-excursion
+      (save-excursion
+        (set-buffer buf) ;; XXX and this is why
+        (let ((o (overlays-at pos))
+              minpri retval)
+          (while (car o)
+            (let ((x (car o)))
+              (and (overlayp x)
+                   (overlay-get x tag)
+                   (if (or (null minpri) (> minpri (overlay-get x 'priority)))
+                       (setq retval x
+                             minpri (overlay-get x 'priority))))
+              (setq o (cdr o))))
+          retval)))))
+
+(if (fboundp 'highlight-extent)
+    (fset 'bbdb-highlight-extent 'highlight-extent)
+  (defun highlight-extent (extent &optional highlight-p))) ;; XXX noop
+
+(if (fboundp 'extent-start-position)
+    (fset 'bbdb-extent-start-position 'extent-start-position)
+  (fset 'extent-start-position 'overlay-start))
+
+(if (fboundp 'extent-end-position)
+    (fset 'bbdb-extent-end-position 'extent-end-position)
+  (fset 'extent-end-position 'overlay-end))
+
+(if (fboundp 'extent-face)
+    (fset 'bbdb-extent-face 'extent-face)
+  (defun bbdb-extent-face (extent)
+    (extent-property extent 'face)))
+
+(if (fboundp 'set-extent-face)
+    (fset 'bbdb-set-extent-face 'set-extent-face)
+  (defun bbdb-set-extent-face (extent face) "set the face for an overlay"
+    (bbdb-set-extent-property extent 'face face)))
+
+(if (fboundp 'set-extent-begin-glyph)
+    (fset 'bbdb-set-extent-begin-glyph 'set-extent-begin-glyph)
+  (defun bbdb-set-extent-begin-glyph(&optional args))) ;XXX noop
+
+(if (fboundp 'set-extent-end-glyph)
+    (fset 'bbdb-set-extent-end-glyph 'set-extent-end-glyph)
+  (defun bbdb-set-extent-end-glyph(&optional args))) ;XXX noop
+
+;;;###autoload
+(defun bbdb-fontify-buffer ()
+  (save-excursion
+    (set-buffer bbdb-buffer-name)
+    (if (and (fboundp 'set-specifier)
+             (featurep 'scrollbar))
+        (set-specifier scrollbar-height (cons (current-buffer) 0)))
+    ;; first delete existing extents
+    (mapcar (function (lambda(o)
+                        (if o  ;; may start with nil
+                            (if (eq (bbdb-extent-property o 'data) 'bbdb)
+                                (bbdb-delete-extent o)))))
+            (bbdb-list-extents))
+    (let ((rest bbdb-records)
+          record face start end elided-p p e)
+      (while rest
+        (setq record (car (car rest))
+              elided-p (eq (nth 1 (car rest)) t)
+              face (and (not elided-p) (bbdb-record-getprop record 'face))
+              start (marker-position (nth 2 (car rest)))
+              end (1- (or (nth 2 (car (cdr rest))) (point-max))))
+        (bbdb-set-extent-property (setq e (bbdb-make-extent start end)) 'highlight t)
+        (bbdb-set-extent-property e 'data 'bbdb)
+        ;; fix GNU overlay stacking order - despite what you might
+        ;; think from reading the elisp manual, a higher priority
+        ;; seems to push the main overlay (i.e. you're within the
+        ;; bounding box of a record, but not on any of its text) to
+        ;; the back, which is what I want - it means the per-field
+        ;; overlays override it.
+        ;; note that on GNU Emacs, once you hit the main overlay, you
+        ;; have to move off the record and back on again before it'll
+        ;; notice that you're on a more specific overlay. This is
+        ;; bogus, like most GNU Emacs GUI stuff.
+        (bbdb-set-extent-property e 'priority 3)
+        (setq p (+ start (length (bbdb-record-name record))))
+        (if (bbdb-record-company record)
+            (setq p (+ p 3 (length (bbdb-record-company record)))))
+        (if (and elided-p (> p (+ start bbdb-pop-up-elided-display-name-end)))
+            (setq p (+ start 3 bbdb-pop-up-elided-display-name-end)))
+        (goto-char start)
+        (if (search-forward " - " p t)
+            (progn
+              (setq e (bbdb-make-extent (point) p))
+              (bbdb-set-extent-property e 'data 'bbdb)
+              (bbdb-set-extent-face e 'bbdb-company)
+              (bbdb-set-extent-property e 'highlight t)
+              (bbdb-set-extent-property e 'priority 2)
+              (forward-char -3))
+          (goto-char p))
+        (setq e (bbdb-make-extent start (point)))
+        (bbdb-set-extent-property e 'data 'bbdb)
+        (bbdb-set-extent-face e 'bbdb-name)
+        (bbdb-set-extent-property e 'priority 2)
+        (bbdb-set-extent-property e 'highlight t)
+        (if face (bbdb-hack-x-face face e))
+        (forward-line 1)
+        (while (< (point) end)
+          (skip-chars-forward " \t")
+          (setq p (point))
+          (and (looking-at "[^:\n]+:")
+               (progn
+                 (setq e (bbdb-make-extent p (match-end 0)))
+                 (bbdb-set-extent-face e 'bbdb-field-name)
+                 (bbdb-set-extent-property e 'priority 2)
+                 (bbdb-set-extent-property e 'data 'bbdb)))
+          (while (progn (forward-line 1)
+                        (looking-at "^\\(\t\t \\|                 \\)")))
+          (setq e (bbdb-make-extent p (1- (point))))
+          (bbdb-set-extent-property e 'data 'bbdb)
+          (bbdb-set-extent-face e 'bbdb-field-value)
+          (bbdb-set-extent-property e 'priority 2)
+          (bbdb-set-extent-property e 'highlight t))
+        (setq rest (cdr rest))))))
+
+;;; share the xface cache data with VM if it's around
+(defvar vm-xface-cache (make-vector 29 0))
+
+(defun bbdb-hack-x-face (face extent)
+  "Process a face property of a record and honour it.
+Not done for GNU Emacs just yet, since it doesn't have image support
+as of GNU Emacs 20.7"
+  (if (not (or (and (boundp 'highlight-headers-hack-x-face-p)
+                    highlight-headers-hack-x-face-p)
+               (and (featurep 'xemacs)
+                    (string-match "^21\\." emacs-version)))) ;; XXX
+      () ;; nothing doing
+    (setq face (bbdb-split face "\n"))
+    (while face
+      (cond
+
+       ;; ripped pretty much verbatim from VM; X Faces for recent XEmacsen.
+       ((string-match "^21\\." emacs-version) ;; XXX how far back can I go?
+        (condition-case data
+            (let (g h)
+              (if (find-face 'vm-xface) ;; heck, why not use the same face?
+                  nil
+                (make-face 'vm-xface)
+                (set-face-background 'vm-xface "white")
+                (set-face-foreground 'vm-xface "black"))
+              (setq g (intern (car face) vm-xface-cache))
+              (if (boundp g)
+                  (setq g (symbol-value g))
+                (set g (make-glyph
+                        (list
+                         (vector 'xface ':data h)))) ;; XXX use API
+                (setq g (symbol-value g))
+                (set-glyph-face g 'vm-xface))
+              (bbdb-set-extent-property extent 'vm-xface t)
+              (bbdb-set-extent-begin-glyph extent g))
+          error nil)) ;; looks like you don't have xface support, d00d
+
+       ;; requires lemacs 19.10 version of highlight-headers.el
+       ((fboundp 'highlight-headers-x-face)                     ; the 19.10 way
+        (highlight-headers-x-face (car face) extent)
+        (let ((b (bbdb-extent-property extent 'begin-glyph)))
+          (cond (b ; I'd like this to be an end-glyph instead
+                 (bbdb-set-extent-property extent 'begin-glyph nil)
+                 (bbdb-set-extent-property extent 'end-glyph b)))))
+
+       ((fboundp 'highlight-headers-x-face-to-pixmap)           ; the 19.13 way
+        (save-excursion
+          (set-buffer (get-buffer-create " *tmp*"))
+          (buffer-disable-undo (current-buffer))
+          (erase-buffer)
+          (insert (car face))
+          (bbdb-set-extent-begin-glyph extent nil)
+          (bbdb-set-extent-end-glyph extent
+                                (highlight-headers-x-face-to-pixmap
+                                 (point-min) (point-max)))
+          (erase-buffer))))
+
+      ;; more faces?
+      (setq face (cdr face))
+      (cond (face ; there are more, so clone the extent
+             (setq extent (bbdb-make-extent
+                           (bbdb-extent-start-position extent)
+                           (bbdb-extent-end-position extent)))
+             (bbdb-set-extent-property extent 'data 'bbdb))))))
+
+
+(defvar global-bbdb-menu-commands
+  '(["Save BBDB" bbdb-save-db t]
+    ["Elide All Records" bbdb-elide-record t]
+    ["Finger All Records" (bbdb-finger (mapcar 'car bbdb-records)) t]
+    ["BBDB Manual" bbdb-info t]
+    ["BBDB Quit" bbdb-bury-buffer t]
+    ))
+
+(defun build-bbdb-finger-menu (record)
+  (let ((addrs (bbdb-record-finger-host record)))
+    (if (cdr addrs)
+        (cons "Finger..."
+              (nconc
+               (mapcar '(lambda (addr)
+                          (vector addr (list 'bbdb-finger record addr)
+                                  t))
+                       addrs)
+               (list "----"
+                     (vector "Finger all addresses"
+                             (list 'bbdb-finger record ''(4)) t))))
+      (vector (concat "Finger " (car addrs))
+              (list 'bbdb-finger record (car addrs)) t))))
+
+(defun build-bbdb-sendmail-menu (record)
+  (let ((addrs (bbdb-record-net record)))
+    (if (cdr addrs)
+        (cons "Send Mail..."
+              (mapcar '(lambda (addr)
+                         (vector addr (list 'bbdb-send-mail-internal
+                                            (bbdb-dwim-net-address record addr))
+                                 t))
+                      addrs))
+      (vector (concat "Send mail to " (car addrs))
+              (list 'bbdb-send-mail-internal
+                    (bbdb-dwim-net-address record (car addrs)))
+              t))))
+
+
+(defun build-bbdb-field-menu (record field)
+  (let ((type (car field)))
+    (nconc
+     (list
+      (concat "Commands for "
+              (cond ((eq type 'property)
+                     (concat "\""
+                             (symbol-name (if (consp (car (cdr field)))
+                                              (car (car (cdr field)))
+                                            (car (cdr field))))
+                             "\" field:"))
+                    ((eq type 'name) "Name field:")
+                    ((eq type 'company) "Company field:")
+                    ((eq type 'net) "Network Addresses field:")
+                    ((eq type 'aka) "Alternate Names field:")
+                    (t
+                     (concat "\"" (aref (nth 1 field) 0) "\" "
+                             (capitalize (symbol-name type)) " field:"))))
+      "-----"
+      ["Edit Field" bbdb-edit-current-field t]
+      )
+     (if (memq type '(name company))
+         nil
+       (list ["Delete Field" bbdb-delete-current-field-or-record t]))
+     (cond ((eq type 'phone)
+            (list (vector (concat "Dial " (bbdb-phone-string (car (cdr field))))
+                          (list 'bbdb-dial (list 'quote field) nil) t)))
+           )
+     )))
+
+
+(defun build-bbdb-insert-field-menu (record)
+  (cons "Insert New Field..."
+        (mapcar
+         '(lambda (field)
+            (let ((type (if (string= (car field) "AKA")
+                            'aka
+                          (intern (car field)))))
+              (vector (car field)
+                      (list 'bbdb-insert-new-field (list 'quote type)
+                            (list 'bbdb-prompt-for-new-field-value
+                                  (list 'quote type)))
+                      (not
+                       (or (and (eq type 'net) (bbdb-record-net record))
+                           (and (eq type 'aka) (bbdb-record-aka record))
+                           (and (eq type 'notes) (bbdb-record-notes record))
+                           (and (consp (bbdb-record-raw-notes record))
+                                (assq type (bbdb-record-raw-notes record))))))))
+         (append '(("phone") ("address") ("net") ("AKA") ("notes"))
+                 (bbdb-propnames)))))
+
+
+(defun build-bbdb-menu (record field)
+  (append
+   '("bbdb-menu" "Global BBDB Commands" "-----")
+   global-bbdb-menu-commands
+   (if record
+       (list
+        "-----"
+        (concat "Commands for record \""
+                (bbdb-record-name record) "\":")
+        "-----"
+        (vector "Delete Record"
+                (list 'bbdb-delete-current-record record) t)
+        (if (nth 1 (assq record bbdb-records))
+            ["Unelide Record" bbdb-elide-record t]
+          ["Elide Record" bbdb-elide-record t])
+        ["Omit Record" bbdb-omit-record t]
+        ["Refile (Merge) Record" bbdb-refile-record t]
+        ))
+   (if record
+       (list (build-bbdb-finger-menu record)))
+   (if (bbdb-record-net record)
+       (list (build-bbdb-sendmail-menu record)))
+   (if record
+       (list (build-bbdb-insert-field-menu record)))
+   (if field
+       (cons "-----" (build-bbdb-field-menu record field)))
+   ))
+
+
+(if (fboundp 'popup-menu)
+    (fset 'bbdb-popup 'popup-menu)
+  ;; This is really, REALLY ugly, but it saves me some coding and uses
+  ;; the correct keymap API instead of carnal knowledge of keymap
+  ;; structure.
+  (defun bbdb-desc-to-menu(desc)
+    (let ((map (make-sparse-keymap (car desc)))
+          (desc (reverse (cdr desc))) ;; throw away header, reorient list
+          (txtcount 0) elt elt-name)
+      (while (setq elt (car desc))
+        ;; fake a key binding name
+        (setq elt-name (intern (format "fake%d" txtcount))
+              txtcount (+ 1 txtcount))
+        (cond
+         ;; non-active entries in the menu
+         ((stringp elt)
+          (define-key map (vector elt-name) (list elt)))
+
+         ;; active entries in the menu
+         ((vectorp elt)
+          (define-key map (vector elt-name) (cons (aref elt 0) (aref elt 1))))
+
+         ;; submenus
+         ((listp elt)
+          (define-key map (vector elt-name)
+            (cons (car elt) (bbdb-desc-to-menu elt))))
+         )
+        (setq desc (cdr desc)))
+      map))
+  ;; this does the actual popping up & parsing nonsense
+  (defun bbdb-popup( desc &optional event )
+    (let ((map (bbdb-desc-to-menu desc)) result)
+      (setq result (x-popup-menu t map))
+      (if result
+          (let ((command (lookup-key map (vconcat result))))
+            ;; Clear out echoing, which perhaps shows a prefix arg.
+            (message "")
+            (if command
+                (if (commandp command)
+                    (command-execute command)
+                  (funcall 'eval command))))))))
+
+;;;###autoload
+(defun bbdb-menu (e)
+  (interactive "e")
+  (mouse-set-point e)
+  (beginning-of-line)
+  (bbdb-popup
+   (save-window-excursion
+     (save-excursion
+       (mouse-set-point e)
+       (let ((extent (or (bbdb-extent-at (point) (current-buffer) 'highlight)
+                         (error "")))
+             record field face)
+         (or (eq (bbdb-extent-property extent 'data) 'bbdb)
+             (error "not a bbdb extent"))
+         (bbdb-highlight-extent extent t)
+         (goto-char (bbdb-extent-start-position extent))
+         (beginning-of-line)
+         (setq record (bbdb-current-record)
+               face (bbdb-extent-face extent)
+               field (cond ((memq face
+                                  '(bbdb-name bbdb-field-value
+                                              bbdb-field-name))
+                            (bbdb-current-field))
+                           ((eq face 'bbdb-company)
+                            (cons 'company (cdr (bbdb-current-field))))
+                           (t nil)))
+         (build-bbdb-menu record field))))))
+
+;; hook in fontification
+(add-hook 'bbdb-list-hook 'bbdb-fontify-buffer)
+
+;; tell everyone else we're here.
+(provide 'bbdb-gui)
