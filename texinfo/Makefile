@@ -11,7 +11,8 @@ bbdb.dvi: bbdb.texinfo
 	texi2dvi bbdb.texinfo
 
 clean:
-	$(RM) -f bbdb.info* *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.log *.pg \
+	$(RM) -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.log *.pg \
 	  *.toc *.tp *.vr *.vrs
 
-
+reallyclean: clean
+	$(RM) -f bbdb.info*
