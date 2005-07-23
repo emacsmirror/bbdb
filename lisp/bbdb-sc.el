@@ -26,8 +26,7 @@
 ;;; for improvements and to Michael D. Carney  <carney@ltx-tr.com>
 ;;; for testing and feedback.
 
-;;; $Date$ by $Author$
-;;; $Revision$
+;;; $Id$
 
 ;;; This file adds the ability to define attributions for Supercite in
 ;;; a BBDB, enables you to retrieve your standard attribution from
