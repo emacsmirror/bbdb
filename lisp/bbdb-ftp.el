@@ -21,8 +21,7 @@
 
 ;;; This file was written by Ivan Vazquez <ivan@haldane.bu.edu>
 
-;; $Date$ by $Author$
-;; $Revision$
+;;; $Id$
 
 ;;; This file adds the ability to define ftp-sites in a BBDB, much the same
 ;;; way one adds a regular person's name to the BBDB.  It also defines the
