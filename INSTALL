@@ -7,6 +7,10 @@ check the additional instructions below.
 
 Running BBDB from CVS:
 
+  *** PLEASE NOTE ****
+  This applies to the master CVS tree at sourceforge, not the XEmacs CVS tree.
+  *** PLEASE NOTE ***
+
   This is not recommended, unless you're a BBDB developer. You will
   need to either install the GNU autoconf package, or download the
   pregenerated copy of configure from the BBDB website. If you choose
@@ -75,26 +79,32 @@ To compile and install the BBDB on systems with `make':
         a) In-place.
              i)   Follow steps 1 and 2
              ii)  Add the lisp subdirectory to the Emacs load-path
-             iii) Add the texinfo directory to the Info search path.
-
+             iii) Add the tex subdirectory to the TeX
+                  search path (can be done by adding the complete path
+                  to the tex subdirectory to the environment variable
+                  TEXINPUTS)
+             iv)  Add the texinfo directory to the Info search path.
         b) "Normal".
              i)   Follow steps 1 and 2.
-             ii)  Copy the .elc files from the lisp subdirectory to a
-                  directory on the Emacs load-path (or make a new
+             ii)  Copy the .el and .elc files from the lisp
+                  subdirectory to a directory on the Emacs load-path
+                  (or make a new directory, copy the files to it, and
+                  add the new directory to the load-path).
+             iii) Copy the .tex files from the tex subdirectory to a
+                  directory on the TeX search path (or make a new
                   directory, copy the files to it, and add the new
-                  directory to the load-path). 
-             iii) Copy the .info and .info-* files from the texinfo
+                  directory to the TeX search path.
+             iv)  Copy the .info and .info-* files from the texinfo
                   subdirectory to a directory on the Info search path
                   (or make a new directory, copy the files to it, and
                   add the new directory to the Info search path)
-
         c) XEmacs Package
              NOTE: This installation option is only available to users
                    running XEmacs 20.3 or higher.
              i)    Follow steps 1 and 2.
              ii)   Issue the 'make install-pkg' command.
 
-===============================================================================
+
 
 To compile and install the BBDB on systems without `make':
 
@@ -130,7 +140,6 @@ To run BBDB uncompiled:
 
 ===============================================================================
 
-Initializing BBDB: 
 ***************************************************************************
 *                                                                         *
 *         THE BBDB INITIALIZATION PROCEDURE CHANGED IN 1.57unoff.         *
@@ -155,4 +164,3 @@ Questions, Comments, Suggestions, and Bug Reports may be directed to
 the BBDB mailing list at bbdb-info@lists.sourceforge.net.  To
 subscribe, send mail to bbdb-info-request@lists.sourceforge.net, with
 'subscribe' as the subject.
-
