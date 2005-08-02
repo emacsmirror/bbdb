@@ -4,13 +4,10 @@
 	that the setting of bbdb-file-coding-system is reflected in the
 	file. I'm still not sure that this coding system hacking about is
 	a good idea OR correct, however.
-
-2005-08-02  Waider  <waider@waider.ie>
-
 	* lisp/bbdb.el: fix docstring for bbdb-invoke-hook-for-value
-	* lisp/bbdb-mhe.el, lisp/bbdb.el: if bbdb/mail-auto-create-p is
-	set to 'prompt (or a function that returns 'prompt) then prompt
-	the user before creating the record.
+	* lisp/bbdb-mhe.el, lisp/bbdb.el, lisp/bbdb-rmail.el: if
+	bbdb/mail-auto-create-p is set to 'prompt (or a function that
+	returns 'prompt) then prompt the user before creating the record.
 
 2005-08-02  Jochen Küpper  <jochen@fhi-berlin.mpg.de>
 
