@@ -85,9 +85,11 @@ the user confirms the creation."
                        from t
                        (or (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)
                            offer-to-create)
-                       offer-to-create)))
-            (if (and msg record) (bbdb-encache-message msg (list record)))
-            ;; return one record
+		       ;; ugh. what the hell?
+                       (or offer-to-create
+			   (bbdb-invoke-hook-for-value bbdb/mail-auto-create-p)))))
+	    (if (and msg record) (bbdb-encache-message msg (list record)))
+	    ;; return one record
             record))))))
 
 ;;;###autoload
