@@ -747,10 +747,10 @@ Database initialization function `bbdb-initialize' is run."
 ;; 22 will really need utf-8-emacs.
 (defconst bbdb-file-coding-system (if (fboundp 'coding-system-p)
                       (cond ((coding-system-p 'utf-8-emacs)
-			     'utf-8-emacs)
-			    ((coding-system-p 'mule-utf-8)
-			     'mule-utf-8)
-			    (t 'iso-2022-7bit)))
+                 'utf-8-emacs)
+                ((coding-system-p 'mule-utf-8)
+                 'mule-utf-8)
+                (t 'iso-2022-7bit)))
   "Coding system used for reading and writing `bbdb-file'.
 This should not be changed by users.")
 
@@ -826,8 +826,7 @@ about.")
           (funcall hook arg))))
 
 (defun bbdb-invoke-hook-for-value (hook &rest args)
-  "If HOOK is nil, return nil.  If it is t, return t.  Otherwise,
-return the value of funcalling it with the rest of the arguments."
+  "If HOOK is a function, invoke it with ARGS. Otherwise return it as-is."
   (cond ((eq hook nil) nil)
         ((eq hook t) t)
         ((functionp hook) (apply hook args))
