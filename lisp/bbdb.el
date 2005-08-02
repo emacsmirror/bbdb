@@ -2437,7 +2437,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
     (if (looking-at ";; *-\\*-coding:")
         (delete-region (point) (progn (forward-line) (point))))
     (insert-before-markers (format ";; -*-coding: %s;-*-\n"
-                                   bbdb-file-coding-system))))
+                                   bbdb-file-coding-system)))
   (setq bbdb-modified-p nil
         bbdb-changed-records nil)
   (let ((buf (get-buffer bbdb-buffer-name)))
