@@ -2,7 +2,7 @@
 
 ;;; This file is part of the Insidious Big Brother Database (aka BBDB),
 ;;; copyright (c) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;;; Interface to GNUS version 3.12 or greater.  See bbdb.texinfo.
+;;; Interface to Gnus.  See bbdb.texinfo.
 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -77,7 +77,7 @@ The default is to annotate only new messages."
 
 ;;;###autoload
 (defun bbdb/gnus-update-record (&optional offer-to-create)
-  "Return the record corresponding to the current GNUS message, creating
+  "Return the record corresponding to the current Gnus message, creating
 or modifying it as necessary.  A record will be created if
 bbdb/news-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
 the user confirms the creation."
@@ -87,7 +87,7 @@ the user confirms the creation."
 
 ;;;###autoload
 (defun bbdb/gnus-update-records (&optional offer-to-create)
-  "Return the records corresponding to the current GNUS message, creating
+  "Return the records corresponding to the current Gnus message, creating
 or modifying it as necessary.  A record will be created if
 bbdb/news-auto-create-p is non-nil or if OFFER-TO-CREATE is true
 and the user confirms the creation.
@@ -198,7 +198,7 @@ This buffer will be in `bbdb-mode', with associated keybindings."
              (bbdb/gnus-show-all-recipients)))))
 
 (defun bbdb/gnus-pop-up-bbdb-buffer (&optional offer-to-create)
-  "Make the *BBDB* buffer be displayed along with the GNUS windows,
+  "Make the *BBDB* buffer be displayed along with the Gnus windows,
 displaying the record corresponding to the sender of the current message."
   (let ((bbdb-gag-messages t)
         (records (bbdb/gnus-update-records offer-to-create))
@@ -237,7 +237,7 @@ set gnus-optional-headers to 'bbdb/gnus-lines-and-from."
 
 (defcustom bbdb/gnus-summary-mark-known-posters t
   "*If t, mark messages created by people with records in the BBDB.
-In GNUS, this marking will take place in the subject list (assuming
+In Gnus, this marking will take place in the subject list (assuming
 `gnus-optional-headers' contains `bbdb/gnus-lines-and-from').  In Gnus, the
 marking will take place in the Summary buffer if the format code defined by
 `bbdb/gnus-summary-user-format-letter' is used in `gnus-summary-line-format'.
@@ -263,7 +263,7 @@ then for messages from authors who are in your database, the name
 displayed will be the primary name in the database, rather than the
 one in the From line of the message.  This doesn't affect the names of
 people who aren't in the database, of course.  (`gnus-optional-headers'
-must be `bbdb/gnus-lines-and-from' for GNUS users.)"
+must be `bbdb/gnus-lines-and-from' for Gnus users.)"
   :group 'bbdb-mua-specific-gnus
   :type 'boolean)
 (defvaralias 'bbdb/gnus-header-show-bbdb-names
@@ -281,7 +281,7 @@ otherwise display his/her primary net address if we have one.  If it
 is set to the symbol bbdb, then real names will be used from the BBDB
 if present, otherwise the net address in the post will be used.  If
 bbdb/gnus-summary-prefer-bbdb-data is nil, then this has no effect.
-See `bbdb/gnus-lines-and-from' for GNUS users, or
+See `bbdb/gnus-lines-and-from' for Gnus users, or
 `bbdb/gnus-summary-user-format-letter' for Gnus users."
   :group 'bbdb-mua-specific-gnus
   :type '(choice (const :tag "Prefer real names" t)
@@ -445,7 +445,7 @@ record contains a gnus-score field."
 
 ;;;###autoload
 (defun bbdb/gnus-score (group)
-  "This returns a score alist for GNUS.  A score pair will be made for
+  "This returns a score alist for Gnus.  A score pair will be made for
 every member of the net field in records which also have a gnus-score
 field.  This allows the BBDB to serve as a supplemental global score
 file, with the advantage that it can keep up with multiple and changing
@@ -700,7 +700,7 @@ determine the group and spooling priority for a single address."
 
 ;;;###autoload
 (defun bbdb-insinuate-gnus ()
-  "Call this function to hook BBDB into GNUS."
+  "Call this function to hook BBDB into Gnus."
   (setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
   (add-hook 'gnus-article-prepare-hook 'bbdb/gnus-pop-up-bbdb-buffer)
   (add-hook 'gnus-save-newsrc-hook 'bbdb-offer-save)

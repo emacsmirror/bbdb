@@ -118,7 +118,7 @@ message.  This will not necessarily be in the current buffer."
 (defun bbdb-extract-field-value (field-name)
   "Given the name of a field (like \"Subject\") this returns the value of
 that field in the current message, or nil.  This works whether you're in
-GNUS, Rmail, or VM.  This works on multi-line fields, but if more than
+Gnus, Rmail, or VM.  This works on multi-line fields, but if more than
 one field of the same name is present, only the last is returned.  It is
 expected that the current buffer has a message in it, and (point) is at the
 beginning of the message headers."

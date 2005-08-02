@@ -407,13 +407,14 @@ commands be different."
 ;; these variables both need to be enabled for gnus mailreading to
 ;; work right. that's probably a bug, or something.
 (defcustom bbdb/mail-auto-create-p t
-  "*If this is t, then VM, MH, and RMAIL will automatically create new bbdb
-records for people you receive mail from.  If this is a function name
-or lambda, then it is called with no arguments to decide whether an
-entry should be automatically created.  You can use this to, for example,
-not create records for messages which have reached you through a
-particular mailing list, or to only create records automatically if
-the mail has a particular subject."
+  "*If this is t, then Gnus, MH, RMAIL, and VM will automatically
+create new bbdb records for people you receive mail from. If this
+is a function name or lambda, then it is called with no arguments
+to decide whether an entry should be automatically created. You
+can use this to, for example, not create records for messages
+which have reached you through a particular mailing list, or to
+only create records automatically if the mail has a particular
+subject."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Automatically create" t)
                  (const :tag "Prompt before creating" prompt)
@@ -421,7 +422,7 @@ the mail has a particular subject."
                  (function :tag "Create with function" bbdb-)))
 
 (defcustom bbdb/news-auto-create-p nil
-  "*If this is t, then GNUS will automatically create new bbdb
+  "*If this is t, then Gnus will automatically create new bbdb
 records for people you receive mail from.  If this is a function name
 or lambda, then it is called with no arguments to decide whether an
 entry should be automatically created.  You can use this to, for
@@ -491,14 +492,14 @@ newer than the file is was read from, and will offer to revert."
 
 (defcustom bbdb-use-pop-up t
   "If true, display a continuously-updating bbdb window while in VM, MH,
-RMAIL, or GNUS.  If 'horiz, stack the window horizontally if there is room."
+RMAIL, or Gnus.  If 'horiz, stack the window horizontally if there is room."
   :group 'bbdb-record-display
   :type '(choice (const :tag "Automatic BBDB window, stacked vertically" t)
                  (const :tag "Automatic BBDB window, stacked horizontally" 'horiz)
                  (const :tag "No Automatic BBDB window" nil)))
 
 (defcustom bbdb-pop-up-target-lines 5
-  "*Desired number of lines in a VM/MH/RMAIL/GNUS pop-up bbdb window."
+  "*Desired number of lines in a VM/MH/RMAIL/Gnus pop-up bbdb window."
   :group 'bbdb-record-display
   :type 'integer)
 
@@ -697,7 +698,7 @@ one argument, the new record.  The record need not have been modified for
 this to be called - use `bbdb-change-hook' for that.  You can use this to,
 for example, add something to the notes field based on the subject of the
 current message.  It is up to your hook to determine whether it is running
-in GNUS, VM, MH, or RMAIL, and to act appropriately.
+in Gnus, VM, MH, or RMAIL, and to act appropriately.
 
 Also note that `bbdb-change-hook' will NOT be called as a result of any
 modifications you may make to the record inside this hook.
@@ -709,7 +710,7 @@ address was extracted from.
 
 Beware that if the variable `bbdb-message-caching-enabled' is true (a good
 idea) then when you are using VM, MH, or RMAIL, this hook will be called only
-the first time that message is selected.  (The GNUS interface does not use
+the first time that message is selected.  (The Gnus interface does not use
 caching.)  When debugging the value of this hook, it is a good idea to set
 caching-enabled to nil."
   :group 'bbdb-hooks

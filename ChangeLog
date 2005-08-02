@@ -1,3 +1,8 @@
+2005-08-02  Jochen Küpper  <jochen@fhi-berlin.mpg.de>
+
+	* lisp/bbdb-gnus.el, lisp/bbdb-hooks.el, lisp/bbdb.el: Change GNUS
+	to Gnus, assuming nobody cares for GNUS support anymore...
+
 2005-02-13  Waider  <waider@waider.ie>
 
 	* texinfo/bbdb.texinfo (Manual Record Addition):
