@@ -2431,11 +2431,13 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
   (save-restriction
     (widen)
     (goto-char (point-min))
-    ;; Fixme: probably this should check any existing cookie for
-    ;; consistency with bbdb-file-coding-system.
-    (unless (looking-at ";; *-\\*-coding:")
-      (insert-before-markers (format ";; -*-coding: %s;-*-\n"
-                     bbdb-file-coding-system))))
+
+    ;; this always rewrites the coding cookie, which is a bit
+    ;; wasteful, but safer than alternatives
+    (if (looking-at ";; *-\\*-coding:")
+        (delete-region (point) (progn (forward-line) (point))))
+    (insert-before-markers (format ";; -*-coding: %s;-*-\n"
+                                   bbdb-file-coding-system))))
   (setq bbdb-modified-p nil
         bbdb-changed-records nil)
   (let ((buf (get-buffer bbdb-buffer-name)))
