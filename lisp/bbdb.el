@@ -744,14 +744,12 @@ Database initialization function `bbdb-initialize' is run."
   "Keymap for Insidious Big Brother Database searching")
 
 ;; iso-2022-7bit should be OK (but not optimal for Emacs, at least --
-;; emacs-mule would be better) with both Emacs 21 and XEmacs.  Emacs
-;; 22 will really need utf-8-emacs.
-(defconst bbdb-file-coding-system (if (fboundp 'coding-system-p)
-                      (cond ((coding-system-p 'utf-8-emacs)
-                 'utf-8-emacs)
-                ((coding-system-p 'mule-utf-8)
-                 'mule-utf-8)
-                (t 'iso-2022-7bit)))
+;; emacs-mule would be better) with both Emacs 21 and XEmacs.
+(defconst bbdb-file-coding-system
+  (if (fboundp 'coding-system-p)
+      (cond ((coding-system-p 'utf-8-emacs)
+             'utf-8-emacs)
+            (t 'iso-2022-7bit)))
   "Coding system used for reading and writing `bbdb-file'.
 This should not be changed by users.")
 
