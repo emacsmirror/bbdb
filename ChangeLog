@@ -1,3 +1,8 @@
+2005-08-11  Waider  <waider@waider.ie>
+
+	* texinfo/bbdb.texinfo, lisp/bbdb-print.el, lisp/bbdb-migrate.el:
+	trivial cleanups
+
 2005-08-02  Waider  <waider@waider.ie>
 
 	* lisp/bbdb.el: rewrite the coding cookie on save. This makes sure
