@@ -1158,7 +1158,7 @@ mail or news-reading interfaces (@xref{Interfaces}.). @refill
 @cindex Creating new records
 @cindex Adding new records
 
-There is als @w{@kbd{bbdb-snarf}} (@xref{bbdb-snarf}), which will
+There is also @w{@kbd{bbdb-snarf}} (@xref{bbdb-snarf}), which will
 attempt to create a record from a text block. Note that this depends
 on particular formatting and may not do exactly what you want.
 
