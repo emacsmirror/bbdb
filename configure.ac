@@ -80,27 +80,29 @@ BBDB_ARG_SUBST([VMDIR],   [vm-dir],   [DIR], [set the location of VM   to DIR],
 	           [], [[ BBDB_VM=vm ]])
 
 # Various MTAs
-# Default RMAIL & Gnus to on
+# Default Gnus to on
 enable_gnus=gnus
+
+# this seems far messier and more complex than I'd expect from autoconf...
 AC_ARG_ENABLE([vm],
               AC_HELP_STRING([--enable-vm],
                          [enable VM hooks (default depends on --with-vm-dir)]),
-              [BBDB_VM=vm])
+              [if test "x$enableval" = "xno"; then BBDB_VM=; else BBDB_VM=vm; fi])
 
 AC_ARG_ENABLE(rmail,
               AC_HELP_STRING([--enable-rmail],
                              [enable RMAIL hooks [[no]]]),
-              [BBDB_RMAIL=rmail], [BBDB_RMAIL=])
+              [if test "x$enableval" = "xno"; then BBDB_RMAIL=; else BBDB_RMAIL=rmail; fi], [BBDB_RMAIL=])
 
 AC_ARG_ENABLE(gnus,
 			  AC_HELP_STRING([--enable-gnus],
                              [enable GNUS hooks [[yes]]]),
-              [BBDB_GNUS=gnus], [BBDB_GNUS=])
+              [if test "x$enableval" = "xno"; then BBDB_GNUS=; else BBDB_GNUS=gnus; fi], [BBDB_GNUS=])
 
 AC_ARG_ENABLE(mhe,
               AC_HELP_STRING([--enable-mhe],
                       [enable MH-E hooks (default depends on --with-mhe-dir)]),
-              [BBDB_MHE=mhe])
+              [if test "x$enableval" = "xno"; then BBDB_MHE=; else BBDB_MHE=mhe; fi], [BBDB_MHE=])
 
 BBDB_ARG_SUBST([OTHERDIRS], [other-dirs], [DIRS],
   [set other needed directories (a list of space or colon separated paths)],
