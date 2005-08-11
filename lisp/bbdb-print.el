@@ -55,61 +55,6 @@
 ;;
 ;; $Id$
 ;;
-;; $Log$
-;; Revision 1.68  2004/10/13 13:37:06  waider
-;; * Correct variable name in comment
-;;
-;; Revision 1.67  2001/11/19 21:35:08  waider
-;; Patch from Alex Schroeder
-;;
-;; Revision 1.66  2001/09/11 10:55:31  fenk
-;; Appliend fixed according to change log
-;;
-;; Revision 1.65  2000/11/27 12:59:53  waider
-;; Alex's zipcode changes. WARNING: New database format.
-;;
-;; Revision 1.64  2000/07/13 17:07:00  sds
-;; minor doc fixes to comply with the standards
-;;
-;; Revision 1.63  2000/05/29 22:47:50  waider
-;; *** empty log message ***
-;;
-;; Revision 1.62  2000/04/15 17:11:49  kuepper
-;; Adopt TeX-output of streets to new file-format v5.
-;;
-;; Revision 1.61  2000/04/13 17:19:58  kuepper
-;; Improved TeX output (fonts, breaks).
-;;
-;; Revision 1.60  2000/04/13 00:22:23  waider
-;; * Address layout patch, including Euro addresses and the streets->list thing
-;;
-;; Revision 1.59  1998/11/02 07:08:14  simmonmt
-;; Change mailing list address
-;;
-;; Revision 1.58  1998/10/17 19:43:26  simmonmt
-;; Patch to convert default area code protection from condition-case to
-;; integerp.
-;;
-;; Revision 1.57  1998/04/11 07:19:32  simmonmt
-;; Colin Rafferty's patch adding autoload cookies back
-;;
-;; Revision 1.56  1998/03/10 07:37:42  simmonmt
-;; Protecting bbdb-default-area-code
-;;
-;; Revision 1.55  1998/02/23 07:12:40  simmonmt
-;; Moved key binding to bbdb.el, changed default of bbdb-print-elide,
-;; fixed problem with nil bbdb-default-area-code
-;;
-;; Revision 1.54  1998/01/06 06:08:38  simmonmt
-;; Customized variables and removed autoloads
-;;
-;; Revision 1.53  1997/12/01 05:02:28  simmonmt
-;; Soren Dayton's fix to correct tilde printing
-;;
-;; Revision 1.52  1997/10/06 01:05:28  simmonmt
-;; New version of bbdb-print from Boris Goldowsky <boris@gnu.ai.mit.edu>
-;;
-;;
 
 ;;; Installation:
 ;;;
