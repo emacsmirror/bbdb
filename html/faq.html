@@ -28,11 +28,11 @@
 				<a href="http://www.xemacs.org/">XEmacs</a>.</em><br><br></dd>
 
 			<dt>What is the most current version of the BBDB?</dt>
-			<dd>Updated: 12 June 2001<br>
+			<dd>Updated: 20 August 2005<br>
 				<br>
-				The current stable version is 2.32. The current
-				development version is 2.33. The versioning from 2.0 to
-				2.32 is a little awkward, for hysterical raisins.<br><br></dd>
+				The current stable version is 2.34. The current
+				development version is 2.35. Generally speaking, the
+				development version is the preferred version.<br><br></dd>
 
 			<dt>Where can I get the most current version of the BBDB?</dt>
 			<dd>Updated: 21 July 2000<br>
@@ -93,6 +93,16 @@
               nil. This tells BBDB to not try parsing numbers, but to
               simply accept whatever the user types in.<br><br></dd>
 
+            <dt>How to I get BBDB to not keep changing the name field
+              for a record?</dt>
+            <dd>Updated: August 20 2005<br>
+              Probably the easiest way to do this is to use
+              <tt>bbdb-ignore-some-messages-alist</tt>; see the
+              documentation on this for more details. You'll also need
+              to set <tt>bbdb/{mail,news}-auto-create-p</tt> to
+              <tt>bbdb-ignore-some-messages-hook</tt>, or invoke the
+              latter from whatever your <tt>auto-create-p</tt>
+              variables currently point at.</dd>
 
 	<!-- I guess this question came off the mailing list. It should be
 	reformatted & answered.
@@ -104,9 +114,10 @@
 	Answer: bbdb-notice-hook, bbdb-auto-notes-hook
 	 -->
 			<dt>How do I make BBDB do something not covered in the FAQ??</dt>
-			<dd>Updated: 25 February 2001<br>
+			<dd>Updated: 20 August 2005<br>
 			<br>
-			Read The Fine Manual!<br><br></dd>
+			Read The Fine Manual, and then if you're still unsure ask
+			on the bbdb-info list.<br><br></dd>
 		  </dl>
 	  </dd>
 
@@ -127,10 +138,10 @@
 
           <dt>I have 42 records for Douglas Adams. How do I delete the
           duplicates?</dt>
-          <dd>Updated: 28 June 2001<br>
+          <dd>Updated: 20 August 2005<br>
           <br>
-          <tt>M-x bbdb-show-duplicates</tt>, and delete the ones you
-          don't want.<br><br></dd>
+          <tt>M-x bbdb-show-duplicates</tt>, and delete or merge the
+          ones you don't want.<br><br></dd>
 
           <dt>Every time I modifiy bbdb mail-alias fields, I need to
           quit and restart before <a
@@ -146,6 +157,33 @@
 	  <dt>Troubleshooting</dt>
 	  <dd>
 		  <dl>
+            <dt>How do I submit a bug report?</dt>
+            <dd>Updated: 20 August 2005<br>
+              Use <tt>bbdb-submit-bug-report</tt>. This extracts
+              version information and settings from your running copy
+              of BBDB and prepares an email message including
+              them. The default address for this mail is the bbdb-info
+              list, so that all developers can see it, but if you've
+              got privacy issues with that then you can send it
+              directly to me (waider@waider.ie). A few essential
+              notes:<ul>
+              <li>Check the mailing list archives to see if your bug
+              has previously been discussed.</li>
+              <li>Make sure you've tried out the latest CVS version,
+              in case your bug has already been solved.</li>
+              <li>Be as precise as you can. Do <b>not</b> use
+              wording like &quot;I got an error message about some
+              file&quot;; include the exact text of the error message
+              and the filename it referred to.</li>
+              <li>If you can, try and provide a minimal <tt>.bbdb</tt>
+              file that illustrates the problem. There is apparently
+              an ongoing issue with completion not providing all
+              possible expansions, but since noone has yet provided a
+              <tt>.bbdb</tt> file that demonstrates the problem, I've
+              been unable to reproduce it.</li>
+              </ul>
+            </dd>
+
 	<!-- this one's actually no longer an issue, I believe -->
 			<dt>XEmacs is giving me an error about BBDB being already
 			loaded.</dt>
@@ -185,25 +223,11 @@
 	  <dd>
 		  <dl>
             <dt>BBDB with Gnus is asking me if I want to update
-              &lt;non-ASCII-name&gt to &lt<non-ASCII-name&lt</dt>
-            <dd>Updated: 28 July 2001<br>
+              &lt;non-ASCII-name&gt; to &lt;non-ASCII-name&lt;</dt>
+            <dd>Updated: 20 August 2005<br>
             <br>
-            All Hail coding-systems. This problem can be fixed by
-            enabling a coding system for your BBDB:
-<pre>
-(setq file-coding-system-alist 
-      (cons '("\\.bbdb" iso-8859-1 . iso-8859-1) 
-        file-coding-system-alist))
-</pre>
-            <br>(From Raymond Scholz and ShengHuo ZHU)<br>
-            or you could try this, from Toby Speight:<br>
-<pre>
-;; Need both `coding-system-p' tests to work with Emacs and XEmacs
-(cond ((coding-system-p 'emacs-mule)
-       (modify-coding-system-alist 'file "/\\.bbdb\\'" 'emacs-mule))
-      ((coding-system-p 'escape-quoted)
-       (modify-coding-system-alist 'file "/\\.bbdb\\'" 'escape-quoted)))
-</pre>
+			This should be (mostly) solved in CVS. If you encounter
+			this, please submit a bug report.
             <br><br></dd>
 
 	<!-- bbdb-whois, bbdb-ftp,
