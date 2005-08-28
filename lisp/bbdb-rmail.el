@@ -17,21 +17,16 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-
 ;;
 ;; $Id$
 ;;
 
-(eval-when-compile
-  (require 'bbdb)
-  (require 'bbdb-com)
-  (require 'rmail)
-  ;(require 'rmailsum)   ; not provided, dammit!
-  (if (not (fboundp 'rmail-make-summary-line))
-      (load-library "rmailsum"))
-  ;; just to avoid a warning 
-  (if (not (boundp 'rmail-buffer))
-      (defvar rmail-buffer nil)))
+(require 'bbdb)
+(require 'bbdb-com)
+(require 'rmail)
+(require 'rmailsum)
+(require 'mailheader)
+
 
 ;;;###autoload
 (defun bbdb/rmail-update-record (&optional offer-to-create)
@@ -39,39 +34,74 @@
         (records (bbdb/rmail-update-records offer-to-create)))
     (if records (car records) nil)))
 
+(defun bbdb/rmail-get-header-content( header-field msg )
+  "Pull HEADER-FIELD out of MSG's mail header.
+
+MSG is a vector of [ rmail-buffer msg-beg msg-end ] although the code only
+uses rmail-buffer."
+  (let ((buf (aref msg 0))) ;; all we need, as it happens...
+    (save-excursion
+      (set-buffer buf)
+      (save-restriction
+    (rmail-narrow-to-non-pruned-header)
+    (let ((headers (mail-header-extract))
+           (header (intern-soft (downcase header-field))))
+      (mail-header header headers))))))
+
+;; FIXME this needs to have a switch on message status, like the VM
+;; variable it's based on. Probably get-header "status" or
+;; something. Also need to put a proper docstring on it.
+(defcustom bbdb/rmail-update-records-mode
+  'annotating
+  "See bbdb/vm-update-records-mode.")
+
+;;;###autoload
 (defun bbdb/rmail-update-records (&optional offer-to-create)
-  "Returns the records corresponding to the current RMAIL message, creating or
-modifying it as necessary.  A record will be created if
-bbdb/mail-auto-create-p is non-nil, or if OFFER-TO-CREATE is true and
-the user confirms the creation."
-  (if bbdb-use-pop-up
-      (bbdb/rmail-pop-up-bbdb-buffer offer-to-create)
-    (if (and (boundp 'rmail-buffer) rmail-buffer)
-        (set-buffer rmail-buffer))
-    (if rmail-current-message
-        (let ((records (bbdb-message-cache-lookup rmail-current-message))
-              record)
-          (or records
-              (save-excursion
-                (let ((from (mail-fetch-field "from")))
-                  (if (or (null from)
-                          (string-match (bbdb-user-mail-names)
-                                        (mail-strip-quoted-names from)))
-                      ;; if logged-in user sent this, use recipients.
-                      (setq from (or (mail-fetch-field "to") from)))
-                  (if from
-                      (setq record
-                             (bbdb-annotate-message-sender
-                              from t
-                              (or (bbdb-invoke-hook-for-value
-                                   bbdb/mail-auto-create-p)
-                                  offer-to-create)
-                              (or offer-to-create bbdb/mail-auto-create-p))))
-                  ;; return a list of records 
-                  (if record
-                      (bbdb-encache-message
-                       rmail-current-message
-                       (list record))))))))))
+  "Returns the records corresponding to the current RMAIL emssage,
+creating or modifying them as necessary.  A record will be created if
+bbdb/mail-auto-create-p is non-nil or if OFFER-TO-CREATE is true, and
+the user confirms the creation.
+
+The variable `bbdb/rmail-update-records-mode' controls what actions
+are performed and it might override `bbdb-update-records-mode'.
+
+When hitting C-g once you will not be asked anymore for new people
+listed n this message, but it will search only for existing records.
+When hitting C-g again it will stop scanning."
+  (if (and (boundp 'rmail-buffer) rmail-buffer)
+      (set-buffer rmail-buffer)
+    (error "Not in an rmail buffer"))
+  (if rmail-current-message
+      (let ((bbdb/rmail-offer-to-create offer-to-create)
+            cache records)
+
+        (if (not bbdb/rmail-offer-to-create)
+            (setq cache (bbdb-message-cache-lookup
+                         rmail-current-message)))
+
+        (if cache
+            (setq records (if bbdb-get-only-first-address-p
+                              (list (car cache))
+                            cache))
+
+          (let ((bbdb-update-records-mode (or
+                                           bbdb/rmail-update-records-mode
+                                           bbdb-update-records-mode)))
+            (setq records (bbdb-update-records
+                           (bbdb-get-addresses
+                            bbdb-get-only-first-address-p
+                            ;; uninteresting-senders
+                            user-mail-address
+                            'bbdb/rmail-get-header-content
+                            (vector rmail-buffer
+                                    (rmail-msgbeg rmail-current-message)
+                                    (rmail-msgend rmail-current-message)))
+                           bbdb/mail-auto-create-p
+                           offer-to-create))
+
+            (bbdb-encache-message rmail-current-message records)))
+        records))
+  )
 
 ;;;###autoload
 (defun bbdb/rmail-annotate-sender (string &optional replace)
@@ -108,46 +138,35 @@ This buffer will be in bbdb-mode, with associated keybindings."
         (bbdb-display-records (list record))
         (error "unperson"))))
 
+(defun bbdb/rmail-pop-up-bbdb-buffer ( &optional offer-to-create )
+  "Make the *BBDB* buffer be displayed along with the RMAIL window(s).
+Displays the records corresponding to the sender respectively
+recipients of the current message.
+See `bbdb/rmail-get-addresses-headers' and
+'bbdb-get-only-first-address-p' for configuration of what is being
+displayed."
+  (save-excursion
+    (let ((bbdb-gag-messages t)
+          (bbdb-electric-p nil)
+          (records (bbdb/rmail-update-records offer-to-create))
+          (bbdb-buffer-name bbdb-buffer-name))
 
-(defun bbdb/rmail-pop-up-bbdb-buffer (&optional offer-to-create)
-  "Make the *BBDB* buffer be displayed along with the RMAIL window(s),
-displaying the record corresponding to the sender of the current message."
-  (bbdb-pop-up-bbdb-buffer
-    (function (lambda (w)
-      (let ((b (current-buffer)))
-        (set-buffer (window-buffer w))
-        (prog1 (eq major-mode 'rmail-mode)
-          (set-buffer b))))))
-  (let ((bbdb-gag-messages t)
-        (bbdb-use-pop-up nil)
-        (bbdb-electric-p nil))
-    (let ((records (bbdb/rmail-update-records offer-to-create))
-          (b (current-buffer)))
-      (if records
-          (bbdb-display-records records bbdb-pop-up-display-layout)
+      (when (and bbdb-use-pop-up records)
+        (bbdb-pop-up-bbdb-buffer
+         (function (lambda (w)
+                     (let ((b (current-buffer)))
+                       (set-buffer (window-buffer w))
+                       (prog1 (eq major-mode 'rmail-mode)
+                         (set-buffer b))))))
+
+        ;; Always update the records; if there are no records, empty
+        ;; the BBDB window. This should be generic, not MUA-specific.
+        (bbdb-display-records records bbdb-pop-up-display-layout))
+
+      (when (not records)
         (bbdb-undisplay-records)
         (if (get-buffer-window bbdb-buffer-name)
-            (delete-window (get-buffer-window bbdb-buffer-name))))
-      (set-buffer b)
-      records)))
-
-(defun bbdb/rmail-only-expunge ()
-  "Actually erase all deleted messages in the file."
-  (interactive)
-  (setq bbdb-message-cache nil)
-  (bbdb-orig-rmail-only-expunge))
-
-(defun bbdb/undigestify-rmail-message ()
-  "Break up a digest message into its constituent messages.
-Leaves original message, deleted, before the undigestified messages."
-  (interactive)
-  (setq bbdb-message-cache nil)
-  (bbdb-orig-undigestify-rmail-message))
-
-;(defun bbdb-orig-rmail-expunge ()
-;  "This becomes the original rmail-expunge function.")
-;(defun bbdb-orig-undigestify-rmail-message ()
-;  "This becomes the original rmail-expunge function.")
+            (delete-window (get-buffer-window bbdb-buffer-name)))))))
 
 ;;;###autoload
 (defun bbdb-insinuate-rmail ()
@@ -157,23 +176,23 @@ Leaves original message, deleted, before the undigestified messages."
   (define-key rmail-summary-mode-map ":" 'bbdb/rmail-show-sender)
   (define-key rmail-summary-mode-map ";" 'bbdb/rmail-edit-notes)
 
-  (add-hook 'rmail-show-message-hook 'bbdb/rmail-update-records)
+  (add-hook 'rmail-show-message-hook 'bbdb/rmail-pop-up-bbdb-buffer)
 
-  ;; We must patch into rmail-only-expunge to clear the cache, since expunging a
-  ;; message invalidates the cache (which is based on message numbers).
+  ;; We must patch into rmail-only-expunge to clear the cache, since
+  ;; expunging a message invalidates the cache (which is based on
+  ;; message numbers).
+  (defadvice rmail-only-expunge (before bbdb/rmail-only-expunge)
+    "Invalidate BBDB cache before expunging."
+    (setq bbdb-message-cache nil))
+
   ;; Same for undigestifying.
-  (or (fboundp 'bbdb-orig-rmail-only-expunge)
-      (defalias 'bbdb-orig-rmail-only-expunge (symbol-function 'rmail-only-expunge)))
-  (defalias 'rmail-only-expunge 'bbdb/rmail-only-expunge)
-
   (or (fboundp 'undigestify-rmail-message)
       (autoload 'undigestify-rmail-message "undigest" nil t))
   (if (eq (car-safe (symbol-function 'undigestify-rmail-message)) 'autoload)
       (load (nth 1 (symbol-function 'undigestify-rmail-message))))
-  (or (fboundp 'bbdb-orig-undigestify-rmail-message)
-      (defalias 'bbdb-orig-undigestify-rmail-message
-            (symbol-function 'undigestify-rmail-message)))
-  (defalias 'undigestify-rmail-message 'bbdb/undigestify-rmail-message)
+  (defadvice undigestify-rmail-message (before bbdb/undigestify-rmail-message)
+    "Invalidate BBDB cache before undigestifying."
+    (setq bbdb-message-cache nil))
   )
 
 (provide 'bbdb-rmail)
