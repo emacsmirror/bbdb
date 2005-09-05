@@ -34,26 +34,33 @@
         (records (bbdb/rmail-update-records offer-to-create)))
     (if records (car records) nil)))
 
-(defun bbdb/rmail-get-header-content( header-field msg )
-  "Pull HEADER-FIELD out of MSG's mail header.
+(defun bbdb/rmail-get-header-content( header-field buf )
+  "Pull HEADER-FIELD out of BUF's mail header.
+BUF is actually the rmail buffer from which the current message should
+be extracted."
+  (save-excursion
+    (set-buffer buf)
+    (save-restriction
+      (rmail-narrow-to-non-pruned-header)
+      (let ((headers (mail-header-extract))
+            (header (intern-soft (downcase header-field))))
+        (mail-header header headers)))))
 
-MSG is a vector of [ rmail-buffer msg-beg msg-end ] although the code only
-uses rmail-buffer."
-  (let ((buf (aref msg 0))) ;; all we need, as it happens...
-    (save-excursion
-      (set-buffer buf)
-      (save-restriction
-    (rmail-narrow-to-non-pruned-header)
-    (let ((headers (mail-header-extract))
-           (header (intern-soft (downcase header-field))))
-      (mail-header header headers))))))
+(defun bbdb/rmail-new-flag( buf )
+  "Returns t if the current message in buffer BUF is new."
+  (rmail-message-labels-p rmail-current-message ", ?\\(unseen\\),"))
 
-;; FIXME this needs to have a switch on message status, like the VM
-;; variable it's based on. Probably get-header "status" or
-;; something. Also need to put a proper docstring on it.
 (defcustom bbdb/rmail-update-records-mode
-  'annotating
-  "See bbdb/vm-update-records-mode.")
+  '(if (bbdb/rmail-new-flag rmail-buffer) 'annotating 'searching)
+  "RMAIL-specific version of `bbdb-update-records-mode', which see."
+  :group 'bbdb-mua-specific-rmail
+  :type '(choice (const :tag "annotating all messages"
+                        annotating)
+                 (const :tag "annotating no messages"
+                        searching)
+                 (const :tag "annotating only new messages"
+                        (if (bbdb/rmail-new-flag rmail-buffer) 'annotating 'searching))
+                 (sexp  :tag "user defined")))
 
 ;;;###autoload
 (defun bbdb/rmail-update-records (&optional offer-to-create)
@@ -93,9 +100,7 @@ When hitting C-g again it will stop scanning."
                             ;; uninteresting-senders
                             user-mail-address
                             'bbdb/rmail-get-header-content
-                            (vector rmail-buffer
-                                    (rmail-msgbeg rmail-current-message)
-                                    (rmail-msgend rmail-current-message)))
+                            rmail-buffer)
                            bbdb/mail-auto-create-p
                            offer-to-create))
 
