@@ -157,8 +157,12 @@ AC_DEFUN([BBDB_PROG_EMACS],
       dnl This is critical enough to generate an error and not a warning...
       AC_MSG_ERROR([*** No Emacs program found.])
     fi
-    dnl If I were pedantic, I'd check that the user-specified executable is
-    dnl actually working. I might do that someday.
+	dnl AC_CHECK_PROGS appears to verify that it's executable, so we don't
+    dnl have to. We do, however, need to verify that it's not got spaces in
+    dnl the path (hello Windows, OS X)
+    if test "x`echo $EMACS_PROG | grep \" \"`" != "x"; then
+      EMACS_PROG=\"$EMACS_PROG\"
+    fi
     AC_SUBST(EMACS_PROG) ])
 
 dnl aclocal.m4 ends here
