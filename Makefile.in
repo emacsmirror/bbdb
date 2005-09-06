@@ -61,6 +61,7 @@ uninstall-pkg:
         done
 
 clean:
+	-$(RM) loadpath.el
 	cd lisp; $(MAKE) clean
 	cd texinfo; $(MAKE) clean
 
@@ -69,6 +70,7 @@ distclean:
           ( cd $$i && $(MAKE) distclean ) ; \
         done
 	-$(RM) config.cache config.status config.log
+	-$(RM) -r autom4te.cache
 	-$(RM) *.tar.gz
 	-$(RM) .#*
 
