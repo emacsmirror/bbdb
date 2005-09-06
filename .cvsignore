@@ -4,3 +4,5 @@ config.status
 configure
 Makefile
 *.tar.gz
+loadpath.el
+autom4te.cache
