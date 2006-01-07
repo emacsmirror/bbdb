@@ -2337,7 +2337,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                   (setq only-one-p nil))
               (if (not (memq sym all-the-completions))
                   (setq all-the-completions (cons sym all-the-completions))))))
-         (completion (try-completion pattern ht pred))
+         (completion (progn (all-completions pattern ht pred) (try-completion pattern ht)))
          (exact-match (eq completion t)))
 
     (cond
@@ -2505,7 +2505,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                     (not (string= completion last))
                     (setq last completion
                           pattern (downcase orig)
-                          completion (try-completion pattern ht pred)))
+                          completion (progn (all-completions pattern ht pred) (try-completion pattern ht))))
           (if (stringp completion)
               (progn (delete-region beg end)
                      (insert completion))))
