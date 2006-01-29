@@ -87,22 +87,22 @@ enable_gnus=gnus
 AC_ARG_ENABLE([vm],
               AC_HELP_STRING([--enable-vm],
                          [enable VM hooks (default depends on --with-vm-dir)]),
-           [if test "x$enableval" = "xno"; then BBDB_VM=; else BBDB_VM=vm; fi])
+           [if test "x$enableval" = "xno"; then BBDB_VM=; enable_vm=; else BBDB_VM=vm; fi])
 
 AC_ARG_ENABLE(rmail,
               AC_HELP_STRING([--enable-rmail],
                              [enable RMAIL hooks [[no]]]),
-           [if test "x$enableval" = "xno"; then BBDB_RMAIL=; else BBDB_RMAIL=rmail; fi], [BBDB_RMAIL=])
+           [if test "x$enableval" = "xno"; then BBDB_RMAIL=; enable_rmail=; else BBDB_RMAIL=rmail; fi], [BBDB_RMAIL=])
 
 AC_ARG_ENABLE(gnus,
 			  AC_HELP_STRING([--enable-gnus],
                              [enable GNUS hooks [[yes]]]),
-           [if test "x$enableval" = "xno"; then BBDB_GNUS=; else BBDB_GNUS=gnus; fi], [BBDB_GNUS=])
+           [if test "x$enableval" = "xno"; then BBDB_GNUS=; enable_gnus=; else BBDB_GNUS=gnus; fi], [BBDB_GNUS=])
 
 AC_ARG_ENABLE(mhe,
               AC_HELP_STRING([--enable-mhe],
                       [enable MH-E hooks (default depends on --with-mhe-dir)]),
-              [if test "x$enableval" = "xno"; then BBDB_MHE=; else BBDB_MHE=mhe; fi], [BBDB_MHE=])
+              [if test "x$enableval" = "xno"; then BBDB_MHE=; enable_mhe=; else BBDB_MHE=mhe; fi], [BBDB_MHE=])
 
 dnl All this does for now is allows you to see the compile commands
 AC_ARG_ENABLE(developer,
@@ -131,16 +131,16 @@ BBDB_LOADPATH="${ac_confdir}/loadpath.el"
 
 dnl if VM was requested, make sure we have access to the source
 if test "x$enable_vm" != "x"; then
-   BBDB_VM=`${EMACS_PROG} --no-site-file --no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(if (locate-library \"vm-autoload\") (message \"vm\"))" 2>&1`
+   BBDB_VM=`${EMACS_PROG} --no-site-file --no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(if (locate-library \"vm-autoload\") (message \"vm\"))"`
    if test "x$BBDB_VM" = "x"; then
 	  AC_MSG_ERROR([*** Cannot build VM support without VM's source.])
    fi
 fi
 
 dnl Now go looking for auxilliary packages (supercite, reportmail and gnuserv)
-BBDB_SC=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(if (locate-library \"supercite\") (message \"bbdb-sc.elc\"))" 2>&1`
-BBDB_REPORTMAIL=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(if (locate-library \"reportmail\") (message \"bbdb-reportmail.elc\"))" 2>&1`
-BBDB_SRV=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(progn (or (fboundp (quote define-obsolete-variable-alias)) (if (locate-library \"gnuserv-compat\") (load \"gnuserv-compat\" t t))) (if (and (locate-library \"gnuserv\") (locate-library \"itimer\")) (message \"bbdb-srv.el\")))" 2>&1`
+BBDB_SC=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(if (locate-library \"supercite\") (message \"bbdb-sc.elc\"))"`
+BBDB_REPORTMAIL=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(if (locate-library \"reportmail\") (message \"bbdb-reportmail.elc\"))"`
+BBDB_SRV=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(progn (or (fboundp (quote define-obsolete-variable-alias)) (if (locate-library \"gnuserv-compat\") (load \"gnuserv-compat\" t t))) (if (and (locate-library \"gnuserv\") (locate-library \"itimer\")) (message \"bbdb-srv.el\")))"`
 
 dnl XEmacsery
 dnl is there a sane way to set this to a useful default?
