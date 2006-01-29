@@ -157,9 +157,12 @@ AC_DEFUN([BBDB_PROG_EMACS],
       dnl This is critical enough to generate an error and not a warning...
       AC_MSG_ERROR([*** No Emacs program found.])
     fi
-	dnl AC_CHECK_PROGS appears to verify that it's executable, so we don't
-    dnl have to. We do, however, need to verify that it's not got spaces in
-    dnl the path (hello Windows, OS X)
+	if test -x "${EMACS_PROG}"; then
+	  dnl AC_CHECK_PROGS only verifies this if you don't override manually
+      AC_MSG_ERROR([*** ${EMACS_PROG} isn't executable.])
+	fi
+    dnl We do need to verify that it's not got spaces in the path
+	dnl (hello Windows, OS X)
     if test "x`echo $EMACS_PROG | grep \" \"`" != "x"; then
       EMACS_PROG=\"$EMACS_PROG\"
     fi
