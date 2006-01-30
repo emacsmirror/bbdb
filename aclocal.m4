@@ -158,6 +158,8 @@ AC_DEFUN([BBDB_PROG_EMACS],
       AC_MSG_ERROR([*** No Emacs program found.])
     fi
 	if test -x "${EMACS_PROG}"; then
+      echo "yay" > /dev/null # because I don't know if 'if !' is portable
+    else
 	  dnl AC_CHECK_PROGS only verifies this if you don't override manually
       AC_MSG_ERROR([*** ${EMACS_PROG} isn't executable.])
 	fi
