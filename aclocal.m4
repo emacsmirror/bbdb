@@ -152,7 +152,7 @@ AC_DEFUN([BBDB_PROG_EMACS],
      AC_HELP_STRING([--with-emacs=PROG],
         [choose which flavor of Emacs to use]),
       [ EMACS_PROG="${withval}" ],
-      [ AC_CHECK_PROGS(EMACS_PROG, emacs xemacs) ])
+      [ AC_PATH_PROGS(EMACS_PROG, emacs xemacs) ])
     if test "x${EMACS_PROG}" = "x" ; then
       dnl This is critical enough to generate an error and not a warning...
       AC_MSG_ERROR([*** No Emacs program found.])
