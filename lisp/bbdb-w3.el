@@ -35,7 +35,9 @@ means to try all records currently visible.
 Non-interactively, do all records if arg is nonnil."
   (interactive (list (bbdb-get-record "Visit (WWW): ")
                      (or current-prefix-arg 0)))
-  (browse-url (read-string "fetch: " (bbdb-get-field rec 'www which))))
+  (browse-url (read-string "fetch: "
+                           (or (bbdb-get-field rec 'www which)
+                               (bbdb-get-field rec 'ftp which)))))
 
 ;;;###autoload
 (defun bbdb-www-grab-homepage (record)
