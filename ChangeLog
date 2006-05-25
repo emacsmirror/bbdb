@@ -1,5 +1,10 @@
 2006-05-26  Robert Widhopf-Fenk  <bbdb@robf.de>
 
+	* lisp/bbdb-snarf.el (bbdb-snarf-region): Bugfix where snarfing on
+	a region only containing a net caused an infinite loop.  Also try
+	to extract real name from the email address if there was none in
+	the snarf region.
+
 	* lisp/bbdb.el (bbdb-format-record-one-line-notes): Remove line
 	breaks and trim white space for one line format.  Also fixed some
 	doc strings.

@@ -203,11 +203,12 @@ more details."
       ;; name
       (goto-char (point-min))
       ;; This check is horribly english-centric (I think)
-      (while (/= (char-syntax (char-after (point))) ?w)
+      (while (and (not (eobp)) (/= (char-syntax (char-after (point))) ?w))
         (forward-line 1))
-      (re-search-forward "\\(\\sw\\|[ -\.,]\\)*\\sw" nil t)
-      (setq name (match-string 0))
-      (delete-region (match-beginning 0) (match-end 0))
+      (if (re-search-forward "\\(\\sw\\|[ -\.,]\\)*\\sw" nil t)
+          (progn 
+            (setq name (match-string 0))
+            (delete-region (match-beginning 0) (match-end 0))))
 
       ;; address
       (goto-char (point-min))
@@ -281,6 +282,12 @@ more details."
                                         ;         "city: " city "\n"
                                         ;         "state: " state "\n"
                                         ;         "zip: " zip "\n")
+
+      (if (not name)
+          (setq name (if nets
+                         (car (car (bbdb-rfc822-addresses (car nets))))
+                       "?")))
+      
       (bbdb-merge-interactively name
                                 nil
                                 nets
