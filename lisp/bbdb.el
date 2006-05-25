@@ -1519,7 +1519,7 @@ formatted and inserted into the current buffer.  This is used by
       (put-text-property start (point) 'bbdb-field '(company)))))
 
 (defun bbdb-format-record-one-line-phones (layout record phone)
-  "Return a formatted phone number for one-line display."
+  "Insert a formatted phone number for one-line display."
   (let ((start (point)))
     (insert (format "%s " (aref phone 1)))
     (put-text-property start (point) 'bbdb-field
@@ -1530,10 +1530,17 @@ formatted and inserted into the current buffer.  This is used by
                        (list 'phone phone 'field-name))))
 
 (defun bbdb-format-record-one-line-net (layout record net)
-  "Return a formatted list of nets for one-line display."
+  "Insert a formatted list of nets for one-line display."
   (let ((start (point)))
     (insert net)
     (put-text-property start (point) 'bbdb-field (list 'net net))))
+
+(defun bbdb-format-record-one-line-notes (layout record notes)
+  "Insert formatted notes for one-line display.
+Line breaks will be removed and white space trimmed."
+  (let ((start (point)))
+    (insert (replace-in-string notes "[\r\n\t ]+" " "))
+    (put-text-property start (point) 'bbdb-field (list 'notes notes))))
 
 (defun bbdb-format-record-layout-one-line (layout record field-list)
   "Record formatting function for the one-line layout.

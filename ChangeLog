@@ -1,3 +1,9 @@
+2006-05-26  Robert Widhopf-Fenk  <bbdb@robf.de>
+
+	* lisp/bbdb.el (bbdb-format-record-one-line-notes): Remove line
+	breaks and trim white space for one line format.  Also fixed some
+	doc strings.
+
 2005-08-11  Waider  <waider@waider.ie>
 
 	* texinfo/bbdb.texinfo, lisp/bbdb-print.el, lisp/bbdb-migrate.el:
