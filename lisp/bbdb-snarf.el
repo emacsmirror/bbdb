@@ -283,10 +283,9 @@ more details."
                                         ;         "state: " state "\n"
                                         ;         "zip: " zip "\n")
 
-      (if (not name)
-          (setq name (if nets
-                         (car (car (bbdb-rfc822-addresses (car nets))))
-                       "?")))
+      (setq name (or name
+                     (and nets (car (car (bbdb-rfc822-addresses (car nets)))))
+                     "?"))
       
       (bbdb-merge-interactively name
                                 nil
