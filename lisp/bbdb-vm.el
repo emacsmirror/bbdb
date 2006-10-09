@@ -297,12 +297,8 @@ e.g. define you own function `my-folder-name' and set it to
           (delete
            nil
            (mapcar (lambda (r)
-                     (let ((notes (bbdb-record-raw-notes r)))
-                       (if (and notes
-                                (assq bbdb/vm-set-auto-folder-alist-field
-                                      notes))
-                           r
-                         nil)))
+                     (if (bbdb-record-getprop r bbdb/vm-set-auto-folder-alist-field)
+                         r))
                    (bbdb-records))))
     
     (while headers
