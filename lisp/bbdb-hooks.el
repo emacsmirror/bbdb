@@ -37,6 +37,7 @@
 
 (require 'bbdb)
 (require 'bbdb-com)
+(require 'mail-parse)
 
 (eval-when-compile
   (condition-case()
@@ -147,7 +148,8 @@ beginning of the message headers."
                  (buffer-substring (match-end 0)
                    (progn (end-of-line 2) (point))))))))
         (forward-line 1))
-      done)))
+      (and done
+	   (mail-decode-encoded-word-string done)))))
 
 (defcustom bbdb-ignore-most-messages-alist '()
   "*An alist describing which messages to automatically create BBDB
