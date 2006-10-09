@@ -1539,7 +1539,7 @@ formatted and inserted into the current buffer.  This is used by
   "Insert formatted notes for one-line display.
 Line breaks will be removed and white space trimmed."
   (let ((start (point)))
-    (insert (replace-in-string notes "[\r\n\t ]+" " "))
+    (insert (bbdb-replace-in-string notes "[\r\n\t ]+" " "))
     (put-text-property start (point) 'bbdb-field (list 'notes notes))))
 
 (defun bbdb-format-record-layout-one-line (layout record field-list)
