@@ -2745,7 +2745,8 @@ of all of those people."
       (setq result (cdr result)))
 
     (when (not use-abbrev-p)
-      (modify-syntax-entry ?* "w" mail-mode-header-syntax-table)
+      (if (boundp 'mail-mode-header-syntax-table)
+          (modify-syntax-entry ?* "w" mail-mode-header-syntax-table))
       (sendmail-pre-abbrev-expand-hook))))
 
 ;; We should be cleverer here and instead of rebuilding all aliases we should
