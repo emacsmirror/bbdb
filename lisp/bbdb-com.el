@@ -2232,6 +2232,14 @@ completion with."
           )
         (setq bbdb-complete-name-saved-window-config nil))))
 
+(defvar bbdb-complete-name-callback-data nil
+  "Stores the buffer and region start and end of the completed string.
+This is set in the *Completions* buffer.
+It is set in `bbdb-display-completion-list' and used in the advice
+`choose-completion-string'.")
+
+(make-variable-buffer-local 'bbdb-complete-name-callback-data)
+
 (defun bbdb-display-completion-list (list &optional callback data)
   "Wrapper for `display-completion-list'.
 GNU Emacs requires DATA to be in a specific format, viz. (nth 1 data) should
@@ -2245,16 +2253,16 @@ be a marker for the start of the region being completed."
     (if data
         (save-excursion
           (set-buffer standard-output)
-	  (setq bbdb-complete-callback-data data)))))
+	  (setq bbdb-complete-name-callback-data data)))))
 
 (defadvice choose-completion-string (before bbdb-complete-fix activate)
   "Deletes the completed string before replacing.
 We need to do this as we are abusing completion and it was not meant to work
 in buffer other than the mini buffer."
-  (when (boundp 'bbdb-complete-callback-data)
-     (save-excursion
-       (set-buffer (car bbdb-complete-callback-data))
-       (apply 'delete-region (cdr  bbdb-complete-callback-data)))))
+  (when bbdb-complete-name-callback-data
+    (save-excursion
+      (set-buffer (car bbdb-complete-name-callback-data))
+      (apply 'delete-region (cdr  bbdb-complete-name-callback-data)))))
 
 (defun bbdb-complete-clicked-name (event extent user-data)
   "Find the record for a name clicked in a completion buffer.
