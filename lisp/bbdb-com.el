@@ -2941,7 +2941,7 @@ try to use internal sound if available."
              (condition-case nil
                  (play-sound (list 'sound
                                    :file (aref bbdb-sound-files
-                                               (string-to-int num))
+                                               (string-to-number num))
                                    :volume (or volume bbdb-sound-volume)))
                (error nil)))
         (if (and bbdb-sound-player

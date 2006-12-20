@@ -216,7 +216,7 @@ This uses the code that used to be in bbdb-parse-zip-string."
                   (zip (cond ((string-match "^[ \t\n]*$" string) 0)
                              ;; Matches 1 to 6 digits.
                              ((string-match "^[ \t\n]*[0-9][0-9]?[0-9]?[0-9]?[0-9]?[0-9]?[ \t\n]*$" string)
-                              (string-to-int string))
+                              (string-to-number string))
                              ;; Matches 5 digits and 3 or 4 digits.
                              ((string-match "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]?\\)[ \t\n]*$" string)
                               (list (bbdb-subint string 1) (bbdb-subint string 2)))
@@ -270,9 +270,9 @@ argument."
         ["0" "0" "0" "0" nil])
      (cond ((string-match
          "^\\([0-9]\\{4\\}\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)" date)
-        (setq parsed (vector (string-to-int (match-string 1 date))
-                     (string-to-int (match-string 2 date))
-                     (string-to-int (match-string 3 date))))
+        (setq parsed (vector (string-to-number (match-string 1 date))
+                     (string-to-number (match-string 2 date))
+                     (string-to-number (match-string 3 date))))
         ;; This should be fairly loud for GNU Emacs users
         (bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
                (car field) (cdr field)
@@ -282,9 +282,9 @@ argument."
                (aref parsed 2) (aref parsed 0)))
            ((string-match
          "^\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([0-9]\\{4\\}\\)" date)
-        (setq parsed (vector (string-to-int (match-string 3 date))
-                     (string-to-int (match-string 1 date))
-                     (string-to-int (match-string 2 date))))
+        (setq parsed (vector (string-to-number (match-string 3 date))
+                     (string-to-number (match-string 1 date))
+                     (string-to-number (match-string 2 date))))
         ;; This should be fairly loud for GNU Emacs users
         (bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
                (car field) (cdr field)
@@ -296,11 +296,11 @@ argument."
 
     ;; I like numbers
     (and (stringp (aref parsed 0))
-     (aset parsed 0 (string-to-int (aref parsed 0))))
+     (aset parsed 0 (string-to-number (aref parsed 0))))
     (and (stringp (aref parsed 1))
-     (aset parsed 1 (string-to-int (aref parsed 1))))
+     (aset parsed 1 (string-to-number (aref parsed 1))))
     (and (stringp (aref parsed 2))
-     (aset parsed 2 (string-to-int (aref parsed 2))))
+     (aset parsed 2 (string-to-number (aref parsed 2))))
 
     ;; Sanity check
     (cond ((and (< 0 (aref parsed 0))
