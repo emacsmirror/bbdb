@@ -1,3 +1,8 @@
+2007-01-01  Waider  <waider@waider.ie>
+
+	* lisp/bbdb.el:
+	fixed version of primep (Patrick Campbell-Preston)
+
 2006-12-15  Robert Widhopf  <fenk@forwiss.de>
 
 	* lisp/bbdb-com.el (bbdb-display-completion-list):  Bugfix for

@@ -326,11 +326,13 @@ When nil, you will be asked."
 
 (unless (fboundp 'primep)
   (defun primep (num)
-    (let ((lim (sqrt num)) (nu 2) (prime t))
-      (while (and prime (< nu lim))
-        (setq prime (/= 0 (mod num nu))
-              nu (1+ nu)))
-      prime)))
+    "Return t if NUM is a prime number."
+    (and (numberp num) (> num 1) (= num (floor num))
+         (let ((lim (sqrt num)) (nu 2) (prime t))
+           (while (and prime (<= nu lim))
+             (setq prime (/= 0 (mod num nu))
+                   nu (1+ nu)))
+           prime))))
 
 (defcustom bbdb-hashtable-size 1021
   "*The size of the bbdb hashtable.
