@@ -2244,16 +2244,13 @@ It is set in `bbdb-display-completion-list' and used in the advice
   "Wrapper for `display-completion-list'.
 GNU Emacs requires DATA to be in a specific format, viz. (nth 1 data) should
 be a marker for the start of the region being completed."
+  ;; disgusting hack to make GNU Emacs nuke the bit you've typed
+  ;; when it inserts the completion.
+  (setq bbdb-complete-name-callback-data data)
   (if (featurep 'xemacs)
       (display-completion-list list :activate-callback callback
                                :user-data data)
-    (display-completion-list list)
-    ;; disgusting hack to make GNU Emacs nuke the bit you've typed
-    ;; when it inserts the completion.
-    (if data
-        (save-excursion
-          (set-buffer standard-output)
-	  (setq bbdb-complete-name-callback-data data)))))
+    (display-completion-list list)))
 
 (defadvice choose-completion-string (before bbdb-complete-fix activate)
   "Deletes the completed string before replacing.
