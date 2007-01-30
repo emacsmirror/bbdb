@@ -67,6 +67,9 @@ bbdb.pdf: bbdb.texinfo
            $(TEXI2DVI) -p bbdb.texinfo ;                     \
          fi
 
+bbdb.html: bbdb.texinfo
+	texi2html bbdb.texinfo && cp $@ ../html
+
 clean:
 	-$(RM) *.aux *.cp *.cps *.dvi *.pdf *.fn *.fns *.ky *.log *.pg \
 	  *.toc *.tp *.vr *.vrs
