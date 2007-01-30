@@ -107,6 +107,9 @@ tar: $(TARFILES)
           $(RM) $${name} ;                                                 \
         fi
 
+homepage:
+	rsync -a -v --exclude=CVS --rsh="ssh" html/ shell.sourceforge.net:/home/groups/b/bb/bbdb/htdocs/
+
 dist: distclean info autoloads tar
 
 TAGS: tags
