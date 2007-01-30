@@ -64,7 +64,7 @@
  (defvar gnus-article-buffer) ;; gnus-art.el
  )
 
-(defconst bbdb-version "2.35")
+(defconst bbdb-version "2.36 devo")
 (defconst bbdb-version-date "$Date$")
 
 (defcustom bbdb-gui (if (fboundp 'display-color-p) ; Emacs 21
