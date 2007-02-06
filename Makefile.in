@@ -18,8 +18,11 @@ TARFILES = ChangeLog INSTALL Makefile README                        \
 
 all: Makefile bbdb info @BBDB_RMAIL@ @BBDB_VM@ @BBDB_MHE@ @BBDB_GNUS@
 
-Makefile: configure Makefile.in
-	@echo "Makefile.in or configure has changed. Please rerun configure!"
+Makefile:: Makefile.in
+	./config.status
+
+Makefile:: configure
+	@echo "Configure has changed, you may need to rerun configure!"
 	exit 1
 
 configure: configure.ac
@@ -108,7 +111,7 @@ tar: $(TARFILES)
         fi
 
 homepage:
-	rsync -a -v --exclude=CVS --rsh="ssh" html/ shell.sourceforge.net:/home/groups/b/bb/bbdb/htdocs/
+	rsync -rtO -v --exclude=CVS --rsh="ssh" html/ shell.sourceforge.net:/home/groups/b/bb/bbdb/htdocs/
 
 dist: distclean info autoloads tar
 
