@@ -1039,9 +1039,12 @@ section, then the entire field is edited, not just the current line."
     ;;
     ;; delete the old hash entry
     (let ((name    (bbdb-record-name    bbdb-record))
+          (lfname  (bbdb-record-lfname  bbdb-record))
           (company (bbdb-record-company bbdb-record)))
       (if (> (length name) 0)
           (bbdb-remhash (downcase name) bbdb-record))
+      (if (> (length lfname) 0)
+          (bbdb-remhash (downcase lfname) bbdb-record))
       (if (> (length company) 0)
           (bbdb-remhash (downcase company) bbdb-record)))
     (bbdb-record-set-namecache bbdb-record nil)
@@ -1049,9 +1052,11 @@ section, then the entire field is edited, not just the current line."
     (bbdb-record-set-lastname bbdb-record ln)
     (bbdb-record-set-company bbdb-record co)
     ;; add a new hash entry
-    (and (or fn ln)
-         (bbdb-puthash (downcase (bbdb-record-name bbdb-record))
-                       bbdb-record))
+    (when (or fn ln)
+      (bbdb-puthash (downcase (bbdb-record-name bbdb-record))
+                    bbdb-record)
+      (bbdb-puthash (downcase (bbdb-record-lfname bbdb-record))
+                    bbdb-record))
     need-to-sort))
 
 (defun bbdb-record-edit-company (bbdb-record)
@@ -1066,10 +1071,7 @@ section, then the entire field is edited, not just the current line."
                                         ""))))))
 
     ;; delete the old hash entry
-    (let ((name    (bbdb-record-name    bbdb-record))
-          (company (bbdb-record-company bbdb-record)))
-      (if (> (length name) 0)
-          (bbdb-remhash (downcase name) bbdb-record))
+    (let ((company (bbdb-record-company bbdb-record)))
       (if (> (length company) 0)
           (bbdb-remhash (downcase company) bbdb-record)))
 
@@ -2438,6 +2440,15 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                            (length pattern))))
                   (setq match-recs (cons (car recs) match-recs)
                         matched t)))
+	    
+            ;; Did we match on lastname?
+            (let ((b-r-name (or (bbdb-record-lfname (car recs)) "")))
+              (if (string= pattern
+                           (substring (downcase b-r-name) 0
+                                      (min (length b-r-name)
+                                           (length pattern))))
+                  (setq match-recs (cons (car recs) match-recs)
+                        matched t)))
 
             ;; Did we match on aka?
             (when (not matched)
@@ -2543,6 +2554,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                 (setq uniq (cons rec uniq)
                       nets (bbdb-record-net rec)
                       name (downcase (or (bbdb-record-name rec) ""))
+                      lfname (downcase (or (bbdb-record-lfname rec) ""))
                       akas (mapcar 'downcase (bbdb-record-aka rec)))
                 (while nets
                   (setq net (car nets))
@@ -2559,6 +2571,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                             '(nil name primary-or-name))
                                (let ((cname (symbol-name sym)))
                                  (or (string= cname name)
+                                     (string= cname lfname)
                                      (member cname akas))))
                           (setq name nil)
                           t)
@@ -2572,6 +2585,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                        '(name-or-primary))
                                (let ((cname (symbol-name sym)))
                                  (or (string= cname name)
+                                     (string= cname lfname)
                                      (member cname akas))))
                           (setq nets nil)
                           t)

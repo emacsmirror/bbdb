@@ -944,6 +944,13 @@ that holds the number of slots."
   (or (bbdb-cache-namecache (bbdb-record-cache record))
       (bbdb-record-name-1 record)))
 
+(defun bbdb-record-lfname (record)
+  (let ((fname (bbdb-record-firstname record))
+        (lname (bbdb-record-lastname record)))
+    (if (and (> (length fname) 0) (> (length lname) 0))
+        (concat lname " " fname)
+      nil)))
+
 ;; Return the sortkey for a record, building (and storing) it if
 ;; necessary.
 (defun bbdb-record-sortkey (record)
@@ -2149,11 +2156,14 @@ The inverse function of `bbdb-split'."
   "Insert the record in the appropriate hashtables.  This must be called
 while the .bbdb buffer is selected."
   (let ((name    (bbdb-record-name-1  record))  ; faster version
+        (lfname  (bbdb-record-lfname record))
         (company (bbdb-record-company record))
         (aka     (bbdb-record-aka     record))
         (net     (bbdb-record-net     record)))
     (if (> (length name) 0)
         (bbdb-puthash (downcase name)    record bbdb-hashtable))
+    (if (> (length lfname) 0)
+        (bbdb-puthash (downcase lfname)  record bbdb-hashtable))
     (if (> (length company) 0)
         (bbdb-puthash (downcase company) record bbdb-hashtable))
     (while aka
@@ -2492,6 +2502,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
                          (bbdb-record-marker (car (cdr tail)))
                          bbdb-end-marker))
       (let ((name    (bbdb-record-name    record))
+            (lfname  (bbdb-record-lfname  record))
             (company (bbdb-record-company record))
             (aka     (bbdb-record-aka     record))
             (nets    (bbdb-record-net     record)))
@@ -2499,6 +2510,8 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
             (bbdb-remhash (downcase name) record bbdb-hashtable))
         (if (> (length company) 0)
             (bbdb-remhash (downcase company) record bbdb-hashtable))
+        (if (> (length lfname) 0)
+            (bbdb-remhash (downcase lfname) record bbdb-hashtable))
         (while nets
           (bbdb-remhash (downcase (car nets)) record bbdb-hashtable)
           (setq nets (cdr nets)))

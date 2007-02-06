@@ -1,3 +1,11 @@
+2007-02-06  Robert Widhopf-Fenk  <bbdb@robf.de>
+
+	* Added support for completion on "lastname firstname".  Before
+	completion only worked on "first lastname". Eventually one will
+	get more choices now!  The order of "firstname lastname" in the
+	completions buffer is still preserved, which might look a bit
+	odd. 
+
 2007-02-03  Tom Tromey  <tromey@redhat.com>
 
 	* lisp/Makefile.in (bbdb-hooks.elc): Put lisp on a single line.
@@ -7,7 +15,7 @@
 	* lisp/bbdb.el:
 	fixed version of primep (Patrick Campbell-Preston)
 
-2006-12-15  Robert Widhopf  <fenk@forwiss.de>
+2006-12-15  Robert Widhopf-Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb-com.el (bbdb-display-completion-list):  Bugfix for
 	correctly replacing completed string in GNU Emacs when selection 
