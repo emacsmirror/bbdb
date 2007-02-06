@@ -1,3 +1,7 @@
+2007-02-03  Tom Tromey  <tromey@redhat.com>
+
+	* lisp/Makefile.in (bbdb-hooks.elc): Put lisp on a single line.
+
 2007-01-01  Waider  <waider@waider.ie>
 
 	* lisp/bbdb.el:

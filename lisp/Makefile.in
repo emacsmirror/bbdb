@@ -143,10 +143,7 @@ bbdb-sc.elc: bbdb.elc bbdb-sc.el
 
 bbdb-hooks.elc:  bbdb.elc bbdb-hooks.el
 	@HUSHMAKE@$(EMACS_PROG) -batch -q $(PUSHPATH) -l ./bbdb.elc \
-	-eval '(and (not (string= "$(VMDIR)" "")) \
-		    (setq load-path (cons "$(VMDIR)" load-path)) \
-		    (load "vm" t t) \
-		    (load "vm-vars" t t))' \
+	-eval '(and (not (string= "$(VMDIR)" "")) (setq load-path (cons "$(VMDIR)" load-path)) (load "vm" t t) (load "vm-vars" t t))' \
 	-f batch-byte-compile $(@:.elc=.el)
 
 autoloads: bbdb-autoloads.el
