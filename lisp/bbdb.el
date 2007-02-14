@@ -495,7 +495,7 @@ newer than the file is was read from, and will offer to revert."
   :type '(choice (const :tag "Check auto-save file" t)
                  (const :tag "Do not check auto-save file" nil)))
 
-(defcustom bbdb-use-pop-up t
+(defcustom bbdb-use-pop-up 'horiz
   "If true, display a continuously-updating bbdb window while in VM, MH,
 RMAIL, or Gnus.  If 'horiz, stack the window horizontally if there is room."
   :group 'bbdb-record-display
@@ -526,8 +526,8 @@ first address in the list of addresses for a given user).  If it is
 
 (defcustom bbdb-completion-display-record t
   "*Whether `bbdb-complete-name' (\\<mail-mode-map>\\[bbdb-complete-name]
-in mail-mode) will update the *BBDB* buffer
-to display the record whose email address has just been inserted."
+in mail-mode) will update the *BBDB* buffer to display the record whose email
+address has just been inserted."  
   :group 'bbdb-record-use
   :type '(choice (const :tag "Update the BBDB buffer" t)
                  (const :tag "Don't update the BBDB buffer" nil)))
@@ -1292,7 +1292,7 @@ layout function, the multi-line layout will be used."
           (choice :tag "Layout type"
                   (const one-line)
                   (const multi-line)
-          (const pop-up-multi-line)
+                  (const pop-up-multi-line)
                   (const full-multi-line)
                   (symbol))
           (set :tag "Properties"
@@ -1355,7 +1355,7 @@ layout function, the multi-line layout will be used."
                  (const full-multi-line)
                  (symbol)))
 
-(defcustom bbdb-pop-up-display-layout 'pop-up-multi-line
+(defcustom bbdb-pop-up-display-layout 'one-line
   "*The default display layout pop-up BBDB buffers, i.e. mail, news."
   :group 'bbdb
   :type '(choice (const one-line)

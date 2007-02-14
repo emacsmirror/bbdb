@@ -1,3 +1,14 @@
+2007-02-14  Robert Widhopf-Fenk  <fenk@forwiss.de>
+
+	* lisp/bbdb.el (bbdb-use-pop-up): Changed the default to 'horiz.
+	(bbdb-pop-up-display-layout):  Changed the default to 'one-line.
+	Some code linting here and there.
+
+	* lisp/bbdb-com.el (bbdb-complete-name-allow-cycling): changed
+	default to t.
+	(bbdb-get-only-first-address-p): changed default to nil.
+	(bbdb-get-addresses): Added a doc string.
+
 2007-02-06  Robert Widhopf-Fenk  <bbdb@robf.de>
 
 	* Added support for completion on "lastname firstname".  Before

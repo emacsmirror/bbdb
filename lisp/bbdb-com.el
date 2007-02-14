@@ -2291,7 +2291,7 @@ Currently only used by XEmacs."
         (bbdb-remove-assoc-duplicates (cdr l))
       (cons (car l) (bbdb-remove-assoc-duplicates (cdr l))))))
 
-(defcustom bbdb-complete-name-allow-cycling nil
+(defcustom bbdb-complete-name-allow-cycling t
   "Whether to allow cycling of email addresses when calling
 `bbdb-complete-name' on a completed address in a composition buffer."
   :group 'bbdb-mua-specific
@@ -3597,8 +3597,7 @@ The headers are grouped into two classes, the authors and the senders headers."
   :type 'list)
 
 ;;;###autoload
-(defcustom bbdb-get-only-first-address-p
-  t
+(defcustom bbdb-get-only-first-address-p nil
   "*If t `bbdb-update-records' will return only the first one.
 Changing this variable will show its effect only after clearing the
 `bbdb-message-cache' of a folder or closing and visiting it again."
@@ -3609,7 +3608,13 @@ Changing this variable will show its effect only after clearing the
                            uninteresting-senders
                            get-header-content-function
                            &rest get-header-content-function-args)
-  ""
+  "Return a list of all addresses found in the headers of a message.
+With ONLY-FIRST-ADDRESS being t, it will only return the first found address. 
+Addresses matching UNINTERESTING-SENDERS will be ignored.
+
+The client has to provide a GET-HEADER-CONTENT-FUNCTION and optional arguments
+(GET-HEADER-CONTENT-FUNCTION-ARGS) to extract the header content.  The first
+argument to this function if the header name sans." 
   (let ((headers bbdb-get-addresses-headers)
         (ignore-senders (or bbdb-user-mail-names uninteresting-senders))
         addrlist adlist fn ad
