@@ -448,12 +448,17 @@ to a record already in the database with the same network address.  As in,
 \"John Smith <jqs@frob.com>\" versus \"John Q. Smith <jqs@frob.com>\".
 Normally you will be asked if you want to change it.
 If set to a number it is the number of seconds to sit for while
-displaying the mismatch message."
+displaying the mismatch message.
+If set to a function it will be called with two arguments, the record and the
+new name and should return nil, t or a number.
+If none of the others it must be a sexp evaluating to nil, t or a number."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Prompt for name changes" nil)
                  (const :tag "Do not prompt for name changes" t)
          (integer :tag
-              "Instead of prompting, warn for this many seconds")))
+              "Instead of prompting, warn for this many seconds")
+         (function :tag "User defined function")
+         (sexp :tag "User defined sexp")))
 
 (defcustom bbdb-use-alternate-names t
   "*If this is true, then when bbdb notices a name change, it will ask you
@@ -3180,6 +3185,7 @@ before the record is created, otherwise it is created without confirmation
           (fname name)
           (lname nil)
           old-name
+          ignore-name-mismatch
           bogon-mode)
       (and record (setq old-name (bbdb-record-name record)))
 
@@ -3254,21 +3260,30 @@ before the record is created, otherwise it is created without confirmation
                                     (and (setq tmp
                                                (bbdb-record-lastname record))
                                          (downcase tmp)))))))
-
+            
             ;; have a message-name, not the same as old name.
             (cond (bbdb-readonly-p nil);; skip if readonly
 
                   ;; ignore name mismatches?
                   ;; NB 'quiet' means 'don't ask', not 'don't mention'
-                  ((and bbdb-quiet-about-name-mismatches old-name)
-                   (let ((sit-for-secs
-                          (if (numberp bbdb-quiet-about-name-mismatches)
-                              bbdb-quiet-about-name-mismatches
-                            2)))
-                     (if (or bbdb-silent-running (= 0 sit-for-secs)) nil
-                       (message "name mismatch: \"%s\" changed to \"%s\""
-                                (bbdb-record-name record) name)
-                       (sit-for sit-for-secs))))
+                  ((and old-name
+                        (setq ignore-name-mismatch bbdb-quiet-about-name-mismatches
+                              ignore-name-mismatch
+                              (cond
+                               ((eq nil ignore-name-mismatch)
+                                nil)
+                               ((eq t ignore-name-mismatch)
+                                2)
+                               ((numberp ignore-name-mismatch)
+                                ignore-name-mismatch)
+                               ((functionp ignore-name-mismatch)
+                                (funcall ignore-name-mismatch record name))
+                               (t
+                                (eval ignore-name-mismatch)))))
+                   (if (or bbdb-silent-running (= 0 ignore-name-mismatch)) nil
+                     (message "name mismatch: \"%s\" changed to \"%s\""
+                              (bbdb-record-name record) name)
+                     (sit-for ignore-name-mismatch)))
                   ((or created-p
                        (if bbdb-silent-running t
                          (if (null old-name)

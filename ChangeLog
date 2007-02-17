@@ -1,3 +1,8 @@
+2007-02-18  Robert Widhopf-Fenk  <bbdb@robf.de>
+
+	* lisp/bbdb.el (bbdb-quiet-about-name-mismatches): Can be
+	a function or sexp to allow user tweak-able name updates.  
+
 2007-02-14  Robert Widhopf-Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb.el (bbdb-use-pop-up): Changed the default to 'horiz.
