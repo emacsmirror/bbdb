@@ -449,16 +449,22 @@ to a record already in the database with the same network address.  As in,
 Normally you will be asked if you want to change it.
 If set to a number it is the number of seconds to sit for while
 displaying the mismatch message.
+
 If set to a function it will be called with two arguments, the record and the
 new name and should return nil, t or a number.
-If none of the others it must be a sexp evaluating to nil, t or a number."
+
+If none of the others it must be a sexp evaluating to nil, t or a number.
+
+Any other return value of the function or sexp will be considered as true."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Prompt for name changes" nil)
                  (const :tag "Do not prompt for name changes" t)
          (integer :tag
               "Instead of prompting, warn for this many seconds")
          (function :tag "User defined function")
-         (sexp :tag "User defined sexp")))
+         (sexp :tag "User defined sexp")
+         (const :tag "Ignore records which has a 'readonly' field"
+                (assq 'readonly (bbdb-record-raw-notes record)))))
 
 (defcustom bbdb-use-alternate-names t
   "*If this is true, then when bbdb notices a name change, it will ask you
@@ -3280,10 +3286,12 @@ before the record is created, otherwise it is created without confirmation
                                 (funcall ignore-name-mismatch record name))
                                (t
                                 (eval ignore-name-mismatch)))))
-                   (if (or bbdb-silent-running (= 0 ignore-name-mismatch)) nil
+                   (if (or bbdb-silent-running (eq t ignore-name-mismatch))
+                       nil
                      (message "name mismatch: \"%s\" changed to \"%s\""
                               (bbdb-record-name record) name)
-                     (sit-for ignore-name-mismatch)))
+                     (if (numberp ignore-name-mismatch)
+                         (sit-for ignore-name-mismatch))))
                   ((or created-p
                        (if bbdb-silent-running t
                          (if (null old-name)
