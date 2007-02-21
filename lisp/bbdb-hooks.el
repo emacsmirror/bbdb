@@ -31,10 +31,6 @@
 ;;;
 ;;; Read the docstrings; read the texinfo file.
 
-;;
-;; $Id$
-;;
-
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'mail-parse)

@@ -34,8 +34,6 @@
 ;;; |  bbdb-submit-bug-report, which will include all useful version         |
 ;;; |  information plus state information about how you have BBDB set up.    |
 ;;;  ------------------------------------------------------------------------
-;;;
-;;; $Id$
 
 (require 'timezone)
 (eval-when-compile (require 'cl))
@@ -65,7 +63,6 @@
  )
 
 (defconst bbdb-version "2.36 devo")
-(defconst bbdb-version-date "$Date$")
 
 (defcustom bbdb-gui (if (fboundp 'display-color-p) ; Emacs 21
                         (display-color-p)
@@ -126,7 +123,6 @@ prompt the users on how to merge records when duplicates are detected.")
    (append
     ;; non user variables
     '(emacs-version
-      bbdb-version-date
       bbdb-file-format
       bbdb-no-duplicates-p)
     ;; user variables
@@ -3579,8 +3575,7 @@ not clutter the buffer-list."
   "Return string describing the version of the BBDB that is running.
 When called interactively with a prefix argument, insert string at point."
   (interactive "P")
-  (let ((version-string (format "BBDB version %s (%s)"
-                               bbdb-version bbdb-version-date)))
+  (let ((version-string (format "BBDB version %s" bbdb-version)))
     (cond
      (arg
       (insert (message version-string)))
