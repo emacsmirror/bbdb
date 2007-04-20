@@ -3383,6 +3383,7 @@ when set!
 This variable is also used for inter-function communication between the
 functions `bbdb-update-records' and `bbdb-prompt-for-create'."
   :group 'bbdb-mua-specific
+  :group 'bbdb-noticing-records
   :type '(choice (const :tag "annotating all messages"
                         annotating)
                  (const :tag "annotating no messages"
@@ -3597,6 +3598,7 @@ Type q  to quit updating records.  No more search or annotation is done.")))
   "*List of headers to search for senders and recipients email addresses.
 The headers are grouped into two classes, the authors and the senders headers."
   :group 'bbdb-mua-specific
+  :group 'bbdb-noticing-records
   :type 'list)
 
 ;;;###autoload
@@ -3605,6 +3607,7 @@ The headers are grouped into two classes, the authors and the senders headers."
 Changing this variable will show its effect only after clearing the
 `bbdb-message-cache' of a folder or closing and visiting it again."
   :group 'bbdb-mua-specific
+  :group 'bbdb-noticing-records
   :type 'boolean)
 
 (defun bbdb-get-addresses (only-first-address
