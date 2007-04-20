@@ -2259,6 +2259,12 @@ in buffer other than the mini buffer."
       (set-buffer (car bbdb-complete-name-callback-data))
       (apply 'delete-region (cdr  bbdb-complete-name-callback-data)))))
 
+(defcustom bbdb-complete-name-allow-cycling t
+  "Whether to allow cycling of email addresses when calling
+`bbdb-complete-name' on a completed address in a composition buffer."
+  :group 'bbdb-mua-specific
+  :type 'boolean)
+
 (defun bbdb-complete-clicked-name (event extent user-data)
   "Find the record for a name clicked in a completion buffer.
 Currently only used by XEmacs."
@@ -2286,12 +2292,6 @@ Currently only used by XEmacs."
     (if (assoc (car (car l)) (cdr l))
         (bbdb-remove-assoc-duplicates (cdr l))
       (cons (car l) (bbdb-remove-assoc-duplicates (cdr l))))))
-
-(defcustom bbdb-complete-name-allow-cycling t
-  "Whether to allow cycling of email addresses when calling
-`bbdb-complete-name' on a completed address in a composition buffer."
-  :group 'bbdb-mua-specific
-  :type 'boolean)
 
 (defcustom bbdb-complete-name-hooks nil
   "List of functions called after a sucessful completion."
@@ -2539,7 +2539,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
           (message "Making completion list..."))
 
       (let (dwim-completions
-            uniq nets net name akas)
+            uniq nets net name lfname akas)
         ;; Now collect all the dwim-addresses for each completion, but only
         ;; once for each record!  Add it if the net is part of the completions
         (bbdb-mapc
@@ -2659,6 +2659,12 @@ of all of those people."
   (interactive "")
   (let* ((target (cons bbdb-define-all-aliases-field "."))
          (use-abbrev-p (fboundp 'define-mail-abbrev))
+         (abbrev-handler (if use-abbrev-p
+                             'define-mail-abbrev
+                           'define-mail-alias))
+         (abbrev-table (if use-abbrev-p
+                           'mail-abbrevs
+                         'mail-aliases))
          (mail-alias-separator-string (if (boundp 'mail-alias-separator-string)
                                           mail-alias-separator-string
                                         ", "))
@@ -2742,12 +2748,9 @@ of all of those people."
           (setq count (1+ count))
           (setq expansion (car expansions))
 
-          (if use-abbrev-p
-              (define-mail-abbrev alias expansion)
-            (define-mail-alias alias expansion))
+          (funcall abbrev-handler alias expansion)
           (setq alias (or (intern-soft (downcase alias)
-                                       (if use-abbrev-p
-                                           mail-abbrevs mail-aliases))
+                                       (symbol-value abbrev-table))
                           (error "couldn't find the alias we just defined!")))
 
           (or (eq (symbol-function alias) 'mail-abbrev-expand-hook)

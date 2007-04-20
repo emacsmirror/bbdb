@@ -33,6 +33,7 @@
 
 (require 'bbdb)
 (require 'bbdb-com)
+(require 'bbdb-autoloads)
 (require 'mail-parse)
 
 (eval-when-compile
@@ -49,7 +50,10 @@
   (autoload 'mh-show "mh-e")
   (condition-case()
       (require 'bbdb-rmail)
-    (error nil)))
+    (error (message "Warning: Could not load RMAIL")))
+  (condition-case()
+      (require 'bbdb-mhe)
+    (error (message "Warning: Could not load MHE"))))
 
 (defvar rmail-buffer)
 (defvar mh-show-buffer)

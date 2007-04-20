@@ -60,9 +60,20 @@
  (defvar message-mode-map) ;; message.el
  (defvar mail-mode-map) ;; sendmail.el
  (defvar gnus-article-buffer) ;; gnus-art.el
+ (defvar temp-buffer-setup-hook nil)
+ (defvar buffer-file-coding-system nil)
+ (defvar coding-system-for-write nil)
  )
 
 (defconst bbdb-version "2.36 devo")
+
+
+(defmacro bbdb-eval-when (c &rest body)
+  "Emit BODY only if C is true."
+  (if (eval c)
+      (backquote (progn (\,@ body)))))
+
+(put 'bbdb-eval-when 'lisp-indent-hook 'defun)
 
 (defcustom bbdb-gui (if (fboundp 'display-color-p) ; Emacs 21
                         (display-color-p)
@@ -109,6 +120,27 @@ prompt the users on how to merge records when duplicates are detected.")
 (eval-and-compile
   (or (fboundp 'set-keymap-prompt)
       (fset 'set-keymap-prompt 'ignore)))
+
+(eval-and-compile
+  (if (fboundp 'replace-in-string)
+      (defalias 'bbdb-replace-in-string 'replace-in-string)
+    (if (fboundp 'replace-regexp-in-string) ; defined in e21
+        (defalias 'bbdb-replace-regexp-in-string 'replace-regexp-in-string)
+      ;; actually this is `dired-replace-in-string' slightly modified
+      ;; We're not defining the whole thing, just enough for our purposes.
+      (defun bbdb-replace-regexp-in-string (regexp newtext string &optional
+                                                   fixedcase literal)
+        ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.
+        ;; NEWTEXT is taken literally---no \\DIGIT escapes will be recognized.
+        (let ((result "") (start 0) mb me)
+          (while (string-match regexp string start)
+            (setq mb (match-beginning 0)
+                  me (match-end 0)
+                  result (concat result (substring string start mb) newtext)
+                  start me))
+          (concat result (substring string start)))))
+    (defun bbdb-replace-in-string (string regexp newtext &optional literal)
+      (bbdb-replace-regexp-in-string regexp newtext string nil literal))))
 
 ;; this should really be in bbdb-com
 ;;;###autoload
@@ -767,10 +799,10 @@ You can also set this to a function returning a buffer name."
 ;; iso-2022-7bit should be OK (but not optimal for Emacs, at least --
 ;; emacs-mule would be better) with both Emacs 21 and XEmacs.
 (defconst bbdb-file-coding-system
-  (if (fboundp 'coding-system-p)
-      (cond ((coding-system-p 'utf-8-emacs)
-             'utf-8-emacs)
-            (t 'iso-2022-7bit)))
+  (bbdb-eval-when (fboundp 'coding-system-p)
+    (cond ((apply 'coding-system-p '(utf-8-emacs))
+           'utf-8-emacs)
+          (t 'iso-2022-7bit)))
   "Coding system used for reading and writing `bbdb-file'.
 This should not be changed by users.")
 
@@ -1819,8 +1851,11 @@ multi-line layout."
 
   (let ((b (current-buffer))
         (temp-buffer-setup-hook nil)
-        (temp-buffer-show-hook nil)
+        (temp-buffer-show-function nil)
         (first (car (car records))))
+
+    ;; just quiet a warning about unused vars 
+    (and temp-buffer-setup-hook temp-buffer-show-function)
 
     (if bbdb-multiple-buffers (bbdb-pop-up-bbdb-buffer))
 

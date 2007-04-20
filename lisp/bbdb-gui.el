@@ -26,6 +26,10 @@
 (require 'bbdb)
 (require 'bbdb-com)
 
+(eval-and-compile 
+  (if (featurep 'xemacs)
+      (require 'overlay)))
+
 ;; compiler whinage. Some of this is legacy stuff that would probably
 ;; be better deleted.
 (defvar scrollbar-height nil)

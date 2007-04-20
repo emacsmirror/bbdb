@@ -395,27 +395,6 @@ more details."
   new-record)
 
 ;;----------------------------------------------------------------------------
-(eval-and-compile
-  (if (fboundp 'replace-in-string)
-      (fset 'bbdb-replace-in-string 'replace-in-string)
-    (if (fboundp 'replace-regexp-in-string) ; defined in e21
-        (fset 'bbdb-replace-regexp-in-string 'replace-regexp-in-string)
-      ;; actually this is `dired-replace-in-string' slightly modified
-      ;; We're not defining the whole thing, just enough for our purposes.
-      (defun bbdb-replace-regexp-in-string (regexp newtext string &optional
-                                                   fixedcase literal)
-        ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.
-        ;; NEWTEXT is taken literally---no \\DIGIT escapes will be recognized.
-        (let ((result "") (start 0) mb me)
-          (while (string-match regexp string start)
-            (setq mb (match-beginning 0)
-                  me (match-end 0)
-                  result (concat result (substring string start mb) newtext)
-                  start me))
-          (concat result (substring string start)))))
-    (defun bbdb-replace-in-string (string regexp newtext &optional literal)
-      (bbdb-replace-regexp-in-string regexp newtext string nil literal))))
-
 (defcustom bbdb-extract-address-component-regexps
     '(
       ;; "surname, firstname" <address>  from Outlookers
