@@ -1,3 +1,15 @@
+2007-03-04  Robert Widhopf-Fenk  <bbdb@robf.de>
+
+	* lisp/bbdb.el (bbdb-pop-up-bbdb-buffer): Rewrote the function to
+	use PREDICATE regardless of the split mode selected by
+	`bbdb-use-pop-up'.
+	
+	`bbdb-use-pop-up' can be used to select the split mode.  
+
+	Also added the new variable `bbdb-pop-up-target-columns' which is
+	the number of columns for the BBDB buffer window when splitting
+	vertically.  
+
 2007-02-18  Robert Widhopf-Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb.el (bbdb-quiet-about-name-mismatches): Can be

@@ -534,16 +534,28 @@ newer than the file is was read from, and will offer to revert."
   :type '(choice (const :tag "Check auto-save file" t)
                  (const :tag "Do not check auto-save file" nil)))
 
-(defcustom bbdb-use-pop-up 'horiz
-  "If true, display a continuously-updating bbdb window while in VM, MH,
-RMAIL, or Gnus.  If 'horiz, stack the window horizontally if there is room."
+(defcustom bbdb-use-pop-up 'horizontal
+  "*If none nil, display a continuously-updating bbdb window while in VM, MH,
+RMAIL, or Gnus.
+
+If 'horizontal, stack the window horizontally and give it the number of lines
+specified by `bbdb-pop-up-target-lines'.  
+If 'vertical, stack the window vertically and give it the number of rows
+specified by `bbdb-pop-up-target-columns'."
   :group 'bbdb-record-display
-  :type '(choice (const :tag "Automatic BBDB window, stacked vertically" t)
-                 (const :tag "Automatic BBDB window, stacked horizontally" 'horiz)
+  :type '(choice (const :tag "Automatic BBDB window, stacked vertically" 'vertical)
+                 (const :tag "Automatic BBDB window, stacked horizontally" 'horizontal)
                  (const :tag "No Automatic BBDB window" nil)))
 
 (defcustom bbdb-pop-up-target-lines 5
-  "*Desired number of lines in a VM/MH/RMAIL/Gnus pop-up bbdb window."
+  "*Desired number of lines in a horizontal BBDB buffer pop-up window.
+See `bbdb-use-pop-up' on how to select horizontal splitting."
+  :group 'bbdb-record-display
+  :type 'integer)
+
+(defcustom bbdb-pop-up-target-columns 20
+  "*Desired number of lines in a vertical BBDB buffer pop-up window.
+See `bbdb-use-pop-up' on how to select vertical splitting."
   :group 'bbdb-record-display
   :type 'integer)
 
@@ -3525,86 +3537,78 @@ before the record is created, otherwise it is created without confirmation
       (setq bbdb-buffer-name new-name)
       (setq buffer-list (cdr buffer-list)))))
 
-(defun bbdb-pop-up-bbdb-buffer (&optional horiz-predicate)
+(defun bbdb-pop-up-bbdb-buffer (&optional predicate)
   "Find the largest window on the screen, and split it, displaying the
 *BBDB* buffer in the bottom 'bbdb-pop-up-target-lines' lines (unless
 the *BBDB* buffer is already visible, in which case do nothing.)
 
-If 'bbdb-use-pop-up' is the symbol 'horiz, and the first window
-matching HORIZ-PREDICATE is sufficiently wide (> 100 columns) then
-the window will be split vertically rather than horizontally.
+PREDICATE can be a function to select the right widnow for the split.
+
+`bbdb-use-pop-up' controls how to split the selected window and how many lines
+resp. columns it will get.
 
 If `bbdb-multiple-buffers' is set we create a new BBDB buffer when not
 already within one.  The new buffer-name starts with a space, i.e. it does
 not clutter the buffer-list."
 
-  (let ((b (current-buffer))
-        new-bbdb-buffer-name)
+  (let ((current-window (selected-window))
+        (current-buffer (current-buffer))
+        new-bbdb-buffer-name
+        window)
 
     ;; create new BBDB buffer if multiple buffers are desired.
     (when (and bbdb-multiple-buffers (not (eq major-mode 'bbdb-mode)))
-      (bbdb-multiple-buffers-set-name (list b)))
+      (bbdb-multiple-buffers-set-name (list current-buffer)))
     (setq new-bbdb-buffer-name bbdb-buffer-name)
+
 
     ;; now get the pop-up
     (if (get-buffer-window new-bbdb-buffer-name)
-        nil
-      (if (and (eq bbdb-use-pop-up 'horiz)
-               horiz-predicate
-               (bbdb-pop-up-bbdb-buffer-horizontally horiz-predicate))
-          nil
-        (let* ((first-window (selected-window))
-               (tallest-window first-window)
-               (window first-window))
-          ;; find the tallest window...
-          (while (not (eq (setq window (previous-window window)) first-window))
+        nil ;; it is already there do nothing 
+      
+      ;; find a window to split
+      (when predicate 
+        (setq window current-window)
+        (while (and (not (funcall predicate window))
+                    (not (eq current-window
+                             (setq window (next-window window)))))))
+      
+      ;; find the tallest window if none has been selected so far 
+      (when (null window)
+        (let ((tallest-window current-window))
+          (while (not (eq current-window (setq window (next-window window))))
             (if (> (window-height window) (window-height tallest-window))
                 (setq tallest-window window)))
-          ;; select it and split it...
-          (select-window tallest-window)
-          (let ((size (min
-                       (- (window-height tallest-window)
-                          window-min-height 1)
-                       (- (window-height tallest-window)
-                          (max window-min-height
-                               (1+ bbdb-pop-up-target-lines))))))
-            (split-window tallest-window
-                          (if (> size 0) size window-min-height)))
-          (if (memq major-mode
-                    '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
-              (goto-char (point-min)))  ; make gnus happy...
-          ;; goto the bottom of the two...
-          (select-window (next-window))
-          ;; make it display *BBDB*...
-          (let ((pop-up-windows nil))
-            (switch-to-buffer (get-buffer-create new-bbdb-buffer-name)))
-          ;; select the original window we were in...
-          (select-window first-window)))
-      ;; and make sure the current buffer is correct as well.
-      (set-buffer b)
-      nil)))
+          (setq window tallest-window)))
+      
+      ;; select it and split it...
+      (select-window window)
+      (cond ((member bbdb-use-pop-up '(t horiz horizontal))
+             (let ((size (min
+                          (- (window-height window) window-min-height 1)
+                          (- (window-height window)
+                             (max window-min-height
+                                  (1+ bbdb-pop-up-target-lines))))))
+               (setq size (if (> size 0) size window-min-height))
+               (split-window window size)))
+            ((eq bbdb-use-pop-up 'vertical)
+             (split-window-horizontally (- bbdb-pop-up-target-columns))))
 
-(defun bbdb-pop-up-bbdb-buffer-horizontally (predicate)
-  (if (<= (frame-width) 112)
-      nil
-    (let* ((first-window (selected-window))
-           (got-it nil)
-           (window first-window))
-      (while (and (not (setq got-it (funcall predicate window)))
-                  (not (eq first-window (setq window (next-window window)))))
-        )
-      (if (or (null got-it)
-              (<= (window-width window) 112))
-          nil
-        (let ((b (current-buffer)))
-          (select-window window)
-          (split-window-horizontally 80)
-          (select-window (next-window window))
-          (let ((pop-up-windows nil))
-            (switch-to-buffer (get-buffer-create bbdb-buffer-name)))
-          (select-window first-window)
-          (set-buffer b)
-          t)))))
+      ;; make gnus happy...
+      (if (memq major-mode
+                '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
+          (goto-char (point-min)))
+      
+      ;; goto the next window, the one created by the split and 
+      ;; make it display the BBDB buffer
+      (select-window (next-window))
+      (let ((pop-up-windows nil))
+        (switch-to-buffer (get-buffer-create new-bbdb-buffer-name)))
+    
+      ;; select the original window we were in
+      (select-window current-window)
+      ;; and make sure the original buffer is selected
+      (set-buffer current-buffer))))
 
 (defun bbdb-version (&optional arg)
   "Return string describing the version of the BBDB that is running.
