@@ -3410,8 +3410,12 @@ creating or modifying them as necessary.  A record will be created if
 AUTO-CREATE-P is non-nil or if OFFER-TO-CREATE is true and the user
 confirms the creation.
 
-The variable `bbdb/gnus-update-records-mode' controls what actions
-are performed and it might override `bbdb-update-records-mode'.
+`bbdb-update-records-mode' controls if records are upodated or not.
+A MUA specific variable, e.g. `bbdb/vm-update-records-mode', can
+overwrite this.
+
+See also `bbdb-get-only-first-address-p' to limit the update to the
+sender of the message.
 
 When hitting C-g once you will not be asked any more for new people listed
 in this message, but it will search only for existing records.  When hitting
