@@ -21,7 +21,7 @@
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'rmail)
-(require 'rmailsum)
+(load-library "rmailsum")
 (require 'mailheader)
 
 
