@@ -1051,8 +1051,9 @@ section, then the entire field is edited, not just the current line."
     (when (or fn ln)
       (bbdb-puthash (downcase (bbdb-record-name bbdb-record))
                     bbdb-record)
-      (bbdb-puthash (downcase (bbdb-record-lfname bbdb-record))
-                    bbdb-record))
+      (if (and fn ln)
+          (bbdb-puthash (downcase (bbdb-record-lfname bbdb-record))
+                        bbdb-record)))
     need-to-sort))
 
 (defun bbdb-record-edit-company (bbdb-record)
