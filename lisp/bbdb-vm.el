@@ -182,7 +182,7 @@ This buffer will be in `bbdb-mode', with associated keybindings."
   "Make the *BBDB* buffer be displayed along with the VM window(s).
 Displays the records corresponding to the sender respectively
 recipients of the current message.
-See `bbdb/vm-get-addresses-headers' and 'bbdb-get-only-first-address-p' for
+See `bbdb-get-addresses-headers' and 'bbdb-get-only-first-address-p' for
 configuration of what is being displayed."
   (save-excursion
     (let ((bbdb-gag-messages t)
