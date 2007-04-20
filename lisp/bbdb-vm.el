@@ -195,7 +195,7 @@ configuration of what is being displayed."
          (function (lambda (w)
                      (let ((b (current-buffer)))
                        (set-buffer (window-buffer w))
-                       (prog1 (eq major-mode 'vm-mode)
+                       (prog1 (member major-mode '(vm-mode vm-presentation-mode))
                          (set-buffer b))))))
 
         ;; Always update the records; if there are no records, empty the
