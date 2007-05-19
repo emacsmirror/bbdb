@@ -2646,8 +2646,35 @@ all:   Generate an alias all nets (as for 'star) and an alias for each net
                  (symbol :tag "<alias>* for all nets" star)
                  (symbol :tag "All aliases" all)))
 
+(defun bbdb-aliases-magic-* (include &optional exclude first-only)
+  "Return list of expanded email addresses matching regexp INCLUDE.
+Exclude those matching the regexp EXCLUDE."
+  (let ((records (bbdb-records))
+        expanded 
+        r n nets)
+    (while records
+      (setq r (car records)
+            nets (bbdb-record-net r))
+      (while nets
+        (setq n (car nets))
+        (if (and (not (= (aref n 0) ?\())
+                 (not (= (aref n 1) ?/))
+                 (string-match include n)
+                 (or (not exclude) (not (string-match exclude n))))
+            (setq expanded (cons (bbdb-dwim-net-address r n) expanded)))
+        (setq nets (if first-only nil (cdr nets))))
+      (setq records (cdr records)))
+    expanded))
+
+(defun bbdb-aliases-magic-1 (include &optional exclude)
+  "Return list of expanded primary email addresses matching regexp INCLUDE.
+Exclude those matching the regexp EXCLUDE."
+  (bbdb-aliases-net-magic-* include exclude t))
+
+;(and (pp (bbdb-collect-all-aliases) (get-buffer "*scratch*")) nil)
 (defun bbdb-collect-all-aliases ()
-  "Return an alist of (alias (rec1 emails) [(rec2 emails) ...]) elements."
+  "Return an alist of (alias (rec1 emails) [(rec2 emails) ...]) elements.
+Does the magic alias handling described in `bbdb-define-all-aliases'."
   (let* ((aliases-field bbdb-define-all-aliases-field)
          (target (cons bbdb-define-all-aliases-field "."))
          (records (bbdb-search (bbdb-records) nil nil nil target))
@@ -2665,31 +2692,56 @@ all:   Generate an alias all nets (as for 'star) and an alias for each net
           (let* ((alias (car aliases))
                  match item)
             ;; extract the nets based on the alias 
-            (cond ((string-match "\\(.+\\)\\*$" alias)
+            (cond ((string-match "^\\(.+\\)\\*$" alias)
+                   ;; all nets of the record
                    (setq alias (match-string 1 alias)
                          item nets))
-                  ((string-match "\\(.+\\)\\[\\([0-9]+\\)\\]$" alias)
-                   (setq alias (alias match-string 1)
-                         item (string-to-number (match-string alias 2))
-                         item (list (nth nets))))
+                  ((string-match "^\\(.+\\)\\[\\([0-9]+\\)\\]$" alias)
+                   ;; the NTH net of the record 
+                   (setq item (string-to-number (match-string 2 alias))
+                         item (list (or (nth item nets)
+                                        (error "net[%d] for alias %S does not exist!"
+                                               item alias)))
+                         alias (match-string 1 alias)))
+                  ((string-match "^\\(.+\\)/\\(.+\\)$" alias)
+                   ;; all nets of the record matching a regexp
+                   (let ((r (match-string 2 alias)))
+                     (setq alias (match-string 1 alias))
+                     (setq item (mapcar (lambda (n)
+                                          (if (string-match r n)
+                                              n))
+                                        nets)
+                           item (delete nil item))))
                   (t 
                    (setq item (list (car nets)))))
-            (setq item (list r item))
-            (if (setq match (assoc alias result))
-                (nconc match (cons item nil))
-              (setq result (cons (list alias item) result)))
-            (setq aliases (cdr aliases)))))
-      (setq records (cdr records)))
+            (when item
+              (setq item (list r item))
+              (if (setq match (assoc alias result))
+                  (nconc match (cons item nil))
+                (setq result (cons (list alias item) result))))
+            (setq aliases (cdr aliases))))
+        (setq records (cdr records))))
     result))
 
 (defun bbdb-expand-alias (alias-items aliases &optional seen-aliases)
-  "Return a list of expanded nets for alias A.
-Uses ALIASES to recursively expand nets without a \"@\".
-SEEN-ALIASES will be checked to avoid cycles."
+  "Return the list (alias record-list expanded-nets-list).
+
+ALIAS-ITEMS are elements of the list returned by `bbdb-collect-all-aliases'.
+Does the actual formatting and handling of magic nets as described in
+`bbdb-define-all-aliases'.
+
+Nets which do not contain an \"@\" and exist as alias in ALIASES are expanded
+recursively.  SEEN-ALIASES will be filled with the aliases already seen and
+checked to detect cycles. 
+
+Other nets are formatted by `bbdb-dwim-net-address'."
   (let ((alias (car alias-items))
         (items (cdr alias-items))
         rec nets n r
         records result)
+    (if (member alias seen-aliases)
+        (error "Alias cycle during recursive expansion. Alias %S already seen in %S"
+               alias seen-aliases))
     (setq seen-aliases (cons alias seen-aliases))
     (while items
       (setq rec (car items)
@@ -2698,46 +2750,69 @@ SEEN-ALIASES will be checked to avoid cycles."
             records (cons rec records))
       (while nets
         (setq n (car nets))
-        (if (or (string-match "@" n) (null (setq r (assoc n aliases))))
-            (setq n (list (bbdb-dwim-net-address rec n)))
-          (setq n (bbdb-expand-alias r aliases seen-aliases)
-                records (append (nth 1 n) records)
-                n (nth 2 n)))
+        (cond ((string-match "^\\([^/]+\\)/\\(.*\\)$" n)
+               (setq n (funcall (intern (format "bbdb-aliases-magic-%s"
+                                                (match-string 1 n)))
+                                (match-string 2 n))))
+              ((= ?\( (aref n 0))
+               (setq r (read n))
+               (setq n (apply (intern (format "bbdb-aliases-magic-%s"
+                                              (car r)))
+                              (cdr r))))
+              ((and (not (string-match "@" n)) (setq r (assoc n aliases)))
+               (setq n (bbdb-expand-alias r aliases seen-aliases)
+                     records (append (nth 1 n) records)
+                     n (nth 2 n)))
+              (t
+               (setq n (list (bbdb-dwim-net-address rec n)))))
         (setq result (append n result))
         (setq nets (cdr nets)))
       (setq items (cdr items)))
     (list alias records result)))
 
+;(and (pp (bbdb-expand-all-aliases) (get-buffer "*scratch*")) nil)
 (defun bbdb-all-aliases-expanded ()
-  "Return an alist (alias net1 [net2 ...] elements."
+  "Return an alist (alias record-list net-list) elements."
   (let ((aliases (reverse (bbdb-collect-all-aliases)))
-        a result)
-    (while aliases
-      (setq a (car aliases))
-      (setq result (cons (bbdb-expand-alias a aliases) result))
-      (setq aliases (cdr aliases)))
+        as result)
+    (setq as aliases)
+    (while as
+      (setq result (cons (bbdb-expand-alias (car as) aliases) result))
+      (setq as (cdr as)))
     result))
 
 ;;;###autoload
 (defun bbdb-define-all-aliases ()
-   "Define mail aliases for some of the records in the database.
-Every record which has a `mail-alias' field will have a mail alias
-defined for it which is the contents of that field.  If there are
-multiple comma-separated words in the `mail-alias' field, then all
-of those words will be defined as aliases for that person.
+  "Define mail aliases for some of the records in the database.
+Every record which has a `mail-alias' field will have a mail alias defined for
+it which is the contents of that field.  If there are multiple comma-separated
+words in the `mail-alias' field, then all of those words will be defined as
+aliases for that person.
 
-If multiple entries in the database have the same mail alias, then
-that alias expands to a comma-separated list of the primary network
-addresses of all of those people.
+If multiple entries in the database have the same mail alias, then that alias
+expands to a comma-separated list of the primary network addresses of all of
+those people.
 
-An alias ending in \"*\" it will be expanded to all the nets of the
-record.  An alias ending in \"[NTH]\" will expand the the NTH net
-of the record.
+An alias ending in \"*\" it will be expanded to all the nets of the record.
+An alias ending in \"[NTH]\" will expand the the NTH net of the record.
 
-Nets which do not contain an \"@\" and are also used as alias are
-recursively expanded.  This is how hierarchical aliases are defined,
-i.e. define a records with an alias ending in \"*\" and nets which
-are actually aliases."
+Special nets exist can expand to different nets using one of 
+`bbdb-aliases-magic-*' or `bbdb-aliases-magic-1' functions or
+user defined functions.
+
+Nets matching \"FUNCTION/ARG\", i.e. they have at least one \"/\" character in
+them, will be passed to the function `bbdb-aliases-magic-FUNCTION' with the
+string argument ARG.
+
+Nets starting with a \"(\" will be considered as a lisp list, where the
+first list element is prefixed by `bbdb-aliases-net-magic-' and then called
+as function with the rest of the list.
+
+Nets which do not contain an \"@\" and exist as alias are expanded recursively.
+This can be used to define hierarchical aliases. SEEN-ALIASES will be filled
+with the aliases already seen and checked to detect cycles.
+
+Other nets are formatted by `bbdb-dwim-net-address'."
   (interactive "")
   (let* ((use-abbrev-p (fboundp 'define-mail-abbrev))
          (abbrev-handler (if use-abbrev-p
@@ -2776,10 +2851,6 @@ are actually aliases."
       (or (eq (symbol-function alias) 'mail-abbrev-expand-hook)
           (error "mail-aliases contains unexpected hook %s"
                  (symbol-function alias)))
-      ;; The abbrev-hook is called with network addresses instead of bbdb
-      ;; records to avoid keeping pointers to records, which would lose if
-      ;; the database was reverted.  It uses -search-simple to convert
-      ;; these to records, which is plenty fast.
       (fset alias (list 'lambda '()
                         (list 'bbdb-mail-abbrev-expand-hook
                               alias (list 'quote
@@ -2930,19 +3001,24 @@ of all of those people."
 
 (defcustom bbdb-mail-abbrev-expand-hook nil
   "*Hook or hooks invoked each time an alias is expanded.
-The hook is called with two arguments the alias and the list of records."
+The hook is called with two arguments the alias and the list of nets."
   :group 'bbdb-hooks
   :type 'hook)
 
-(defun bbdb-mail-abbrev-expand-hook (alias records)
-  (run-hook-with-args 'bbdb-mail-abbrev-expand-hook alias records)
+(defun bbdb-mail-abbrev-expand-hook (alias nets)
+  "The abbrev-hook is called with a list of network addresses NETS.
+ALIAS and NETS is passed to the other hooks in `bbdb-mail-abbrev-expand-hook'.
+Thus we do not keep pointers to bbdb records, which would lose if
+the database was reverted.  It uses `bbdb-search-simple' to convert
+these to records, which is plenty fast."
+  (run-hook-with-args 'bbdb-mail-abbrev-expand-hook alias nets)
   (mail-abbrev-expand-hook)
   (when bbdb-completion-display-record
     (if bbdb-use-pop-up
         (bbdb-pop-up-bbdb-buffer))
     (let ((bbdb-gag-messages t))
       (bbdb-display-records-1
-       (mapcar (lambda (x) (bbdb-search-simple nil x)) records)
+       (mapcar (lambda (n) (bbdb-search-simple nil n)) nets)
        t))))
 
 (defun bbdb-get-mail-aliases ()
