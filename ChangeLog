@@ -1,3 +1,11 @@
+2007-05-12  Robert Widhopf-Fenk  <bbdb@robf.de>
+
+	* lisp/bbdb-com.el (bbdb-define-all-aliases): Rewrite to handle
+	magic aliases which expand to all nets of a records when ending in
+	"*", pick the nth net of a records when ending in "[NTH]" and
+	recursively expanding aliases if a net has no "@" and exists as
+	alias.
+
 2007-03-04  Robert Widhopf-Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb.el (bbdb-pop-up-bbdb-buffer): Rewrote the function to

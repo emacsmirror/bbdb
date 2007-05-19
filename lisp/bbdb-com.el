@@ -2646,8 +2646,150 @@ all:   Generate an alias all nets (as for 'star) and an alias for each net
                  (symbol :tag "<alias>* for all nets" star)
                  (symbol :tag "All aliases" all)))
 
+(defun bbdb-collect-all-aliases ()
+  "Return an alist of (alias (rec1 emails) [(rec2 emails) ...]) elements."
+  (let* ((aliases-field bbdb-define-all-aliases-field)
+         (target (cons bbdb-define-all-aliases-field "."))
+         (records (bbdb-search (bbdb-records) nil nil nil target))
+         r nets aliases result)
+    (while records
+      (setq r (car records)
+            nets (bbdb-record-net r))
+      (if (null nets)
+          (if (not bbdb-silent-running)
+              (bbdb-warn "record %S has no network address, but the aliases: %s"
+                         (bbdb-record-name r)
+                         (bbdb-record-getprop r aliases-field)))
+        (setq aliases (bbdb-split (bbdb-record-getprop r aliases-field) ","))
+        (while aliases
+          (let* ((alias (car aliases))
+                 match item)
+            ;; extract the nets based on the alias 
+            (cond ((string-match "\\(.+\\)\\*$" alias)
+                   (setq alias (match-string 1 alias)
+                         item nets))
+                  ((string-match "\\(.+\\)\\[\\([0-9]+\\)\\]$" alias)
+                   (setq alias (alias match-string 1)
+                         item (string-to-number (match-string alias 2))
+                         item (list (nth nets))))
+                  (t 
+                   (setq item (list (car nets)))))
+            (setq item (list r item))
+            (if (setq match (assoc alias result))
+                (nconc match (cons item nil))
+              (setq result (cons (list alias item) result)))
+            (setq aliases (cdr aliases)))))
+      (setq records (cdr records)))
+    result))
+
+(defun bbdb-expand-alias (alias-items aliases &optional seen-aliases)
+  "Return a list of expanded nets for alias A.
+Uses ALIASES to recursively expand nets without a \"@\".
+SEEN-ALIASES will be checked to avoid cycles."
+  (let ((alias (car alias-items))
+        (items (cdr alias-items))
+        rec nets n r
+        records result)
+    (setq seen-aliases (cons alias seen-aliases))
+    (while items
+      (setq rec (car items)
+            nets (car (cdr rec))
+            rec (car rec)
+            records (cons rec records))
+      (while nets
+        (setq n (car nets))
+        (if (or (string-match "@" n) (null (setq r (assoc n aliases))))
+            (setq n (list (bbdb-dwim-net-address rec n)))
+          (setq n (bbdb-expand-alias r aliases seen-aliases)
+                records (append (nth 1 n) records)
+                n (nth 2 n)))
+        (setq result (append n result))
+        (setq nets (cdr nets)))
+      (setq items (cdr items)))
+    (list alias records result)))
+
+(defun bbdb-all-aliases-expanded ()
+  "Return an alist (alias net1 [net2 ...] elements."
+  (let ((aliases (reverse (bbdb-collect-all-aliases)))
+        a result)
+    (while aliases
+      (setq a (car aliases))
+      (setq result (cons (bbdb-expand-alias a aliases) result))
+      (setq aliases (cdr aliases)))
+    result))
+
 ;;;###autoload
 (defun bbdb-define-all-aliases ()
+   "Define mail aliases for some of the records in the database.
+Every record which has a `mail-alias' field will have a mail alias
+defined for it which is the contents of that field.  If there are
+multiple comma-separated words in the `mail-alias' field, then all
+of those words will be defined as aliases for that person.
+
+If multiple entries in the database have the same mail alias, then
+that alias expands to a comma-separated list of the primary network
+addresses of all of those people.
+
+An alias ending in \"*\" it will be expanded to all the nets of the
+record.  An alias ending in \"[NTH]\" will expand the the NTH net
+of the record.
+
+Nets which do not contain an \"@\" and are also used as alias are
+recursively expanded.  This is how hierarchical aliases are defined,
+i.e. define a records with an alias ending in \"*\" and nets which
+are actually aliases."
+  (interactive "")
+  (let* ((use-abbrev-p (fboundp 'define-mail-abbrev))
+         (abbrev-handler (if use-abbrev-p
+                             'define-mail-abbrev
+                           'define-mail-alias))
+         (abbrev-table (if use-abbrev-p
+                           'mail-abbrevs
+                         'mail-aliases))
+         (mail-alias-separator-string (if (boundp 'mail-alias-separator-string)
+                                          mail-alias-separator-string
+                                        ", "))
+         (aliases (bbdb-all-aliases-expanded))
+         alias nets expansion)
+
+    (if use-abbrev-p
+        nil
+      ;; clear abbrev-table
+      (setq mail-aliases nil)
+      ;; arrange rebuilt if necessary, this should be done by
+      ;; mail-pre-abbrev-expand-hook, but there is none!
+      (defadvice sendmail-pre-abbrev-expand-hook
+        (before bbdb-rebuilt-all-aliases activate)
+        (bbdb-rebuilt-all-aliases)))
+
+    ;; iterate over the results and create the aliases
+    (while aliases
+      (setq alias (car aliases)
+            records (nth 1 alias)
+            nets (nth 2 alias)
+            alias (car alias)
+            expansion (mapconcat 'identity nets mail-alias-separator-string))
+      (funcall abbrev-handler alias expansion)
+      (setq alias (or (intern-soft (downcase alias)
+                                   (symbol-value abbrev-table))
+                      (error "couldn't find the alias we just defined!")))
+      (or (eq (symbol-function alias) 'mail-abbrev-expand-hook)
+          (error "mail-aliases contains unexpected hook %s"
+                 (symbol-function alias)))
+      ;; The abbrev-hook is called with network addresses instead of bbdb
+      ;; records to avoid keeping pointers to records, which would lose if
+      ;; the database was reverted.  It uses -search-simple to convert
+      ;; these to records, which is plenty fast.
+      (fset alias (list 'lambda '()
+                        (list 'bbdb-mail-abbrev-expand-hook
+                              alias (list 'quote
+                                          (mapcar (lambda (e)
+                                                    (car (bbdb-record-net e)))
+                                                  records)))))
+      (setq aliases (cdr aliases)))))
+  
+;;;###autoload
+(defun bbdb-define-all-aliases-old ()
   "Define mail aliases for some of the records in the database.
 Every record which has a `mail-alias' field will have a mail alias
 defined for it which is the contents of that field.  If there are
