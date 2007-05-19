@@ -2632,9 +2632,10 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
   :group 'bbdb
   :type 'symbol)
 
-(defun bbdb-aliases-magic-* (include &optional exclude first-only)
+(defun bbdb-magic-net-* (include &optional exclude primary-only)
   "Return list of expanded email addresses matching regexp INCLUDE.
-Exclude those matching the regexp EXCLUDE."
+Exclude those matching the regexp EXCLUDE.  When PRIMARY-ONLY is t
+only work on the primary net of records."
   (let ((records (bbdb-records))
         expanded 
         r n nets)
@@ -2648,12 +2649,12 @@ Exclude those matching the regexp EXCLUDE."
                  (string-match include n)
                  (or (not exclude) (not (string-match exclude n))))
             (setq expanded (cons (bbdb-dwim-net-address r n) expanded)))
-        (setq nets (if first-only nil (cdr nets))))
+        (setq nets (if primary-only nil (cdr nets))))
       (setq records (cdr records)))
     expanded))
 
-(defun bbdb-aliases-magic-1 (include &optional exclude)
-  "Return list of expanded primary email addresses matching regexp INCLUDE.
+(defun bbdb-magic-net-1 (include &optional exclude)
+  "Return list of expanded primary nets matching regexp INCLUDE.
 Exclude those matching the regexp EXCLUDE."
   (bbdb-aliases-net-magic-* include exclude t))
 
@@ -2737,12 +2738,12 @@ Other nets are formatted by `bbdb-dwim-net-address'."
       (while nets
         (setq n (car nets))
         (cond ((string-match "^\\([^/]+\\)/\\(.*\\)$" n)
-               (setq n (funcall (intern (format "bbdb-aliases-magic-%s"
+               (setq n (funcall (intern (format "bbdb-magic-net-%s"
                                                 (match-string 1 n)))
                                 (match-string 2 n))))
               ((= ?\( (aref n 0))
                (setq r (read n))
-               (setq n (apply (intern (format "bbdb-aliases-magic-%s"
+               (setq n (apply (intern (format "bbdb-magic-net-%s"
                                               (car r)))
                               (cdr r))))
               ((and (not (string-match "@" n)) (setq r (assoc n aliases)))
@@ -2782,21 +2783,21 @@ those people.
 An alias ending in \"*\" it will be expanded to all the nets of the record.
 An alias ending in \"[NTH]\" will expand the the NTH net of the record.
 
-Special nets exist can expand to different nets using one of 
-`bbdb-aliases-magic-*' or `bbdb-aliases-magic-1' functions or
-user defined functions.
+Special nets exist and expand to other nets using one of `bbdb-magic-net-*' or
+`bbdb-magic-net-1' functions or user defined function.  Still also magic nets
+may not contain the comma character.   If you have to use it put it into an
+own magic net function or us the octal escape sequence \"\\054\". 
 
 Nets matching \"FUNCTION/ARG\", i.e. they have at least one \"/\" character in
-them, will be passed to the function `bbdb-aliases-magic-FUNCTION' with the
-string argument ARG.
+them, will be passed to the function `bbdb-magic-net-FUNCTION' with the string
+argument ARG.
 
 Nets starting with a \"(\" will be considered as a lisp list, where the
-first list element is prefixed by `bbdb-aliases-net-magic-' and then called
-as function with the rest of the list.
+first list element is prefixed by `bbdb-magic-net' and then called
+as function with the rest of the list as arguments.
 
 Nets which do not contain an \"@\" and exist as alias are expanded recursively.
-This can be used to define hierarchical aliases. SEEN-ALIASES will be filled
-with the aliases already seen and checked to detect cycles.
+This can be used to define hierarchical aliases.
 
 Other nets are formatted by `bbdb-dwim-net-address'."
   (interactive "")
