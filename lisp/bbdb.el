@@ -535,8 +535,8 @@ newer than the file is was read from, and will offer to revert."
                  (const :tag "Do not check auto-save file" nil)))
 
 (defcustom bbdb-use-pop-up 'horizontal
-  "*If none nil, display a continuously-updating bbdb window while in VM, MH,
-RMAIL, or Gnus.
+  "*If not nil, display a continuously-updating bbdb window while in VM, MH,
+RMAIL, Gnus or a composition buffer.
 
 If 'horizontal, stack the window horizontally and give it the number of lines
 specified by `bbdb-pop-up-target-lines'.  
@@ -3545,7 +3545,8 @@ the *BBDB* buffer is already visible, in which case do nothing.)
 PREDICATE can be a function to select the right widnow for the split.
 
 `bbdb-use-pop-up' controls how to split the selected window and how many lines
-resp. columns it will get.
+resp. columns it will get.  If it is 'vertical a vertical split is done otherwise
+a horizontal.
 
 If `bbdb-multiple-buffers' is set we create a new BBDB buffer when not
 already within one.  The new buffer-name starts with a space, i.e. it does
@@ -3563,7 +3564,7 @@ not clutter the buffer-list."
 
 
     ;; now get the pop-up
-    (if (get-buffer-window new-bbdb-buffer-name)
+    (if (and bbdb-use-pop-up (get-buffer-window new-bbdb-buffer-name))
         nil ;; it is already there do nothing 
       
       ;; find a window to split
@@ -3583,16 +3584,16 @@ not clutter the buffer-list."
       
       ;; select it and split it...
       (select-window window)
-      (cond ((member bbdb-use-pop-up '(t horiz horizontal))
+      (cond ((eq bbdb-use-pop-up 'vertical)
+             (split-window-horizontally (- bbdb-pop-up-target-columns)))
+            (t
              (let ((size (min
                           (- (window-height window) window-min-height 1)
                           (- (window-height window)
                              (max window-min-height
                                   (1+ bbdb-pop-up-target-lines))))))
                (setq size (if (> size 0) size window-min-height))
-               (split-window window size)))
-            ((eq bbdb-use-pop-up 'vertical)
-             (split-window-horizontally (- bbdb-pop-up-target-columns))))
+               (split-window window size))))
 
       ;; make gnus happy...
       (if (memq major-mode
