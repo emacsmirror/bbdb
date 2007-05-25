@@ -23,16 +23,16 @@
   (require 'bbdb)
   (require 'bbdb-com)
   (require 'bbdb-snarf)
-  (require 'vm-autoload)
-  (require 'vm)
-
-  (if (not (fboundp 'vm-record-and-change-message-pointer))
-      (load-library "vm-motion"))
-  (if (not (fboundp 'vm-su-from))
-      (load-library "vm-summary"))
-  (or (boundp 'vm-mode-map)
-      (load-library "vm-vars")))
-
+  (require 'vm-version)
+  (require 'vm-macro)
+  (require 'vm-message)
+  (require 'vm-misc)
+  (require 'vm-motion)
+  (require 'vm-summary)
+  (require 'vm-vars)
+  (require 'vm-folder)
+  (require 'vm-mime))
+  
 (defun bbdb/vm-get-header-content (header-field msg)
   (let ((content (vm-get-header-contents msg (concat header-field ":"))))
     (if content
