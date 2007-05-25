@@ -2656,7 +2656,7 @@ only work on the primary net of records."
 (defun bbdb-magic-net-1 (include &optional exclude)
   "Return list of expanded primary nets matching regexp INCLUDE.
 Exclude those matching the regexp EXCLUDE."
-  (bbdb-aliases-net-magic-* include exclude t))
+  (bbdb-magic-net-* include exclude t))
 
 ;(and (pp (bbdb-collect-all-aliases) (get-buffer "*scratch*")) nil)
 (defun bbdb-collect-all-aliases ()
@@ -2812,7 +2812,7 @@ Other nets are formatted by `bbdb-dwim-net-address'."
                                           mail-alias-separator-string
                                         ", "))
          (aliases (bbdb-all-aliases-expanded))
-         alias nets expansion)
+         records alias nets expansion)
 
     (if use-abbrev-p
         nil
@@ -2871,8 +2871,7 @@ these to records, which is plenty fast."
   (run-hook-with-args 'bbdb-mail-abbrev-expand-hook alias nets)
   (mail-abbrev-expand-hook)
   (when bbdb-completion-display-record
-    (if bbdb-use-pop-up
-        (bbdb-pop-up-bbdb-buffer))
+    (bbdb-pop-up-bbdb-buffer)
     (let ((bbdb-gag-messages t))
       (bbdb-display-records-1
        (mapcar (lambda (n) (bbdb-search-simple nil n)) nets)
