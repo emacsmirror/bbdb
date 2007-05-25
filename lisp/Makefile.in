@@ -20,19 +20,14 @@ SYMLINKS = @SYMLINKS@
 LINKPATH = @LINKPATH@
 
 # this is lovely, isn't it?  Surprisingly enough, it seems to work...
-VM	= -eval '(progn (if (not (string-match "$(VMDIR)" ""))            \
-			    (setq load-path (cons "$(VMDIR)" load-path))) \
-			(if (load "vm-version" t t)                         \
-			    (cond ((> (string-to-number vm-version) 5.31) \
-                                   (load "vm" t t))                           \
-                                  (t (load "vm-vars" t t) (load "vm" t t)))))'
+VM	= -eval '(if (> (length "$(VMDIR)") 0) \
+		   (setq load-path (cons "$(VMDIR)" load-path)))'
 
-GNUS	= -eval '(if (not (string-match "$(GNUSDIR)" ""))             \
-		     (setq load-path (cons "$(GNUSDIR)" load-path)))'
+GNUS	= -eval '(if (> (length "$(GNUSDIR)") 0) \
+	           (setq load-path (cons "$(GNUSDIR)" load-path)))'
 
-MHE	= -eval '(progn (if (not (string-match "$(MHEDIR)" ""))            \
-			    (setq load-path (cons "$(MHEDIR)" load-path))) \
-			(load "mh-e" t t))'
+MHE	= -eval '(if (> (length "$(MHEDIR)") 0) \
+	           (setq load-path (cons "$(MHEDIR)" load-path)))'
 
 PUSHPATH=-l @top_srcdir@/@BBDB_LOADPATH@
 
@@ -50,8 +45,7 @@ BINS=		bbdb.elc $(DEPBINS)
 all: Makefile @BBDB_RMAIL@ @BBDB_GNUS@ @BBDB_VM@ @BBDB_MHE@ bbdb autoloadsc
 
 Makefile: Makefile.in
-	@echo "Makefile.in has changed, rerun configure!"
-	exit 1
+	cd ..; ./config.status
 
 install-pkg: uninstall-pkg bbdb autoloadsc
 	@if test "x$(SYMLINKS)" = "xno" ; then                 \
