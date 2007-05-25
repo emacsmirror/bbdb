@@ -3564,7 +3564,7 @@ not clutter the buffer-list."
 
 
     ;; now get the pop-up
-    (if (and bbdb-use-pop-up (get-buffer-window new-bbdb-buffer-name))
+    (if (or (not bbdb-use-pop-up) (get-buffer-window new-bbdb-buffer-name))
         nil ;; it is already there do nothing 
       
       ;; find a window to split
