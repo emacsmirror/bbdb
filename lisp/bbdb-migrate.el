@@ -47,7 +47,7 @@ disk.  Returns the version for the saved database."
       (set-buffer buf)
       (erase-buffer)
       (goto-char (point-min))
-      (insert-string (format "BBDB new data version notice:
+      (insert (format "BBDB new data version notice:
 =============================
 
 Your BBDB data is stored in an older format (version %d).  At this point,
@@ -58,7 +58,7 @@ versions will be lost.  For your convenience, a list of file format
 changes introduced after version %d is shown below:\n\n" ondisk ondisk))
       (while newfeatures
     (if (> (caar newfeatures) ondisk)
-      (insert-string (concat (if first (setq first nil) "\n\n")
+      (insert (concat (if first (setq first nil) "\n\n")
                  "New features in database version "
                  (format "%d" (caar newfeatures))
                  ":\n\n" (cdar newfeatures))))

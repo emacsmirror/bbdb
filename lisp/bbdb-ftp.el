@@ -56,6 +56,7 @@
 ;;; (autoload 'bbdb-create-ftp-site     "bbdb-ftp"  "Ftp BBDB Package" t)
 
 (require 'bbdb)
+(require 'bbdb-com)
 
 ;; There must be a better way
 (if (featurep 'efs-cu)

@@ -142,6 +142,13 @@ BBDB_SC=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH}
 BBDB_REPORTMAIL=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(if (locate-library \"reportmail\") (message \"bbdb-reportmail.elc\"))" 2>&1`
 BBDB_SRV=`${EMACS_PROG} -no-site-file -no-init-file -batch -q -l ${BBDB_LOADPATH} -eval "(progn (or (fboundp (quote define-obsolete-variable-alias)) (if (locate-library \"gnuserv-compat\") (load \"gnuserv-compat\" t t))) (if (and (locate-library \"gnuserv\") (locate-library \"itimer\")) (message \"bbdb-srv.el\")))" 2>&1`
 
+AC_MSG_CHECKING([checking emacs-type of ${EMACS_PROG}])
+cat > conftest.el <<TEST
+(princ (format "%s" (if (featurep 'xemacs ) 'xemacs 'emacs)))
+TEST
+EMACS_FLAVOR=`${EMACS_PROG} --no-site-file --batch -l conftest.el | ${GREP} .`
+AC_MSG_RESULT([${EMACS_FLAVOR}])
+
 dnl XEmacsery
 dnl is there a sane way to set this to a useful default?
 BBDB_ARG_SUBST([PACKAGEDIR], [package-dir], [DIR],
@@ -164,6 +171,7 @@ AC_SUBST([BBDB_SC])
 AC_SUBST([BBDB_REPORTMAIL])
 AC_SUBST([BBDB_SRV])
 AC_SUBST([HUSHMAKE])
+AC_SUBST([EMACS_FLAVOR])
 
 dnl Hacky Hacky. If RM really /is/ rm (i.e. we're not on DOS, for example)
 dnl then make it 'quiet'.

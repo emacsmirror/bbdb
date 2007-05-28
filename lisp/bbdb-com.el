@@ -40,6 +40,7 @@
   (autoload 'mh-send "mh-e")
   (autoload 'vm-session-initialization "vm-startup")
   (autoload 'vm-mail-internal "vm-reply")
+  (autoload 'vm-mail "vm")
   (autoload 'mew-send "mew")
   (autoload 'bbdb-header-start "bbdb-hooks")
   (autoload 'bbdb-extract-field-value "bbdb-hooks")
@@ -271,12 +272,10 @@ in either the name(s), company, network address, or notes."
      (list (setq field (completing-read "Notes field to search (RET for all): "
                                         (append '(("notes")) (bbdb-propnames))
                                         nil t))
-           (if (featurep 'gmhist)
-               (read-with-history-in 'bbdb-notes-field "Regular expression: ")
-             (bbdb-search-prompt "Search records with %s %m regexp: "
-                                 (if (string= field "")
-                                     "one field"
-                                   field)))
+	   (bbdb-search-prompt "Search records with %s %m regexp: "
+			       (if (string= field "")
+				   "one field"
+				 field))
            current-prefix-arg)))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
         (notes (if (string= which "")
@@ -3018,8 +3017,8 @@ Uses external program `bbdb-sound-player' if set, otherwise
 try to use internal sound if available."
   (if (and (not bbdb-sound-player) (featurep 'native-sound))
       ;; This requires the sound files to be loaded via bbdb-xemacs.
-      (funcall 'play-sound (intern (format "touchtone%d" num))
-               bbdb-sound-volume)
+      (apply 'play-sound (list (intern (format "touchtone%d" num))
+			       bbdb-sound-volume))
     (if (and (not (featurep 'xemacs))
              ;; We can't tell a priori if Emacs 21 facility will
              ;; actually work.
@@ -3066,7 +3065,7 @@ a pause in the dial sequence."
            ;; if we use sit-for, the user can interrupt!
            (sleep-for 1)) ;; configurable?
           ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-           (bbdb-play-sound (- (char-int d) (char-int ?0))))
+           (bbdb-play-sound (- d ?0)))
           (t)))) phone-string)
 
     ;; tell the user that we're dialed, if we're using the modem

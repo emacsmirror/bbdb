@@ -9,6 +9,7 @@ RM   = @RM@
 LN_S = @LN_S@
 
 EMACS_PROG = @EMACS_PROG@ -no-site-file -no-init-file
+EMACS_FLAVOR = @EMACS_FLAVOR@
 
 GNUSDIR = @GNUSDIR@
 MHEDIR = @MHEDIR@
@@ -35,8 +36,12 @@ PUSHPATH=-l @top_srcdir@/@BBDB_LOADPATH@
 
 DEPSRCS=	bbdb-com.el  bbdb-hooks.el  bbdb-gnus.el  bbdb-mhe.el \
 		bbdb-rmail.el bbdb-vm.el bbdb-ftp.el bbdb-whois.el \
-		bbdb-xemacs.el bbdb-print.el bbdb-srv.el bbdb-reportmail.el \
+		bbdb-print.el bbdb-srv.el bbdb-reportmail.el \
 		bbdb-merge.el bbdb-migrate.el bbdb-gui.el
+
+ifeq ($(EMACS_FLAVOR),xemacs)
+DEPSRCS+=	bbdb-xemacs.el 
+endif
 
 DEPBINS=	${DEPSRCS:.el=.elc}
 SRCS=		bbdb.el  $(DEPSRCS)
@@ -144,14 +149,23 @@ autoloads: bbdb-autoloads.el
 
 autoloadsc: bbdb-autoloads.elc
 
-extras: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc bbdb-xemacs.elc  \
+extras:: bbdb-print.elc bbdb-ftp.elc bbdb-whois.elc \
 	@BBDB_SRV@ @BBDB_REPORTMAIL@ bbdb-snarf.elc bbdb-w3.elc \
 	@BBDB_SC@ bbdb-merge.elc bbdb-migrate.elc bbdb-gui.elc
+ifeq ($(EMACS_FLAVOR),xemacs)
+extras:: bbdb-xemacs.elc
+endif
+
 bbdb:	bbdb.elc bbdb-com.elc bbdb-hooks.elc autoloadsc extras
+
 rmail:	bbdb bbdb-rmail.elc
+
 vm:	bbdb bbdb-vm.elc
+
 mhe:	bbdb bbdb-mhe.elc
+
 gnus:	bbdb bbdb-gnus.elc
+
 # aliases
 mh:	mhe
 mh-e:	mhe

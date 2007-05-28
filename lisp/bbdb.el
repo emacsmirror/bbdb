@@ -352,15 +352,16 @@ When nil, you will be asked."
   :group 'bbdb-database
   :type 'boolean)
 
-(unless (fboundp 'primep)
-  (defun primep (num)
-    "Return t if NUM is a prime number."
-    (and (numberp num) (> num 1) (= num (floor num))
-         (let ((lim (sqrt num)) (nu 2) (prime t))
-           (while (and prime (<= nu lim))
-             (setq prime (/= 0 (mod num nu))
-                   nu (1+ nu)))
-           prime))))
+(eval-and-compile 
+  (unless (fboundp 'primep)
+    (defun primep (num)
+      "Return t if NUM is a prime number."
+      (and (numberp num) (> num 1) (= num (floor num))
+	   (let ((lim (sqrt num)) (nu 2) (prime t))
+	     (while (and prime (<= nu lim))
+	       (setq prime (/= 0 (mod num nu))
+		     nu (1+ nu)))
+	     prime)))))
 
 (defcustom bbdb-hashtable-size 1021
   "*The size of the bbdb hashtable.
@@ -1293,7 +1294,7 @@ present).  Returns a string containing the date in the new format."
 (defconst bbdb-gag-messages nil
   "Bind this to t to quiet things down - do not set it!")
 
-(defconst bbdb-buffer-name "*BBDB*")
+(defvar bbdb-buffer-name "*BBDB*")
 
 (defcustom bbdb-display-layout-alist
   '((one-line   (order     . (phones mail-alias net notes))
@@ -1950,7 +1951,7 @@ multi-line layout."
 
 ;;; Electric display stuff
 
-(defconst bbdb-inside-electric-display nil)
+(defvar bbdb-inside-electric-display nil)
 ;; hack hack: a couple of specials that the electric stuff uses for state.
 (defvar bbdb-electric-execute-me)
 (defvar bbdb-electric-completed-normally)
