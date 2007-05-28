@@ -1872,7 +1872,7 @@ multi-line layout."
 
     (if bbdb-multiple-buffers (bbdb-pop-up-bbdb-buffer))
 
-    (with-output-to-temp-buffer bbdb-buffer-name
+    (save-excursion 
       (set-buffer bbdb-buffer-name)
 
       ;; If append is set, clear the buffer, otherwise do clean up.
