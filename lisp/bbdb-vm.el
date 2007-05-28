@@ -27,6 +27,7 @@
   (require 'vm-macro)
   (require 'vm-message)
   (require 'vm-misc)
+  (require 'vm-undo)
   (require 'vm-motion)
   (require 'vm-summary)
   (require 'vm-vars)
