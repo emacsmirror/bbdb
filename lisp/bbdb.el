@@ -1873,8 +1873,7 @@ multi-line layout."
     (if bbdb-multiple-buffers (bbdb-pop-up-bbdb-buffer))
 
     (save-excursion 
-      (set-buffer bbdb-buffer-name)
-
+      (set-buffer (get-buffer-create bbdb-buffer-name))
       ;; If append is set, clear the buffer, otherwise do clean up.
       (unless append (bbdb-undisplay-records))
 
@@ -3566,9 +3565,10 @@ not clutter the buffer-list."
 
     ;; now get the pop-up
     (if (or (not bbdb-use-pop-up) (get-buffer-window new-bbdb-buffer-name))
-        nil ;; it is already there do nothing 
+        ;; just create the buffer if necessary 
+        (get-buffer-create new-bbdb-buffer-name)
       
-      ;; find a window to split
+      ;; else find a window to split
       (when predicate 
         (setq window current-window)
         (while (and (not (funcall predicate window))
