@@ -5,6 +5,7 @@ prefix = @prefix@
 srcdir = @srcdir@
 subdir = texinfo
 top_srcdir = @top_srcdir@
+datarootdir = @datarootdir@
 
 VPATH=$(srcdir)
 INSTALL = @INSTALL@
