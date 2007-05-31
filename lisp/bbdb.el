@@ -1870,11 +1870,10 @@ multi-line layout."
     ;; just quiet a warning about unused vars 
     (and temp-buffer-setup-hook temp-buffer-show-function)
 
-    (let ((bbdb-use-pop-up (or bbdb-use-pop-up t)))
-      (bbdb-pop-up-bbdb-buffer))
+    (bbdb-pop-up-bbdb-buffer)
 
     (save-excursion 
-      (set-buffer (get-buffer-create bbdb-buffer-name))
+      (set-buffer bbdb-buffer-name)
       (let ((inhibit-read-only t)) (erase-buffer))
 
       ;; If append is set, clear the buffer, otherwise do clean up.
@@ -3569,7 +3568,9 @@ not clutter the buffer-list."
     ;; now get the pop-up
     (if (or (not bbdb-use-pop-up) (get-buffer-window new-bbdb-buffer-name))
         ;; just create the buffer if necessary 
-        (get-buffer-create new-bbdb-buffer-name)
+        (progn
+          (get-buffer-create new-bbdb-buffer-name)
+          (display-buffer new-bbdb-buffer-name))
       
       ;; else find a window to split
       (when predicate 
