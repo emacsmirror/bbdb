@@ -1870,7 +1870,8 @@ multi-line layout."
     ;; just quiet a warning about unused vars 
     (and temp-buffer-setup-hook temp-buffer-show-function)
 
-    (bbdb-pop-up-bbdb-buffer)
+    (let ((bbdb-use-pop-up (or bbdb-use-pop-up t)))
+      (bbdb-pop-up-bbdb-buffer))
 
     (save-excursion 
       (set-buffer (get-buffer-create bbdb-buffer-name))
