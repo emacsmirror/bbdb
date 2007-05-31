@@ -1874,6 +1874,8 @@ multi-line layout."
 
     (save-excursion 
       (set-buffer (get-buffer-create bbdb-buffer-name))
+      (let ((inhibit-read-only t)) (erase-buffer))
+
       ;; If append is set, clear the buffer, otherwise do clean up.
       (unless append (bbdb-undisplay-records))
 
