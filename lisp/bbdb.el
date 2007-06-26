@@ -352,16 +352,16 @@ When nil, you will be asked."
   :group 'bbdb-database
   :type 'boolean)
 
-(eval-and-compile 
-  (unless (fboundp 'primep)
-    (defun primep (num)
-      "Return t if NUM is a prime number."
-      (and (numberp num) (> num 1) (= num (floor num))
-	   (let ((lim (sqrt num)) (nu 2) (prime t))
-	     (while (and prime (<= nu lim))
-	       (setq prime (/= 0 (mod num nu))
-		     nu (1+ nu)))
-	     prime)))))
+(defun bbdb-primep (num)
+  "Return t if NUM is a prime number."
+  (if (fboundp 'primep)
+      (primep num) 
+    (and (numberp num) (> num 1) (= num (floor num))
+         (let ((lim (sqrt num)) (nu 2) (prime t))
+           (while (and prime (<= nu lim))
+             (setq prime (/= 0 (mod num nu))
+                   nu (1+ nu)))
+           prime))))
 
 (defcustom bbdb-hashtable-size 1021
   "*The size of the bbdb hashtable.
@@ -373,7 +373,7 @@ you should reload `bbdb-file'."
   :group 'bbdb-database
   :type 'integer
   :set (lambda (symb val)
-         (unless (primep val)
+         (unless (bbdb-primep val)
            (error "`%s' must be prime, not %s" symb val))
          (set symb val)
          (when (fboundp 'bbdb-records)
