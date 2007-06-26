@@ -2866,13 +2866,13 @@ ALIAS and NETS is passed to the other hooks in `bbdb-mail-abbrev-expand-hook'.
 Thus we do not keep pointers to bbdb records, which would lose if
 the database was reverted.  It uses `bbdb-search-simple' to convert
 these to records, which is plenty fast."
-  (run-hook-with-args 'bbdb-mail-abbrev-expand-hook alias nets)
-  (mail-abbrev-expand-hook)
   (when bbdb-completion-display-record
     (let ((bbdb-gag-messages t))
       (bbdb-display-records-1
        (mapcar (lambda (n) (bbdb-search-simple nil n)) nets)
-       t))))
+       t)))
+  (run-hook-with-args 'bbdb-mail-abbrev-expand-hook alias nets)
+  (mail-abbrev-expand-hook))
 
 (defun bbdb-get-mail-aliases ()
   "Return a list of mail aliases used in the BBDB.
