@@ -327,9 +327,19 @@ documentation for the following variables for more details:
 This function is meant to be used with the user function defined in
   `bbdb/gnus-summary-user-format-letter'"
   (let* ((from (mail-header-from header))
+         (to (when (and (boundp 'gnus-ignored-from-addresses)
+                        gnus-ignored-from-addresses
+                        (string-match gnus-ignored-from-addresses from))
+               (let* ((headers (mail-header-extra header))
+                      (to (or (mail-header 'To)
+                              (mail-header 'CC)
+                              (mail-header 'Newsgroups))))
+                 (if (and to (listp to))
+                     (cdr (car to))
+                   to))))
          (data (and bbdb/gnus-summary-show-bbdb-names
                     (condition-case nil
-                        (mail-extract-address-components from)
+                        (mail-extract-address-components (or to from))
                       (error nil))))
          (name (car data))
          (net (car (cdr data)))
@@ -339,27 +349,34 @@ This function is meant to be used with the user function defined in
                        (if (and net bbdb-canonicalize-net-hook)
                            (bbdb-canonicalize-address net)
                          net)))))
+                       
     (if (and record name (member (downcase name) (bbdb-record-net record)))
-    ;; bogon!
-    (setq record nil))
+        ;; bogon!
+        (setq record nil))
     (setq name
-      (or (and bbdb/gnus-summary-prefer-bbdb-data
-           (or (and bbdb/gnus-summary-prefer-real-names
-                (and record (bbdb-record-name record)))
-               (and record (bbdb-record-net record)
-                (nth 0 (bbdb-record-net record)))))
-          (and bbdb/gnus-summary-prefer-real-names
-           (or (and (equal bbdb/gnus-summary-prefer-real-names 'bbdb)
-                net)
-               name))
-          net from "**UNKNOWN**"))
-    (format "%s%s"
-        (or (and record bbdb/gnus-summary-mark-known-posters
-             (or (bbdb-record-getprop
-              record bbdb-message-marker-field)
-             bbdb/gnus-summary-known-poster-mark))
-        " ")
-        name)))
+          (or (and bbdb/gnus-summary-prefer-bbdb-data
+                   (or (and bbdb/gnus-summary-prefer-real-names
+                            (and record (bbdb-record-name record)))
+                       (and record (bbdb-record-net record)
+                            (nth 0 (bbdb-record-net record)))))
+              (and bbdb/gnus-summary-prefer-real-names
+                   (or (and (equal bbdb/gnus-summary-prefer-real-names 'bbdb)
+                            net)
+                       name))
+              net from "**UNKNOWN**"))
+    (format "%s%s%s"
+            (if to
+                (if (and (boundp 'gnus-summary-to-prefix)
+                         (stringp gnus-summary-to-prefix))
+                    gnus-summary-to-prefix
+                  "To: ")
+              "")
+            (or (and record bbdb/gnus-summary-mark-known-posters
+                     (or (bbdb-record-getprop
+                          record bbdb-message-marker-field)
+                         bbdb/gnus-summary-known-poster-mark))
+                " ")
+            name)))
 
 ;; DEBUG: (bbdb/gnus-summary-author-in-bbdb "From: simmonmt@acm.org")
 (defun bbdb/gnus-summary-author-in-bbdb (header)
