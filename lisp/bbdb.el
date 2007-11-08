@@ -821,13 +821,20 @@ You can also set this to a function returning a buffer name."
 
 ;; iso-2022-7bit should be OK (but not optimal for Emacs, at least --
 ;; emacs-mule would be better) with both Emacs 21 and XEmacs.
-(defconst bbdb-file-coding-system
+(defcustom bbdb-file-coding-system
   (bbdb-eval-when (fboundp 'coding-system-p)
     (cond ((apply 'coding-system-p '(utf-8-emacs))
            'utf-8-emacs)
-          (t 'iso-2022-7bit)))
+          (t 'iso-8859-1)))
   "Coding system used for reading and writing `bbdb-file'.
-This should not be changed by users.")
+This should not be changed by users.
+This should not be changed in between BBDB sessions, i.e. before loading the
+BBDB which was stored in a different coding system.  Make a backup of your
+BBDB before changing this variable!"
+  :group 'bbdb
+  :type '(choice (const iso-8859-1)
+                 (const utf-8-emacs)
+                 (const iso-2022-7bit)))
 
 (defvar bbdb-suppress-changed-records-recording nil
   "Whether to record changed records in variable `bbdb-changed-records'.
