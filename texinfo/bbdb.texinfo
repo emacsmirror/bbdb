@@ -1158,7 +1158,7 @@ mail or news-reading interfaces (@xref{Interfaces}.). @refill
 @cindex Creating new records
 @cindex Adding new records
 
-There is also @w{@kbd{bbdb-snarf}} (@xref{bbdb-snarf}.), which will
+There is also @w{@kbd{bbdb-snarf}} (@pxref{bbdb-snarf}.), which will
 attempt to create a record from a text block. Note that this depends
 on particular formatting and may not do exactly what you want.
 
@@ -2393,11 +2393,19 @@ line.  If this is @code{nil}, it will default to the value of
 @vindex bbdb-always-add-addresses
 If this is @code{t}, then whenever the Insidious Big Brother Database
 notices a new email address corresponding to a person who is in the
-database, it will add it to the database.  If this is @code{nil} (the
-default), then whenever a new network address is noticed for a person in
-the database, you will be asked whether to add the address.  If this is
-the symbol @code{never} (really if it is not @code{t} and not @code{nil})
-then new network addresses will never be automatically added. @refill
+database, it will add it to the database.  If this is the symbol
+@code{ask} (the default), then whenever a new network address is
+noticed for a person in the database, you will be asked whether to add
+the address.  If this is @code{nil} then new network addresses will
+never be automatically added. @refill
+
+When set to a function name, @b{BBDB} calls the function to decide
+whether to add the address or not; it should return one of the above
+values.  You may find the functions
+@code{bbdb-ignore-some-messages-hook} or
+@code{bbdb-ignore-most-messages-hook} useful here.  @xref{Predefined
+Hooks}.
+@refill
 
 @item bbdb-new-nets-always-primary
 @vindex bbdb-new-nets-always-primary

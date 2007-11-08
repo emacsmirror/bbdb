@@ -4,6 +4,14 @@
 	prin1-to-string binding print-level and print-length to nil to
 	avoid abbreviation when writing records.
 
+2007-09-18  Jim Blandy  <jimb@codesourcery.com>
+
+	* texinfo/bbdb.texinfo (bbdb-always-add-addresses): Document new
+	meanings of 'ask', nil, and function symbols.
+
+	* texinfo/bbdb.texinfo (Manual Record Addition): Use @pxref, not
+	@xref.
+
 2007-07-03  Robert Widhopf-Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-gnus.el (bbdb/gnus-summary-get-author): Added handling
