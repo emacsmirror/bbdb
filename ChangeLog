@@ -1,3 +1,9 @@
+2007-11-02  Robert Widhopf-Fenk  <bbdb@robf.de>
+
+	* lisp/bbdb.el (bbdb-prin1): Added BBDB version of prin1 and
+	prin1-to-string binding print-level and print-length to nil to
+	avoid abbreviation when writing records.
+
 2007-07-03  Robert Widhopf-Fenk  <fenk@forwiss.de>
 
 	* lisp/bbdb-gnus.el (bbdb/gnus-summary-get-author): Added handling

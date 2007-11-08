@@ -142,6 +142,16 @@ prompt the users on how to merge records when duplicates are detected.")
     (defun bbdb-replace-in-string (string regexp newtext &optional literal)
       (bbdb-replace-regexp-in-string regexp newtext string nil literal))))
 
+(defun bbdb-prin1-to-string (object &optional noescape)
+  (let ((print-length nil)
+        (print-level nil))
+    (prin1-to-string object noescape)))
+
+(defun bbdb-prin1 (object &optional stream)
+  (let ((print-length nil)
+        (print-level nil))
+    (prin1 object stream)))
+
 ;; this should really be in bbdb-com
 ;;;###autoload
 (defun bbdb-submit-bug-report ()
@@ -2621,7 +2631,7 @@ Assumes the list is already sorted.  Returns the new head."
                       point)))
           (bbdb-record-set-cache record nil)
           (if unmigrated (bbdb-record-set-cache unmigrated nil))
-          (insert-before-markers (prin1-to-string (or unmigrated record)) "\n")
+          (insert-before-markers (bbdb-prin1-to-string (or unmigrated record)) "\n")
           (set-marker (bbdb-cache-marker cache) point)
           (bbdb-record-set-cache record cache)
 ;;        (if (bbdb-record-name record)
@@ -2667,7 +2677,7 @@ Assumes the list is already sorted.  Returns the new head."
         (bbdb-record-set-cache record nil)
         (if unmigrated (bbdb-record-set-cache unmigrated nil))
 
-        (insert (prin1-to-string (or unmigrated record)) "\n")
+        (insert (bbdb-prin1-to-string (or unmigrated record)) "\n")
         (delete-region (point)
                        (if (cdr tail)
                            (bbdb-record-marker (car (cdr tail)))
@@ -2784,7 +2794,7 @@ doesn't know how to deal with."
       ;; record in the database!
       (insert-before-markers ";;; user-fields: \n")
       (forward-char -1))
-    (prin1 (mapcar (lambda (x) (intern (car x)))
+    (bbdb-prin1 (mapcar (lambda (x) (intern (car x)))
                    bbdb-propnames)
            (current-buffer))
     bbdb-propnames))
@@ -3657,7 +3667,7 @@ after having used inferior software to add entries to the BBDB, however."
            (setq record (car records)
                  cache (bbdb-record-cache record))
            (bbdb-record-set-cache record nil)
-           (prin1 (car records))
+           (bbdb-prin1 (car records))
            (bbdb-record-set-cache record cache)
            (insert ?\n)
            (setq records (cdr records))))

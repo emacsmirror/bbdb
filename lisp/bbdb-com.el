@@ -3168,7 +3168,7 @@ To be used in `interactive' like this:
                               (if (cdr (cdr condition)) ": ")
                               (mapconcat '(lambda (x)
                                             (if (stringp x) x
-                                              (prin1-to-string x)))
+                                              (bbdb-prin1-to-string x)))
                                          (cdr (cdr condition)) ", ")))))
      (bbdb-finger-process-sentinel nil nil)))) ; hackaroonie
 
