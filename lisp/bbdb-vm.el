@@ -40,7 +40,8 @@
         (vm-decode-mime-encoded-words-in-string content))))
 
 (defcustom bbdb/vm-update-records-mode
-  '(if (vm-new-flag msg) 'annotating 'searching)
+;  '(if (vm-new-flag msg) 'annotating 'searching)
+  'annotating
   "Controls how `bbdb/vm-update-records' processes email addresses.
 Set this to an expression which evaluates either to 'searching or
 'annotating.  When set to 'annotating email addresses will be fed to
@@ -92,7 +93,7 @@ C-g again it will stop scanning."
     (if (not bbdb/vm-offer-to-create)
         (setq cache (and msg (bbdb-message-cache-lookup msg))))
 
-    (if cache
+    (if nil;cache
         (setq records (if bbdb-get-only-first-address-p
                           (list (car cache))
                         cache))

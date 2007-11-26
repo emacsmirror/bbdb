@@ -1,3 +1,8 @@
+2007-11-26  Leo  <sdl.web@gmail.com>
+
+	* lisp/bbdb-com.el (bbdb-get-addresses): Minor cleanup and fix an
+	bug (unquoted leading "(")in a doc string.
+	
 2007-11-26  Robert Widhopf-Fenk  <widhopf@matilda>
 
 	* lisp/bbdb.el (bbdb-annotate-message-sender): Normalize and unify
