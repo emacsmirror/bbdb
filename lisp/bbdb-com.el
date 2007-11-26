@@ -2436,7 +2436,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
                                            (length pattern))))
                   (setq match-recs (cons (car recs) match-recs)
                         matched t)))
-	    
+
             ;; Did we match on lastname?
             (let ((b-r-name (or (bbdb-record-lfname (car recs)) "")))
               (if (string= pattern
@@ -2635,7 +2635,7 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
 Exclude those matching the regexp EXCLUDE.  When PRIMARY-ONLY is t
 only work on the primary net of records."
   (let ((records (bbdb-records))
-        expanded 
+        expanded
         r n nets)
     (while records
       (setq r (car records)
@@ -2676,13 +2676,13 @@ Does the magic alias handling described in `bbdb-define-all-aliases'."
         (while aliases
           (let* ((alias (car aliases))
                  match item)
-            ;; extract the nets based on the alias 
+            ;; extract the nets based on the alias
             (cond ((string-match "^\\(.+\\)\\*$" alias)
                    ;; all nets of the record
                    (setq alias (match-string 1 alias)
                          item nets))
                   ((string-match "^\\(.+\\)\\[\\([0-9]+\\)\\]$" alias)
-                   ;; the NTH net of the record 
+                   ;; the NTH net of the record
                    (setq item (string-to-number (match-string 2 alias))
                          item (list (or (nth item nets)
                                         (error "net[%d] for alias %S does not exist!"
@@ -2697,7 +2697,7 @@ Does the magic alias handling described in `bbdb-define-all-aliases'."
                                               n))
                                         nets)
                            item (delete nil item))))
-                  (t 
+                  (t
                    (setq item (list (car nets)))))
             (when item
               (setq item (list r item))
@@ -2717,7 +2717,7 @@ Does the actual formatting and handling of magic nets as described in
 
 Nets which do not contain an \"@\" and exist as alias in ALIASES are expanded
 recursively.  SEEN-ALIASES will be filled with the aliases already seen and
-checked to detect cycles. 
+checked to detect cycles.
 
 Other nets are formatted by `bbdb-dwim-net-address'."
   (let ((alias (car alias-items))
@@ -2784,7 +2784,7 @@ An alias ending in \"[NTH]\" will expand the the NTH net of the record.
 Special nets exist and expand to other nets using one of `bbdb-magic-net-*' or
 `bbdb-magic-net-1' functions or user defined function.  Still also magic nets
 may not contain the comma character.   If you have to use it put it into an
-own magic net function or us the octal escape sequence \"\\054\". 
+own magic net function or us the octal escape sequence \"\\054\".
 
 Nets matching \"FUNCTION/ARG\", i.e. they have at least one \"/\" character in
 them, will be passed to the function `bbdb-magic-net-FUNCTION' with the string
@@ -2843,7 +2843,7 @@ Other nets are formatted by `bbdb-dwim-net-address'."
                                                     (car (bbdb-record-net e)))
                                                   records)))))
       (setq aliases (cdr aliases)))))
-  
+
 ;; We should be cleverer here and instead of rebuilding all aliases we should
 ;; just do what's necessary, i.e. remove deleted records and add new records
 (defun bbdb-rebuilt-all-aliases ()
@@ -3687,12 +3687,12 @@ Changing this variable will show its effect only after clearing the
                            get-header-content-function
                            &rest get-header-content-function-args)
   "Return a list of all addresses found in the headers of a message.
-With ONLY-FIRST-ADDRESS being t, it will only return the first found address. 
+With ONLY-FIRST-ADDRESS being t, it will only return the first found address.
 Addresses matching UNINTERESTING-SENDERS will be ignored.
 
 The client has to provide a GET-HEADER-CONTENT-FUNCTION and optional arguments
-(GET-HEADER-CONTENT-FUNCTION-ARGS) to extract the header content.  The first
-argument to this function if the header name sans." 
+\(GET-HEADER-CONTENT-FUNCTION-ARGS) to extract the header content.  The first
+argument to this function if the header name sans."
   (let ((headers bbdb-get-addresses-headers)
         (ignore-senders (or bbdb-user-mail-names uninteresting-senders))
         addrlist adlist fn ad
