@@ -3223,6 +3223,27 @@ and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\"."
       (setq old-nets (cdr old-nets)))
     redundant-addr))
 
+(defun bbdb-name-normalize (name)
+  "Return normalized NAME.
+NAME is converted to lower case and in a MULE enabled Emacs it is converted to
+UTF-8 or unibyte to unify the overlapping ISO-8859-* encodings.
+
+You may advice this function to allow more sophisticated normalizations."
+  (when name 
+    (setq name (downcase name))
+    (cond ((functionp 'encode-coding-string)
+	   (funcall 'encode-coding-string name 'utf-8))
+	  ((functionp 'string-make-unibyte)
+	   (funcall 'string-make-unibyte name))
+	  (t
+	   name))))
+
+(defun bbdb-name= (a b)
+  "Return t if the two names A and B are equal.
+Before comparing A and B they are normalized by calling the function
+`bbdb-name-normalize'."   
+  (string= (bbdb-name-normalize a) (bbdb-name-normalize b)))
+
 
 (defun bbdb-annotate-message-sender (from &optional loudly create-p
                                           prompt-to-create-p)
@@ -3264,14 +3285,12 @@ before the record is created, otherwise it is created without confirmation
       ;; corresponding to a person who has a real-name which is the same
       ;; as the network-address of someone in the db already.  This is not
       ;; a good solution.
-      (let (down-name old-net)
-        (if (and record name
-                 (not (equal (setq down-name (downcase name))
-                             (and old-name (downcase old-name)))))
+      (let (old-net)
+        (if (and record name (not (bbdb-name= name old-name)))
             (progn
               (setq old-net (bbdb-record-net record))
               (while old-net
-                (if (equal down-name (downcase (car old-net)))
+                (if (bbdb-name= name (car old-net))
                     (progn
                       (setq bogon-mode t
                             old-net nil)
@@ -3312,8 +3331,7 @@ before the record is created, otherwise it is created without confirmation
         (bbdb-debug (if (bbdb-record-deleted-p record)
                         (error "nasty nasty deleted record nasty.")))
         (if (and name
-                 (not (equal (and name (downcase name))
-                             (and old-name (downcase old-name))))
+                 (not (bbdb-name= name old-name))
                  (or (null bbdb-use-alternate-names)
                      (not (bbdb-check-alternate-name name record)))
                  (let ((fullname (bbdb-divide-name name))

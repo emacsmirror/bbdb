@@ -1,3 +1,9 @@
+2007-11-26  Robert Widhopf-Fenk  <widhopf@matilda>
+
+	* lisp/bbdb.el (bbdb-annotate-message-sender): Normalize and unify
+	names before comparing them to avoid detecting a name change where
+	none is.
+
 2007-11-02  Robert Widhopf-Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb.el (bbdb-prin1): Added BBDB version of prin1 and
