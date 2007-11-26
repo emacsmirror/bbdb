@@ -93,7 +93,7 @@ C-g again it will stop scanning."
     (if (not bbdb/vm-offer-to-create)
         (setq cache (and msg (bbdb-message-cache-lookup msg))))
 
-    (if nil;cache
+    (if cache
         (setq records (if bbdb-get-only-first-address-p
                           (list (car cache))
                         cache))
