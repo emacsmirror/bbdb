@@ -37,7 +37,8 @@
 
 ;;; Compiler hushing
 (eval-when-compile
-   (defvar gnus-optional-headers))
+   (defvar gnus-optional-headers)
+   (defvar gnus-summary-to-prefix))
 
 (defun bbdb/gnus-get-message-id ()
   "Return the message-id of the current message."
@@ -330,8 +331,7 @@ This function is meant to be used with the user function defined in
          (to (when (and (boundp 'gnus-ignored-from-addresses)
                         gnus-ignored-from-addresses
                         (string-match gnus-ignored-from-addresses from))
-               (let* ((headers (mail-header-extra header))
-                      (to (or (mail-header 'To)
+               (let* ((to (or (mail-header 'To)
                               (mail-header 'CC)
                               (mail-header 'Newsgroups))))
                  (if (and to (listp to))
