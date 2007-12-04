@@ -1050,13 +1050,13 @@ can be changed by changing the value of @code{bbdb/gnus-score-field}.
 Value used instead of @code{name} for completion.  @xref{Mail Sending
 Interfaces}.
 @item mail-name
-@i{(Available only when the Reportmail-specific @b{BBDB} functions have been
-enabled)}  Used for the storage of non-default names to be used in the
-reporting of new mail by Reportmail.  For initialization details,
-see @ref{Reportmail Prep}.  For usage details, see @ref{Using Reportmail}.
+Used for the storage of non-default names to be used as name in email
+addresses.  See also @ref{Reportmail Prep} and see @ref{Using Reportmail}.
 @item mark-char
 The field containing the character to be used for marking a given poster
 in the Gnus Summary Buffer.  For usage details, see @ref{Gnus Summary Buffer}.
+@item title
+The field containing the title of a person.  
 @item tex-name
 @cindex Printing records in the database
 @findex bbdb-print
@@ -1599,6 +1599,7 @@ There are BBDB interfaces for the following news readers:
 
 @findex bbdb-complete-name
 @vindex bbdb-dwim-net-address-allow-redundancy
+@vindex bbdb-dwim-net-address-title-field
 @cindex Name completion
 @cindex Mail address completion
 @cindex Address completion
@@ -1619,7 +1620,10 @@ of the form @w{@code{User Name <email-address>}}; however, if
 @code{User Name} has an address of the form
 @code{<user.name@@somedomain>}, only the @code{<email-address>} portion
 is inserted. This can be overridden by setting
-@code{bbdb-dwim-net-address-allow-redundancy} to @code{t}. @refill
+@code{bbdb-dwim-net-address-allow-redundancy} to @code{t}. 
+If @code{User name} has the field configured by
+@code{bbdb-dwim-net-address-title-field} it will be prepended.
+@refill
 
 This binding is automatically set by the various insinuation functions
 documented earlier in this manual.  (@xref{Initial Configuration}.)

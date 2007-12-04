@@ -1865,20 +1865,34 @@ Can be used in `bbdb-change-hook'."
                  (const :tag "Return only the net" 'netonly)
                  (const :tag "Allow redundancy" t)))
 
+(defcustom bbdb-dwim-net-address-title-field 'title
+  "*Non-nil should by a field to get the title from for prepending it."
+  :group 'bbdb
+  :type '(choice (const :tag "Do not append title." nil)
+                 (const :tag "Append content of field 'title" 'title)
+                 (symbol :tag "Field name")))
+
 ;;;###autoload
 (defun bbdb-dwim-net-address (record &optional net)
-  "Returns a string to use as the email address of the given record.  The
-given address is the address the mail is destined to; this is formatted like
-\"Firstname Lastname <addr>\" unless both the first name and last name are
-constituents of the address, as in John.Doe@SomeHost, or the address is
-already in the form \"Name <foo>\" or \"foo (Name)\", in which case the
-address is used as-is. If `bbdb-dwim-net-address-allow-redundancy' is non-nil,
-the name is always included.  If `bbdb-dwim-net-address-allow-redundancy' is
-'netonly the name is never included!"
+  "Return a string to use as the email address of the given record.
+It is formatted like \"Firstname Lastname <addr>\" unless both the first name
+and last name are constituents of the address, as in John.Doe@SomeHost, or the
+address is already in the form \"Name <foo>\" or \"foo (Name)\", in which case
+the address is used as-is.
+
+If the record has the field 'mail-name it is used instead of the record's name.
+
+If `bbdb-dwim-net-address-allow-redundancy' is non-nil, the name is always
+included.  If `bbdb-dwim-net-address-allow-redundancy' is 'netonly the name is
+never included!
+
+A title is prepended from the field `bbdb-dwim-net-address-title-field' if it
+exists."
   (or net (setq net (car (bbdb-record-net record))))
   (or net (error "record unhas network addresses"))
   (let* ((override (bbdb-record-getprop record 'mail-name))
          (name (or override (bbdb-record-name record)))
+         title
          fn ln (i 0))
     (if override
         (let ((both (bbdb-divide-name override)))
@@ -1887,7 +1901,10 @@ the name is always included.  If `bbdb-dwim-net-address-allow-redundancy' is
           (if (equal fn "") (setq fn nil))
           (if (equal ln "") (setq ln nil)))
       (setq fn (bbdb-record-firstname record)
-            ln (bbdb-record-lastname record)))
+            ln (bbdb-record-lastname record))
+      (if (setq title bbdb-dwim-net-address-title-field
+                title (if title (bbdb-record-getprop record title)))
+          (setq name (concat title " " name))))
     ;; if the name contains backslashes or double-quotes, backslash them.
     (if name
         (while (setq i (string-match "[\\\"]" name i))
@@ -1896,7 +1913,7 @@ the name is always included.  If `bbdb-dwim-net-address-allow-redundancy' is
     (cond ((eq 'netonly bbdb-dwim-net-address-allow-redundancy)
            net)
           ((or (null name)
-               (if (not bbdb-dwim-net-address-allow-redundancy)
+               (if (not (or title bbdb-dwim-net-address-allow-redundancy))
                    (cond ((and fn ln)
                           (or (string-match
                                (concat "\\`[^!@%]*\\b" (regexp-quote fn)

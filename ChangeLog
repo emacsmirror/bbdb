@@ -1,9 +1,15 @@
+2007-12-05  Robert Widhopf-Fenk  <bbdb@robf.de>
+
+	* lisp/bbdb-com.el (bbdb-dwim-net-address-title-field): New field
+	controlling if a title is prepended to an email address.  The
+	default value is 'title.
+
 2007-11-26  Leo  <sdl.web@gmail.com>
 
 	* lisp/bbdb-com.el (bbdb-get-addresses): Minor cleanup and fix an
 	bug (unquoted leading "(")in a doc string.
 	
-2007-11-26  Robert Widhopf-Fenk  <widhopf@matilda>
+2007-11-26  Robert Widhopf-Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb.el (bbdb-annotate-message-sender): Normalize and unify
 	names before comparing them to avoid detecting a name change where
