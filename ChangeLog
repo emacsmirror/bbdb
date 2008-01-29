@@ -1,5 +1,10 @@
 2008-01-29  Didier Verna  <didier@xemacs.org>
 
+	* lisp/bbdb-com.el (bbdb-define-all-aliases): Rewrite docstring
+	and format it properly for describe-function.
+
+2008-01-29  Didier Verna  <didier@xemacs.org>
+
 	* lisp/bbdb-com.el (bbdb-collect-all-aliases): Fix infite loop due
 	to misplaced iteration. This occurred when triggering the warning.
 

@@ -2786,33 +2786,37 @@ Other nets are formatted by `bbdb-dwim-net-address'."
 ;;;###autoload
 (defun bbdb-define-all-aliases ()
   "Define mail aliases for some of the records in the database.
-Every record which has a `mail-alias' field will have a mail alias defined for
-it which is the contents of that field.  If there are multiple comma-separated
-words in the `mail-alias' field, then all of those words will be defined as
-aliases for that person.
+Every record which has a `mail-alias' field \(but see
+`bbdb-define-all-aliases-field') will have a mail alias defined for it
+which is the contents of that field.  If there are multiple
+comma-separated words in this field, then all of those words will be
+defined as aliases for that record.
 
-If multiple entries in the database have the same mail alias, then that alias
-expands to a comma-separated list of the primary network addresses of all of
-those people.
+If multiple entries in the database have the same mail alias, then
+that alias expands to a comma-separated list of the primary network
+addresses of all of those people.
 
-An alias ending in \"*\" it will be expanded to all the nets of the record.
-An alias ending in \"[NTH]\" will expand the the NTH net of the record.
+An alias ending in \"*\" will expand to all the nets of the record.
+An alias ending in \"[NTH]\" will expand the the NTH net of the
+record.
 
-Special nets exist and expand to other nets using one of `bbdb-magic-net-*' or
-`bbdb-magic-net-1' functions or user defined function.  Still also magic nets
-may not contain the comma character.   If you have to use it put it into an
-own magic net function or us the octal escape sequence \"\\054\".
+Special nets exist and expand to other nets using one of
+`bbdb-magic-net-*', `bbdb-magic-net-1' or `bbdb-magic-net-SOMETHING'.
+Magic nets may not contain any comma character. If you need one, please
+put it into a custom magic net function or use the octal escape
+sequence \"\\054\".
 
-Nets matching \"FUNCTION/ARG\", i.e. they have at least one \"/\" character in
-them, will be passed to the function `bbdb-magic-net-FUNCTION' with the string
-argument ARG.
+Nets matching \"FUNCTION/ARG\" (i.e. containing at least one \"/\")
+will be passed to the function `bbdb-magic-net-FUNCTION' with the
+string argument ARG.
 
-Nets starting with a \"(\" will be considered as a lisp list, where the
-first list element is prefixed by `bbdb-magic-net' and then called
-as function with the rest of the list as arguments.
+Nets starting with a \"(\" will be considered as a lisp list where the
+first element is prefixed by `bbdb-magic-net-' and then called as a
+function with the rest of the list as arguments.
 
-Nets which do not contain an \"@\" and exist as alias are expanded recursively.
-This can be used to define hierarchical aliases.
+Nets which do not contain an \"@\" character and also exist as aliases
+are expanded recursively.  This can be used to define hierarchical
+aliases.
 
 Other nets are formatted by `bbdb-dwim-net-address'."
   (interactive "")
