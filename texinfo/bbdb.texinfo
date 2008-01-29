@@ -4,10 +4,6 @@
 @settitle Insidious Big Brother Database User Manual
 @c %**end of header
 
-@c
-@c $Id$
-@c
-
 @ifinfo
 @dircategory Emacs
 @direntry
@@ -16,8 +12,7 @@
 
 This file documents the Insidious Big Brother Database
 
-This is edition $Revision$ of the BBDB User Manual for BBDB
-version 2.34.
+This is the BBDB User Manual for BBDB version 2.36.
 
 Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
@@ -29,7 +24,6 @@ Copyright (c) 2000-present The BBDB Development Team
 @titlepage
 @title BBDB User Manual
 @subtitle A phone number and address database program for Emacs
-@subtitle Edition $Revision$, $Date$
 
 @author by Jamie Zawinski, Matt Simmons and the BBDB Development Team
 @page
@@ -38,10 +32,6 @@ Copyright @copyright{} 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 Copyright @copyright{} 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
 Copyright @copyright{} 2000-present The BBDB Development Team
-
-@sp 2
-This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
-version 2.34, $Date$.@refill
 
 @sp 2
 

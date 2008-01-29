@@ -3,7 +3,6 @@ dnl configure.ac --- configuration setup for BBDB
 dnl Author:        Didier Verna <didier@xemacs.org>
 dnl Maintainer:    Didier Verna <didier@xemacs.org>, Waider <waider@waider.ie>
 dnl Created:       Tue Nov 14 18:28:52 2000
-dnl Last Revision: $Date$
 
 dnl Copyright (C) 2000-2001 Didier Verna
 
@@ -30,7 +29,6 @@ BBDB_PRE_INIT
 AC_INIT([BBDB], [BBDB_VERSION], [bbdb-info@lists.sourceforge.net])
 
 AC_COPYRIGHT([Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>.])
-AC_REVISION([$Revision$])
 
 AC_CONFIG_SRCDIR([configure.ac])
 dnl We only have install-sh right now, so it's not worth adding an aux
