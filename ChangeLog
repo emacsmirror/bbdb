@@ -20,6 +20,12 @@
 	* lisp/bbdb-com.el (bbdb-collect-all-aliases): Fix infite loop due
 	to misplaced iteration. This occurred when triggering the warning.
 
+2007-12-08  Kousik Nandy <kousik.nandy@gmail.com>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-get-author):
+	bbdb/gnus-summary-get-author() fails if no To/Cc/Newsgroup is
+	present (in newer Gnus)
+
 2007-12-05  Robert Widhopf-Fenk  <bbdb@robf.de>
 
 	* lisp/bbdb-com.el (bbdb-dwim-net-address-title-field): New field
