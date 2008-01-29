@@ -52,9 +52,9 @@
   ;; any of these functions, bad things will happen. Again, FITNR.
   (if (featurep 'xemacs)
       (progn
-        (fset 'bbdb-extent-string 'extent-string)
-        (fset 'bbdb-display-message 'display-message)
-        (fset 'bbdb-event-to-character 'event-to-character))
+	(fset 'bbdb-extent-string 'extent-string)
+	(fset 'bbdb-display-message 'display-message)
+	(fset 'bbdb-event-to-character 'event-to-character))
     (fset 'bbdb-extent-string 'ignore)
     (fset 'bbdb-display-message 'ignore)
     (fset 'bbdb-event-to-character 'ignore)))
@@ -76,8 +76,8 @@ See bbdb-extract-address-components for an example."
 
 (defmacro bbdb-grovel-elide-arg (arg)
   (list 'if arg
-        (list 'not (list 'eq arg 0))
-        'bbdb-display-layout))
+	(list 'not (list 'eq arg 0))
+	'bbdb-display-layout))
 
 (defvar bbdb-search-invert nil
   "Bind this variable to t in order to invert the result of `bbdb-search'.
@@ -101,7 +101,7 @@ do repeated inverted searches."
   (interactive)
   (setq bbdb-search-invert t)
   (message (substitute-command-keys
-            "\\<bbdb-mode-map>\\[bbdb-search-invert-set] - ")))
+	    "\\<bbdb-mode-map>\\[bbdb-search-invert-set] - ")))
 
 (defmacro bbdb-search (records &optional name company net notes phone)
   "Search RECORDS for optional arguments NAME, COMPANY, NET, NOTES, PHONE.
@@ -119,104 +119,104 @@ If you want to reverse the search, bind `bbdb-search-invert' to t."
     (or (stringp notes) (symbolp notes) (error "notes must be atomic"))
     (or (stringp phone) (symbolp phone) (error "phone must be atomic"))
     (if phone
-        (setq clauses
-              (cons
-               (` (let ((rest-of-phones (bbdb-record-phones record))
-                        (done nil))
-                    (if rest-of-phones
-                        (while (and rest-of-phones (not done))
-                          (setq done (string-match (, phone)
-                                                   ;; way way wasteful...
-                                                   (bbdb-phone-string
-                                                    (car rest-of-phones)))
-                                rest-of-phones (cdr rest-of-phones)))
-                      ;; so that "^$" can be used to find entries that
-                      ;; have no phones
-                      (setq done (string-match (, phone) "")))
-                    done))
-               clauses)))
+	(setq clauses
+	      (cons
+	       (` (let ((rest-of-phones (bbdb-record-phones record))
+			(done nil))
+		    (if rest-of-phones
+			(while (and rest-of-phones (not done))
+			  (setq done (string-match (, phone)
+						   ;; way way wasteful...
+						   (bbdb-phone-string
+						    (car rest-of-phones)))
+				rest-of-phones (cdr rest-of-phones)))
+		      ;; so that "^$" can be used to find entries that
+		      ;; have no phones
+		      (setq done (string-match (, phone) "")))
+		    done))
+	       clauses)))
     (if notes
-        (setq clauses
-              (cons
-               (` (if (stringp (, notes))
-                      (string-match (, notes)
-                                    (or (bbdb-record-notes record) ""))
-                    (if (eq (car (, notes)) '*)
-                        (let ((fields all-fields) done tmp)
-                          (if (bbdb-record-raw-notes record)
-                              (while (and (not done) fields)
-                                (setq tmp (bbdb-record-getprop
-                                           record (car fields))
-                                      done (and tmp (string-match
-                                                     (cdr (, notes))
-                                                     tmp))
-                                      fields (cdr fields)))
-                            ;; so that "^$" can be used to find entries that
-                            ;; have no notes
-                            (setq done (string-match (cdr (, notes)) "")))
-                          done)
-                      (string-match (cdr (, notes))
-                                    (or (bbdb-record-getprop
-                                         record (car (, notes))) "")))))
-               clauses)))
+	(setq clauses
+	      (cons
+	       (` (if (stringp (, notes))
+		      (string-match (, notes)
+				    (or (bbdb-record-notes record) ""))
+		    (if (eq (car (, notes)) '*)
+			(let ((fields all-fields) done tmp)
+			  (if (bbdb-record-raw-notes record)
+			      (while (and (not done) fields)
+				(setq tmp (bbdb-record-getprop
+					   record (car fields))
+				      done (and tmp (string-match
+						     (cdr (, notes))
+						     tmp))
+				      fields (cdr fields)))
+			    ;; so that "^$" can be used to find entries that
+			    ;; have no notes
+			    (setq done (string-match (cdr (, notes)) "")))
+			  done)
+		      (string-match (cdr (, notes))
+				    (or (bbdb-record-getprop
+					 record (car (, notes))) "")))))
+	       clauses)))
     (if name
-        (setq clauses
-              (append
-               (` ((string-match (, name) (or (bbdb-record-name record) ""))
-                   (let ((rest-of-aka (bbdb-record-aka record))
-                         (done nil))
-                     (while (and rest-of-aka (not done))
-                       (setq done (string-match (, name) (car rest-of-aka))
-                             rest-of-aka (cdr rest-of-aka)))
-                     done)))
-               clauses)))
+	(setq clauses
+	      (append
+	       (` ((string-match (, name) (or (bbdb-record-name record) ""))
+		   (let ((rest-of-aka (bbdb-record-aka record))
+			 (done nil))
+		     (while (and rest-of-aka (not done))
+		       (setq done (string-match (, name) (car rest-of-aka))
+			     rest-of-aka (cdr rest-of-aka)))
+		     done)))
+	       clauses)))
     (if net
-        (setq clauses
-              (cons
-               (` (let ((rest-of-nets (bbdb-record-net record))
-                        (done nil))
-                    (if rest-of-nets
-                        (while (and rest-of-nets (not done))
-                          (setq done (string-match (, net) (car rest-of-nets))
-                                rest-of-nets (cdr rest-of-nets)))
-                      ;; so that "^$" can be used to find entries that
-                      ;; have no net addresses.
-                      (setq done (string-match (, net) "")))
-                    done))
-               clauses)))
+	(setq clauses
+	      (cons
+	       (` (let ((rest-of-nets (bbdb-record-net record))
+			(done nil))
+		    (if rest-of-nets
+			(while (and rest-of-nets (not done))
+			  (setq done (string-match (, net) (car rest-of-nets))
+				rest-of-nets (cdr rest-of-nets)))
+		      ;; so that "^$" can be used to find entries that
+		      ;; have no net addresses.
+		      (setq done (string-match (, net) "")))
+		    done))
+	       clauses)))
     (if company
-        (setq clauses
-              (cons
-               (` (string-match (, company)
-                                (or (bbdb-record-company record) "")))
-               clauses)))
+	(setq clauses
+	      (cons
+	       (` (string-match (, company)
+				(or (bbdb-record-company record) "")))
+	       clauses)))
 
     (` (let ((matches '())
-             (,@ (if notes
-                     '((all-fields (cons 'notes
-                                         (mapcar (lambda (x) (intern (car x)))
-                                                 (bbdb-propnames)))))
-                   nil))
-             (case-fold-search bbdb-case-fold-search)
-             (records (, records))
-         (invert (bbdb-search-invert-p))
-             record)
-         (while records
-           (setq record (car records))
+	     (,@ (if notes
+		     '((all-fields (cons 'notes
+					 (mapcar (lambda (x) (intern (car x)))
+						 (bbdb-propnames)))))
+		   nil))
+	     (case-fold-search bbdb-case-fold-search)
+	     (records (, records))
+	 (invert (bbdb-search-invert-p))
+	     record)
+	 (while records
+	   (setq record (car records))
        (if (or (and invert
-            (not (or (,@ clauses))))
-           (and (not invert)
-            (or (,@ clauses))))
-           (setq matches (cons record matches)))
+	    (not (or (,@ clauses))))
+	   (and (not invert)
+	    (or (,@ clauses))))
+	   (setq matches (cons record matches)))
        (setq records (cdr records)))
-         (nreverse matches)))))
+	 (nreverse matches)))))
 
 (defun bbdb-search-prompt (prompt &rest rest)
   (if (string-match "%m" prompt)
       (setq prompt (replace-match (if bbdb-search-invert
-                                      "not matching"
-                                    "matching")
-                                  nil nil prompt)))
+				      "not matching"
+				    "matching")
+				  nil nil prompt)))
   (read-string (apply 'format prompt rest)))
 
 ;;;###autoload
@@ -225,14 +225,14 @@ If you want to reverse the search, bind `bbdb-search-invert' to t."
 in either the name(s), company, network address, or notes."
   (interactive
    (list (bbdb-search-prompt "Search records %m regexp: ")
-         current-prefix-arg))
+	 current-prefix-arg))
   (let* ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
-         (notes (cons '* string))
-         (records
-          (bbdb-search (bbdb-records) string string string notes
-                       nil)))
+	 (notes (cons '* string))
+	 (records
+	  (bbdb-search (bbdb-records) string string string notes
+		       nil)))
     (if records
-        (bbdb-display-records records)
+	(bbdb-display-records records)
       ;; we could use error here, but it's not really an error.
       (message "No records matching '%s'" string))))
 
@@ -242,7 +242,7 @@ in either the name(s), company, network address, or notes."
 \(or ``alternate'' names\)."
   (interactive
    (list (bbdb-search-prompt "Search records with names %m regexp: ")
-         current-prefix-arg))
+	 current-prefix-arg))
    (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) string))))
 
@@ -251,7 +251,7 @@ in either the name(s), company, network address, or notes."
   "Display all entries in BBDB matching STRING in the company field."
   (interactive
    (list (bbdb-search-prompt "Search records with company %m regexp: ")
-         current-prefix-arg))
+	 current-prefix-arg))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) nil string))))
 
@@ -260,7 +260,7 @@ in either the name(s), company, network address, or notes."
   "Display all entries in BBDB matching regexp STRING in the network address."
   (interactive
    (list (bbdb-search-prompt "Search records with net address %m regexp: ")
-         current-prefix-arg))
+	 current-prefix-arg))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records (bbdb-search (bbdb-records) nil nil string))))
 
@@ -270,24 +270,24 @@ in either the name(s), company, network address, or notes."
   (interactive
    (let (field)
      (list (setq field (completing-read "Notes field to search (RET for all): "
-                                        (append '(("notes")) (bbdb-propnames))
-                                        nil t))
+					(append '(("notes")) (bbdb-propnames))
+					nil t))
 	   (bbdb-search-prompt "Search records with %s %m regexp: "
 			       (if (string= field "")
 				   "one field"
 				 field))
-           current-prefix-arg)))
+	   current-prefix-arg)))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
-        (notes (if (string= which "")
-                   (cons '* string)
-                 (cons (intern which) string))))
+	(notes (if (string= which "")
+		   (cons '* string)
+		 (cons (intern which) string))))
     (bbdb-display-records (bbdb-search (bbdb-records) nil nil nil notes))))
 
 (defun bbdb-phones (string elidep)
   "Display all entries in BBDB matching the regexp STRING in the phones field."
   (interactive
    (list (bbdb-search-prompt "Search records with phone %m regexp: ")
-         current-prefix-arg))
+	 current-prefix-arg))
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep)))
     (bbdb-display-records
      (bbdb-search (bbdb-records) nil nil nil nil string))))
@@ -298,18 +298,18 @@ in either the name(s), company, network address, or notes."
 the database was last saved."
   (interactive "P")
   (let ((bbdb-display-layout (bbdb-grovel-elide-arg elidep))
-        (changed-records  (bbdb-with-db-buffer bbdb-changed-records)))
+	(changed-records  (bbdb-with-db-buffer bbdb-changed-records)))
     (if (bbdb-search-invert-p)
-        (let ((recs (bbdb-records))
-              unchanged-records
-              r)
-          (while recs
-            (setq r (car recs)
-                  recs (cdr recs))
-            (when (not (member r changed-records))
-              (setq changed-records (delete r changed-records)
-                    unchanged-records (cons r unchanged-records))))
-          (bbdb-display-records unchanged-records))
+	(let ((recs (bbdb-records))
+	      unchanged-records
+	      r)
+	  (while recs
+	    (setq r (car recs)
+		  recs (cdr recs))
+	    (when (not (member r changed-records))
+	      (setq changed-records (delete r changed-records)
+		    unchanged-records (cons r unchanged-records))))
+	  (bbdb-display-records unchanged-records))
       (bbdb-display-records changed-records))))
 
 (defun bbdb-display (records)
@@ -331,7 +331,7 @@ be returned."
   "Regrinds the contents of the *BBDB* buffer, without scrolling.
 If possible, you should call `bbdb-redisplay-one-record' instead."
   (let ((p (point))
-        (m (condition-case nil (mark) (error nil))))
+	(m (condition-case nil (mark) (error nil))))
     (goto-char (window-start))
     (let ((p2 (point)))
       (bbdb-display-records-1 bbdb-records)
@@ -343,40 +343,40 @@ If possible, you should call `bbdb-redisplay-one-record' instead."
       (run-hooks 'bbdb-list-hook))))
 
 (defun bbdb-redisplay-one-record (record &optional record-cons next-record-cons
-                                         delete-p)
+					 delete-p)
   "Regrind one record. The *BBDB* buffer must be current when this is called."
   (bbdb-debug (if (not (eq (not (not delete-p))
-                           (not (not (bbdb-record-deleted-p record)))))
-                  (error "splorch.")))
+			   (not (not (bbdb-record-deleted-p record)))))
+		  (error "splorch.")))
   (if (null record-cons) (setq record-cons (assq record bbdb-records)))
   (if (null next-record-cons)
       (setq next-record-cons (car (cdr (memq record-cons bbdb-records)))))
   (if (null record-cons)
       (bbdb-display-records (list record) nil t)
     (let ((position (point))
-          (marker (nth 2 record-cons))
-          next-marker
-          (buffer-read-only nil))
+	  (marker (nth 2 record-cons))
+	  next-marker
+	  (buffer-read-only nil))
       (bbdb-debug
        (if (null record-cons) (error "doubleplus ungood: record unexists!"))
        (if (null marker) (error "doubleplus ungood: marker unexists!")))
       (beginning-of-line)
       (goto-char marker)
       (remove-text-properties marker (or (nth 2 next-record-cons) (point-max))
-                              '(bbdb-field nil))
+			      '(bbdb-field nil))
       (if delete-p nil
-        (bbdb-format-record (car record-cons) (car (cdr record-cons))))
+	(bbdb-format-record (car record-cons) (car (cdr record-cons))))
       (setq next-marker (or (nth 2 next-record-cons) (point-max)))
       (delete-region (point) next-marker)
       (if (< position next-marker)
-          (goto-char position))
+	  (goto-char position))
 
       (if (and bbdb-gui (not delete-p))
-          (bbdb-fontify-buffer (list record-cons
-                                     ;; the record ends here
-                                     (list nil nil next-marker))))
+	  (bbdb-fontify-buffer (list record-cons
+				     ;; the record ends here
+				     (list nil nil next-marker))))
       (save-excursion
-        (run-hooks 'bbdb-list-hook)))))
+	(run-hooks 'bbdb-list-hook)))))
 
 ;;; Parsing phone numbers
 ;;; XXX this needs expansion to handle international prefixes properly
@@ -427,28 +427,28 @@ Note that \"4151212123\" is ambiguous; it could be interpreted either as
 is nil...\)"
 
   (cond ((if number-type
-             (eq number-type 'euro)
-           (not bbdb-north-american-phone-numbers-p))
-         (list (bbdb-string-trim string)))
-        ((string-match bbdb-phone-regexp-1 string)
-         ;; (415) 555-1212 x123
-         (list (bbdb-subint string 1) (bbdb-subint string 2)
-               (bbdb-subint string 3) (bbdb-subint string 4)))
-        ((string-match bbdb-phone-regexp-2 string)
-         ;; (415) 555-1212
-         (list (bbdb-subint string 1) (bbdb-subint string 2)
-               (bbdb-subint string 3)))
-        ((string-match bbdb-phone-regexp-3 string)
-         ;; 555-1212 x123
-         (list 0 (bbdb-subint string 1) (bbdb-subint string 2)
-               (bbdb-subint string 3)))
-        ((string-match bbdb-phone-regexp-4 string)
-         ;; 555-1212
-         (list 0 (bbdb-subint string 1) (bbdb-subint string 2)))
-        ((string-match bbdb-phone-regexp-5 string)
-         ;; x123
-         (list 0 0 0 (bbdb-subint string 1)))
-        (t (error "phone number unparsable."))))
+	     (eq number-type 'euro)
+	   (not bbdb-north-american-phone-numbers-p))
+	 (list (bbdb-string-trim string)))
+	((string-match bbdb-phone-regexp-1 string)
+	 ;; (415) 555-1212 x123
+	 (list (bbdb-subint string 1) (bbdb-subint string 2)
+	       (bbdb-subint string 3) (bbdb-subint string 4)))
+	((string-match bbdb-phone-regexp-2 string)
+	 ;; (415) 555-1212
+	 (list (bbdb-subint string 1) (bbdb-subint string 2)
+	       (bbdb-subint string 3)))
+	((string-match bbdb-phone-regexp-3 string)
+	 ;; 555-1212 x123
+	 (list 0 (bbdb-subint string 1) (bbdb-subint string 2)
+	       (bbdb-subint string 3)))
+	((string-match bbdb-phone-regexp-4 string)
+	 ;; 555-1212
+	 (list 0 (bbdb-subint string 1) (bbdb-subint string 2)))
+	((string-match bbdb-phone-regexp-5 string)
+	 ;; x123
+	 (list 0 0 0 (bbdb-subint string 1)))
+	(t (error "phone number unparsable."))))
 
 ;;; Parsing other things
 
@@ -491,10 +491,10 @@ Whether this is used at all depends on the variable `bbdb-check-zip-codes-p'."
   "Check whether STRING is a legal zip code.
 Do this only if `bbdb-check-zip-codes-p' is non-nil."
   (if (and bbdb-check-zip-codes-p
-           (not (memq t (mapcar (lambda (regexp)
-                                  ;; if it matches, (not (not index-of-match)) returns t
-                                  (not (not (string-match regexp string))))
-                                bbdb-legal-zip-codes))))
+	   (not (memq t (mapcar (lambda (regexp)
+				  ;; if it matches, (not (not index-of-match)) returns t
+				  (not (not (string-match regexp string))))
+				bbdb-legal-zip-codes))))
       (error "not a valid zip code.")
     string))
 
@@ -509,73 +509,73 @@ ensure that there will not be name collisions."
     (bbdb-error-retry
      (progn
        (if current-prefix-arg
-           (setq firstname (bbdb-read-string "First Name: ")
-                 lastname (bbdb-read-string "Last Name: "))
-         (let ((names (bbdb-divide-name (bbdb-read-string "Name: "))))
-           (setq firstname (car names)
-                 lastname (nth 1 names))))
+	   (setq firstname (bbdb-read-string "First Name: ")
+		 lastname (bbdb-read-string "Last Name: "))
+	 (let ((names (bbdb-divide-name (bbdb-read-string "Name: "))))
+	   (setq firstname (car names)
+		 lastname (nth 1 names))))
        (if (string= firstname "") (setq firstname nil))
        (if (string= lastname "") (setq lastname nil))
        (if (and bbdb-no-duplicates-p
-                (bbdb-gethash (bbdb-build-name firstname lastname)))
-           (error "%s %s is already in the database"
-                  (or firstname "") (or lastname "")))))
+		(bbdb-gethash (bbdb-build-name firstname lastname)))
+	   (error "%s %s is already in the database"
+		  (or firstname "") (or lastname "")))))
     (let ((company (bbdb-read-string "Company: "))
-          (net (bbdb-split (bbdb-read-string "Network Address: ") ","))
-          (addrs
-           (let (L L-tail str addr)
-             (while (not (string=
-                          ""
-                          (setq str
-                                (bbdb-read-string
-                                 "Address Description [RET when no more]: "
-                                 ""
-                                 (mapcar (function (lambda(x) (list x)))
-                                         (bbdb-label-completion-list
-                                          "addresses"))))))
-               (setq addr (make-vector bbdb-address-length nil))
-               (bbdb-record-edit-address addr str)
-               (if L
-                   (progn (setcdr L-tail (cons addr nil))
-                          (setq L-tail (cdr L-tail)))
-                 (setq L (cons addr nil)
-                       L-tail L)))
-             L))
-          (phones
-           (let (L L-tail str)
-             (while (not (string=
-                          ""
-                          (setq str
-                                (bbdb-read-string
-                                 "Phone Location [RET when no more]: "
-                                 ""
-                                 (mapcar (function (lambda(x) (list x)))
-                                         (bbdb-label-completion-list
-                                          "phones"))))))
-               (let* ((phonelist
-                       (bbdb-error-retry
-                        (bbdb-parse-phone-number
-                         (read-string "Phone: "
-                                      (and (integerp bbdb-default-area-code)
-                                           (format "(%03d) "
-                                                   bbdb-default-area-code))))))
-                      (phone (apply 'vector str
-                                    (if (= 3 (length phonelist))
-                                        (nconc phonelist '(0))
-                                      phonelist))))
-                 (if L
-                     (progn (setcdr L-tail (cons phone nil))
-                            (setq L-tail (cdr L-tail)))
-                          (setq L (cons phone nil)
-                                L-tail L))))
-                    L))
-          (notes (bbdb-read-string "Additional Comments: ")))
+	  (net (bbdb-split (bbdb-read-string "Network Address: ") ","))
+	  (addrs
+	   (let (L L-tail str addr)
+	     (while (not (string=
+			  ""
+			  (setq str
+				(bbdb-read-string
+				 "Address Description [RET when no more]: "
+				 ""
+				 (mapcar (function (lambda(x) (list x)))
+					 (bbdb-label-completion-list
+					  "addresses"))))))
+	       (setq addr (make-vector bbdb-address-length nil))
+	       (bbdb-record-edit-address addr str)
+	       (if L
+		   (progn (setcdr L-tail (cons addr nil))
+			  (setq L-tail (cdr L-tail)))
+		 (setq L (cons addr nil)
+		       L-tail L)))
+	     L))
+	  (phones
+	   (let (L L-tail str)
+	     (while (not (string=
+			  ""
+			  (setq str
+				(bbdb-read-string
+				 "Phone Location [RET when no more]: "
+				 ""
+				 (mapcar (function (lambda(x) (list x)))
+					 (bbdb-label-completion-list
+					  "phones"))))))
+	       (let* ((phonelist
+		       (bbdb-error-retry
+			(bbdb-parse-phone-number
+			 (read-string "Phone: "
+				      (and (integerp bbdb-default-area-code)
+					   (format "(%03d) "
+						   bbdb-default-area-code))))))
+		      (phone (apply 'vector str
+				    (if (= 3 (length phonelist))
+					(nconc phonelist '(0))
+				      phonelist))))
+		 (if L
+		     (progn (setcdr L-tail (cons phone nil))
+			    (setq L-tail (cdr L-tail)))
+			  (setq L (cons phone nil)
+				L-tail L))))
+		    L))
+	  (notes (bbdb-read-string "Additional Comments: ")))
       (if (string= company "") (setq company nil))
       (if (string= notes "") (setq notes nil))
       (let ((record
-             (vector firstname lastname nil company phones addrs net notes
-                     (make-vector bbdb-cache-length nil))))
-        record))))
+	     (vector firstname lastname nil company phones addrs net notes
+		     (make-vector bbdb-cache-length nil))))
+	record))))
 
 ;;;###autoload
 (defun bbdb-create (record)
@@ -591,16 +591,16 @@ bbdb-create-internal instead."
 
 (defmacro bbdb-check-type (place predicate)
   (list 'while (list 'not (list predicate place))
-        (nconc (cond ((eq (car-safe place) 'aref)
-                      (list 'aset (nth 1 place) (nth 2 place)))
-                     ((eq (car-safe place) 'car)
-                      (list 'setcar (nth 1 place)))
-                     ((eq (car-safe place) 'cdr)
-                      (list 'setcdr (nth 1 place)))
-                     (t (list 'setq place)))
-               (list
-                (list 'signal ''wrong-type-argument
-                      (list 'list (list 'quote predicate) place))))))
+	(nconc (cond ((eq (car-safe place) 'aref)
+		      (list 'aset (nth 1 place) (nth 2 place)))
+		     ((eq (car-safe place) 'car)
+		      (list 'setcar (nth 1 place)))
+		     ((eq (car-safe place) 'cdr)
+		      (list 'setcdr (nth 1 place)))
+		     (t (list 'setq place)))
+	       (list
+		(list 'signal ''wrong-type-argument
+		      (list 'list (list 'quote predicate) place))))))
 
 (defun bbdb-create-internal (name company net addrs phones notes)
   "Adds a record to the database; this function does a fair amount of
@@ -622,71 +622,71 @@ or
 NOTES is a string, or an alist associating symbols with strings."
   (let (firstname lastname aka)
     (while (and (progn
-                  (setq name      (and name (bbdb-divide-name name))
-                        firstname (car name)
-                        lastname  (nth 1 name))
-                  (bbdb-gethash (bbdb-build-name firstname lastname)))
-                bbdb-no-duplicates-p)
+		  (setq name      (and name (bbdb-divide-name name))
+			firstname (car name)
+			lastname  (nth 1 name))
+		  (bbdb-gethash (bbdb-build-name firstname lastname)))
+		bbdb-no-duplicates-p)
       (setq name (signal 'error
-                         (list (format "%s %s is already in the database"
-                                       (or firstname "") (or lastname ""))))))
+			 (list (format "%s %s is already in the database"
+				       (or firstname "") (or lastname ""))))))
     (and company (bbdb-check-type company stringp))
     (if (stringp net)
-        (setq net (bbdb-split net ",")))
+	(setq net (bbdb-split net ",")))
     (if bbdb-no-duplicates-p
-        (let ((rest net))
-          (while rest
-            (while (bbdb-gethash (downcase (car rest)))
-              (setcar rest
-                      (signal 'error (list (format
-                                            "%s is already in the database"
-                                            (car rest))))))
-            (setq rest (cdr rest)))))
+	(let ((rest net))
+	  (while rest
+	    (while (bbdb-gethash (downcase (car rest)))
+	      (setcar rest
+		      (signal 'error (list (format
+					    "%s is already in the database"
+					    (car rest))))))
+	    (setq rest (cdr rest)))))
     (setq addrs
-          (mapcar
-           (lambda (addr)
-             (while (or (not (vectorp addr))
-                        (/= (length addr) bbdb-address-length))
-               (setq addr (signal 'wrong-type-argument (list 'vectorp addr))))
-             (bbdb-check-type (aref addr 0) stringp) ;;; XXX use bbdb-addresses
-             (bbdb-check-type (aref addr 1) listp)
-             (bbdb-check-type (aref addr 2) stringp)
-             (bbdb-check-type (aref addr 3) stringp)
-             (bbdb-check-type (aref addr 4) stringp)
-             (bbdb-check-type (aref addr 5) stringp)
-             addr)
-           addrs))
+	  (mapcar
+	   (lambda (addr)
+	     (while (or (not (vectorp addr))
+			(/= (length addr) bbdb-address-length))
+	       (setq addr (signal 'wrong-type-argument (list 'vectorp addr))))
+	     (bbdb-check-type (aref addr 0) stringp) ;;; XXX use bbdb-addresses
+	     (bbdb-check-type (aref addr 1) listp)
+	     (bbdb-check-type (aref addr 2) stringp)
+	     (bbdb-check-type (aref addr 3) stringp)
+	     (bbdb-check-type (aref addr 4) stringp)
+	     (bbdb-check-type (aref addr 5) stringp)
+	     addr)
+	   addrs))
     (setq phones
-          (mapcar
-           (lambda (phone)
-             (while (or (not (vectorp phone))
-                        (and (/= (length phone) 2)
-                             (/= (length phone) bbdb-phone-length)))
-               (setq phone
-                     (signal 'wrong-type-argument (list 'vectorp phone))))
-             (bbdb-check-type (aref phone 0) stringp)
-             (if (= 2 (length phone))
-                 (bbdb-check-type (aref phone 1) stringp)
-               (bbdb-check-type (aref phone 1) integerp)
-               (bbdb-check-type (aref phone 2) integerp)
-               (bbdb-check-type (aref phone 3) integerp)
-               (and (aref phone 4) (bbdb-check-type (aref phone 4) integerp))
-               (if (eq 0 (aref phone 4)) (aset phone 4 nil)))
-             phone)
-           phones))
+	  (mapcar
+	   (lambda (phone)
+	     (while (or (not (vectorp phone))
+			(and (/= (length phone) 2)
+			     (/= (length phone) bbdb-phone-length)))
+	       (setq phone
+		     (signal 'wrong-type-argument (list 'vectorp phone))))
+	     (bbdb-check-type (aref phone 0) stringp)
+	     (if (= 2 (length phone))
+		 (bbdb-check-type (aref phone 1) stringp)
+	       (bbdb-check-type (aref phone 1) integerp)
+	       (bbdb-check-type (aref phone 2) integerp)
+	       (bbdb-check-type (aref phone 3) integerp)
+	       (and (aref phone 4) (bbdb-check-type (aref phone 4) integerp))
+	       (if (eq 0 (aref phone 4)) (aset phone 4 nil)))
+	     phone)
+	   phones))
     (or (stringp notes)
-        (setq notes
-              (mapcar (lambda (note)
-                        (bbdb-check-type note consp)
-                        (bbdb-check-type (car note) symbolp)
-                        (if (consp (cdr note))
-                            (setq note (cons (car note) (car (cdr note)))))
-                        (bbdb-check-type (cdr note) stringp)
-                        note)
-                      notes)))
+	(setq notes
+	      (mapcar (lambda (note)
+			(bbdb-check-type note consp)
+			(bbdb-check-type (car note) symbolp)
+			(if (consp (cdr note))
+			    (setq note (cons (car note) (car (cdr note)))))
+			(bbdb-check-type (cdr note) stringp)
+			note)
+		      notes)))
     (let ((record
-           (vector firstname lastname aka company phones addrs net notes
-                   (make-vector bbdb-cache-length nil))))
+	   (vector firstname lastname aka company phones addrs net notes
+		   (make-vector bbdb-cache-length nil))))
       (bbdb-invoke-hook 'bbdb-create-hook record)
       (bbdb-change-record record t)
       record)))
@@ -700,13 +700,13 @@ NOTES is a string, or an alist associating symbols with strings."
       (error "The Insidious Big Brother Database is read-only."))
   (if (not (equal bbdb-buffer-name (buffer-name (current-buffer))))
       (error "this command only works while in the \"%s\" buffer."
-             bbdb-buffer-name))
+	     bbdb-buffer-name))
   (let ((p (point))
-        (rest bbdb-records)
-        (rec nil))
+	(rest bbdb-records)
+	(rec nil))
     (while (and (cdr rest) (not rec))
       (if (> (nth 2 (car (cdr rest))) p)
-          (setq rec (car (car rest))))
+	  (setq rec (car (car rest))))
       (setq rest (cdr rest)))
     (or rec (car (car rest)))))
 
@@ -714,31 +714,31 @@ NOTES is a string, or an alist associating symbols with strings."
 ;; yow, are we object oriented yet?
 (defun bbdb-record-get-field-internal (record field)
   (cond ((eq field 'name)   (bbdb-record-name record))
-        ((eq field 'net)    (bbdb-record-net record))
-        ((eq field 'aka)    (bbdb-record-aka record))
-        ((eq field 'phone)  (bbdb-record-phones record))
-        ((eq field 'address)    (bbdb-record-addresses record))
-        ((eq field 'property)   (bbdb-record-raw-notes record))
-        (t (error "doubleplus ungood: unknown field type %s" field))))
+	((eq field 'net)    (bbdb-record-net record))
+	((eq field 'aka)    (bbdb-record-aka record))
+	((eq field 'phone)  (bbdb-record-phones record))
+	((eq field 'address)    (bbdb-record-addresses record))
+	((eq field 'property)   (bbdb-record-raw-notes record))
+	(t (error "doubleplus ungood: unknown field type %s" field))))
 
 (defun bbdb-record-store-field-internal (record field value)
   (cond ((eq field 'name)   (error "doesn't work on names"))
-        ((eq field 'net)    (bbdb-record-set-net record value))
-        ((eq field 'aka)    (bbdb-record-set-aka record value))
-        ((eq field 'phone)  (bbdb-record-set-phones record value))
-        ((eq field 'address)    (bbdb-record-set-addresses record value))
-        ((eq field 'property)   (bbdb-record-set-raw-notes record value))
-        (t (error "doubleplus ungood: unknown field type %s" field))))
+	((eq field 'net)    (bbdb-record-set-net record value))
+	((eq field 'aka)    (bbdb-record-set-aka record value))
+	((eq field 'phone)  (bbdb-record-set-phones record value))
+	((eq field 'address)    (bbdb-record-set-addresses record value))
+	((eq field 'property)   (bbdb-record-set-raw-notes record value))
+	(t (error "doubleplus ungood: unknown field type %s" field))))
 
 (defun bbdb-record-edit-field-internal (record field &optional which location)
   (cond ((eq field 'name)     (bbdb-record-edit-name record))
-        ((eq field 'company)  (bbdb-record-edit-company record))
-        ((eq field 'net)      (bbdb-record-edit-net record))
-        ((eq field 'aka)      (bbdb-record-edit-aka record))
-        ((eq field 'phone)    (bbdb-record-edit-phone which location))
-        ((eq field 'address)  (bbdb-record-edit-address which location))
-        ((eq field 'property) (bbdb-record-edit-property record (car which)))
-        (t (error "doubleplus ungood: unknown field type %s" field))))
+	((eq field 'company)  (bbdb-record-edit-company record))
+	((eq field 'net)      (bbdb-record-edit-net record))
+	((eq field 'aka)      (bbdb-record-edit-aka record))
+	((eq field 'phone)    (bbdb-record-edit-phone which location))
+	((eq field 'address)  (bbdb-record-edit-address which location))
+	((eq field 'property) (bbdb-record-edit-property record (car which)))
+	(t (error "doubleplus ungood: unknown field type %s" field))))
 
 
 (defun bbdb-current-field (&optional planning-on-modifying)
@@ -754,9 +754,9 @@ of the records currently displayed.  \(Note that this only works for
 certain commands.\)"
   (interactive)
   (message (substitute-command-keys
-            "\\<bbdb-mode-map>\\[bbdb-apply-next-command-to-all-records] - "))
+	    "\\<bbdb-mode-map>\\[bbdb-apply-next-command-to-all-records] - "))
   (setq prefix-arg current-prefix-arg
-        last-command this-command)
+	last-command this-command)
   nil)
 
 (defmacro bbdb-do-all-records-p ()
@@ -769,19 +769,19 @@ certain commands.\)"
 ;;;###autoload
 (defun bbdb-append-records-p ()
   (cond ((eq t bbdb-append-records))
-        ((numberp bbdb-append-records)
-         (setq bbdb-append-records
-               (1- bbdb-append-records))
-         (when (= 0 bbdb-append-records)
-           (when (not bbdb-silent-running)
-             (message "No further search results will be appended.")
-             (sit-for 2))
-           (setq bbdb-append-records nil))
-         t)
-        (bbdb-append-records
-         (setq bbdb-append-records nil)
-         t)
-        (t nil)))
+	((numberp bbdb-append-records)
+	 (setq bbdb-append-records
+	       (1- bbdb-append-records))
+	 (when (= 0 bbdb-append-records)
+	   (when (not bbdb-silent-running)
+	     (message "No further search results will be appended.")
+	     (sit-for 2))
+	   (setq bbdb-append-records nil))
+	 t)
+	(bbdb-append-records
+	 (setq bbdb-append-records nil)
+	 t)
+	(t nil)))
 
 ;;;###autoload
 (defun bbdb-append-records (arg)
@@ -795,19 +795,19 @@ many times.
 With any other argument append will be enabled once."
   (interactive "P")
   (message (substitute-command-keys
-            "\\<bbdb-mode-map>\\[bbdb-append-records] - "))
+	    "\\<bbdb-mode-map>\\[bbdb-append-records] - "))
   (setq bbdb-append-records
-        (cond ((and arg (listp arg))
-               (if (not bbdb-silent-running)
-                   (if (not bbdb-append-records)
-                       (message "Always append records.")
-                     (message "Do not append records.")))
-               (not bbdb-append-records))
-              ((and (numberp arg) (< 1 arg))
-               (if (not bbdb-silent-running)
-                   (message "Append records for the next %d times." arg))
-               arg)
-              (t 'once))))
+	(cond ((and arg (listp arg))
+	       (if (not bbdb-silent-running)
+		   (if (not bbdb-append-records)
+		       (message "Always append records.")
+		     (message "Do not append records.")))
+	       (not bbdb-append-records))
+	      ((and (numberp arg) (< 1 arg))
+	       (if (not bbdb-silent-running)
+		   (message "Append records for the next %d times." arg))
+	       arg)
+	      (t 'once))))
 
 ;;;###autoload
 (defun bbdb-insert-new-field (record name contents)
@@ -829,85 +829,85 @@ depending on your environment, (getenv \"DOMAINNAME\")), and
 just a username.  A prefix arg of ^U (or a `bbdb-default-domain'
 value of \"\", the default) means do not alter the address."
   (interactive (let ((record (or (bbdb-current-record t)
-                                 (error "current record unexists!")))
-                     (name "")
-                     (completion-ignore-case t))
-                 (while (string= name "")
-                   (setq name
-                         (downcase
-                          (completing-read "Insert Field: "
-                                           (append '(("phone") ("address")
-                                                     ("net") ("AKA") ("notes"))
-                                                   (bbdb-propnames))
-                                           nil
-                                           nil ; used to be t
-                                           nil))))
-                 (setq name (intern name))
-                 (list record name (bbdb-prompt-for-new-field-value name))))
+				 (error "current record unexists!")))
+		     (name "")
+		     (completion-ignore-case t))
+		 (while (string= name "")
+		   (setq name
+			 (downcase
+			  (completing-read "Insert Field: "
+					   (append '(("phone") ("address")
+						     ("net") ("AKA") ("notes"))
+						   (bbdb-propnames))
+					   nil
+					   nil ; used to be t
+					   nil))))
+		 (setq name (intern name))
+		 (list record name (bbdb-prompt-for-new-field-value name))))
   (if (null contents)
       (setq contents (bbdb-prompt-for-new-field-value name)))
 
   (cond ((eq name 'phone)
-         (bbdb-record-set-phones record
-                                 (nconc (bbdb-record-phones record)
-                                        (list contents))))
-        ((eq name 'address)
-         (bbdb-record-set-addresses record
-                                    (nconc (bbdb-record-addresses record)
-                                           (list contents))))
-        ((eq name 'net)
-         (if (bbdb-record-net record)
-             (error "There already are net addresses!"))
-         (if (stringp contents)
-             (setq contents (bbdb-split contents ",")))
-         ;; first detect any conflicts....
-         (if bbdb-no-duplicates-p
-             (let ((nets contents))
-               (while nets
-                 (let ((old (bbdb-gethash (downcase (car nets)))))
-                   (if (and old (not (eq old record)))
-                       (error "net address \"%s\" is used by \"%s\""
-                              (car nets)
-                              (or (bbdb-record-name old)
-                                  (car (bbdb-record-net old))))))
-                 (setq nets (cdr nets)))))
-         ;; then store.
-         (let ((nets contents))
-           (while nets
-             (bbdb-puthash (downcase (car nets)) record)
-             (setq nets (cdr nets))))
-         (bbdb-record-set-net record contents))
-        ((eq name 'aka)
-        (if (bbdb-record-aka record)
-            (error "there already are alternate names!"))
-        (if (stringp contents)
-            (setq contents (bbdb-split contents ";")))
-        ;; first detect any conflicts....
-        (if bbdb-no-duplicates-p
-            (let ((aka contents))
-              (while aka
-                (let ((old (bbdb-gethash (downcase (car aka)))))
-                  (if (and old (not (eq old record)))
-                      (error "alternate name \"%s\" is used by \"%s\""
-                             (car aka)
-                             (or (bbdb-record-name old)
-                                 (car (bbdb-record-net old))))))
-                (setq aka (cdr aka)))))
-        ;; then store.
-        (let ((aka contents))
-          (while aka
-            (bbdb-puthash (downcase (car aka)) record)
-            (setq aka (cdr aka))))
-        (bbdb-record-set-aka record contents))
-        ((eq name 'notes)
-        (if (bbdb-record-notes record) (error "there already are notes!"))
-        (bbdb-record-set-notes record contents))
-        ((assoc (symbol-name name) (bbdb-propnames))
-        (if (and (consp (bbdb-record-raw-notes record))
-                 (assq name (bbdb-record-raw-notes record)))
-            (error "there is already a \"%s\" note!" name))
-        (bbdb-record-putprop record name contents))
-        (t (error "doubleplus ungood: unknow how to set slot %s" name)))
+	 (bbdb-record-set-phones record
+				 (nconc (bbdb-record-phones record)
+					(list contents))))
+	((eq name 'address)
+	 (bbdb-record-set-addresses record
+				    (nconc (bbdb-record-addresses record)
+					   (list contents))))
+	((eq name 'net)
+	 (if (bbdb-record-net record)
+	     (error "There already are net addresses!"))
+	 (if (stringp contents)
+	     (setq contents (bbdb-split contents ",")))
+	 ;; first detect any conflicts....
+	 (if bbdb-no-duplicates-p
+	     (let ((nets contents))
+	       (while nets
+		 (let ((old (bbdb-gethash (downcase (car nets)))))
+		   (if (and old (not (eq old record)))
+		       (error "net address \"%s\" is used by \"%s\""
+			      (car nets)
+			      (or (bbdb-record-name old)
+				  (car (bbdb-record-net old))))))
+		 (setq nets (cdr nets)))))
+	 ;; then store.
+	 (let ((nets contents))
+	   (while nets
+	     (bbdb-puthash (downcase (car nets)) record)
+	     (setq nets (cdr nets))))
+	 (bbdb-record-set-net record contents))
+	((eq name 'aka)
+	(if (bbdb-record-aka record)
+	    (error "there already are alternate names!"))
+	(if (stringp contents)
+	    (setq contents (bbdb-split contents ";")))
+	;; first detect any conflicts....
+	(if bbdb-no-duplicates-p
+	    (let ((aka contents))
+	      (while aka
+		(let ((old (bbdb-gethash (downcase (car aka)))))
+		  (if (and old (not (eq old record)))
+		      (error "alternate name \"%s\" is used by \"%s\""
+			     (car aka)
+			     (or (bbdb-record-name old)
+				 (car (bbdb-record-net old))))))
+		(setq aka (cdr aka)))))
+	;; then store.
+	(let ((aka contents))
+	  (while aka
+	    (bbdb-puthash (downcase (car aka)) record)
+	    (setq aka (cdr aka))))
+	(bbdb-record-set-aka record contents))
+	((eq name 'notes)
+	(if (bbdb-record-notes record) (error "there already are notes!"))
+	(bbdb-record-set-notes record contents))
+	((assoc (symbol-name name) (bbdb-propnames))
+	(if (and (consp (bbdb-record-raw-notes record))
+		 (assq name (bbdb-record-raw-notes record)))
+	    (error "there is already a \"%s\" note!" name))
+	(bbdb-record-putprop record name contents))
+	(t (error "doubleplus ungood: unknow how to set slot %s" name)))
   (bbdb-change-record record nil)
 ;    (bbdb-offer-save)
   (let ((bbdb-display-layout nil))
@@ -915,56 +915,56 @@ value of \"\", the default) means do not alter the address."
 
 (defun bbdb-prompt-for-new-field-value (name)
   (cond ((eq name 'net)
-         (let
-             ((n (bbdb-read-string "Net: ")))
-           (if (string-match "^mailto:" n)
-               (setq n (substring n (match-end 0))))
-           (if (or (eq nil bbdb-default-domain)
-                   current-prefix-arg (string-match "[@%!]" n))
-               n
-             (concat n "@" bbdb-default-domain))))
-        ((eq name 'aka) (bbdb-read-string "Alternate Names: "))
-        ((eq name 'phone)
-         (let ((p (make-vector
-                   (if (if current-prefix-arg
-                           (numberp current-prefix-arg)
-                         bbdb-north-american-phone-numbers-p)
-                       bbdb-phone-length
-                     2)
-                   0)))
-           (aset p 0 nil)
-           (aset p 1
-                 (if (= bbdb-phone-length (length p))
-                     (if (integerp bbdb-default-area-code)
-                         bbdb-default-area-code
-                       0)
-                   nil))
-           (bbdb-record-edit-phone p)
-           p))
-        ((eq name 'address)
-         (let ((a (make-vector bbdb-address-length nil)))
-           (bbdb-record-edit-address a)
-           a))
-        ((eq name 'notes) (bbdb-read-string "Notes: "))
-        ((assoc (symbol-name name) (bbdb-propnames))
-         (bbdb-read-string (format "%s: " name)))
-        (t
-         (if (bbdb-y-or-n-p
-              (format "\"%s\" is an unknown field name.  Define it? " name))
-             (bbdb-set-propnames
-              (append (bbdb-propnames) (list (list (symbol-name name)))))
-           (error "unknown field \"%s\"" name))
-         (bbdb-read-string (format "%s: " name)))))
+	 (let
+	     ((n (bbdb-read-string "Net: ")))
+	   (if (string-match "^mailto:" n)
+	       (setq n (substring n (match-end 0))))
+	   (if (or (eq nil bbdb-default-domain)
+		   current-prefix-arg (string-match "[@%!]" n))
+	       n
+	     (concat n "@" bbdb-default-domain))))
+	((eq name 'aka) (bbdb-read-string "Alternate Names: "))
+	((eq name 'phone)
+	 (let ((p (make-vector
+		   (if (if current-prefix-arg
+			   (numberp current-prefix-arg)
+			 bbdb-north-american-phone-numbers-p)
+		       bbdb-phone-length
+		     2)
+		   0)))
+	   (aset p 0 nil)
+	   (aset p 1
+		 (if (= bbdb-phone-length (length p))
+		     (if (integerp bbdb-default-area-code)
+			 bbdb-default-area-code
+		       0)
+		   nil))
+	   (bbdb-record-edit-phone p)
+	   p))
+	((eq name 'address)
+	 (let ((a (make-vector bbdb-address-length nil)))
+	   (bbdb-record-edit-address a)
+	   a))
+	((eq name 'notes) (bbdb-read-string "Notes: "))
+	((assoc (symbol-name name) (bbdb-propnames))
+	 (bbdb-read-string (format "%s: " name)))
+	(t
+	 (if (bbdb-y-or-n-p
+	      (format "\"%s\" is an unknown field name.  Define it? " name))
+	     (bbdb-set-propnames
+	      (append (bbdb-propnames) (list (list (symbol-name name)))))
+	   (error "unknown field \"%s\"" name))
+	 (bbdb-read-string (format "%s: " name)))))
 
 (defun bbdb-add-new-field (name)
   "Programmatically add a new field called NAME. Returns the list of propnames."
   ;; check that we don't have one already; if we do, return quietly.
   (if (assoc (symbol-name name) (append '(("phone") ("address") ("net")
-                                          ("AKA") ("notes"))
-                                        (bbdb-propnames)))
+					  ("AKA") ("notes"))
+					(bbdb-propnames)))
       bbdb-propnames
     (bbdb-set-propnames (append (bbdb-propnames)
-                                (list (list (symbol-name name)))))))
+				(list (list (symbol-name name)))))))
 
 ;;;###autoload
 (defun bbdb-edit-current-field ()
@@ -978,18 +978,18 @@ section, then the entire field is edited, not just the current line."
       (backward-char 1))
 
   (let* ((record (bbdb-current-record t))
-         (field (bbdb-current-field t))
-         need-to-sort)
+	 (field (bbdb-current-field t))
+	 need-to-sort)
     (or field (error "on an unfield"))
     (setq need-to-sort
-          (apply 'bbdb-record-edit-field-internal record field))
+	  (apply 'bbdb-record-edit-field-internal record field))
     (bbdb-change-record record need-to-sort)
     (bbdb-redisplay-one-record record)
     ;; (bbdb-offer-save)
     (if (and (eq 'property (car field))
-             (or (eq 'mail-alias (caadr field))
-                 (eq 'net (caadr field))))
-        (setq bbdb-define-all-aliases-needs-rebuilt 'edit))
+	     (or (eq 'mail-alias (caadr field))
+		 (eq 'net (caadr field))))
+	(setq bbdb-define-all-aliases-needs-rebuilt 'edit))
     ))
 
 (defun bbdb-record-edit-name (bbdb-record)
@@ -997,51 +997,51 @@ section, then the entire field is edited, not just the current line."
     (bbdb-error-retry
      (progn
        (if current-prefix-arg
-           (setq fn (bbdb-read-string "First Name: "
-                                      (bbdb-record-firstname bbdb-record))
-                 ln (bbdb-read-string "Last Name: "
-                                      (bbdb-record-lastname bbdb-record)))
-         (let ((names (bbdb-divide-name
-                       (bbdb-read-string "Name: "
-                                         (bbdb-record-name bbdb-record)))))
-           (setq fn (car names)
-                 ln (nth 1 names))))
+	   (setq fn (bbdb-read-string "First Name: "
+				      (bbdb-record-firstname bbdb-record))
+		 ln (bbdb-read-string "Last Name: "
+				      (bbdb-record-lastname bbdb-record)))
+	 (let ((names (bbdb-divide-name
+		       (bbdb-read-string "Name: "
+					 (bbdb-record-name bbdb-record)))))
+	   (setq fn (car names)
+		 ln (nth 1 names))))
        (setq need-to-sort
-             (or (not (string= fn
-                               (or (bbdb-record-firstname bbdb-record) "")))
-                 (not (string= ln
-                               (or (bbdb-record-lastname bbdb-record) "")))))
+	     (or (not (string= fn
+			       (or (bbdb-record-firstname bbdb-record) "")))
+		 (not (string= ln
+			       (or (bbdb-record-lastname bbdb-record) "")))))
        (if (string= "" fn) (setq fn nil))
        (if (string= "" ln) (setq ln nil))
        ;; check for collisions
        (setq new-name (if (and fn ln) (concat fn " " ln)
-                        (or fn ln))
-             old-name (bbdb-record-name bbdb-record))
+			(or fn ln))
+	     old-name (bbdb-record-name bbdb-record))
        (if (and bbdb-no-duplicates-p
-                new-name
-                (not (and old-name (string= (downcase new-name)
-                                            (downcase old-name))))
-                (bbdb-gethash (downcase new-name)))
-           (error "%s is already in the database!" new-name))))
+		new-name
+		(not (and old-name (string= (downcase new-name)
+					    (downcase old-name))))
+		(bbdb-gethash (downcase new-name)))
+	   (error "%s is already in the database!" new-name))))
     (setq co (bbdb-read-string "Company: "
-                               (bbdb-record-company bbdb-record)))
+			       (bbdb-record-company bbdb-record)))
     (if (string= "" co) (setq co nil))
     (setq need-to-sort
-          (or need-to-sort
-              (not (equal (if co (downcase co) "")
-                          (downcase (or (bbdb-record-company bbdb-record)
-                                        ""))))))
+	  (or need-to-sort
+	      (not (equal (if co (downcase co) "")
+			  (downcase (or (bbdb-record-company bbdb-record)
+					""))))))
     ;;
     ;; delete the old hash entry
     (let ((name    (bbdb-record-name    bbdb-record))
-          (lfname  (bbdb-record-lfname  bbdb-record))
-          (company (bbdb-record-company bbdb-record)))
+	  (lfname  (bbdb-record-lfname  bbdb-record))
+	  (company (bbdb-record-company bbdb-record)))
       (if (> (length name) 0)
-          (bbdb-remhash (downcase name) bbdb-record))
+	  (bbdb-remhash (downcase name) bbdb-record))
       (if (> (length lfname) 0)
-          (bbdb-remhash (downcase lfname) bbdb-record))
+	  (bbdb-remhash (downcase lfname) bbdb-record))
       (if (> (length company) 0)
-          (bbdb-remhash (downcase company) bbdb-record)))
+	  (bbdb-remhash (downcase company) bbdb-record)))
     (bbdb-record-set-namecache bbdb-record nil)
     (bbdb-record-set-firstname bbdb-record fn)
     (bbdb-record-set-lastname bbdb-record ln)
@@ -1049,32 +1049,32 @@ section, then the entire field is edited, not just the current line."
     ;; add a new hash entry
     (when (or fn ln)
       (bbdb-puthash (downcase (bbdb-record-name bbdb-record))
-                    bbdb-record)
+		    bbdb-record)
       (if (and fn ln)
-          (bbdb-puthash (downcase (bbdb-record-lfname bbdb-record))
-                        bbdb-record)))
+	  (bbdb-puthash (downcase (bbdb-record-lfname bbdb-record))
+			bbdb-record)))
     need-to-sort))
 
 (defun bbdb-record-edit-company (bbdb-record)
   (let ((co (bbdb-read-string "Company: " (bbdb-record-company bbdb-record)))
-        need-to-sort)
+	need-to-sort)
 
     (if (string= "" co) (setq co nil))
     (setq need-to-sort
-          (or need-to-sort
-              (not (equal (if co (downcase co) "")
-                          (downcase (or (bbdb-record-company bbdb-record)
-                                        ""))))))
+	  (or need-to-sort
+	      (not (equal (if co (downcase co) "")
+			  (downcase (or (bbdb-record-company bbdb-record)
+					""))))))
 
     ;; delete the old hash entry
     (let ((company (bbdb-record-company bbdb-record)))
       (if (> (length company) 0)
-          (bbdb-remhash (downcase company) bbdb-record)))
+	  (bbdb-remhash (downcase company) bbdb-record)))
 
     (bbdb-record-set-company bbdb-record co)
     ;; add a new hash entry
     (bbdb-puthash (downcase (bbdb-record-name bbdb-record))
-                  bbdb-record)
+		  bbdb-record)
 
     need-to-sort))
 
@@ -1092,28 +1092,28 @@ State:           state
 Zip Code:        zip
 Country:         country"
   (let* ((str (let ((l) (s) (n 0))
-                (while (not (string= "" (setq s (bbdb-read-string
-                                                 (format "Street, line %d: " (+ 1 n))
-                                                 (nth n (bbdb-address-streets addr))))))
-                  (setq l (append l (list s)))
-                  (setq n (1+ n)))
-                l))
-         (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
-         (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
-         (zip (bbdb-error-retry
-               (bbdb-parse-zip-string
-                (bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
-         (country (bbdb-read-string "Country: " (or (bbdb-address-country addr)
-                                                    bbdb-default-country))))
+		(while (not (string= "" (setq s (bbdb-read-string
+						 (format "Street, line %d: " (+ 1 n))
+						 (nth n (bbdb-address-streets addr))))))
+		  (setq l (append l (list s)))
+		  (setq n (1+ n)))
+		l))
+	 (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
+	 (ste (bbdb-read-string "State: " (bbdb-address-state addr)))
+	 (zip (bbdb-error-retry
+	       (bbdb-parse-zip-string
+		(bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
+	 (country (bbdb-read-string "Country: " (or (bbdb-address-country addr)
+						    bbdb-default-country))))
     (bbdb-address-set-streets addr str)
     (bbdb-address-set-city addr cty)
     (bbdb-address-set-state addr ste)
     (bbdb-address-set-zip addr zip)
     (if (string= "" (concat cty ste zip country (mapconcat 'identity str "")))
-        ;; user didn't enter anything. this causes a display bug. this
-        ;; is a temporary fix. Ideally, we'd simply discard the entire
-        ;; address entry, but that's going to require bigger hacking.
-        (bbdb-address-set-country addr "Emacs")
+	;; user didn't enter anything. this causes a display bug. this
+	;; is a temporary fix. Ideally, we'd simply discard the entire
+	;; address entry, but that's going to require bigger hacking.
+	(bbdb-address-set-country addr "Emacs")
       (bbdb-address-set-country addr country))
     nil))
 
@@ -1131,28 +1131,28 @@ State:           state
 Zip Code:        zip
 Country:         country"
   (let* ((str (let ((l) (s) (n 0))
-                (while (not (string= "" (setq s (bbdb-read-string
-                                                 (format "Street, line %d: " (+ 1 n))
-                                                 (nth n (bbdb-address-streets addr))))))
-                  (setq l (append l (list s)))
-                  (setq n (1+ n)))
-                l))
-         (zip (bbdb-error-retry
-               (bbdb-parse-zip-string
-                (bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
-         (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
-         (ste "")
-         (country (bbdb-read-string "Country: " (or (bbdb-address-country addr)
-                                                    bbdb-default-country))))
+		(while (not (string= "" (setq s (bbdb-read-string
+						 (format "Street, line %d: " (+ 1 n))
+						 (nth n (bbdb-address-streets addr))))))
+		  (setq l (append l (list s)))
+		  (setq n (1+ n)))
+		l))
+	 (zip (bbdb-error-retry
+	       (bbdb-parse-zip-string
+		(bbdb-read-string "Zip Code: " (bbdb-address-zip-string addr)))))
+	 (cty (bbdb-read-string "City: " (bbdb-address-city addr)))
+	 (ste "")
+	 (country (bbdb-read-string "Country: " (or (bbdb-address-country addr)
+						    bbdb-default-country))))
     (bbdb-address-set-streets addr str)
     (bbdb-address-set-city addr cty)
     (bbdb-address-set-state addr ste)
     (bbdb-address-set-zip addr zip)
     (if (string= "" (concat cty ste zip country (mapconcat 'identity str "")))
-        ;; user didn't enter anything. this causes a display bug. this
-        ;; is a temporary fix. Ideally, we'd simply discard the entire
-        ;; address entry, but that's going to require bigger hacking.
-        (bbdb-address-set-country addr "Emacs")
+	;; user didn't enter anything. this causes a display bug. this
+	;; is a temporary fix. Ideally, we'd simply discard the entire
+	;; address entry, but that's going to require bigger hacking.
+	(bbdb-address-set-country addr "Emacs")
       (bbdb-address-set-country addr country))
     nil))
 
@@ -1170,13 +1170,13 @@ If optional parameter LOCATION is nil, edit the location sub-field
 of the address as well.  The address itself is edited using the editing
 function in `bbdb-address-editing-function'."
   (let ((loc
-         (or location (bbdb-read-string "Location: "
-                                        (or (bbdb-address-location addr)
-                                            (bbdb-label-completion-default
-                                             "addresses"))
-                                        (mapcar (function (lambda(x) (list x)))
-                                                (bbdb-label-completion-list
-                                                 "addresses"))))))
+	 (or location (bbdb-read-string "Location: "
+					(or (bbdb-address-location addr)
+					    (bbdb-label-completion-default
+					     "addresses"))
+					(mapcar (function (lambda(x) (list x)))
+						(bbdb-label-completion-list
+						 "addresses"))))))
     (bbdb-address-set-location addr loc))
   (if current-prefix-arg
       (bbdb-address-edit-default addr)
@@ -1184,22 +1184,22 @@ function in `bbdb-address-editing-function'."
 
 (defun bbdb-record-edit-phone (phone-number &optional location)
   (let ((newl (or location
-                  (bbdb-read-string "Location: "
-                                    (or (bbdb-phone-location phone-number)
-                                        (bbdb-label-completion-default
-                                         "phones"))
-                                    (mapcar (function (lambda(x) (list x)))
-                                            (bbdb-label-completion-list
-                                             "phones")))))
-        (newp (let ((bbdb-north-american-phone-numbers-p
-                     (= (length phone-number) bbdb-phone-length)))
-                (bbdb-error-retry
-                 (bbdb-parse-phone-number
-                  (read-string "Phone: " (bbdb-phone-string phone-number)))))))
+		  (bbdb-read-string "Location: "
+				    (or (bbdb-phone-location phone-number)
+					(bbdb-label-completion-default
+					 "phones"))
+				    (mapcar (function (lambda(x) (list x)))
+					    (bbdb-label-completion-list
+					     "phones")))))
+	(newp (let ((bbdb-north-american-phone-numbers-p
+		     (= (length phone-number) bbdb-phone-length)))
+		(bbdb-error-retry
+		 (bbdb-parse-phone-number
+		  (read-string "Phone: " (bbdb-phone-string phone-number)))))))
     (bbdb-phone-set-location phone-number newl)
     (bbdb-phone-set-area phone-number (nth 0 newp)) ; euronumbers too.
     (if (= (length phone-number) 2)
-        nil
+	nil
       (bbdb-phone-set-exchange phone-number (nth 1 newp))
       (bbdb-phone-set-suffix phone-number (nth 2 newp))
       (bbdb-phone-set-extension phone-number (or (nth 3 newp) 0))))
@@ -1207,58 +1207,58 @@ function in `bbdb-address-editing-function'."
 
 (defun bbdb-record-edit-net (bbdb-record)
   (let ((str (bbdb-read-string "Net: "
-                               (mapconcat (function identity)
-                                          (bbdb-record-net bbdb-record)
-                                          ", "))))
+			       (mapconcat (function identity)
+					  (bbdb-record-net bbdb-record)
+					  ", "))))
     (let ((oldnets (bbdb-record-net bbdb-record))
-          (newnets (bbdb-split str ",")))
+	  (newnets (bbdb-split str ",")))
       ;; first check for any conflicts...
       (if bbdb-no-duplicates-p
-          (let ((rest newnets))
-            (while rest
-              (let ((old (delete bbdb-record (bbdb-gethash (downcase (car rest))))))
-                (if old
-                    (error "net address \"%s\" is used by \"%s\""
-                           (car rest) (mapconcat (lambda (r) (bbdb-record-name r))
-                                                 old ", "))))
-              (setq rest (cdr rest)))))
+	  (let ((rest newnets))
+	    (while rest
+	      (let ((old (delete bbdb-record (bbdb-gethash (downcase (car rest))))))
+		(if old
+		    (error "net address \"%s\" is used by \"%s\""
+			   (car rest) (mapconcat (lambda (r) (bbdb-record-name r))
+						 old ", "))))
+	      (setq rest (cdr rest)))))
       ;; then update.
       (let ((rest oldnets))
-        (while rest
-          (bbdb-remhash (downcase (car rest)) bbdb-record)
-          (setq rest (cdr rest))))
+	(while rest
+	  (bbdb-remhash (downcase (car rest)) bbdb-record)
+	  (setq rest (cdr rest))))
       (let ((nets newnets))
-        (while nets
-          (bbdb-puthash (downcase (car nets)) bbdb-record)
-          (setq nets (cdr nets))))
+	(while nets
+	  (bbdb-puthash (downcase (car nets)) bbdb-record)
+	  (setq nets (cdr nets))))
       (bbdb-record-set-net bbdb-record newnets)))
   nil)
 
 (defun bbdb-record-edit-aka (bbdb-record)
   (let ((str (bbdb-read-string "AKA: "
-                               (mapconcat (function identity)
-                                          (bbdb-record-aka bbdb-record)
-                                          "; "))))
+			       (mapconcat (function identity)
+					  (bbdb-record-aka bbdb-record)
+					  "; "))))
     (let ((oldaka (bbdb-record-aka bbdb-record))
-          (newaka (bbdb-split str ";")))
+	  (newaka (bbdb-split str ";")))
       ;; first check for any conflicts...
       (if bbdb-no-duplicates-p
-          (let ((rest newaka))
-            (while rest
-              (let ((old (bbdb-gethash (downcase (car rest)))))
-                (if (and old (not (eq old bbdb-record)))
-                    (error "alternate name address \"%s\" is used by \"%s\""
-                           (car rest) (bbdb-record-name old))))
-              (setq rest (cdr rest)))))
+	  (let ((rest newaka))
+	    (while rest
+	      (let ((old (bbdb-gethash (downcase (car rest)))))
+		(if (and old (not (eq old bbdb-record)))
+		    (error "alternate name address \"%s\" is used by \"%s\""
+			   (car rest) (bbdb-record-name old))))
+	      (setq rest (cdr rest)))))
       ;; then update.
       (let ((rest oldaka))
-        (while rest
-          (bbdb-remhash (downcase (car rest)) bbdb-record)
-          (setq rest (cdr rest))))
+	(while rest
+	  (bbdb-remhash (downcase (car rest)) bbdb-record)
+	  (setq rest (cdr rest))))
       (let ((aka newaka))
-        (while aka
-          (bbdb-puthash (downcase (car aka)) bbdb-record)
-          (setq aka (cdr aka))))
+	(while aka
+	  (bbdb-puthash (downcase (car aka)) bbdb-record)
+	  (setq aka (cdr aka))))
       (bbdb-record-set-aka bbdb-record newaka)))
   nil)
 
@@ -1269,58 +1269,58 @@ function in `bbdb-address-editing-function'."
     (bbdb-record-set-notes bbdb-record (if (string= "" notes) nil notes)))
   (if regrind
       (save-excursion
-        (set-buffer bbdb-buffer-name)
-        (bbdb-redisplay-one-record bbdb-record)))
+	(set-buffer bbdb-buffer-name)
+	(bbdb-redisplay-one-record bbdb-record)))
   nil)
 
 ;;;###autoload
 (defun bbdb-record-edit-property (bbdb-record &optional prop regrind)
   (interactive (list (bbdb-current-record t) nil t))
   (let* ((propnames (bbdb-propnames))
-         (propname (if prop (symbol-name prop)
-                     (completing-read
-                      (format "Edit property of %s: "
-                              (bbdb-record-name bbdb-record))
-                      (cons '("notes") propnames))))
-         (propsym (or prop (if (equal "" propname) 'notes (intern propname))))
-         (string (bbdb-read-string (format "%s: " propname)
-                                   (bbdb-record-getprop bbdb-record propsym))))
+	 (propname (if prop (symbol-name prop)
+		     (completing-read
+		      (format "Edit property of %s: "
+			      (bbdb-record-name bbdb-record))
+		      (cons '("notes") propnames))))
+	 (propsym (or prop (if (equal "" propname) 'notes (intern propname))))
+	 (string (bbdb-read-string (format "%s: " propname)
+				   (bbdb-record-getprop bbdb-record propsym))))
     (bbdb-record-putprop bbdb-record propsym
-                         (if (string= "" string) nil string)))
+			 (if (string= "" string) nil string)))
   (if regrind
       (save-excursion
-        (set-buffer bbdb-buffer-name)
-        (bbdb-redisplay-one-record bbdb-record)))
+	(set-buffer bbdb-buffer-name)
+	(bbdb-redisplay-one-record bbdb-record)))
   nil)
 
 
 (defsubst bbdb-field-equal (x y)
   (if (and (consp x) (consp y))
       (and (eq (car x) (car y))
-           (eq (car (cdr x)) (car (cdr y)))
-           (eq (car (cdr (cdr x))) (car (cdr (cdr y)))))
+	   (eq (car (cdr x)) (car (cdr y)))
+	   (eq (car (cdr (cdr x))) (car (cdr (cdr y)))))
     (eq x y)))
 
 (defun bbdb-next-field (&optional count planning-on-modifying)
   (or count (setq count 1))
   (beginning-of-line)
   (let* ((record (bbdb-current-record planning-on-modifying))
-         (field (bbdb-current-field planning-on-modifying))
-         (next-record record)
-         (next-field field)
-         (signum (if (< count 0) -1 1))
-         (i 0))
+	 (field (bbdb-current-field planning-on-modifying))
+	 (next-record record)
+	 (next-field field)
+	 (signum (if (< count 0) -1 1))
+	 (i 0))
     (if (< count 0) (setq count (- count)))
     (if field
-        (while (and next-field (< i count))
-          (while (bbdb-field-equal next-field field)
-            (forward-line signum)
-            (setq next-record (bbdb-current-record planning-on-modifying)
-                  next-field (bbdb-current-field planning-on-modifying))
-            (or (eq next-record record)
-                (setq next-field nil)))
-          (setq i (1+ i))
-          (setq field next-field)))
+	(while (and next-field (< i count))
+	  (while (bbdb-field-equal next-field field)
+	    (forward-line signum)
+	    (setq next-record (bbdb-current-record planning-on-modifying)
+		  next-field (bbdb-current-field planning-on-modifying))
+	    (or (eq next-record record)
+		(setq next-field nil)))
+	  (setq i (1+ i))
+	  (setq field next-field)))
     next-field))
 
 ;;;###autoload
@@ -1338,59 +1338,59 @@ fields are listed, but you can't use it to make an address appear before a
 phone number; the order of field types is fixed.\)"
   (interactive "p")
   (let ((record (bbdb-current-record t))
-        moving-field position-after position-before
-        swap-p type list)
+	moving-field position-after position-before
+	swap-p type list)
     (if (/= arg 0)
-        (setq moving-field (or (bbdb-next-field -1 t)
-                               (error "no previous field"))
-              position-after (bbdb-next-field arg t)
-              position-before (bbdb-next-field (if (< arg 0) -1 1) t))
+	(setq moving-field (or (bbdb-next-field -1 t)
+			       (error "no previous field"))
+	      position-after (bbdb-next-field arg t)
+	      position-before (bbdb-next-field (if (< arg 0) -1 1) t))
       ;; if arg is 0, swap fields at point and mark
       (setq swap-p t)
       (setq position-after (bbdb-current-field))
       (save-excursion
-        (goto-char (mark))
-        (setq moving-field (bbdb-current-field))
-        (or (eq record (bbdb-current-record)) (error "not in the same record"))))
+	(goto-char (mark))
+	(setq moving-field (bbdb-current-field))
+	(or (eq record (bbdb-current-record)) (error "not in the same record"))))
     (if (< arg 0)
-        (let ((x position-after))
-          (setq position-after position-before
-                position-before x)
-          (forward-line 2)))
+	(let ((x position-after))
+	  (setq position-after position-before
+		position-before x)
+	  (forward-line 2)))
     (setq type (car moving-field))
     (or position-after position-before
-        (error "that would be out of the record!"))
+	(error "that would be out of the record!"))
     (or (eq type (car position-after))
-        (eq type (car position-before))
-        (error "can't transpose fields of different types (%s and %s)"
-               type (if (eq type (car position-after))
-                        (car position-before) (car position-after))))
+	(eq type (car position-before))
+	(error "can't transpose fields of different types (%s and %s)"
+	       type (if (eq type (car position-after))
+			(car position-before) (car position-after))))
     (or (eq type (car position-after)) (setq position-after nil))
     (or (eq type (car position-before)) (setq position-before nil))
     (setq moving-field (nth 1 moving-field)
-          position-after (nth 1 position-after)
-          position-before (nth 1 position-before))
+	  position-after (nth 1 position-after)
+	  position-before (nth 1 position-before))
     (cond ((memq type '(name aka net))
-           (error "there is only one %s field, so you can't transpose it"
-                  type))
-          ((memq type '(phone address property))
-           (setq list (bbdb-record-get-field-internal record type)))
-          (t (error "doubleplus ungood: unknown field %s" type)))
+	   (error "there is only one %s field, so you can't transpose it"
+		  type))
+	  ((memq type '(phone address property))
+	   (setq list (bbdb-record-get-field-internal record type)))
+	  (t (error "doubleplus ungood: unknown field %s" type)))
     (if swap-p
-        (let ((rest list))
-          (while rest
-            (cond ((eq (car rest) moving-field) (setcar rest position-after))
-                  ((eq (car rest) position-after) (setcar rest moving-field)))
-            (setq rest (cdr rest))))
+	(let ((rest list))
+	  (while rest
+	    (cond ((eq (car rest) moving-field) (setcar rest position-after))
+		  ((eq (car rest) position-after) (setcar rest moving-field)))
+	    (setq rest (cdr rest))))
       (if (eq position-before (car list))
-          (setq list (cons moving-field (delq moving-field list)))
-        (let ((rest list))
-          (while (and rest (not (eq position-after (car rest))))
-            (setq rest (cdr rest)))
-          (or rest (error "doubleplus ungood: couldn't reorder list"))
-          (let ((inhibit-quit t))
-            (setq list (delq moving-field list))
-            (setcdr rest (cons moving-field (cdr rest)))))))
+	  (setq list (cons moving-field (delq moving-field list)))
+	(let ((rest list))
+	  (while (and rest (not (eq position-after (car rest))))
+	    (setq rest (cdr rest)))
+	  (or rest (error "doubleplus ungood: couldn't reorder list"))
+	  (let ((inhibit-quit t))
+	    (setq list (delq moving-field list))
+	    (setcdr rest (cons moving-field (cdr rest)))))))
     (bbdb-record-store-field-internal record type list)
     (bbdb-change-record record nil)
     (bbdb-redisplay-one-record record)))
@@ -1403,40 +1403,40 @@ that line represents from the database.  If the cursor is on the first line
 of a database entry (the name/company line) then the entire entry will be
 deleted."
   (interactive (list (if (bbdb-do-all-records-p)
-                         (mapcar 'car bbdb-records)
-                       (list (bbdb-current-record)))
-                     current-prefix-arg))
+			 (mapcar 'car bbdb-records)
+		       (list (bbdb-current-record)))
+		     current-prefix-arg))
   (let* ((field (bbdb-current-field t))
-         (type (car field))
-         record
-         (name (cond ((null field) (error "on an unfield"))
-                     ((eq type 'property) (symbol-name (car (nth 1 field))))
-                     (t (symbol-name type)))))
+	 (type (car field))
+	 record
+	 (name (cond ((null field) (error "on an unfield"))
+		     ((eq type 'property) (symbol-name (car (nth 1 field))))
+		     (t (symbol-name type)))))
     (while records
       (setq record (car records))
       (if (eq type 'name)
-          (bbdb-delete-current-record record noprompt)
-        (if (not (or noprompt
-                     (bbdb-y-or-n-p (format "delete this %s field (of %s)? "
-                                            name
-                                            (bbdb-record-name record)))))
-            nil
-          (cond ((memq type '(phone address))
-                 (bbdb-record-store-field-internal
-                  record type
-                  (delq (nth 1 field)
-                        (bbdb-record-get-field-internal record type))))
-                ((memq type '(net aka))
-                 (let ((rest (bbdb-record-get-field-internal record type)))
-                   (while rest
-                     (bbdb-remhash (downcase (car rest)) record)
-                     (setq rest (cdr rest))))
-                 (bbdb-record-store-field-internal record type nil))
-                ((eq type 'property)
-                 (bbdb-record-putprop record (car (nth 1 field)) nil))
-                (t (error "doubleplus ungood: unknown field type")))
-          (bbdb-change-record record nil)
-          (bbdb-redisplay-one-record record)))
+	  (bbdb-delete-current-record record noprompt)
+	(if (not (or noprompt
+		     (bbdb-y-or-n-p (format "delete this %s field (of %s)? "
+					    name
+					    (bbdb-record-name record)))))
+	    nil
+	  (cond ((memq type '(phone address))
+		 (bbdb-record-store-field-internal
+		  record type
+		  (delq (nth 1 field)
+			(bbdb-record-get-field-internal record type))))
+		((memq type '(net aka))
+		 (let ((rest (bbdb-record-get-field-internal record type)))
+		   (while rest
+		     (bbdb-remhash (downcase (car rest)) record)
+		     (setq rest (cdr rest))))
+		 (bbdb-record-store-field-internal record type nil))
+		((eq type 'property)
+		 (bbdb-record-putprop record (car (nth 1 field)) nil))
+		(t (error "doubleplus ungood: unknown field type")))
+	  (bbdb-change-record record nil)
+	  (bbdb-redisplay-one-record record)))
       (setq records (cdr records)))))
 
 ;;;###autoload
@@ -1445,50 +1445,50 @@ deleted."
 Pressing \\<bbdb-mode-map>\\[bbdb-apply-next-command-to-all-records] will
 delete all records listed in the BBDB buffer."
   (interactive (list (if (bbdb-do-all-records-p)
-                         (mapcar 'car bbdb-records)
-                       (list (bbdb-current-record t)))
-                     current-prefix-arg))
+			 (mapcar 'car bbdb-records)
+		       (list (bbdb-current-record t)))
+		     current-prefix-arg))
   (if (not (listp recs))
       (setq recs (list recs)))
   (while recs
     (let ((r (car recs)))
       (setq recs (cdr recs))
       (bbdb-debug (if (bbdb-record-deleted-p r)
-                      (error "deleting deleted record")))
+		      (error "deleting deleted record")))
       (if (or noprompt
-              (bbdb-y-or-n-p (format "delete the entire db entry of %s? "
-                                     (or (bbdb-record-name r)
-                                         (bbdb-record-company r)
-                                         (car (bbdb-record-net r))))))
-          (let* ((record-cons (assq r bbdb-records))
-                 (next-record-cons (car (cdr (memq record-cons
-                                                   bbdb-records)))))
-            (bbdb-debug (if (bbdb-record-deleted-p r)
-                            (error "deleting deleted record")))
-            (bbdb-record-set-deleted-p r t)
-            (bbdb-delete-record-internal r)
-            (if (eq record-cons (car bbdb-records))
-                (setq bbdb-records (cdr bbdb-records))
-              (let ((rest bbdb-records))
-                (while (cdr rest)
-                  (if (eq record-cons (car (cdr rest)))
-                      (progn
-                        (setcdr rest (cdr (cdr rest)))
-                        (setq rest nil)))
-                  (setq rest (cdr rest)))))
-            (bbdb-redisplay-one-record r record-cons next-record-cons t)
-            (bbdb-with-db-buffer
-             (setq bbdb-changed-records (delq r bbdb-changed-records)))
-            ;; (bbdb-offer-save)
-            )))))
+	      (bbdb-y-or-n-p (format "delete the entire db entry of %s? "
+				     (or (bbdb-record-name r)
+					 (bbdb-record-company r)
+					 (car (bbdb-record-net r))))))
+	  (let* ((record-cons (assq r bbdb-records))
+		 (next-record-cons (car (cdr (memq record-cons
+						   bbdb-records)))))
+	    (bbdb-debug (if (bbdb-record-deleted-p r)
+			    (error "deleting deleted record")))
+	    (bbdb-record-set-deleted-p r t)
+	    (bbdb-delete-record-internal r)
+	    (if (eq record-cons (car bbdb-records))
+		(setq bbdb-records (cdr bbdb-records))
+	      (let ((rest bbdb-records))
+		(while (cdr rest)
+		  (if (eq record-cons (car (cdr rest)))
+		      (progn
+			(setcdr rest (cdr (cdr rest)))
+			(setq rest nil)))
+		  (setq rest (cdr rest)))))
+	    (bbdb-redisplay-one-record r record-cons next-record-cons t)
+	    (bbdb-with-db-buffer
+	     (setq bbdb-changed-records (delq r bbdb-changed-records)))
+	    ;; (bbdb-offer-save)
+	    )))))
 
 (defun bbdb-change-records-state-and-redisplay (desired-state records)
   (let (rec)
     (while records
       (setq rec (car records))
       (unless (eq desired-state (nth 1 rec))
-        (setcar (cdr rec) desired-state)
-        (bbdb-redisplay-one-record (car rec) rec))
+	(setcar (cdr rec) desired-state)
+	(bbdb-redisplay-one-record (car rec) rec))
       (setq records (cdr records)))))
 
 ;;;###autoload
@@ -1499,25 +1499,25 @@ Like `bbdb-toggle-records-display-layout' but for all visible records."
   (if (null records)
       (setq records bbdb-records))
   (let* ((record (bbdb-current-record))
-         (cons (assq record bbdb-records))
-         (current-state (nth 1 cons))
-         (layout-alist
-          (or (delete nil (mapcar (lambda (l)
-                                    (if (and (assoc 'toggle l)
-                                             (cdr (assoc 'toggle l)))
-                                        l))
-                                  bbdb-display-layout-alist))
-              bbdb-display-layout-alist))
-         (desired-state (assoc current-state layout-alist)))
+	 (cons (assq record bbdb-records))
+	 (current-state (nth 1 cons))
+	 (layout-alist
+	  (or (delete nil (mapcar (lambda (l)
+				    (if (and (assoc 'toggle l)
+					     (cdr (assoc 'toggle l)))
+					l))
+				  bbdb-display-layout-alist))
+	      bbdb-display-layout-alist))
+	 (desired-state (assoc current-state layout-alist)))
     (setq desired-state
-          (cond ((eq arg 0)
-                 'one-line)
-                ((null current-state)
-                 'multi-line)
-                ((null (cdr (memq desired-state layout-alist)))
-                 (caar layout-alist))
-                (t
-                 (caadr (memq desired-state layout-alist)))))
+	  (cond ((eq arg 0)
+		 'one-line)
+		((null current-state)
+		 'multi-line)
+		((null (cdr (memq desired-state layout-alist)))
+		 (caar layout-alist))
+		(t
+		 (caadr (memq desired-state layout-alist)))))
     (message "Using %S layout" desired-state)
     (bbdb-change-records-state-and-redisplay desired-state records)))
 
@@ -1551,13 +1551,13 @@ The display layout `full-multi-line' is used for this."
   (if (null records)
       (setq records bbdb-records))
   (let* ((record (bbdb-current-record))
-         (cons (assq record bbdb-records))
-         (current-state (nth 1 cons))
-         (desired-state
-          (cond ((not (eq current-state 'full-multi-line))
-                 'full-multi-line)
-                (t
-                 'multi-line))))
+	 (cons (assq record bbdb-records))
+	 (current-state (nth 1 cons))
+	 (desired-state
+	  (cond ((not (eq current-state 'full-multi-line))
+		 'full-multi-line)
+		(t
+		 'multi-line))))
     (bbdb-change-records-state-and-redisplay desired-state records)))
 
 ;;;###autoload
@@ -1574,9 +1574,9 @@ The display layout `full-multi-line' is used for this."
 (defun bbdb-display-record-with-layout (layout &optional records)
   "Show all the fields of the current record using LAYOUT."
   (interactive (list (completing-read "Layout: "
-                      (mapcar (lambda (i)
-                        (list (symbol-name (car i))))
-                          bbdb-display-layout-alist))))
+		      (mapcar (lambda (i)
+			(list (symbol-name (car i))))
+			  bbdb-display-layout-alist))))
   (when (stringp layout)
     (setq layout (intern layout)))
   (when (null records)
@@ -1592,21 +1592,21 @@ omit backwards."
   (while (not (= n 0))
     (if (< n 0) (bbdb-prev-record 1))
     (let* ((record (or (bbdb-current-record) (error "no records")))
-           (rest bbdb-records)
-           cons next prev-tail)
+	   (rest bbdb-records)
+	   cons next prev-tail)
       (while rest
-        (if (eq (car (car rest)) record)
-            (setq cons (car rest)
-                  next (car (cdr rest))
-                  rest nil)
-          (setq prev-tail rest
-                rest (cdr rest))))
+	(if (eq (car (car rest)) record)
+	    (setq cons (car rest)
+		  next (car (cdr rest))
+		  rest nil)
+	  (setq prev-tail rest
+		rest (cdr rest))))
       (or record (error "can't find current record"))
       (let ((buffer-read-only nil))
-        (delete-region (nth 2 cons) (if next (nth 2 next) (point-max))))
+	(delete-region (nth 2 cons) (if next (nth 2 next) (point-max))))
       (if prev-tail
-          (setcdr prev-tail (cdr (cdr prev-tail)))
-        (setq bbdb-records (cdr bbdb-records)))
+	  (setcdr prev-tail (cdr (cdr prev-tail)))
+	(setq bbdb-records (cdr bbdb-records)))
       (setq n (if (> n 0) (1- n) (1+ n)))))
   (bbdb-frob-mode-line (length bbdb-records)))
 
@@ -1616,8 +1616,8 @@ omit backwards."
   "*An alist defining specific merging function, based on notes field."
   :group 'bbdb-noticing-records
   :type '(repeat (cons
-                  (symbol :tag "Notes filed")
-                  (hook :tag "Generating function"))))
+		  (symbol :tag "Notes filed")
+		  (hook :tag "Generating function"))))
 
 (defcustom bbdb-refile-notes-default-merge-function 'bbdb-refile-notes-default-merge-function
   "*Default function to use for merging BBDB notes records.
@@ -1635,10 +1635,10 @@ that function will be used instead."
 (defun bbdb-refile-notes-remove-duplicates (string1 string2)
   "Concatenate STRING1 and STRING2, but remove duplicate lines."
   (let ((note1 (split-string string1 "\n"))
-        (note2 (split-string string2 "\n")))
+	(note2 (split-string string2 "\n")))
     (while note2
       (if (not (member (car note2) note1))
-          (setq note1 (cons (car note2) note1)))
+	  (setq note1 (cons (car note2) note1)))
       (setq note2 (cdr note2)))
     (mapconcat 'identity note1 "\n")))
 
@@ -1661,21 +1661,21 @@ is provided it is applied to each element of l1 and l2 prior to cmp"
   (if (null l1)
       l2
     (let ((end (last l1))
-          (src2 l2)
-          (chk (if mod (mapcar mod l1) (append l1 '()))))
+	  (src2 l2)
+	  (chk (if mod (mapcar mod l1) (append l1 '()))))
       (while src2
-        (let ((fail '())
-              (src1 chk)
-              (val  (if mod (apply mod (car src2) '()) (car src2))))
-          (while src1
-            (if (apply cmp (car src1) val '())
-                (setq src1 '()
-                      fail 't)
-              (setq src1 (cdr src1))))
-          (if fail '()
-            (setcdr end (cons (car src2) '()))
-            (setq end (cdr end)))
-          (setq src2 (cdr src2))))
+	(let ((fail '())
+	      (src1 chk)
+	      (val  (if mod (apply mod (car src2) '()) (car src2))))
+	  (while src1
+	    (if (apply cmp (car src1) val '())
+		(setq src1 '()
+		      fail 't)
+	      (setq src1 (cdr src1))))
+	  (if fail '()
+	    (setcdr end (cons (car src2) '()))
+	    (setq end (cdr end)))
+	  (setq src2 (cdr src2))))
       l1)))
 
 (defun bbdb-merge-records (old-record new-record)
@@ -1691,92 +1691,92 @@ database, that is somebody elses problem (something like
   (if (or (null new-record) (eq old-record new-record))
       (error "those are the same"))
   (let ((new-name (bbdb-record-name    new-record))
-        (new-co   (bbdb-record-company new-record))
-        (old-name (bbdb-record-name    old-record))
-        (old-co   (bbdb-record-company old-record))
-        (old-nets (bbdb-record-net     old-record))
-        (old-aka  (bbdb-record-aka     old-record))
-        extra-name)
+	(new-co   (bbdb-record-company new-record))
+	(old-name (bbdb-record-name    old-record))
+	(old-co   (bbdb-record-company old-record))
+	(old-nets (bbdb-record-net     old-record))
+	(old-aka  (bbdb-record-aka     old-record))
+	extra-name)
     (let ((name
-           (cond ((= 0 (length old-name))
-                  (cons (bbdb-record-firstname new-record)
-                        (bbdb-record-lastname new-record)))
-                 ((= 0 (length new-name))
-                  (cons (bbdb-record-firstname old-record)
-                        (bbdb-record-lastname old-record)))
-                 ((string-equal (downcase old-name) (downcase new-name))
-                  (cons (bbdb-record-firstname new-record)
-                        (bbdb-record-lastname new-record)))
-                 (t (prog1
-                        (if (bbdb-y-or-n-p
-                             (format "Use name \"%s\" instead of \"%s\"? "
-                                     old-name  new-name))
-                            (progn
-                              (setq extra-name new-record)
-                              (cons (bbdb-record-firstname old-record)
-                                    (bbdb-record-lastname old-record)))
-                          (setq extra-name old-record)
-                          (cons (bbdb-record-firstname new-record)
-                                (bbdb-record-lastname new-record)))
-                      (or (and bbdb-use-alternate-names
-                               (bbdb-y-or-n-p
-                                (format "Keep \"%s\" as an alternate name? "
-                                        (bbdb-record-name extra-name))))
-                          (setq extra-name nil))))))
-          (comp (cond ((= 0 (length old-co)) new-co)
-                      ((= 0 (length new-co)) old-co)
-                      ((string-equal old-co new-co) new-co)
-                      (t (if (bbdb-y-or-n-p
-                              (format "Use company \"%s\" instead of \"%s\"? "
-                                      old-co new-co))
-                             old-co new-co)))))
+	   (cond ((= 0 (length old-name))
+		  (cons (bbdb-record-firstname new-record)
+			(bbdb-record-lastname new-record)))
+		 ((= 0 (length new-name))
+		  (cons (bbdb-record-firstname old-record)
+			(bbdb-record-lastname old-record)))
+		 ((string-equal (downcase old-name) (downcase new-name))
+		  (cons (bbdb-record-firstname new-record)
+			(bbdb-record-lastname new-record)))
+		 (t (prog1
+			(if (bbdb-y-or-n-p
+			     (format "Use name \"%s\" instead of \"%s\"? "
+				     old-name  new-name))
+			    (progn
+			      (setq extra-name new-record)
+			      (cons (bbdb-record-firstname old-record)
+				    (bbdb-record-lastname old-record)))
+			  (setq extra-name old-record)
+			  (cons (bbdb-record-firstname new-record)
+				(bbdb-record-lastname new-record)))
+		      (or (and bbdb-use-alternate-names
+			       (bbdb-y-or-n-p
+				(format "Keep \"%s\" as an alternate name? "
+					(bbdb-record-name extra-name))))
+			  (setq extra-name nil))))))
+	  (comp (cond ((= 0 (length old-co)) new-co)
+		      ((= 0 (length new-co)) old-co)
+		      ((string-equal old-co new-co) new-co)
+		      (t (if (bbdb-y-or-n-p
+			      (format "Use company \"%s\" instead of \"%s\"? "
+				      old-co new-co))
+			     old-co new-co)))))
 
       (if extra-name
-          (setq old-aka (cons (bbdb-record-name extra-name) old-aka)))
+	  (setq old-aka (cons (bbdb-record-name extra-name) old-aka)))
 
       (bbdb-record-set-phones new-record
-                              (bbdb-merge-lists!
-                               (bbdb-record-phones new-record)
-                               (bbdb-record-phones old-record)
-                               'equal))
+			      (bbdb-merge-lists!
+			       (bbdb-record-phones new-record)
+			       (bbdb-record-phones old-record)
+			       'equal))
       (bbdb-record-set-addresses new-record
-                                 (bbdb-merge-lists!
-                                  (bbdb-record-addresses new-record)
-                                  (bbdb-record-addresses old-record)
-                                  'equal))
+				 (bbdb-merge-lists!
+				  (bbdb-record-addresses new-record)
+				  (bbdb-record-addresses old-record)
+				  'equal))
       (bbdb-record-set-company new-record comp)
 
       (let ((n1 (bbdb-record-raw-notes new-record))
-            (n2 (bbdb-record-raw-notes old-record))
-            tmp)
-        (or (equal n1 n2)
-            (progn
-              (or (listp n1) (setq n1 (list (cons 'notes n1))))
-              (or (listp n2) (setq n2 (list (cons 'notes n2))))
-              (while n2
-                (if (setq tmp (assq (car (car n2)) n1))
-                    (setcdr tmp
-                            (funcall
-                             (or (cdr (assq (car (car n2))
-                                            bbdb-refile-notes-generate-alist))
-                                 bbdb-refile-notes-default-merge-function)
-                             (cdr tmp) (cdr (car n2))))
-                  (setq n1 (nconc n1 (list (car n2)))))
-                (setq n2 (cdr n2)))
-              (bbdb-record-set-raw-notes new-record n1))))
+	    (n2 (bbdb-record-raw-notes old-record))
+	    tmp)
+	(or (equal n1 n2)
+	    (progn
+	      (or (listp n1) (setq n1 (list (cons 'notes n1))))
+	      (or (listp n2) (setq n2 (list (cons 'notes n2))))
+	      (while n2
+		(if (setq tmp (assq (car (car n2)) n1))
+		    (setcdr tmp
+			    (funcall
+			     (or (cdr (assq (car (car n2))
+					    bbdb-refile-notes-generate-alist))
+				 bbdb-refile-notes-default-merge-function)
+			     (cdr tmp) (cdr (car n2))))
+		  (setq n1 (nconc n1 (list (car n2)))))
+		(setq n2 (cdr n2)))
+	      (bbdb-record-set-raw-notes new-record n1))))
 
       (bbdb-record-set-firstname new-record (car name))
       (bbdb-record-set-lastname  new-record (cdr name))
       (bbdb-record-set-namecache new-record nil)
 
       (bbdb-record-set-net new-record
-                           (bbdb-merge-lists!
-                            (bbdb-record-net new-record) old-nets
-                            'string= 'downcase))
+			   (bbdb-merge-lists!
+			    (bbdb-record-net new-record) old-nets
+			    'string= 'downcase))
       (bbdb-record-set-aka new-record
-                           (bbdb-merge-lists!
-                            (bbdb-record-aka new-record) old-aka
-                            'string= 'downcase))
+			   (bbdb-merge-lists!
+			    (bbdb-record-aka new-record) old-aka
+			    'string= 'downcase))
       new-record)))
 
 ;;;###autoload
@@ -1792,15 +1792,15 @@ The first record is the record under the point; the second is prompted for.
 Completion behaviour is as dictated by the variable `bbdb-completion-type'."
   (interactive
    (let ((r (bbdb-current-record))
-         name)
+	 name)
      (setq name (bbdb-record-name r))
      (list r
-           (if current-prefix-arg
-               (car (delq r (bbdb-search (bbdb-records) name nil)))
-             (bbdb-completing-read-one-record
-              (format "merge record \"%s\" into: "
-                      (or (bbdb-record-name r) (car (bbdb-record-net r))
-                          "???")) (list r))))))
+	   (if current-prefix-arg
+	       (car (delq r (bbdb-search (bbdb-records) name nil)))
+	     (bbdb-completing-read-one-record
+	      (format "merge record \"%s\" into: "
+		      (or (bbdb-record-name r) (car (bbdb-record-net r))
+			  "???")) (list r))))))
 
   (if (or (null new-record) (eq old-record new-record))
       (error "those are the same"))
@@ -1810,13 +1810,13 @@ Completion behaviour is as dictated by the variable `bbdb-completion-type'."
   (bbdb-change-record new-record t)     ; don't always need-to-sort...
   (let ((bbdb-display-layout nil))
     (if (assq new-record bbdb-records)
-        (bbdb-redisplay-one-record new-record))
+	(bbdb-redisplay-one-record new-record))
     (bbdb-with-db-buffer
      (if (not (memq new-record bbdb-changed-records))
-         (setq bbdb-changed-records
-               (cons new-record bbdb-changed-records))))
+	 (setq bbdb-changed-records
+	       (cons new-record bbdb-changed-records))))
     (if (null bbdb-records)             ; nothing displayed, display something.
-        (bbdb-display-records (list new-record))))
+	(bbdb-display-records (list new-record))))
   (message "records merged."))
 
 ;; sort the notes
@@ -1837,7 +1837,7 @@ Can be used in `bbdb-change-hook'."
   (flet ((kk (nt) (or (cdr (assq (car nt) bbdb-notes-sort-order)) 100)))
     (bbdb-record-set-raw-notes
      rec (sort (bbdb-record-raw-notes rec)
-               (lambda (aa bb) (< (kk aa) (kk bb)))))))
+	       (lambda (aa bb) (< (kk aa) (kk bb)))))))
 
 ;;;###autoload
 (defun bbdb-sort-phones (rec)
@@ -1845,7 +1845,7 @@ Can be used in `bbdb-change-hook'."
 Can be used in `bbdb-change-hook'."
   (bbdb-record-set-phones
    rec (sort (bbdb-record-phones rec)
-             (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
+	     (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
 
 ;;;###autoload
 (defun bbdb-sort-addresses (rec)
@@ -1853,7 +1853,7 @@ Can be used in `bbdb-change-hook'."
 Can be used in `bbdb-change-hook'."
   (bbdb-record-set-addresses
    rec (sort (bbdb-record-addresses rec)
-             (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
+	     (lambda (xx yy) (string< (aref xx 0) (aref yy 0))))))
 
 
 ;;; Send-Mail interface
@@ -1862,15 +1862,15 @@ Can be used in `bbdb-change-hook'."
   "*Non-nil means always use full name when sending mail, even if same as net."
   :group 'bbdb
   :type '(choice (const :tag "Disallow redundancy" nil)
-                 (const :tag "Return only the net" 'netonly)
-                 (const :tag "Allow redundancy" t)))
+		 (const :tag "Return only the net" 'netonly)
+		 (const :tag "Allow redundancy" t)))
 
 (defcustom bbdb-dwim-net-address-title-field 'title
   "*Non-nil should by a field to get the title from for prepending it."
   :group 'bbdb
   :type '(choice (const :tag "Do not append title." nil)
-                 (const :tag "Append content of field 'title" 'title)
-                 (symbol :tag "Field name")))
+		 (const :tag "Append content of field 'title" 'title)
+		 (symbol :tag "Field name")))
 
 ;;;###autoload
 (defun bbdb-dwim-net-address (record &optional net)
@@ -1891,82 +1891,82 @@ exists."
   (or net (setq net (car (bbdb-record-net record))))
   (or net (error "record unhas network addresses"))
   (let* ((override (bbdb-record-getprop record 'mail-name))
-         (name (or override (bbdb-record-name record)))
-         title
-         fn ln (i 0))
+	 (name (or override (bbdb-record-name record)))
+	 title
+	 fn ln (i 0))
     (if override
-        (let ((both (bbdb-divide-name override)))
-          (setq fn (car both)
-                ln (car (cdr both)))
-          (if (equal fn "") (setq fn nil))
-          (if (equal ln "") (setq ln nil)))
+	(let ((both (bbdb-divide-name override)))
+	  (setq fn (car both)
+		ln (car (cdr both)))
+	  (if (equal fn "") (setq fn nil))
+	  (if (equal ln "") (setq ln nil)))
       (setq fn (bbdb-record-firstname record)
-            ln (bbdb-record-lastname record))
+	    ln (bbdb-record-lastname record))
       (if (setq title bbdb-dwim-net-address-title-field
-                title (if title (bbdb-record-getprop record title)))
-          (setq name (concat title " " name))))
+		title (if title (bbdb-record-getprop record title)))
+	  (setq name (concat title " " name))))
     ;; if the name contains backslashes or double-quotes, backslash them.
     (if name
-        (while (setq i (string-match "[\\\"]" name i))
-          (setq name (concat (substring name 0 i) "\\" (substring name i))
-                i (+ i 2))))
+	(while (setq i (string-match "[\\\"]" name i))
+	  (setq name (concat (substring name 0 i) "\\" (substring name i))
+		i (+ i 2))))
     (cond ((eq 'netonly bbdb-dwim-net-address-allow-redundancy)
-           net)
-          ((or (null name)
-               (if (not (or title bbdb-dwim-net-address-allow-redundancy))
-                   (cond ((and fn ln)
-                          (or (string-match
-                               (concat "\\`[^!@%]*\\b" (regexp-quote fn)
-                                       "\\b[^!%@]+\\b" (regexp-quote ln) "\\b")
-                               net)
-                              (string-match
-                               (concat "\\`[^!@%]*\\b" (regexp-quote ln)
-                                       "\\b[^!%@]+\\b" (regexp-quote fn) "\\b")
-                               net)))
-                         ((or fn ln)
-                          (string-match
-                           (concat "\\`[^!@%]*\\b" (regexp-quote (or fn ln)) "\\b")
-                           net))))
-               ;; already in "foo <bar>" or "bar <foo>" format.
-               (string-match "\\`[ \t]*[^<]+[ \t]*<" net)
-               (string-match "\\`[ \t]*[^(]+[ \t]*(" net))
-           net)
-          ;; if the name contains control chars or RFC822 specials, it needs
-          ;; to be enclosed in quotes.  Double-quotes and backslashes have
-          ;; already been escaped.  This quotes a few extra characters as
-          ;; well (!,%, and $) just for common sense.
-          ((string-match "[][\000-\037\177()<>@,;:.!$%]" name)
-           (format "\"%s\" <%s>" name net))
-          (t
-           (format "%s <%s>" name net)))))
+	   net)
+	  ((or (null name)
+	       (if (not (or title bbdb-dwim-net-address-allow-redundancy))
+		   (cond ((and fn ln)
+			  (or (string-match
+			       (concat "\\`[^!@%]*\\b" (regexp-quote fn)
+				       "\\b[^!%@]+\\b" (regexp-quote ln) "\\b")
+			       net)
+			      (string-match
+			       (concat "\\`[^!@%]*\\b" (regexp-quote ln)
+				       "\\b[^!%@]+\\b" (regexp-quote fn) "\\b")
+			       net)))
+			 ((or fn ln)
+			  (string-match
+			   (concat "\\`[^!@%]*\\b" (regexp-quote (or fn ln)) "\\b")
+			   net))))
+	       ;; already in "foo <bar>" or "bar <foo>" format.
+	       (string-match "\\`[ \t]*[^<]+[ \t]*<" net)
+	       (string-match "\\`[ \t]*[^(]+[ \t]*(" net))
+	   net)
+	  ;; if the name contains control chars or RFC822 specials, it needs
+	  ;; to be enclosed in quotes.  Double-quotes and backslashes have
+	  ;; already been escaped.  This quotes a few extra characters as
+	  ;; well (!,%, and $) just for common sense.
+	  ((string-match "[][\000-\037\177()<>@,;:.!$%]" name)
+	   (format "\"%s\" <%s>" name net))
+	  (t
+	   (format "%s <%s>" name net)))))
 
 
 (defun bbdb-send-mail-internal (&optional to subj records)
   (let ((type (or bbdb-send-mail-style
-          ;; In Emacs, `compose-mail' gets whatever you've
-          ;; customized as your preferred `mail-user-agent'.
-                  (cond ((fboundp 'compose-mail) 'compose-mail)
-                        ((featurep 'mh-e) 'mh)
-                        ((featurep 'vm) 'vm)
-                        ((featurep 'message) 'message)
-                        ((featurep 'mew) 'mew)
-                        ((featurep 'gnus) 'gnus)
-                        (t 'mail)))))
+	  ;; In Emacs, `compose-mail' gets whatever you've
+	  ;; customized as your preferred `mail-user-agent'.
+		  (cond ((fboundp 'compose-mail) 'compose-mail)
+			((featurep 'mh-e) 'mh)
+			((featurep 'vm) 'vm)
+			((featurep 'message) 'message)
+			((featurep 'mew) 'mew)
+			((featurep 'gnus) 'gnus)
+			(t 'mail)))))
     (cond
      ((eq type 'mh)
       (or (fboundp 'mh-send) (autoload 'mh-send "mh-e"))
       (mh-send to "" (or subj "")))
      ((eq type 'vm)
       (cond ((not (fboundp 'vm-mail-internal))
-             (load-library "vm")        ; 5.32 or later
-             (or (fboundp 'vm-mail-internal)
-                 (load-library "vm-reply")))) ; 5.31 or earlier
+	     (load-library "vm")        ; 5.32 or later
+	     (or (fboundp 'vm-mail-internal)
+		 (load-library "vm-reply")))) ; 5.31 or earlier
       (vm-session-initialization)
       (if (not subj)
-          (vm-mail to)
-        (vm-mail-internal nil to subj)
-        (run-hooks 'vm-mail-hook)
-        (run-hooks 'vm-mail-mode-hook)))
+	  (vm-mail to)
+	(vm-mail-internal nil to subj)
+	(run-hooks 'vm-mail-hook)
+	(run-hooks 'vm-mail-mode-hook)))
      ((eq type 'message)
       (or (fboundp 'message-mail) (autoload 'message-mail "message"))
       (message-mail to subj))
@@ -1992,8 +1992,8 @@ used instead of simply \"\\[bbdb-send-mail]\", then mail will be sent to \
 all of the
 folks listed in the *BBDB* buffer instead of just the person at point."
   (interactive (list (if (bbdb-do-all-records-p)
-                         (mapcar 'car bbdb-records)
-                       (bbdb-current-record))))
+			 (mapcar 'car bbdb-records)
+		       (bbdb-current-record))))
   (if (consp bbdb-record)
       (bbdb-send-mail-many bbdb-record subject)
     (bbdb-send-mail-1 bbdb-record subject)))
@@ -2006,11 +2006,11 @@ folks listed in the *BBDB* buffer instead of just the person at point."
   ;; else...
 
   (cond ((null bbdb-record) (error "record unexists"))
-        ((null (bbdb-record-net bbdb-record))
-         (error "Current record unhas a network addresses."))
-        (t (bbdb-send-mail-internal (bbdb-dwim-net-address bbdb-record)
-                                    subject (list bbdb-record))
-           (if (re-search-backward "^Subject: $" nil t) (end-of-line)))))
+	((null (bbdb-record-net bbdb-record))
+	 (error "Current record unhas a network addresses."))
+	(t (bbdb-send-mail-internal (bbdb-dwim-net-address bbdb-record)
+				    subject (list bbdb-record))
+	   (if (re-search-backward "^Subject: $" nil t) (end-of-line)))))
 
 
 (defun bbdb-send-mail-many (records &optional subject)
@@ -2020,26 +2020,26 @@ folks listed in the *BBDB* buffer instead of just the person at point."
   ;; else...
 
   (let ((good '()) (bad '())
-        (orec records))
+	(orec records))
     (while records
       (if (bbdb-record-net (car records))
-          (setq good (cons (car records) good))
-        (setq bad (cons (car records) bad)))
+	  (setq good (cons (car records) good))
+	(setq bad (cons (car records) bad)))
       (setq records (cdr records)))
     (bbdb-send-mail-internal
      (mapconcat (lambda (x) (bbdb-dwim-net-address x))
-                (nreverse good) ",\n    ")
+		(nreverse good) ",\n    ")
      subject orec)
     (if (not bad) nil
       (goto-char (point-max))
       (let ((p (point))
-            (fill-prefix "    ")
-            (fill-column 70))
-        (insert "*** Warning: No net addresses for "
-                (mapconcat (lambda (x) (bbdb-record-name x))
-                           (nreverse bad) ", ") ".")
-        (fill-region-as-paragraph p (point))
-        (goto-char p))))
+	    (fill-prefix "    ")
+	    (fill-column 70))
+	(insert "*** Warning: No net addresses for "
+		(mapconcat (lambda (x) (bbdb-record-name x))
+			   (nreverse bad) ", ") ".")
+	(fill-region-as-paragraph p (point))
+	(goto-char p))))
   (if (re-search-backward "^Subject: $" nil t) (end-of-line)))
 
 
@@ -2051,41 +2051,41 @@ CC: field of the current buffer (assuming the current buffer is a mail
 composition buffer.)"
   (interactive)
   (let ((addrs (save-excursion
-                 (set-buffer bbdb-buffer-name)
-                 (delq nil
-                       (mapcar (lambda (x)
-                                 (if (bbdb-record-net (car x))
-                                     (bbdb-dwim-net-address (car x))
-                                   nil))
-                               bbdb-records)))))
+		 (set-buffer bbdb-buffer-name)
+		 (delq nil
+		       (mapcar (lambda (x)
+				 (if (bbdb-record-net (car x))
+				     (bbdb-dwim-net-address (car x))
+				   nil))
+			       bbdb-records)))))
     (goto-char (point-min))
     ;; If there's a CC field, move to the end of it, inserting a comma if
     ;;  there are already addresses present.
     ;; Otherwise, if there's an empty To: field, move to the end of it.
     ;; Otherwise, insert an empty CC: field.
     (if (re-search-forward "^CC:[ \t]*" nil t)
-        (if (eolp)
-            nil
-          (end-of-line)
-          (while (looking-at "\n[ \t]")
-            (forward-char) (end-of-line))
-          (insert ",\n")
-          (indent-relative))
+	(if (eolp)
+	    nil
+	  (end-of-line)
+	  (while (looking-at "\n[ \t]")
+	    (forward-char) (end-of-line))
+	  (insert ",\n")
+	  (indent-relative))
       (re-search-forward "^To:[ \t]*")
       (if (eolp)
-          nil
-        (end-of-line)
-        (while (looking-at "\n[ \t]")
-          (forward-char) (end-of-line))
-        (insert ",\n")
-        (indent-relative))
+	  nil
+	(end-of-line)
+	(while (looking-at "\n[ \t]")
+	  (forward-char) (end-of-line))
+	(insert ",\n")
+	(indent-relative))
       (if (eolp)
-          nil
-        (end-of-line)
-        (while (looking-at "\n[ \t]")
-          (forward-char) (end-of-line))
-        (insert "\nCC:")
-        (indent-relative)))
+	  nil
+	(end-of-line)
+	(while (looking-at "\n[ \t]")
+	  (forward-char) (end-of-line))
+	(insert "\nCC:")
+	(indent-relative)))
     ;; Now insert each of the addresses on its own line.
     (while addrs
       (insert (car addrs))
@@ -2097,27 +2097,27 @@ composition buffer.)"
   "*Display BBDB records for all recipients of the message in this buffer."
   (interactive)
   (let ((marker (bbdb-header-start))
-        (fields '("from" "sender" "to" "cc" "bcc"
-                  "resent-from" "resent-to" "resent-cc" "resent-bcc"))
-        addrs)
+	(fields '("from" "sender" "to" "cc" "bcc"
+		  "resent-from" "resent-to" "resent-cc" "resent-bcc"))
+	addrs)
     (message "Searching...")
     (save-excursion
       (set-buffer (marker-buffer marker))
       (while fields
-        (goto-char marker)
-        (setq addrs (append (bbdb-split (or (bbdb-extract-field-value
-                                             (car fields))
-                                            "")
-                                        ",")
-                            addrs)
-              fields (cdr fields))))
+	(goto-char marker)
+	(setq addrs (append (bbdb-split (or (bbdb-extract-field-value
+					     (car fields))
+					    "")
+					",")
+			    addrs)
+	      fields (cdr fields))))
     (let ((rest addrs)
-          (records '())
-          record)
+	  (records '())
+	  record)
       (while rest
-        (setq record (bbdb-annotate-message-sender (car rest) t t t))
-        (if record (setq records (cons record records)))
-        (setq rest (cdr rest)))
+	(setq record (bbdb-annotate-message-sender (car rest) t t t))
+	(if record (setq records (cons record records)))
+	(setq rest (cdr rest)))
       (message "Sorting...")
       (setq records (sort records (lambda (x y) (bbdb-record-lessp x y))))
       (bbdb-display-records records))))
@@ -2128,27 +2128,27 @@ composition buffer.)"
 ;;;###autoload
 (defun bbdb-completion-check-record (sym rec)
   (let ((name (or (bbdb-record-name rec)
-                  (bbdb-record-company rec)
-                  ""))
-        (nets (bbdb-record-net rec))
-        ok)
+		  (bbdb-record-company rec)
+		  ""))
+	(nets (bbdb-record-net rec))
+	ok)
 
     (if (null bbdb-completion-type)
-        (setq ok 't)
+	(setq ok 't)
 
       (if (memq bbdb-completion-type
-                '(name primary-or-name name-or-primary))
-          (setq ok (string= sym (downcase name))))
+		'(name primary-or-name name-or-primary))
+	  (setq ok (string= sym (downcase name))))
 
       ;; #### handle AKA, mail-name or mail-alias here?
       (if ok '()
-        (when (eq bbdb-completion-type 'net)
-          (while (and nets (not ok))
-            (setq ok (string= sym (downcase (car nets)))
-                  nets (cdr nets))))
-        (when (and nets (memq bbdb-completion-type
-                              '(primary primary-or-name name-or-primary)))
-          (setq ok (string= sym (downcase (car nets)))))))
+	(when (eq bbdb-completion-type 'net)
+	  (while (and nets (not ok))
+	    (setq ok (string= sym (downcase (car nets)))
+		  nets (cdr nets))))
+	(when (and nets (memq bbdb-completion-type
+			      '(primary primary-or-name name-or-primary)))
+	  (setq ok (string= sym (downcase (car nets)))))))
     ok))
 
 
@@ -2157,38 +2157,38 @@ composition buffer.)"
   "For use as the third argument to `completing-read'.
 Obey the semantics of `bbdb-completion-type'."
   (cond ((null bbdb-completion-type)
-         t)
-        ((not (boundp symbol))
-         nil)
-        (t
-         (let ((sym  (symbol-name symbol))
-               (recs (symbol-value symbol))
-               ok)
-           (while (and recs (not ok))
-             (setq ok   (bbdb-completion-check-record sym (car recs))
-                   recs (cdr recs)))
-           ok))))
+	 t)
+	((not (boundp symbol))
+	 nil)
+	(t
+	 (let ((sym  (symbol-name symbol))
+	       (recs (symbol-value symbol))
+	       ok)
+	   (while (and recs (not ok))
+	     (setq ok   (bbdb-completion-check-record sym (car recs))
+		   recs (cdr recs)))
+	   ok))))
 
 (defun bbdb-completing-read-record (prompt &optional omit-records)
   "Prompt for and return a record from the bbdb.
 Completion is done according to `bbdb-completion-type'.  If the user
 just hits return, nil is returned.  Otherwise, a valid response is forced."
   (let* ((ht (bbdb-hashtable))
-         (completion-ignore-case 't)
-         (string (completing-read prompt ht 'bbdb-completion-predicate t))
-         (symbol (and (not (= 0 (length string)))
-                      (intern-soft string ht))))
+	 (completion-ignore-case 't)
+	 (string (completing-read prompt ht 'bbdb-completion-predicate t))
+	 (symbol (and (not (= 0 (length string)))
+		      (intern-soft string ht))))
     (if symbol
-        (if (and (boundp symbol) (symbol-value symbol))
-            (let ((recs (symbol-value symbol)) ret)
-              (while recs
-                (if (and (not (memq (car recs) omit-records))
-                         (bbdb-completion-check-record (symbol-name symbol)
-                                                       (car recs)))
-                    (setq ret (cons (car recs) ret)))
-                (setq recs (cdr recs)))
-              ret)
-          (error "selecting deleted (unhashed) record \"%s\"!" symbol))
+	(if (and (boundp symbol) (symbol-value symbol))
+	    (let ((recs (symbol-value symbol)) ret)
+	      (while recs
+		(if (and (not (memq (car recs) omit-records))
+			 (bbdb-completion-check-record (symbol-name symbol)
+						       (car recs)))
+		    (setq ret (cons (car recs) ret)))
+		(setq recs (cdr recs)))
+	      ret)
+	  (error "selecting deleted (unhashed) record \"%s\"!" symbol))
       nil)))
 
 (defun bbdb-completing-read-one-record (prompt &optional omit-records)
@@ -2198,22 +2198,22 @@ just hits return, nil is returned. Otherwise, a valid response is forced.
 if omit-records is non-nil it should be a list of records to dis-allow
 completion with."
   (let ((records (bbdb-remove-memq-duplicates
-                  (bbdb-completing-read-record prompt omit-records))))
+		  (bbdb-completing-read-record prompt omit-records))))
     (cond
      ((eq (length records) 1)
       (car records))
      ((> (length records) 1)
       (let ((count (length records))
-            prompts result)
-        (bbdb-display-records records)
-        (while (> count 0)
-          (setq prompts (cons (list (number-to-string count) count) prompts)
-                count (1- count)))
-        (setq result
-              (completing-read (format "Which duplicate record (1-%s): "
-                                       (length records))
-                               prompts nil t "1"))
-        (nth (1- (string-to-number result)) records)))
+	    prompts result)
+	(bbdb-display-records records)
+	(while (> count 0)
+	  (setq prompts (cons (list (number-to-string count) count) prompts)
+		count (1- count)))
+	(setq result
+	      (completing-read (format "Which duplicate record (1-%s): "
+				       (length records))
+			       prompts nil t "1"))
+	(nth (1- (string-to-number result)) records)))
      (t
       nil))))
 
@@ -2228,7 +2228,7 @@ completion with."
 (defun bbdb-read-addresses-with-completion (prompt &optional default)
   "Like `read-string', but allows `bbdb-complete-name' style completion."
   (read-from-minibuffer prompt default
-                        bbdb-read-addresses-with-completion-map))
+			bbdb-read-addresses-with-completion-map))
 
 
 ;; Internal use. Store the window configuration before we pop up the
@@ -2239,13 +2239,13 @@ completion with."
 (defun bbdb-complete-name-cleanup ()
   (if bbdb-complete-name-saved-window-config
       (progn
-        (if (get-buffer-window "*Completions*")
-            (progn
-              (set-window-configuration
-               bbdb-complete-name-saved-window-config)
-              (bury-buffer "*Completions*"))
-          )
-        (setq bbdb-complete-name-saved-window-config nil))))
+	(if (get-buffer-window "*Completions*")
+	    (progn
+	      (set-window-configuration
+	       bbdb-complete-name-saved-window-config)
+	      (bury-buffer "*Completions*"))
+	  )
+	(setq bbdb-complete-name-saved-window-config nil))))
 
 (defvar bbdb-complete-name-callback-data nil
   "Stores the buffer and region start and end of the completed string.
@@ -2264,7 +2264,7 @@ be a marker for the start of the region being completed."
   (setq bbdb-complete-name-callback-data data)
   (if (featurep 'xemacs)
       (display-completion-list list :activate-callback callback
-                               :user-data data)
+			       :user-data data)
     (display-completion-list list)))
 
 (defadvice choose-completion-string (before bbdb-complete-fix activate)
@@ -2286,9 +2286,9 @@ in buffer other than the mini buffer."
   "Find the record for a name clicked in a completion buffer.
 Currently only used by XEmacs."
   (let ((buffer (nth 0 user-data))
-        (bbdb-complete-name-allow-cycling nil)
-        (beg (nth 1 user-data))
-        (end (nth 2 user-data)))
+	(bbdb-complete-name-allow-cycling nil)
+	(beg (nth 1 user-data))
+	(end (nth 2 user-data)))
     (bbdb-complete-name-cleanup)
     (set-buffer buffer)
     (goto-char beg)
@@ -2301,13 +2301,13 @@ Currently only used by XEmacs."
   (let (ok)
     (while (and (not ok) l1)
       (if (memq (car l1) l2) (setq ok t l1 '())
-        (setq l1 (cdr l1))))
+	(setq l1 (cdr l1))))
     ok))
 
 (defun bbdb-remove-assoc-duplicates (l)
   (if (null l) '()
     (if (assoc (car (car l)) (cdr l))
-        (bbdb-remove-assoc-duplicates (cdr l))
+	(bbdb-remove-assoc-duplicates (cdr l))
       (cons (car l) (bbdb-remove-assoc-duplicates (cdr l))))))
 
 (defcustom bbdb-complete-name-hooks nil
@@ -2335,200 +2335,200 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
   (interactive)
 
   (let* ((end (point))
-         (beg (or start-pos
-                  (save-excursion
-                    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
-                    (goto-char (match-end 0))
-                    (point))))
-         (orig (buffer-substring beg end))
-         (typed (downcase orig))
-         (pattern (bbdb-string-trim typed))
-         (ht (bbdb-hashtable))
-         ;; make a list of possible completion strings
-         ;; (all-the-completions), and a flag to indicate if there's a
-         ;; single matching record or not (only-one-p)
-         (only-one-p t)
-         (all-the-completions nil)
-         (pred
-          (lambda (sym)
-            (when (bbdb-completion-predicate sym)
-              (if (and only-one-p
-                       all-the-completions
-                       (or
-                        ;; not sure about this. more than one record
-                        ;; attached to the symbol? does that happen?
-                        (> (length (symbol-value sym)) 1)
-                        ;; this is the doozy, though. multiple syms
-                        ;; which all match the same record
-                        (delete t (mapcar (lambda(x)
-                                            (equal (symbol-value x)
-                                                   (symbol-value sym)))
-                                          all-the-completions))))
-                  (setq only-one-p nil))
-              (if (not (memq sym all-the-completions))
-                  (setq all-the-completions (cons sym all-the-completions))))))
-         (completion (progn (all-completions pattern ht pred) (try-completion pattern ht)))
-         (exact-match (eq completion t)))
+	 (beg (or start-pos
+		  (save-excursion
+		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
+		    (goto-char (match-end 0))
+		    (point))))
+	 (orig (buffer-substring beg end))
+	 (typed (downcase orig))
+	 (pattern (bbdb-string-trim typed))
+	 (ht (bbdb-hashtable))
+	 ;; make a list of possible completion strings
+	 ;; (all-the-completions), and a flag to indicate if there's a
+	 ;; single matching record or not (only-one-p)
+	 (only-one-p t)
+	 (all-the-completions nil)
+	 (pred
+	  (lambda (sym)
+	    (when (bbdb-completion-predicate sym)
+	      (if (and only-one-p
+		       all-the-completions
+		       (or
+			;; not sure about this. more than one record
+			;; attached to the symbol? does that happen?
+			(> (length (symbol-value sym)) 1)
+			;; this is the doozy, though. multiple syms
+			;; which all match the same record
+			(delete t (mapcar (lambda(x)
+					    (equal (symbol-value x)
+						   (symbol-value sym)))
+					  all-the-completions))))
+		  (setq only-one-p nil))
+	      (if (not (memq sym all-the-completions))
+		  (setq all-the-completions (cons sym all-the-completions))))))
+	 (completion (progn (all-completions pattern ht pred) (try-completion pattern ht)))
+	 (exact-match (eq completion t)))
 
     (cond
      ;; No matches found OR you're trying completion on an
      ;; already-completed record. In the latter case, we might have to
      ;; cycle through the nets for that record.
      ((or (null completion)
-          (and bbdb-complete-name-allow-cycling
-               exact-match ;; which is a net of the record
-               (member orig
-                       (bbdb-record-net
-                        (car (symbol-value (intern-soft pattern ht)))))))
+	  (and bbdb-complete-name-allow-cycling
+	       exact-match ;; which is a net of the record
+	       (member orig
+		       (bbdb-record-net
+			(car (symbol-value (intern-soft pattern ht)))))))
       ;; Clean up the completion buffer, if it exists
       (bbdb-complete-name-cleanup)
       ;; Check for cycling
       (or (catch 'bbdb-cycling-exit
-            ;; jump straight out if we're not cycling
-            (or bbdb-complete-name-allow-cycling
-                (throw 'bbdb-cycling-exit nil))
+	    ;; jump straight out if we're not cycling
+	    (or bbdb-complete-name-allow-cycling
+		(throw 'bbdb-cycling-exit nil))
 
-            ;; find the record we're working on.
-            (let* ((addr (funcall bbdb-extract-address-components-func orig))
-                   (rec
-                    (if (listp addr)
-                        ;; for now, we're ignoring the case where this
-                        ;; returns more than one record. Ideally, the
-                        ;; last expansion would be stored in a
-                        ;; buffer-local variable, perhaps.
-                        (car (bbdb-search-intertwingle (caar addr)
-                                                       (cadar addr)))
-                      nil)))
-              (or rec
-                  (throw 'bbdb-cycling-exit nil))
+	    ;; find the record we're working on.
+	    (let* ((addr (funcall bbdb-extract-address-components-func orig))
+		   (rec
+		    (if (listp addr)
+			;; for now, we're ignoring the case where this
+			;; returns more than one record. Ideally, the
+			;; last expansion would be stored in a
+			;; buffer-local variable, perhaps.
+			(car (bbdb-search-intertwingle (caar addr)
+						       (cadar addr)))
+		      nil)))
+	      (or rec
+		  (throw 'bbdb-cycling-exit nil))
 
-              (if current-prefix-arg
-                  ;; use completion buffer
-                  (let ((standard-output (get-buffer-create "*Completions*")))
-                    ;; a previously existing buffer has to be cleaned first
-                    (save-excursion (set-buffer standard-output)
-                                    (setq buffer-read-only nil)
-                                    (erase-buffer))
-                    (display-completion-list
-                     (mapcar (lambda (n) (bbdb-dwim-net-address rec n))
-                             (bbdb-record-net rec)))
-                    (delete-region beg end)
-                    (switch-to-buffer standard-output))
-                ;; use next address
-                (let* ((addrs (bbdb-record-net rec))
-                       (this-addr (or (cadr (member (car (cdar addr)) addrs))
-                                      (nth 0 addrs))))
-                  (if (= (length addrs) 1)
-                      ;; no alternatives. don't signal an error.
-                      (throw 'bbdb-cycling-exit t)
-                    ;; replace with new mail address
-                    (delete-region beg end)
-                    (insert (bbdb-dwim-net-address rec this-addr))
-                    (run-hooks 'bbdb-complete-name-hooks)
-                    (throw 'bbdb-cycling-exit t))))))
+	      (if current-prefix-arg
+		  ;; use completion buffer
+		  (let ((standard-output (get-buffer-create "*Completions*")))
+		    ;; a previously existing buffer has to be cleaned first
+		    (save-excursion (set-buffer standard-output)
+				    (setq buffer-read-only nil)
+				    (erase-buffer))
+		    (display-completion-list
+		     (mapcar (lambda (n) (bbdb-dwim-net-address rec n))
+			     (bbdb-record-net rec)))
+		    (delete-region beg end)
+		    (switch-to-buffer standard-output))
+		;; use next address
+		(let* ((addrs (bbdb-record-net rec))
+		       (this-addr (or (cadr (member (car (cdar addr)) addrs))
+				      (nth 0 addrs))))
+		  (if (= (length addrs) 1)
+		      ;; no alternatives. don't signal an error.
+		      (throw 'bbdb-cycling-exit t)
+		    ;; replace with new mail address
+		    (delete-region beg end)
+		    (insert (bbdb-dwim-net-address rec this-addr))
+		    (run-hooks 'bbdb-complete-name-hooks)
+		    (throw 'bbdb-cycling-exit t))))))
 
-          ;; FALL THROUGH
-          ;; Check mail aliases
-          (if (and bbdb-expand-mail-aliases (expand-abbrev))
-              ()
-            (when bbdb-complete-name-hooks
-              (message "completion for \"%s\" unfound." pattern)
-              (ding)))));; no matches, sorry!
+	  ;; FALL THROUGH
+	  ;; Check mail aliases
+	  (if (and bbdb-expand-mail-aliases (expand-abbrev))
+	      ()
+	    (when bbdb-complete-name-hooks
+	      (message "completion for \"%s\" unfound." pattern)
+	      (ding)))));; no matches, sorry!
 
      ;; Match for a single record. If cycling is enabled then we don't
      ;; care too much about the exact-match part.
      ((and only-one-p (or exact-match bbdb-complete-name-allow-cycling))
       (let* ((sym (if exact-match (intern-soft pattern ht) (car all-the-completions)))
-             (recs (symbol-value sym))
-             the-net match-recs lst primary matched)
+	     (recs (symbol-value sym))
+	     the-net match-recs lst primary matched)
 
-        (while recs
-          (when (bbdb-record-net (car recs))
+	(while recs
+	  (when (bbdb-record-net (car recs))
 
-            ;; Did we match on name?
-            (let ((b-r-name (or (bbdb-record-name (car recs)) "")))
-              (if (string= pattern
-                           (substring (downcase b-r-name) 0
-                                      (min (length b-r-name)
-                                           (length pattern))))
-                  (setq match-recs (cons (car recs) match-recs)
-                        matched t)))
+	    ;; Did we match on name?
+	    (let ((b-r-name (or (bbdb-record-name (car recs)) "")))
+	      (if (string= pattern
+			   (substring (downcase b-r-name) 0
+				      (min (length b-r-name)
+					   (length pattern))))
+		  (setq match-recs (cons (car recs) match-recs)
+			matched t)))
 
-            ;; Did we match on lastname?
-            (let ((b-r-name (or (bbdb-record-lfname (car recs)) "")))
-              (if (string= pattern
-                           (substring (downcase b-r-name) 0
-                                      (min (length b-r-name)
-                                           (length pattern))))
-                  (setq match-recs (cons (car recs) match-recs)
-                        matched t)))
+	    ;; Did we match on lastname?
+	    (let ((b-r-name (or (bbdb-record-lfname (car recs)) "")))
+	      (if (string= pattern
+			   (substring (downcase b-r-name) 0
+				      (min (length b-r-name)
+					   (length pattern))))
+		  (setq match-recs (cons (car recs) match-recs)
+			matched t)))
 
-            ;; Did we match on aka?
-            (when (not matched)
-              (setq lst (bbdb-record-aka (car recs)))
-              (while lst
-                (if (string= pattern (substring (downcase (car lst)) 0
-                                                (min (length (downcase
-                                                              (car
-                                                               lst)))
-                                                     (length pattern))))
-                    (setq match-recs (append match-recs (list (car recs)))
-                          matched t
-                          lst '())
-                  (setq lst (cdr lst)))))
+	    ;; Did we match on aka?
+	    (when (not matched)
+	      (setq lst (bbdb-record-aka (car recs)))
+	      (while lst
+		(if (string= pattern (substring (downcase (car lst)) 0
+						(min (length (downcase
+							      (car
+							       lst)))
+						     (length pattern))))
+		    (setq match-recs (append match-recs (list (car recs)))
+			  matched t
+			  lst '())
+		  (setq lst (cdr lst)))))
 
-            ;; Name didn't match name so check net matching
-            (when (not matched)
-              (setq lst (bbdb-record-net (car recs)))
-              (setq primary t) ;; primary wins over secondary...
-              (while lst
-                (if (string= pattern (substring (downcase (car lst))
-                                                0 (min (length
-                                                        (downcase (car
-                                                                   lst)))
-                                                       (length pattern))))
-                    (setq the-net (car lst)
-                          lst     nil
-                          match-recs
-                          (if primary (cons (car recs) match-recs)
-                            (append match-recs (list (car recs))))))
-                (setq lst     (cdr lst)
-                      primary nil))))
+	    ;; Name didn't match name so check net matching
+	    (when (not matched)
+	      (setq lst (bbdb-record-net (car recs)))
+	      (setq primary t) ;; primary wins over secondary...
+	      (while lst
+		(if (string= pattern (substring (downcase (car lst))
+						0 (min (length
+							(downcase (car
+								   lst)))
+						       (length pattern))))
+		    (setq the-net (car lst)
+			  lst     nil
+			  match-recs
+			  (if primary (cons (car recs) match-recs)
+			    (append match-recs (list (car recs))))))
+		(setq lst     (cdr lst)
+		      primary nil))))
 
-          ;; loop to next rec
-          (setq recs    (cdr recs)
-                matched nil))
+	  ;; loop to next rec
+	  (setq recs    (cdr recs)
+		matched nil))
 
-        (unless match-recs
-          (error "only exact matching record unhas net field"))
+	(unless match-recs
+	  (error "only exact matching record unhas net field"))
 
-        ;; now replace the text with the expansion
-        (delete-region beg end)
-        (insert (bbdb-dwim-net-address (car match-recs) the-net))
+	;; now replace the text with the expansion
+	(delete-region beg end)
+	(insert (bbdb-dwim-net-address (car match-recs) the-net))
 
-        ;; if we're past fill-column, wrap at the previous comma.
-        (if (and
-             (bbdb-auto-fill-function)
-             (>= (current-column) fill-column))
-            (let ((p (point))
-                  bol)
-              (save-excursion
-                (beginning-of-line)
-                (setq bol (point))
-                (goto-char p)
-                (if (search-backward "," bol t)
-                    (progn
-                      (forward-char 1)
-                      (insert "\n   "))))))
+	;; if we're past fill-column, wrap at the previous comma.
+	(if (and
+	     (bbdb-auto-fill-function)
+	     (>= (current-column) fill-column))
+	    (let ((p (point))
+		  bol)
+	      (save-excursion
+		(beginning-of-line)
+		(setq bol (point))
+		(goto-char p)
+		(if (search-backward "," bol t)
+		    (progn
+		      (forward-char 1)
+		      (insert "\n   "))))))
 
-        ;; Update the *BBDB* buffer if desired.
-        (if bbdb-completion-display-record
-            (let ((bbdb-gag-messages t))
-              (bbdb-display-records-1 match-recs t)))
-        (bbdb-complete-name-cleanup)
+	;; Update the *BBDB* buffer if desired.
+	(if bbdb-completion-display-record
+	    (let ((bbdb-gag-messages t))
+	      (bbdb-display-records-1 match-recs t)))
+	(bbdb-complete-name-cleanup)
 
-        ;; call the exact-completion hook
-        (run-hooks 'bbdb-complete-name-hooks)))
+	;; call the exact-completion hook
+	(run-hooks 'bbdb-complete-name-hooks)))
 
      ;; Partial match
      ;; note, we can't use the trimmed version of the pattern here or
@@ -2538,106 +2538,106 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
       (insert completion)
       (setq end (point))
       (let ((last "")
-            (bbdb-complete-name-allow-cycling nil))
-        (while (and (stringp completion)
-                    (not (string= completion last))
-                    (setq last completion
-                          pattern (downcase orig)
-                          completion (progn (all-completions pattern ht pred) (try-completion pattern ht))))
-          (if (stringp completion)
-              (progn (delete-region beg end)
-                     (insert completion))))
-        (bbdb-complete-name beg)))
+	    (bbdb-complete-name-allow-cycling nil))
+	(while (and (stringp completion)
+		    (not (string= completion last))
+		    (setq last completion
+			  pattern (downcase orig)
+			  completion (progn (all-completions pattern ht pred) (try-completion pattern ht))))
+	  (if (stringp completion)
+	      (progn (delete-region beg end)
+		     (insert completion))))
+	(bbdb-complete-name beg)))
 
      ;; Exact match, but more than one record
      (t
       (or (eq (selected-window) (minibuffer-window))
-          (message "Making completion list..."))
+	  (message "Making completion list..."))
 
       (let (dwim-completions
-            uniq nets net name lfname akas)
-        ;; Now collect all the dwim-addresses for each completion, but only
-        ;; once for each record!  Add it if the net is part of the completions
-        (bbdb-mapc
-         (lambda (sym)
-           (bbdb-mapc
-            (lambda (rec)
-              (when (not (member rec uniq))
-                (setq uniq (cons rec uniq)
-                      nets (bbdb-record-net rec)
-                      name (downcase (or (bbdb-record-name rec) ""))
-                      lfname (downcase (or (bbdb-record-lfname rec) ""))
-                      akas (mapcar 'downcase (bbdb-record-aka rec)))
-                (while nets
-                  (setq net (car nets))
-                  (when (cond
-                         ;; primary
-                         ((and (member bbdb-completion-type
-                                       '(primary primary-or-name))
-                               (member (intern-soft (downcase net) ht)
-                                       all-the-completions))
-                          (setq nets nil)
-                          t)
-                         ;; name
-                         ((and name (member bbdb-completion-type
-                                            '(nil name primary-or-name))
-                               (let ((cname (symbol-name sym)))
-                                 (or (string= cname name)
-                                     (string= cname lfname)
-                                     (member cname akas))))
-                          (setq name nil)
-                          t)
-                         ;; net
-                         ((and (member bbdb-completion-type
-                                       '(nil net))
-                               (member (intern-soft (downcase net) ht)
-                                       all-the-completions)))
-                         ;; (name-or-)primary
-                         ((and (member bbdb-completion-type
-                                       '(name-or-primary))
-                               (let ((cname (symbol-name sym)))
-                                 (or (string= cname name)
-                                     (string= cname lfname)
-                                     (member cname akas))))
-                          (setq nets nil)
-                          t)
-                         )
-                    (setq dwim-completions
-                          (cons (bbdb-dwim-net-address rec net)
-                                dwim-completions))
-                    (if exact-match (setq nets nil)))
-                  (setq nets (cdr nets)))))
-            (symbol-value sym)))
-         all-the-completions)
+	    uniq nets net name lfname akas)
+	;; Now collect all the dwim-addresses for each completion, but only
+	;; once for each record!  Add it if the net is part of the completions
+	(bbdb-mapc
+	 (lambda (sym)
+	   (bbdb-mapc
+	    (lambda (rec)
+	      (when (not (member rec uniq))
+		(setq uniq (cons rec uniq)
+		      nets (bbdb-record-net rec)
+		      name (downcase (or (bbdb-record-name rec) ""))
+		      lfname (downcase (or (bbdb-record-lfname rec) ""))
+		      akas (mapcar 'downcase (bbdb-record-aka rec)))
+		(while nets
+		  (setq net (car nets))
+		  (when (cond
+			 ;; primary
+			 ((and (member bbdb-completion-type
+				       '(primary primary-or-name))
+			       (member (intern-soft (downcase net) ht)
+				       all-the-completions))
+			  (setq nets nil)
+			  t)
+			 ;; name
+			 ((and name (member bbdb-completion-type
+					    '(nil name primary-or-name))
+			       (let ((cname (symbol-name sym)))
+				 (or (string= cname name)
+				     (string= cname lfname)
+				     (member cname akas))))
+			  (setq name nil)
+			  t)
+			 ;; net
+			 ((and (member bbdb-completion-type
+				       '(nil net))
+			       (member (intern-soft (downcase net) ht)
+				       all-the-completions)))
+			 ;; (name-or-)primary
+			 ((and (member bbdb-completion-type
+				       '(name-or-primary))
+			       (let ((cname (symbol-name sym)))
+				 (or (string= cname name)
+				     (string= cname lfname)
+				     (member cname akas))))
+			  (setq nets nil)
+			  t)
+			 )
+		    (setq dwim-completions
+			  (cons (bbdb-dwim-net-address rec net)
+				dwim-completions))
+		    (if exact-match (setq nets nil)))
+		  (setq nets (cdr nets)))))
+	    (symbol-value sym)))
+	 all-the-completions)
 
-        ;; if, after all that, we've only got one matching record...
-        (if (and dwim-completions (null (cdr dwim-completions)))
-            (progn
-              (delete-region beg end)
-              (insert (car dwim-completions))
-              (message ""))
-          ;; otherwise, pop up a completions window
-          (if (not (get-buffer-window "*Completions*"))
-              (setq bbdb-complete-name-saved-window-config
-                    (current-window-configuration)))
-          (let ((arg (list (current-buffer)
-                           (set-marker (make-marker) beg)
-                           (set-marker (make-marker) end))))
-            (with-output-to-temp-buffer "*Completions*"
-              (bbdb-display-completion-list
-               dwim-completions
-               'bbdb-complete-clicked-name
-               arg)))
-          (or (eq (selected-window) (minibuffer-window))
-              (message "Making completion list...done"))))))))
+	;; if, after all that, we've only got one matching record...
+	(if (and dwim-completions (null (cdr dwim-completions)))
+	    (progn
+	      (delete-region beg end)
+	      (insert (car dwim-completions))
+	      (message ""))
+	  ;; otherwise, pop up a completions window
+	  (if (not (get-buffer-window "*Completions*"))
+	      (setq bbdb-complete-name-saved-window-config
+		    (current-window-configuration)))
+	  (let ((arg (list (current-buffer)
+			   (set-marker (make-marker) beg)
+			   (set-marker (make-marker) end))))
+	    (with-output-to-temp-buffer "*Completions*"
+	      (bbdb-display-completion-list
+	       dwim-completions
+	       'bbdb-complete-clicked-name
+	       arg)))
+	  (or (eq (selected-window) (minibuffer-window))
+	      (message "Making completion list...done"))))))))
 
 ;;;###autoload
 (defun bbdb-yank ()
   "Insert the current contents of the *BBDB* buffer at point."
   (interactive)
   (insert (let ((b (current-buffer)))
-            (set-buffer bbdb-buffer-name)
-            (prog1 (buffer-string) (set-buffer b)))))
+	    (set-buffer bbdb-buffer-name)
+	    (prog1 (buffer-string) (set-buffer b)))))
 
 
 ;;; interface to mail-abbrevs.el.
@@ -2652,19 +2652,19 @@ Completion behaviour can be controlled with `bbdb-completion-type'."
 Exclude those matching the regexp EXCLUDE.  When PRIMARY-ONLY is t
 only work on the primary net of records."
   (let ((records (bbdb-records))
-        expanded
-        r n nets)
+	expanded
+	r n nets)
     (while records
       (setq r (car records)
-            nets (bbdb-record-net r))
+	    nets (bbdb-record-net r))
       (while nets
-        (setq n (car nets))
-        (if (and (not (= (aref n 0) ?\())
-                 (not (= (aref n 1) ?/))
-                 (string-match include n)
-                 (or (not exclude) (not (string-match exclude n))))
-            (setq expanded (cons (bbdb-dwim-net-address r n) expanded)))
-        (setq nets (if primary-only nil (cdr nets))))
+	(setq n (car nets))
+	(if (and (not (= (aref n 0) ?\())
+		 (not (= (aref n 1) ?/))
+		 (string-match include n)
+		 (or (not exclude) (not (string-match exclude n))))
+	    (setq expanded (cons (bbdb-dwim-net-address r n) expanded)))
+	(setq nets (if primary-only nil (cdr nets))))
       (setq records (cdr records)))
     expanded))
 
@@ -2678,51 +2678,51 @@ Exclude those matching the regexp EXCLUDE."
   "Return an alist of (alias (rec1 emails) [(rec2 emails) ...]) elements.
 Does the magic alias handling described in `bbdb-define-all-aliases'."
   (let* ((aliases-field bbdb-define-all-aliases-field)
-         (target (cons bbdb-define-all-aliases-field "."))
-         (records (bbdb-search (bbdb-records) nil nil nil target))
-         r nets aliases result)
-    (while records
-      (setq r (car records)
-            nets (bbdb-record-net r))
+	 (target (cons bbdb-define-all-aliases-field "."))
+	 (records (bbdb-search (bbdb-records) nil nil nil target))
+	 nets aliases result)
+    (dolist (r records)
+      (setq nets (bbdb-record-net r))
       (if (null nets)
-          (if (not bbdb-silent-running)
-              (bbdb-warn "record %S has no network address, but the aliases: %s"
-                         (bbdb-record-name r)
-                         (bbdb-record-getprop r aliases-field)))
-        (setq aliases (bbdb-split (bbdb-record-getprop r aliases-field) ","))
-        (while aliases
-          (let* ((alias (car aliases))
-                 match item)
-            ;; extract the nets based on the alias
-            (cond ((string-match "^\\(.+\\)\\*$" alias)
-                   ;; all nets of the record
-                   (setq alias (match-string 1 alias)
-                         item nets))
-                  ((string-match "^\\(.+\\)\\[\\([0-9]+\\)\\]$" alias)
-                   ;; the NTH net of the record
-                   (setq item (string-to-number (match-string 2 alias))
-                         item (list (or (nth item nets)
-                                        (error "net[%d] for alias %S does not exist!"
-                                               item alias)))
-                         alias (match-string 1 alias)))
-                  ((string-match "^\\(.+\\)/\\(.+\\)$" alias)
-                   ;; all nets of the record matching a regexp
-                   (let ((r (match-string 2 alias)))
-                     (setq alias (match-string 1 alias))
-                     (setq item (mapcar (lambda (n)
-                                          (if (string-match r n)
-                                              n))
-                                        nets)
-                           item (delete nil item))))
-                  (t
-                   (setq item (list (car nets)))))
-            (when item
-              (setq item (list r item))
-              (if (setq match (assoc alias result))
-                  (nconc match (cons item nil))
-                (setq result (cons (list alias item) result))))
-            (setq aliases (cdr aliases))))
-        (setq records (cdr records))))
+	  (if (not bbdb-silent-running)
+	      (bbdb-warn
+	       "record %S has no network address, but the aliases: %s"
+	       (bbdb-record-name r)
+	       (bbdb-record-getprop r aliases-field)))
+	(setq aliases (bbdb-split (bbdb-record-getprop r aliases-field) ","))
+	(while aliases
+	  (let* ((alias (car aliases))
+		 match item)
+	    ;; extract the nets based on the alias
+	    (cond ((string-match "^\\(.+\\)\\*$" alias)
+		   ;; all nets of the record
+		   (setq alias (match-string 1 alias)
+			 item nets))
+		  ((string-match "^\\(.+\\)\\[\\([0-9]+\\)\\]$" alias)
+		   ;; the NTH net of the record
+		   (setq item (string-to-number (match-string 2 alias))
+			 item (list (or (nth item nets)
+					(error
+					 "net[%d] for alias %S does not exist!"
+					 item alias)))
+			 alias (match-string 1 alias)))
+		  ((string-match "^\\(.+\\)/\\(.+\\)$" alias)
+		   ;; all nets of the record matching a regexp
+		   (let ((r (match-string 2 alias)))
+		     (setq alias (match-string 1 alias))
+		     (setq item (mapcar (lambda (n)
+					  (if (string-match r n)
+					      n))
+					nets)
+			   item (delete nil item))))
+		  (t
+		   (setq item (list (car nets)))))
+	    (when item
+	      (setq item (list r item))
+	      (if (setq match (assoc alias result))
+		  (nconc match (cons item nil))
+		(setq result (cons (list alias item) result))))
+	    (setq aliases (cdr aliases))))))
     result))
 
 (defun bbdb-expand-alias (alias-items aliases &optional seen-aliases)
@@ -2738,37 +2738,37 @@ checked to detect cycles.
 
 Other nets are formatted by `bbdb-dwim-net-address'."
   (let ((alias (car alias-items))
-        (items (cdr alias-items))
-        rec nets n r
-        records result)
+	(items (cdr alias-items))
+	rec nets n r
+	records result)
     (if (member alias seen-aliases)
-        (error "Alias cycle during recursive expansion. Alias %S already seen in %S"
-               alias seen-aliases))
+	(error "Alias cycle during recursive expansion. Alias %S already seen in %S"
+	       alias seen-aliases))
     (setq seen-aliases (cons alias seen-aliases))
     (while items
       (setq rec (car items)
-            nets (car (cdr rec))
-            rec (car rec)
-            records (cons rec records))
+	    nets (car (cdr rec))
+	    rec (car rec)
+	    records (cons rec records))
       (while nets
-        (setq n (car nets))
-        (cond ((string-match "^\\([^/]+\\)/\\(.*\\)$" n)
-               (setq n (funcall (intern (format "bbdb-magic-net-%s"
-                                                (match-string 1 n)))
-                                (match-string 2 n))))
-              ((= ?\( (aref n 0))
-               (setq r (read n))
-               (setq n (apply (intern (format "bbdb-magic-net-%s"
-                                              (car r)))
-                              (cdr r))))
-              ((and (not (string-match "@" n)) (setq r (assoc n aliases)))
-               (setq n (bbdb-expand-alias r aliases seen-aliases)
-                     records (append (nth 1 n) records)
-                     n (nth 2 n)))
-              (t
-               (setq n (list (bbdb-dwim-net-address rec n)))))
-        (setq result (append n result))
-        (setq nets (cdr nets)))
+	(setq n (car nets))
+	(cond ((string-match "^\\([^/]+\\)/\\(.*\\)$" n)
+	       (setq n (funcall (intern (format "bbdb-magic-net-%s"
+						(match-string 1 n)))
+				(match-string 2 n))))
+	      ((= ?\( (aref n 0))
+	       (setq r (read n))
+	       (setq n (apply (intern (format "bbdb-magic-net-%s"
+					      (car r)))
+			      (cdr r))))
+	      ((and (not (string-match "@" n)) (setq r (assoc n aliases)))
+	       (setq n (bbdb-expand-alias r aliases seen-aliases)
+		     records (append (nth 1 n) records)
+		     n (nth 2 n)))
+	      (t
+	       (setq n (list (bbdb-dwim-net-address rec n)))))
+	(setq result (append n result))
+	(setq nets (cdr nets)))
       (setq items (cdr items)))
     (list alias records result)))
 
@@ -2776,7 +2776,7 @@ Other nets are formatted by `bbdb-dwim-net-address'."
 (defun bbdb-all-aliases-expanded ()
   "Return an alist (alias record-list net-list) elements."
   (let ((aliases (reverse (bbdb-collect-all-aliases)))
-        as result)
+	as result)
     (setq as aliases)
     (while as
       (setq result (cons (bbdb-expand-alias (car as) aliases) result))
@@ -2817,48 +2817,48 @@ This can be used to define hierarchical aliases.
 Other nets are formatted by `bbdb-dwim-net-address'."
   (interactive "")
   (let* ((use-abbrev-p (fboundp 'define-mail-abbrev))
-         (abbrev-handler (if use-abbrev-p
-                             'define-mail-abbrev
-                           'define-mail-alias))
-         (abbrev-table (if use-abbrev-p
-                           'mail-abbrevs
-                         'mail-aliases))
-         (mail-alias-separator-string (if (boundp 'mail-alias-separator-string)
-                                          mail-alias-separator-string
-                                        ", "))
-         (aliases (bbdb-all-aliases-expanded))
-         records alias nets expansion)
+	 (abbrev-handler (if use-abbrev-p
+			     'define-mail-abbrev
+			   'define-mail-alias))
+	 (abbrev-table (if use-abbrev-p
+			   'mail-abbrevs
+			 'mail-aliases))
+	 (mail-alias-separator-string (if (boundp 'mail-alias-separator-string)
+					  mail-alias-separator-string
+					", "))
+	 (aliases (bbdb-all-aliases-expanded))
+	 records alias nets expansion)
 
     (if use-abbrev-p
-        nil
+	nil
       ;; clear abbrev-table
       (setq mail-aliases nil)
       ;; arrange rebuilt if necessary, this should be done by
       ;; mail-pre-abbrev-expand-hook, but there is none!
       (defadvice sendmail-pre-abbrev-expand-hook
-        (before bbdb-rebuilt-all-aliases activate)
-        (bbdb-rebuilt-all-aliases)))
+	(before bbdb-rebuilt-all-aliases activate)
+	(bbdb-rebuilt-all-aliases)))
 
     ;; iterate over the results and create the aliases
     (while aliases
       (setq alias (car aliases)
-            records (nth 1 alias)
-            nets (nth 2 alias)
-            alias (car alias)
-            expansion (mapconcat 'identity nets mail-alias-separator-string))
+	    records (nth 1 alias)
+	    nets (nth 2 alias)
+	    alias (car alias)
+	    expansion (mapconcat 'identity nets mail-alias-separator-string))
       (funcall abbrev-handler alias expansion)
       (setq alias (or (intern-soft (downcase alias)
-                                   (symbol-value abbrev-table))
-                      (error "couldn't find the alias we just defined!")))
+				   (symbol-value abbrev-table))
+		      (error "couldn't find the alias we just defined!")))
       (or (eq (symbol-function alias) 'mail-abbrev-expand-hook)
-          (error "mail-aliases contains unexpected hook %s"
-                 (symbol-function alias)))
+	  (error "mail-aliases contains unexpected hook %s"
+		 (symbol-function alias)))
       (fset alias (list 'lambda '()
-                        (list 'bbdb-mail-abbrev-expand-hook
-                              alias (list 'quote
-                                          (mapcar (lambda (e)
-                                                    (car (bbdb-record-net e)))
-                                                  records)))))
+			(list 'bbdb-mail-abbrev-expand-hook
+			      alias (list 'quote
+					  (mapcar (lambda (e)
+						    (car (bbdb-record-net e)))
+						  records)))))
       (setq aliases (cdr aliases)))))
 
 ;; We should be cleverer here and instead of rebuilding all aliases we should
@@ -2867,7 +2867,7 @@ Other nets are formatted by `bbdb-dwim-net-address'."
   (let ((needs-rebuilt bbdb-define-all-aliases-needs-rebuilt))
     (when needs-rebuilt
       (if (not bbdb-silent-running)
-          (message "Rebuilding aliases due to %s aliases." needs-rebuilt))
+	  (message "Rebuilding aliases due to %s aliases." needs-rebuilt))
       (setq bbdb-define-all-aliases-needs-rebuilt nil)
       (bbdb-define-all-aliases))))
 
@@ -2895,16 +2895,16 @@ these to records, which is plenty fast."
   "Return a list of mail aliases used in the BBDB.
 The format is suitable for `completing-read'."
   (let* ((target (cons bbdb-define-all-aliases-field "."))
-         (records (bbdb-search (bbdb-records) nil nil nil target))
-         result aliases)
+	 (records (bbdb-search (bbdb-records) nil nil nil target))
+	 result aliases)
     (while records
       (setq aliases (bbdb-split
-                     (bbdb-record-getprop (car records)
-                                          bbdb-define-all-aliases-field)
-                     ","))
+		     (bbdb-record-getprop (car records)
+					  bbdb-define-all-aliases-field)
+		     ","))
       (while aliases
-        (add-to-list 'result (list (car aliases)))
-        (setq aliases (cdr aliases)))
+	(add-to-list 'result (list (car aliases)))
+	(setq aliases (cdr aliases)))
       (setq records (cdr records)))
     result))
 
@@ -2915,40 +2915,40 @@ When called with prefix argument it will remove the alias.
 We honor `bbdb-apply-next-command-to-all-records'!
 The new alias will only be added if it isn't there yet."
   (interactive (list (if (bbdb-do-all-records-p) 'all 'one)
-                     (completing-read
-                      (format "%s mail alias: " (if current-prefix-arg "Remove" "Add"))
-                      (bbdb-get-mail-aliases))
-                     current-prefix-arg))
+		     (completing-read
+		      (format "%s mail alias: " (if current-prefix-arg "Remove" "Add"))
+		      (bbdb-get-mail-aliases))
+		     current-prefix-arg))
   (setq newalias (bbdb-string-trim newalias))
   (setq newalias (if (string= "" newalias) nil newalias))
   (let* ((propsym bbdb-define-all-aliases-field)
-         (do-all-p (if (equal records 'one) nil t))
-         (records (cond ((equal records 'all) (mapcar 'car bbdb-records))
-                        ((equal records 'one) (list (bbdb-current-record t)))
-                        (t records))))
+	 (do-all-p (if (equal records 'one) nil t))
+	 (records (cond ((equal records 'all) (mapcar 'car bbdb-records))
+			((equal records 'one) (list (bbdb-current-record t)))
+			(t records))))
     (while records
       (let* ((record (car records))
-             (oldaliases (bbdb-record-getprop record propsym)))
-        (if oldaliases (setq oldaliases (bbdb-split oldaliases ",")))
-        (if delete (setq oldaliases (delete newalias oldaliases))
-          (add-to-list 'oldaliases newalias))
-        (setq oldaliases (bbdb-join oldaliases ", "))
-        (bbdb-record-putprop record propsym oldaliases))
+	     (oldaliases (bbdb-record-getprop record propsym)))
+	(if oldaliases (setq oldaliases (bbdb-split oldaliases ",")))
+	(if delete (setq oldaliases (delete newalias oldaliases))
+	  (add-to-list 'oldaliases newalias))
+	(setq oldaliases (bbdb-join oldaliases ", "))
+	(bbdb-record-putprop record propsym oldaliases))
       (setq records (cdr records)))
     (if do-all-p
-        (bbdb-redisplay-records)
+	(bbdb-redisplay-records)
       (bbdb-redisplay-one-record (bbdb-current-record))))
   (setq bbdb-define-all-aliases-needs-rebuilt
-        (if delete
-            'deleted
-          (if (bbdb-record-net (bbdb-current-record))
-              'new
-            nil))))
+	(if delete
+	    'deleted
+	  (if (bbdb-record-net (bbdb-current-record))
+	      'new
+	    nil))))
 
 ;;; Dialing numbers from BBDB
 (defcustom bbdb-dial-local-prefix-alist
   '(((if (integerp bbdb-default-area-code)
-         (format "(%03d)" bbdb-default-area-code)
+	 (format "(%03d)" bbdb-default-area-code)
        (or bbdb-default-area-code ""))
      ""))
   "Mapping to remove local prefixes from numbers.
@@ -2968,7 +2968,7 @@ opinion, you're dialing a local number if it starts with a 0 after
 processing bbdb-dial-local-prefix-alist."
   :group 'bbdb-phone-dialing
   :type '(choice (const :tag "No digits required" nil)
-                 (string :tag "Dial this first" "9")))
+		 (string :tag "Dial this first" "9")))
 
 (defcustom bbdb-dial-long-distance-prefix nil
   "Long distance prefix digits.
@@ -2979,13 +2979,13 @@ code. Note that this is used to replace the + sign in phone numbers
 when dialling (international dialing prefix.)"
   :group 'bbdb-phone-dialing
   :type '(choice (const :tag "No digits required" nil)
-                 (string :tag "Dial this first" "1")))
+		 (string :tag "Dial this first" "1")))
 
 (defcustom bbdb-sound-player nil
   "The program to be used to play the sounds for the touch-tone digits."
   :group 'bbdb-phone-dialing
   :type '(choice (const :tag "No External Player" nil)
-                 (file :tag "Sound Player" "/usr/local/bin/play")))
+		 (file :tag "Sound Player" "/usr/local/bin/play")))
 
 (defcustom bbdb-sound-files
   '["/usr/demo/SOUND/sounds/touchtone.0.au"
@@ -3011,8 +3011,8 @@ If this value is nil, the audio device is used for dialing. Otherwise,
 this string is fed to the modem before the phone number digits."
   :group 'bbdb-phone-dialing
   :type '(choice (const  :tag "audio" nil)
-                 (string :tag "tone dialing" "ATDT ")
-                 (string :tag "pulse dialing" "ATDP ")))
+		 (string :tag "tone dialing" "ATDT ")
+		 (string :tag "pulse dialing" "ATDP ")))
 
 (defcustom bbdb-modem-device "/dev/modem"
   "The name of the modem device.
@@ -3035,19 +3035,19 @@ try to use internal sound if available."
       (apply 'play-sound (list (intern (format "touchtone%d" num))
 			       bbdb-sound-volume))
     (if (and (not (featurep 'xemacs))
-             ;; We can't tell a priori if Emacs 21 facility will
-             ;; actually work.
-             (condition-case nil
-                 (play-sound (list 'sound
-                                   :file (aref bbdb-sound-files
-                                               (string-to-number num))
-                                   :volume (or volume bbdb-sound-volume)))
-               (error nil)))
-        (if (and bbdb-sound-player
-                 (file-exists-p bbdb-sound-player))
-            (call-process bbdb-sound-player nil nil nil
-                          (aref bbdb-sound-files num))
-          (error "BBDB has no means of playing sound.")))))
+	     ;; We can't tell a priori if Emacs 21 facility will
+	     ;; actually work.
+	     (condition-case nil
+		 (play-sound (list 'sound
+				   :file (aref bbdb-sound-files
+					       (string-to-number num))
+				   :volume (or volume bbdb-sound-volume)))
+	       (error nil)))
+	(if (and bbdb-sound-player
+		 (file-exists-p bbdb-sound-player))
+	    (call-process bbdb-sound-player nil nil nil
+			  (aref bbdb-sound-files num))
+	  (error "BBDB has no means of playing sound.")))))
 
 (eval-and-compile
   (if (fboundp 'next-event)
@@ -3065,35 +3065,35 @@ a pause in the dial sequence."
     (mapcar
      (lambda(d)
        (if bbdb-modem-dial
-           (setq dialed
-                 (concat dialed
-                         (cond ((eq ?  d) ",")
-                               ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?* ?#))
-                                (format "%c" d))
-                               (t ""))))
-         (cond
-          ((eq ?# d)
-           (bbdb-play-sound 10))
-          ((eq ?* d)
-           (bbdb-play-sound 11))
-          ((eq ?  d)
-           ;; if we use sit-for, the user can interrupt!
-           (sleep-for 1)) ;; configurable?
-          ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-           (bbdb-play-sound (- d ?0)))
-          (t)))) phone-string)
+	   (setq dialed
+		 (concat dialed
+			 (cond ((eq ?  d) ",")
+			       ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?* ?#))
+				(format "%c" d))
+			       (t ""))))
+	 (cond
+	  ((eq ?# d)
+	   (bbdb-play-sound 10))
+	  ((eq ?* d)
+	   (bbdb-play-sound 11))
+	  ((eq ?  d)
+	   ;; if we use sit-for, the user can interrupt!
+	   (sleep-for 1)) ;; configurable?
+	  ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+	   (bbdb-play-sound (- d ?0)))
+	  (t)))) phone-string)
 
     ;; tell the user that we're dialed, if we're using the modem
     (if bbdb-modem-dial
-        (with-temp-buffer
-          (insert bbdb-modem-dial dialed ";\r\n")
-          (write-region (point-min) (point-max) bbdb-modem-device t)
-          (message "%s dialed. Pick up the phone now and hit any key ..."
-                   phone-string)
-          (bbdb-next-event)
-          (erase-buffer)
-          (insert "ATH\r\n")
-          (write-region (point-min) (point-max) bbdb-modem-device t)))))
+	(with-temp-buffer
+	  (insert bbdb-modem-dial dialed ";\r\n")
+	  (write-region (point-min) (point-max) bbdb-modem-device t)
+	  (message "%s dialed. Pick up the phone now and hit any key ..."
+		   phone-string)
+	  (bbdb-next-event)
+	  (erase-buffer)
+	  (insert "ATH\r\n")
+	  (write-region (point-min) (point-max) bbdb-modem-device t)))))
 
 ;;;###autoload
 (defun bbdb-dial (phone force-area-code)
@@ -3103,7 +3103,7 @@ phone number.  Does not dial the extension.  Does not apply the
 transformations from bbdb-dial-local-prefix-alist if a prefix arg
 is given."
   (interactive (list (bbdb-current-field)
-                     current-prefix-arg))
+		     current-prefix-arg))
   (if (eq (car-safe phone) 'name)
       (setq phone (car (bbdb-record-phones (bbdb-current-record)))))
   (if (eq (car-safe phone) 'phone)
@@ -3113,33 +3113,33 @@ is given."
   (let* ((number (bbdb-phone-string phone)) shortnumber)
     (when (not force-area-code)
       (let ((alist bbdb-dial-local-prefix-alist))
-        (while alist
-          (if (string-match (concat "^" (eval (caar alist))) number)
-              (setq shortnumber (concat (car (cdar alist))
-                                        (substring number (match-end 0)))
-                    alist nil))
-          (setq alist (cdr alist)))))
+	(while alist
+	  (if (string-match (concat "^" (eval (caar alist))) number)
+	      (setq shortnumber (concat (car (cdar alist))
+					(substring number (match-end 0)))
+		    alist nil))
+	  (setq alist (cdr alist)))))
 
     ;; cut off the extension
     (if (string-match "x[0-9]+$" number)
-        (setq number (substring number 0 (match-beginning 0))))
+	(setq number (substring number 0 (match-beginning 0))))
 
     ;; This is terrifically Americanized...
     ;; Leading 0 => local number (?)
     (if (and (not shortnumber) bbdb-dial-local-prefix
-             (string-match "^0" number))
-        (setq number (concat bbdb-dial-local-prefix number)))
+	     (string-match "^0" number))
+	(setq number (concat bbdb-dial-local-prefix number)))
 
     ;; Leading + => long distance/international number
     (if (and (not shortnumber) bbdb-dial-long-distance-prefix
-             (string-match "^\+" number))
-        (setq number (concat bbdb-dial-long-distance-prefix " "
-                             (substring number 1))))
+	     (string-match "^\+" number))
+	(setq number (concat bbdb-dial-long-distance-prefix " "
+			     (substring number 1))))
 
     ;; use the short number if it's available
     (setq number (or shortnumber number))
     (if (not bbdb-silent-running)
-        (message "Dialing %s" number))
+	(message "Dialing %s" number))
     (bbdb-dial-number number)))
 
 
@@ -3168,25 +3168,25 @@ To be used in `interactive' like this:
   (message "Fingering %s..." address)
   (condition-case condition
       (let* ((@ (string-match "@" address))
-             (stream (open-network-stream
-                      "finger" bbdb-finger-buffer-name
-                      (if @ (substring address (1+ @)) "localhost")
-                      "finger")))
-        (set-process-sentinel stream 'bbdb-finger-process-sentinel)
-        (princ (concat "finger " address "\n"))
-        (process-send-string
-         stream (concat;;"/W " ; cs.stanford.edu doesn't like this...
-                 (if @ (substring address 0 @) address) "\n"))
-        (process-send-eof stream))
+	     (stream (open-network-stream
+		      "finger" bbdb-finger-buffer-name
+		      (if @ (substring address (1+ @)) "localhost")
+		      "finger")))
+	(set-process-sentinel stream 'bbdb-finger-process-sentinel)
+	(princ (concat "finger " address "\n"))
+	(process-send-string
+	 stream (concat;;"/W " ; cs.stanford.edu doesn't like this...
+		 (if @ (substring address 0 @) address) "\n"))
+	(process-send-eof stream))
     (error
      (princ (format "error fingering %s: %s\n" address
-                    (if (stringp condition) condition
-                      (concat "\n" (nth 1 condition)
-                              (if (cdr (cdr condition)) ": ")
-                              (mapconcat '(lambda (x)
-                                            (if (stringp x) x
-                                              (bbdb-prin1-to-string x)))
-                                         (cdr (cdr condition)) ", ")))))
+		    (if (stringp condition) condition
+		      (concat "\n" (nth 1 condition)
+			      (if (cdr (cdr condition)) ": ")
+			      (mapconcat '(lambda (x)
+					    (if (stringp x) x
+					      (bbdb-prin1-to-string x)))
+					 (cdr (cdr condition)) ", ")))))
      (bbdb-finger-process-sentinel nil nil)))) ; hackaroonie
 
 (defvar bbdb-remaining-addrs-to-finger)
@@ -3197,14 +3197,14 @@ To be used in `interactive' like this:
     (while (search-forward "\r" nil t)
       (delete-char -1))
     (if (and (boundp 'bbdb-remaining-addrs-to-finger)
-             bbdb-remaining-addrs-to-finger)
-        (let ((addr (car bbdb-remaining-addrs-to-finger)))
-          (setq bbdb-remaining-addrs-to-finger
-                (cdr bbdb-remaining-addrs-to-finger))
-          (goto-char (point-max))
-          (let ((standard-output (current-buffer)))
-            (princ "\n\n\^L\n")
-            (bbdb-finger-internal addr)))
+	     bbdb-remaining-addrs-to-finger)
+	(let ((addr (car bbdb-remaining-addrs-to-finger)))
+	  (setq bbdb-remaining-addrs-to-finger
+		(cdr bbdb-remaining-addrs-to-finger))
+	  (goto-char (point-max))
+	  (let ((standard-output (current-buffer)))
+	    (princ "\n\n\^L\n")
+	    (bbdb-finger-internal addr)))
       (goto-char (point-max))
       (message "Finger done."))))
 
@@ -3215,9 +3215,9 @@ To be used in `interactive' like this:
 
 (defun bbdb-record-finger-host (record)
   (let ((finger-host (and bbdb-finger-host-field
-                          (bbdb-record-getprop record bbdb-finger-host-field))))
+			  (bbdb-record-getprop record bbdb-finger-host-field))))
     (if finger-host
-        (bbdb-split finger-host ",")
+	(bbdb-split finger-host ",")
       (bbdb-record-net record))))
 
 ;;;###autoload
@@ -3241,49 +3241,49 @@ at point.  The numeric prefix argument has the same interpretation.
 You can define a special network address to \"finger\" by defining a
 field `finger-host' (default value of `bbdb-finger-host-field')."
   (interactive (list (bbdb-get-record "BBDB Finger: ")
-                     current-prefix-arg))
+		     current-prefix-arg))
   (if (not (consp record)) (setq record (list record)))
   (let ((addrs nil))
     (while record
       (cond ((null which-address)
-             (setq addrs
-                   (nconc addrs
-                          (list (car (bbdb-record-finger-host (car record)))))))
-            ((stringp which-address)
-             (setq addrs (nconc addrs (list which-address))))
-            ((numberp which-address)
-             (setq addrs
-                   (nconc addrs
-                          (list (nth which-address
-                                     (bbdb-record-finger-host (car record)))))))
-            (t
-             (setq addrs
-                   (nconc addrs
-                          (copy-sequence (bbdb-record-finger-host
-                                          (car record)))))))
+	     (setq addrs
+		   (nconc addrs
+			  (list (car (bbdb-record-finger-host (car record)))))))
+	    ((stringp which-address)
+	     (setq addrs (nconc addrs (list which-address))))
+	    ((numberp which-address)
+	     (setq addrs
+		   (nconc addrs
+			  (list (nth which-address
+				     (bbdb-record-finger-host (car record)))))))
+	    (t
+	     (setq addrs
+		   (nconc addrs
+			  (copy-sequence (bbdb-record-finger-host
+					  (car record)))))))
       (setq record (cdr record)))
     (if (car addrs)
-        (save-excursion
-          (with-output-to-temp-buffer bbdb-finger-buffer-name
-            (set-buffer bbdb-finger-buffer-name)
-            (make-local-variable 'bbdb-remaining-addrs-to-finger)
-            (setq bbdb-remaining-addrs-to-finger (cdr addrs))
-            (bbdb-finger-internal (car addrs))))
+	(save-excursion
+	  (with-output-to-temp-buffer bbdb-finger-buffer-name
+	    (set-buffer bbdb-finger-buffer-name)
+	    (make-local-variable 'bbdb-remaining-addrs-to-finger)
+	    (setq bbdb-remaining-addrs-to-finger (cdr addrs))
+	    (bbdb-finger-internal (car addrs))))
       (error "Nothing to finger!"))))
 
 
 (defun bbdb-remove-duplicate-nets (records)
   "*Remove duplicate nets from a record."
   (interactive (if (bbdb-do-all-records-p)
-                   (mapcar 'car bbdb-records)
-                 (bbdb-current-record)))
+		   (mapcar 'car bbdb-records)
+		 (bbdb-current-record)))
   (let (nets cnets)
     (while records
       (setq nets (bbdb-record-net (car records))
-            cnets nil)
+	    cnets nil)
       (while nets
-        (add-to-list 'cnets (car nets))
-        (setq nets (cdr nets)))
+	(add-to-list 'cnets (car nets))
+	(setq nets (cdr nets)))
       (bbdb-record-set-net (car records) cnets)
       (setq records (cdr records)))))
 
@@ -3297,40 +3297,40 @@ defaults to all of them.
 The results of the search is returned as a list of records."
   (setq fields (or fields '(name net aka)))
   (let ((records (bbdb-records))
-        rec hash ret)
+	rec hash ret)
     (while records
       (setq rec (car records))
 
       (when (and (memq 'name fields)
-                 (bbdb-record-name rec)
-                 (setq hash (bbdb-gethash (downcase (bbdb-record-name rec))))
-                 (> (length hash) 1))
-        (setq ret (append hash ret))
-        (message "BBDB record `%s' causes duplicates, maybe it is equal to a company name."
-                 (bbdb-record-name rec))
-        (sit-for 0))
+		 (bbdb-record-name rec)
+		 (setq hash (bbdb-gethash (downcase (bbdb-record-name rec))))
+		 (> (length hash) 1))
+	(setq ret (append hash ret))
+	(message "BBDB record `%s' causes duplicates, maybe it is equal to a company name."
+		 (bbdb-record-name rec))
+	(sit-for 0))
 
       (if (memq 'net fields)
-          (let ((nets (bbdb-record-net rec)))
-            (while nets
-              (setq hash (bbdb-gethash (downcase (car nets))))
-              (when (> (length hash) 1)
-                (setq ret (append hash ret))
-                (message "BBDB record `%s' has duplicate net `%s'."
-                         (bbdb-record-name rec) (car nets))
-                (sit-for 0))
-              (setq nets (cdr nets)))))
+	  (let ((nets (bbdb-record-net rec)))
+	    (while nets
+	      (setq hash (bbdb-gethash (downcase (car nets))))
+	      (when (> (length hash) 1)
+		(setq ret (append hash ret))
+		(message "BBDB record `%s' has duplicate net `%s'."
+			 (bbdb-record-name rec) (car nets))
+		(sit-for 0))
+	      (setq nets (cdr nets)))))
 
       (if (memq 'aka fields)
-          (let ((aka (bbdb-record-aka rec)))
-            (while aka
-              (setq hash (bbdb-gethash (downcase (car aka))))
-              (when (> (length hash) 1)
-                (setq ret (append hash ret))
-                (message "BBDB record `%s' has duplicate aka `%s'"
-                         (bbdb-record-name rec) (car aka))
-                (sit-for 0))
-              (setq aka (cdr aka)))))
+	  (let ((aka (bbdb-record-aka rec)))
+	    (while aka
+	      (setq hash (bbdb-gethash (downcase (car aka))))
+	      (when (> (length hash) 1)
+		(setq ret (append hash ret))
+		(message "BBDB record `%s' has duplicate aka `%s'"
+			 (bbdb-record-name rec) (car aka))
+		(sit-for 0))
+	      (setq aka (cdr aka)))))
 
       (setq records (cdr records)))
     (reverse (bbdb-remove-memq-duplicates ret))))
@@ -3355,19 +3355,19 @@ selected records are deleted.  If COMPARE is not specified,
 `string-lessp' is used.
 
 Example:
-        (bbdb-kill-older \"1997-01-01\")
+	(bbdb-kill-older \"1997-01-01\")
 will delete all records with timestamps older than Jan 1 1997.
 
 Notes:  1. Records without timestamp fields will be ignored
 2. DATE must be in yyyy-mm-dd format."
   (interactive "sKill records with timestamp older than (yyyy-mm-dd): \n")
   (let ((records (bbdb-records)) timestamp
-        (fun (or function 'bbdb-delete-record-internal))
-        (cmp (or compare 'string-lessp)))
+	(fun (or function 'bbdb-delete-record-internal))
+	(cmp (or compare 'string-lessp)))
     (while records
       (if (and (setq timestamp (bbdb-record-getprop (car records) 'timestamp))
-               (funcall cmp timestamp date))
-          (funcall fun (car records)))
+	       (funcall cmp timestamp date))
+	  (funcall fun (car records)))
       (setq records (cdr records)))))
 
 (defmacro bbdb-compare-records (cmpval field compare)
@@ -3414,7 +3414,7 @@ DATE must be in yyyy-mm-dd format."
   (interactive)
   (bbdb-display-some
    (bbdb-compare-records (bbdb-record-getprop rec 'timestamp)
-                         'creation-date string=)))
+			 'creation-date string=)))
 
 ;;; Help and documentation
 
@@ -3423,7 +3423,7 @@ DATE must be in yyyy-mm-dd format."
 standard place."
   :group 'bbdb
   :type '(choice (const :tag "Standard location" nil)
-                 (file :tag "New location")))
+		 (file :tag "New location")))
 
 ;;;###autoload
 (defun bbdb-info ()
@@ -3453,9 +3453,9 @@ info: \\[bbdb-info]")))
 
 ;;; If Sebastian Kremer's minibuffer history package is around, use it.
 (if (and (fboundp 'gmhist-make-magic)
-         (string-lessp emacs-version "19")) ; v19 has history built in
+	 (string-lessp emacs-version "19")) ; v19 has history built in
     (mapcar 'gmhist-make-magic
-            '(bbdb bbdb-name bbdb-company bbdb-net bbdb-changed)))
+	    '(bbdb bbdb-name bbdb-company bbdb-net bbdb-changed)))
 
 ;;;###autoload
 (defcustom bbdb-update-records-mode 'annotating
@@ -3474,10 +3474,10 @@ functions `bbdb-update-records' and `bbdb-prompt-for-create'."
   :group 'bbdb-mua-specific
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "annotating all messages"
-                        annotating)
-                 (const :tag "annotating no messages"
-                        searching)
-                 (sexp   :tag "user defined")))
+			annotating)
+		 (const :tag "annotating no messages"
+			searching)
+		 (sexp   :tag "user defined")))
 
 (defvar bbdb-offer-to-create nil
   "Used for inter-function communication between the functions
@@ -3516,75 +3516,75 @@ C-g again it will stop scanning."
   (setq auto-create-p (bbdb-invoke-hook-for-value auto-create-p))
 
   (let ((bbdb-records (bbdb-records))
-        (processed-addresses 0)
-        (bbdb-offer-to-create (or offer-to-create (eq 'prompt auto-create-p)))
-        (bbdb-update-records-mode
-         (if offer-to-create 'annotating
-           (if (listp bbdb-update-records-mode)
-               (eval bbdb-update-records-mode)
-             bbdb-update-records-mode)))
-        (addrslen (length addrs))
-        (bbdb-update-address-class nil)
-        (bbdb-update-address-header nil)
-        records hits)
+	(processed-addresses 0)
+	(bbdb-offer-to-create (or offer-to-create (eq 'prompt auto-create-p)))
+	(bbdb-update-records-mode
+	 (if offer-to-create 'annotating
+	   (if (listp bbdb-update-records-mode)
+	       (eval bbdb-update-records-mode)
+	     bbdb-update-records-mode)))
+	(addrslen (length addrs))
+	(bbdb-update-address-class nil)
+	(bbdb-update-address-header nil)
+	records hits)
 
     (while addrs
 
       (setq bbdb-address (car addrs)
-            bbdb-update-address-class (car bbdb-address)
-            bbdb-update-address-header (cadr bbdb-address)
-            bbdb-address (caddr bbdb-address))
+	    bbdb-update-address-class (car bbdb-address)
+	    bbdb-update-address-header (cadr bbdb-address)
+	    bbdb-address (caddr bbdb-address))
 
       (condition-case nil
-          (progn
-            (setq hits
-                  (cond ((null (cadr bbdb-address))
-                         ;; ignore emtpy addrs, e.g. (??? nil)
-                         nil)
-                        ((eq bbdb-update-records-mode 'annotating)
-                         (list;; search might return a list
-                          (bbdb-annotate-message-sender
-                           bbdb-address t
-                           (or offer-to-create;; force create
-                               auto-create-p)
-                           'bbdb-prompt-for-create)))
-                        ((eq bbdb-update-records-mode 'searching)
-                         ;; search for records having this net
-                         (let ((net (concat "^"
-                                            (regexp-quote
-                                             (cadr bbdb-address))
-                                            "$"))
-                               ;; there is no case for nets
-                               (bbdb-case-fold-search t))
-                           (bbdb-search bbdb-records nil nil net))))
-                  processed-addresses (+ processed-addresses 1))
+	  (progn
+	    (setq hits
+		  (cond ((null (cadr bbdb-address))
+			 ;; ignore emtpy addrs, e.g. (??? nil)
+			 nil)
+			((eq bbdb-update-records-mode 'annotating)
+			 (list;; search might return a list
+			  (bbdb-annotate-message-sender
+			   bbdb-address t
+			   (or offer-to-create;; force create
+			       auto-create-p)
+			   'bbdb-prompt-for-create)))
+			((eq bbdb-update-records-mode 'searching)
+			 ;; search for records having this net
+			 (let ((net (concat "^"
+					    (regexp-quote
+					     (cadr bbdb-address))
+					    "$"))
+			       ;; there is no case for nets
+			       (bbdb-case-fold-search t))
+			   (bbdb-search bbdb-records nil nil net))))
+		  processed-addresses (+ processed-addresses 1))
 
-            (when (and (not bbdb-silent-running)
-                       (not bbdb-gag-messages)
-                       (not (eq bbdb-offer-to-create 'quit))
-                       (= 0 (% processed-addresses 5)))
-              (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed."
-                                  bbdb-update-records-mode processed-addresses addrslen)))
-                (if (featurep 'xemacs)
-                    (bbdb-display-message 'progress mess)
-                  (message mess)))
-              (sit-for 0)))
+	    (when (and (not bbdb-silent-running)
+		       (not bbdb-gag-messages)
+		       (not (eq bbdb-offer-to-create 'quit))
+		       (= 0 (% processed-addresses 5)))
+	      (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed."
+				  bbdb-update-records-mode processed-addresses addrslen)))
+		(if (featurep 'xemacs)
+		    (bbdb-display-message 'progress mess)
+		  (message mess)))
+	      (sit-for 0)))
 
-        ;; o.k. there was a quit signal so how should we proceed now?
-        (quit (cond ((eq bbdb-update-records-mode 'annotating)
-                     (setq bbdb-update-records-mode 'searching))
-                    ((eq bbdb-update-records-mode 'searching)
-                     nil)
-                    ((eq bbdb-update-records-mode 'next)
-                     (setq bbdb-update-records-mode 'annotating))
-                    (t
-                     (setq bbdb-update-records-mode 'quit)))
-              nil))
+	;; o.k. there was a quit signal so how should we proceed now?
+	(quit (cond ((eq bbdb-update-records-mode 'annotating)
+		     (setq bbdb-update-records-mode 'searching))
+		    ((eq bbdb-update-records-mode 'searching)
+		     nil)
+		    ((eq bbdb-update-records-mode 'next)
+		     (setq bbdb-update-records-mode 'annotating))
+		    (t
+		     (setq bbdb-update-records-mode 'quit)))
+	      nil))
 
       (while hits
-        ;; people should be listed only once so we use add-to-list
-        (if (car hits) (add-to-list 'records (car hits)))
-        (setq hits (cdr hits)))
+	;; people should be listed only once so we use add-to-list
+	(if (car hits) (add-to-list 'records (car hits)))
+	(setq hits (cdr hits)))
 
       (setq addrs (cdr addrs)))
 
@@ -3597,12 +3597,12 @@ C-g again it will stop scanning."
 (defun bbdb-get-help-window (message)
   "Display MESSAGE in a new window which is the last one in the current frame."
   (let ((b (get-buffer-create " *BBDB Help*"))
-        (w (or (get-buffer-window " *BBDB Help*")
-               (get-lru-window)))
-        (lines (let ((l 2) (s 0))
-                 (while (setq s (string-match "\n" message s))
-                   (setq s (1+ s) l (1+ l)))
-                 l)))
+	(w (or (get-buffer-window " *BBDB Help*")
+	       (get-lru-window)))
+	(lines (let ((l 2) (s 0))
+		 (while (setq s (string-match "\n" message s))
+		   (setq s (1+ s) l (1+ l)))
+		 l)))
 
     (setq w (split-window w))
     (select-window w)
@@ -3632,39 +3632,39 @@ It is called from `bbdb-annotate-message-sender' (PROMPT-FOR-CREATE arg) and
 returns `t' if the record should be created or `nil' otherwise.  It honors a
 previous answer, e.g. \"!\" add all ..."
   (let ((old-offer-to-create bbdb-offer-to-create)
-        event prompt)
+	event prompt)
     (when bbdb-offer-to-create
       (when (not (integerp bbdb-offer-to-create))
-        (setq prompt (format "%s is not in the db; add? (y,!,n,s,q,?) "
-                             (or (car bbdb-address) (cadr bbdb-address))))
-        (while (not event)
-          (setq event (read-key-sequence prompt))
-          (if (featurep 'xemacs)
-              (setq event (bbdb-event-to-character (aref event 0)))
-            (setq event (if (stringp event) (aref event 0)))))
+	(setq prompt (format "%s is not in the db; add? (y,!,n,s,q,?) "
+			     (or (car bbdb-address) (cadr bbdb-address))))
+	(while (not event)
+	  (setq event (read-key-sequence prompt))
+	  (if (featurep 'xemacs)
+	      (setq event (bbdb-event-to-character (aref event 0)))
+	    (setq event (if (stringp event) (aref event 0)))))
 
-        (setq bbdb-offer-to-create event))
+	(setq bbdb-offer-to-create event))
       (message "");; clear the message buffer
 
       (cond ((eq bbdb-offer-to-create ?y)
-             (setq bbdb-offer-to-create old-offer-to-create)
-             t)
-            ((eq bbdb-offer-to-create  ?!)
-             t)
-            ((or (eq bbdb-offer-to-create  ?n)
-                 (eq bbdb-offer-to-create  ? ))
-             (setq bbdb-update-records-mode 'next
-                   bbdb-offer-to-create old-offer-to-create)
-             (signal 'quit nil))
-            ((eq bbdb-offer-to-create  ?q)
-             (setq bbdb-update-records-mode 'quit)
-             (signal 'quit nil))
-            ((eq bbdb-offer-to-create  ?s)
-             (setq bbdb-update-records-mode 'searching)
-             (signal 'quit nil))
-            (t
-             (let ((w (bbdb-get-help-window
-                       "Your answer controls how BBDB updates/searches for records.
+	     (setq bbdb-offer-to-create old-offer-to-create)
+	     t)
+	    ((eq bbdb-offer-to-create  ?!)
+	     t)
+	    ((or (eq bbdb-offer-to-create  ?n)
+		 (eq bbdb-offer-to-create  ? ))
+	     (setq bbdb-update-records-mode 'next
+		   bbdb-offer-to-create old-offer-to-create)
+	     (signal 'quit nil))
+	    ((eq bbdb-offer-to-create  ?q)
+	     (setq bbdb-update-records-mode 'quit)
+	     (signal 'quit nil))
+	    ((eq bbdb-offer-to-create  ?s)
+	     (setq bbdb-update-records-mode 'searching)
+	     (signal 'quit nil))
+	    (t
+	     (let ((w (bbdb-get-help-window
+		       "Your answer controls how BBDB updates/searches for records.
 
 Type ?  for this help.
 Type y  to add the current record.
@@ -3672,13 +3672,13 @@ Type !  to add all remaining records.
 Type n  to skip the current record. (You might also type space)
 Type s  to switch from annotate to search mode.
 Type q  to quit updating records.  No more search or annotation is done.")))
-               (setq bbdb-offer-to-create nil)
-               (condition-case error
-                   (progn (bbdb-prompt-for-create)
-                          (bbdb-kill-help-window w))
-                 (t
-                  (bbdb-kill-help-window w)
-                  (apply 'signal error)))))))))
+	       (setq bbdb-offer-to-create nil)
+	       (condition-case error
+		   (progn (bbdb-prompt-for-create)
+			  (bbdb-kill-help-window w))
+		 (t
+		  (bbdb-kill-help-window w)
+		  (apply 'signal error)))))))))
 
 ;;;###autoload
 (defcustom bbdb-get-addresses-headers
@@ -3700,9 +3700,9 @@ Changing this variable will show its effect only after clearing the
   :type 'boolean)
 
 (defun bbdb-get-addresses (only-first-address
-                           uninteresting-senders
-                           get-header-content-function
-                           &rest get-header-content-function-args)
+			   uninteresting-senders
+			   get-header-content-function
+			   &rest get-header-content-function-args)
   "Return a list of all addresses found in the headers of a message.
 With ONLY-FIRST-ADDRESS being t, it will only return the first found address.
 Addresses matching UNINTERESTING-SENDERS will be ignored.
@@ -3711,36 +3711,36 @@ The client has to provide a GET-HEADER-CONTENT-FUNCTION and optional arguments
 \(GET-HEADER-CONTENT-FUNCTION-ARGS) to extract the header content.  The first
 argument to this function if the header name sans."
   (let ((headers bbdb-get-addresses-headers)
-        (ignore-senders (or bbdb-user-mail-names uninteresting-senders))
-        addrlist adlist fn ad
-        header-type header-fields header-content)
+	(ignore-senders (or bbdb-user-mail-names uninteresting-senders))
+	addrlist adlist fn ad
+	header-type header-fields header-content)
     (while headers
       (setq header-type (caar headers)
-            header-fields (cdar headers))
+	    header-fields (cdar headers))
       (while header-fields
-        (setq header-content (apply get-header-content-function
-                                    (car header-fields)
-                                    get-header-content-function-args))
-        (when header-content
-          (setq adlist (funcall bbdb-extract-address-components-func
-                                header-content))
-          (while adlist
-            (setq fn (caar adlist)
-                  ad (car (cdar adlist)))
+	(setq header-content (apply get-header-content-function
+				    (car header-fields)
+				    get-header-content-function-args))
+	(when header-content
+	  (setq adlist (funcall bbdb-extract-address-components-func
+				header-content))
+	  (while adlist
+	    (setq fn (caar adlist)
+		  ad (car (cdar adlist)))
 
-            ;; ignore uninteresting addresses, this is kinda gross!
-            (if (or (not (stringp ignore-senders))
-                    (not (or (and fn (string-match ignore-senders fn))
-                             (and ad (string-match ignore-senders ad)))))
-                (add-to-list 'addrlist
-                             (list header-type
-                                   (car header-fields)
-                                   (car adlist))))
+	    ;; ignore uninteresting addresses, this is kinda gross!
+	    (if (or (not (stringp ignore-senders))
+		    (not (or (and fn (string-match ignore-senders fn))
+			     (and ad (string-match ignore-senders ad)))))
+		(add-to-list 'addrlist
+			     (list header-type
+				   (car header-fields)
+				   (car adlist))))
 
-            (if (and only-first-address addrlist)
-                (setq adlist nil headers nil)
-              (setq adlist (cdr adlist)))))
-        (setq header-fields (cdr header-fields)))
+	    (if (and only-first-address addrlist)
+		(setq adlist nil headers nil)
+	      (setq adlist (cdr adlist)))))
+	(setq header-fields (cdr header-fields)))
       (setq headers (cdr headers)))
     (nreverse addrlist)))
 
