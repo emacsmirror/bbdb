@@ -1,5 +1,10 @@
 2008-01-29  Didier Verna  <didier@xemacs.org>
 
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-get-author): Use the proper
+	nnheader interface for retrieving header values.
+
+2008-01-29  Didier Verna  <didier@xemacs.org>
+
 	Handle recent type change of gnus-ignored-from-addresses.
 	* lisp/bbdb-gnus.el (bbdb/gnus-ignored-from-addresses): New.
 	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): Use it.
