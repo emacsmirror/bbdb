@@ -1,5 +1,12 @@
 2008-01-29  Didier Verna  <didier@xemacs.org>
 
+	Handle recent type change of gnus-ignored-from-addresses.
+	* lisp/bbdb-gnus.el (bbdb/gnus-ignored-from-addresses): New.
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records): Use it.
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-get-author): Ditto.
+
+2008-01-29  Didier Verna  <didier@xemacs.org>
+
 	* lisp/bbdb-com.el (bbdb-define-all-aliases): Rewrite docstring
 	and format it properly for describe-function.
 
