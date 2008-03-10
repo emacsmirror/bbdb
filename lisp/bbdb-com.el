@@ -3550,9 +3550,9 @@ C-g again it will stop scanning."
 			  (bbdb-annotate-message-sender
 			   bbdb-address t
                            (or auto-create-p offer-to-create)
-                           (if auto-create-p
+                           (if (eq auto-create-p t)
                                nil
-                             (if offer-to-create
+                             (if bbdb-offer-to-create
                                  'bbdb-prompt-for-create)))))
 			((eq bbdb-update-records-mode 'searching)
 			 ;; search for records having this net
