@@ -448,10 +448,8 @@ commands be different."
   :group 'bbdb
   :type 'boolean)
 
-;; these variables both need to be enabled for gnus mailreading to
-;; work right. that's probably a bug, or something.
 (defcustom bbdb/mail-auto-create-p t
-  "*If this is t, then Gnus, MH, RMAIL, and VM will automatically
+  "*If this is t, then MH, RMAIL, and VM will automatically
 create new bbdb records for people you receive mail from. If this
 is a function name or lambda, then it is called with no arguments
 to decide whether an entry should be automatically created. You
@@ -3314,7 +3312,6 @@ before the record is created, otherwise it is created without confirmation
             (if (string-match "^[^@]+" net)
                 (setq name (bbdb-clean-username (match-string 0 net)))))
         (setq record (if (or (null prompt-to-create-p)
-                             (eq create-p t) ;; don't skip if it's 'prompt!
                              (if (functionp prompt-to-create-p)
                                  (bbdb-invoke-hook-for-value
                                   prompt-to-create-p)

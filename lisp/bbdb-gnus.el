@@ -95,7 +95,7 @@ the user confirms the creation."
 (defun bbdb/gnus-update-records (&optional offer-to-create)
   "Return the records corresponding to the current Gnus message, creating
 or modifying it as necessary.  A record will be created if
-bbdb/news-auto-create-p is non-nil or if OFFER-TO-CREATE is true
+`bbdb/news-auto-create-p' is non-nil or if OFFER-TO-CREATE is true
 and the user confirms the creation.
 
 The variable `bbdb/gnus-update-records-mode' controls what actions

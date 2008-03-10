@@ -69,7 +69,7 @@ The default is to annotate only new messages."
 (defun bbdb/vm-update-records (&optional offer-to-create)
   "Returns the records corresponding to the current VM message,
 creating or modifying them as necessary.  A record will be created if
-bbdb/mail-auto-create-p is non-nil or if OFFER-TO-CREATE is true, and
+`bbdb/mail-auto-create-p' is non-nil or if OFFER-TO-CREATE is true, and
 the user confirms the creation.
 
 The variable `bbdb/vm-update-records-mode' controls what actions

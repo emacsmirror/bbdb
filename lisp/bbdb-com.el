@@ -3507,7 +3507,7 @@ creating or modifying them as necessary.  A record will be created if
 AUTO-CREATE-P is non-nil or if OFFER-TO-CREATE is true and the user
 confirms the creation.
 
-`bbdb-update-records-mode' controls if records are upodated or not.
+`bbdb-update-records-mode' controls if records are updated or not.
 A MUA specific variable, e.g. `bbdb/vm-update-records-mode', can
 overwrite this.
 
@@ -3549,9 +3549,11 @@ C-g again it will stop scanning."
 			 (list;; search might return a list
 			  (bbdb-annotate-message-sender
 			   bbdb-address t
-			   (or offer-to-create;; force create
-			       auto-create-p)
-			   'bbdb-prompt-for-create)))
+                           (or auto-create-p offer-to-create)
+                           (if auto-create-p
+                               nil
+                             (if offer-to-create
+                                 'bbdb-prompt-for-create)))))
 			((eq bbdb-update-records-mode 'searching)
 			 ;; search for records having this net
 			 (let ((net (concat "^"
