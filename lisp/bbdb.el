@@ -3576,7 +3576,7 @@ before the record is created, otherwise it is created without confirmation
 *BBDB* buffer in the bottom 'bbdb-pop-up-target-lines' lines (unless
 the *BBDB* buffer is already visible, in which case do nothing.)
 
-PREDICATE can be a function to select the right widnow for the split.
+PREDICATE can be a function to select the right window for the split.
 
 `bbdb-use-pop-up' controls how to split the selected window and how many lines
 resp. columns it will get.  If it is 'vertical a vertical split is done otherwise
