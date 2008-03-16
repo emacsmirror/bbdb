@@ -3567,7 +3567,7 @@ C-g again it will stop scanning."
 
 	    (when (and (not bbdb-silent-running)
 		       (not bbdb-gag-messages)
-		       (not (eq bbdb-offer-to-create 'quit))
+		       (not (eq bbdb-offer-to-create 'q))
 		       (= 0 (% processed-addresses 5)))
 	      (let ((mess (format "Hit C-g to stop BBDB from %s.  %d of %d addresses processed."
 				  bbdb-update-records-mode processed-addresses addrslen)))
@@ -3602,28 +3602,26 @@ C-g again it will stop scanning."
 
 (defun bbdb-get-help-window (message)
   "Display MESSAGE in a new window which is the last one in the current frame."
+  (bbdb-pop-up-bbdb-buffer)
   (let ((b (get-buffer-create " *BBDB Help*"))
-	(w (or (get-buffer-window " *BBDB Help*")
-	       (get-lru-window)))
-	(lines (let ((l 2) (s 0))
-		 (while (setq s (string-match "\n" message s))
-		   (setq s (1+ s) l (1+ l)))
-		 l)))
-
-    (setq w (split-window w))
+        (w (get-buffer-window bbdb-buffer-name))
+        (selected (selected-window))
+        (lines (let ((l 2) (s 0))
+                 (while (setq s (string-match "\n" message s))
+                   (setq s (1+ s) l (1+ l)))
+                 l)))
+    (unless w
+      (setq w (display-buffer b)))
     (select-window w)
     (switch-to-buffer b)
-    (erase-buffer)
-    (insert message)
+    (setq buffer-read-only t)
+    (let ((buffer-read-only nil))
+      (erase-buffer)
+      (insert message))
     (goto-char (point-min))
-    (let ((window-min-height 1))
-      (enlarge-window (- lines (window-height w))))
-    w))
-
-(defun bbdb-kill-help-window (window)
-  "Kill the buffer corresponding to WINDOW and delete the WINDOW."
-  (kill-buffer (window-buffer window))
-  (delete-window window))
+      (let ((window-min-height 1))
+        (enlarge-window (- lines (window-height w))))
+      w))
 
 ;; This is a hack.  The function is called by bbdb-annotate-message-sender and
 ;; uses the above variable in order to manipulate bbdb-update-records.
@@ -3661,30 +3659,25 @@ previous answer, e.g. \"!\" add all ..."
 		 (eq bbdb-offer-to-create  ? ))
 	     (setq bbdb-update-records-mode 'next
 		   bbdb-offer-to-create old-offer-to-create)
-	     (signal 'quit nil))
+	     (signal 'quit 'next))
 	    ((eq bbdb-offer-to-create  ?q)
 	     (setq bbdb-update-records-mode 'quit)
-	     (signal 'quit nil))
+	     (signal 'quit 'quit))
 	    ((eq bbdb-offer-to-create  ?s)
 	     (setq bbdb-update-records-mode 'searching)
-	     (signal 'quit nil))
+	     (signal 'quit 'searching))
 	    (t
-	     (let ((w (bbdb-get-help-window
-		       "Your answer controls how BBDB updates/searches for records.
+             (save-window-excursion
+               (bbdb-get-help-window
+                "Your answer controls how BBDB updates/searches for records.
 
 Type ?  for this help.
 Type y  to add the current record.
 Type !  to add all remaining records.
 Type n  to skip the current record. (You might also type space)
 Type s  to switch from annotate to search mode.
-Type q  to quit updating records.  No more search or annotation is done.")))
-	       (setq bbdb-offer-to-create nil)
-	       (condition-case error
-		   (progn (bbdb-prompt-for-create)
-			  (bbdb-kill-help-window w))
-		 (t
-		  (bbdb-kill-help-window w)
-		  (apply 'signal error)))))))))
+Type q  to quit updating records.  No more search or annotation is done.")
+               (bbdb-prompt-for-create)))))))
 
 ;;;###autoload
 (defcustom bbdb-get-addresses-headers
