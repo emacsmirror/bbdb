@@ -23,10 +23,10 @@ dnl Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 dnl Process this file with autoconf to produce a new configure script
 
-AC_PREREQ([2.50])
+AC_PREREQ(2.64)
 
 BBDB_PRE_INIT
-AC_INIT([BBDB], [BBDB_VERSION], [bbdb-info@lists.sourceforge.net])
+AC_INIT([BBDB],[BBDB_VERSION],[bbdb-info@lists.sourceforge.net])
 
 AC_COPYRIGHT([Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>.])
 
@@ -83,29 +83,24 @@ enable_gnus=gnus
 
 # this seems far messier and more complex than I'd expect from autoconf...
 AC_ARG_ENABLE([vm],
-              AC_HELP_STRING([--enable-vm],
-                         [enable VM hooks (default depends on --with-vm-dir)]),
+              AS_HELP_STRING([--enable-vm],[enable VM hooks (default depends on --with-vm-dir)]),
            [if test "x$enableval" = "xno"; then BBDB_VM=; enable_vm=; else BBDB_VM=vm; fi])
 
 AC_ARG_ENABLE(rmail,
-              AC_HELP_STRING([--enable-rmail],
-                             [enable RMAIL hooks [[no]]]),
+              AS_HELP_STRING([--enable-rmail],[enable RMAIL hooks [[no]]]),
            [if test "x$enableval" = "xno"; then BBDB_RMAIL=; enable_rmail=; else BBDB_RMAIL=rmail; fi], [BBDB_RMAIL=])
 
 AC_ARG_ENABLE(gnus,
-			  AC_HELP_STRING([--enable-gnus],
-                             [enable GNUS hooks [[yes]]]),
+			  AS_HELP_STRING([--enable-gnus],[enable GNUS hooks [[yes]]]),
            [if test "x$enableval" = "xno"; then BBDB_GNUS=; enable_gnus=; else BBDB_GNUS=gnus; fi], [BBDB_GNUS=])
 
 AC_ARG_ENABLE(mhe,
-              AC_HELP_STRING([--enable-mhe],
-                      [enable MH-E hooks (default depends on --with-mhe-dir)]),
+              AS_HELP_STRING([--enable-mhe],[enable MH-E hooks (default depends on --with-mhe-dir)]),
               [if test "x$enableval" = "xno"; then BBDB_MHE=; enable_mhe=; else BBDB_MHE=mhe; fi], [BBDB_MHE=])
 
 dnl All this does for now is allows you to see the compile commands
 AC_ARG_ENABLE(developer,
-			  AC_HELP_STRING([--enable-developer],
-   [enable developer hooks [[no]]]),
+			  AS_HELP_STRING([--enable-developer],[enable developer hooks [[no]]]),
    [if test "x$enable" = "xno"; then HUSHMAKE=; fi], [HUSHMAKE=@])
 
 BBDB_ARG_SUBST([OTHERDIRS], [other-dirs], [DIRS],
