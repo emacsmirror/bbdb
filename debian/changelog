@@ -1,3 +1,12 @@
+bbdb (2.35.cvs20060204-1.2) unstable; urgency=low
+
+  * NMU with the permission of the maintainer to adjust the dependencies
+    to accommodate the removal of emacs21.  Change the emacs21 dependency
+    to emacs23 and the emacs21 build dependency to emacs22 or emacs23.
+    Thanks to Sven Joachim <svenjoac@gmx.de>.  (Closes: #478799)
+
+ -- Rob Browning <rlb@defaultvalue.org>  Sat, 01 Aug 2009 12:16:02 -0700
+
 bbdb (2.35.cvs20060204-1.1) unstable; urgency=low
 
   * NMU with the permission of the maintainer.
