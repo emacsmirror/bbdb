@@ -1,0 +1,9 @@
+*.elc
+/*-stamp
+/.pc/
+/Makefile
+/bits.tar.gz
+/bits/extern/
+/config.log
+/config.status
+/loadpath.el
