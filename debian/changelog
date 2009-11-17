@@ -1,3 +1,11 @@
+bbdb (2.35.cvs20060204-1.1) unstable; urgency=low
+
+  * NMU with the permission of the maintainer.
+  * Set coding system when writing .bbdb file to prevent data corruption.
+    (Closes: #351778)
+
+ -- Hubert Chan <hubert@uhoreg.ca>  Thu, 13 Apr 2006 15:42:40 +0200
+
 bbdb (2.35.cvs20060204-1) unstable; urgency=low
 
   * New CVS co
