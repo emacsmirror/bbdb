@@ -45,3 +45,17 @@ their failure to work.
 Look at it if you find something useful. If there is enough demand for some of the
 files i can install them with bbdb. Just ask me. :)
 
+----------------------------------------------------------------
+
+Trying to bring up-to-date, and make compatible with Emacs23 RMAIL.
+
+Imported via:
+ git cvsimport -v -C bbdb -s -k -u -a bbdb -d :pserver:anonymous@bbdb.cvs.sourceforge.net:/cvsroot/bbdb
+on 17-Nov-2009
+
+Manually merge Debian patches and tag Debian releases.
+
+Note that the upstream CVS repo did not contain the ./configure file,
+while the upstream .orig tarballs do.  I have left these out.
+
+ -- Barak A. Pearlmutter <bap@debian.org>, Tue, 17 Nov 2009 15:59:51 -0500
