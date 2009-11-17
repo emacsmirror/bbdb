@@ -2,8 +2,8 @@ Source: bbdb
 Section: mail
 Priority: optional
 Maintainer: Joerg Jaspert <joerg@debian.org>
-Build-Depends-Indep: debhelper (>> 4.2.0), emacs22 | emacs23, texinfo, texi2html
-Standards-Version: 3.6.2.0
+Build-Depends-Indep: debhelper (>= 7), emacs22 | emacs23, texinfo, texi2html
+Standards-Version: 3.8.3
 
 Package: bbdb
 Architecture: all

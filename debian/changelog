@@ -4,8 +4,9 @@ bbdb (2.35.cvs20080316-1) unstable; urgency=low
   * Bring into GIT
   * Begin updating Debian packaging
   * Regenerate debian/Makepatch to accommodate upstream changes
+  * dh 7; rev deb std
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 17 Nov 2009 16:21:05 -0500
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 17 Nov 2009 16:22:06 -0500
 
 bbdb (2.35.cvs20060204-1.2) unstable; urgency=low
 
