@@ -1,13 +1,16 @@
---- Makefile.orig	Tue Apr  2 12:57:12 2002
-+++ Makefile	Tue Apr  2 13:10:16 2002
-@@ -16,15 +16,7 @@
+--- Makefile.orig	2009-11-17 16:13:19.000000000 -0500
++++ Makefile	2009-11-17 16:16:25.000000000 -0500
+@@ -16,18 +16,7 @@
             aclocal.m4 configure configure.ac install-sh Makefile.in \
             bits lisp misc tex texinfo utils
  
 -all: Makefile bbdb info    gnus
 -
--Makefile: configure Makefile.in
--	@echo "Makefile.in or configure has changed. Please rerun configure!"
+-Makefile:: Makefile.in
+-	./config.status
+-
+-Makefile:: configure
+-	@echo "Configure has changed, you may need to rerun configure!"
 -	exit 1
 -
 -configure: configure.ac
