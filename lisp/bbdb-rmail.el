@@ -37,11 +37,13 @@ BUF is actually the rmail buffer from which the current message should
 be extracted."
   (save-excursion
     (set-buffer buf)
-    (save-restriction
-      (rmail-narrow-to-non-pruned-header)
-      (let ((headers (mail-header-extract))
-            (header (intern-soft (downcase header-field))))
-        (mail-header header headers)))))
+    (if (fboundp 'rmail-get-header)	; Emacs 23
+	(rmail-get-header header-field)
+      (save-restriction
+	(rmail-narrow-to-non-pruned-header)
+	(let ((headers (mail-header-extract))
+	      (header (intern-soft (downcase header-field))))
+	  (mail-header header headers))))))
 
 (defun bbdb/rmail-new-flag( buf )
   "Returns t if the current message in buffer BUF is new."

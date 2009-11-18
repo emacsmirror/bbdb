@@ -1,3 +1,10 @@
+2009-11-18  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+
+	* lisp/bbdb-rmail.el (bbdb/rmail-get-header-content): Fix RMAIL
+	insinuation in GNU Emacs23 by using rmail-get-header when
+	available, thus avoiding rmail-narrow-to-non-pruned-header, which
+	no longer exists in GNU Emacs 23.
+
 2008-01-29  Didier Verna  <didier@xemacs.org>
 
 	* lisp/bbdb-gnus.el (bbdb/gnus-summary-get-author): Use the proper
