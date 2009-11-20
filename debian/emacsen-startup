@@ -1,20 +1,29 @@
-;; on Debian GNU/Linux
-;;
-;;
-(setq load-path 
-      (cons 
-       (concat "/usr/share/" (symbol-name debian-emacs-flavor)
-              "/site-lisp/bbdb")
-       load-path))
+;; bbdb startup file for Debian.
 
-;; (require 'message)
+;; Modified by Peter S Galbraith <psg@debian.org> to skip loading when
+;;  not ess is fully installed, as this file still exists when the
+;;  package is removed but not purged.
 
-;; http://bugs.debian.org/85019
-(setq bbdb-sound-files nil)
-(setq bbdb-sound-player nil)
-(setq bbdb-sounds-directory nil)
+(cond
+ ((not (file-exists-p "/usr/share/emacs/site-lisp/bbdb"))
+  (message "Package bbdb removed but not purged.  Skipping setup."))
+ ((not (file-exists-p (concat "/usr/share/"
+			      (symbol-name debian-emacs-flavor)
+			      "/site-lisp/bbdb/bbdb-autoloads.elc")))
+  (message "Package bbdb not fully installed.  Skipping setup."))
+ (t
 
-;; (require 'bbdb) 
-;; (bbdb-initialize)
+  (debian-pkg-add-load-path-item
+   (concat "/usr/share/" (symbol-name debian-emacs-flavor) "/site-lisp/bbdb"))
 
-(require 'bbdb-autoloads)
+  ;; (require 'message)
+
+  ;; http://bugs.debian.org/85019
+  (setq bbdb-sound-files nil)
+  (setq bbdb-sound-player nil)
+  (setq bbdb-sounds-directory nil)
+
+  ;; (require 'bbdb)
+  ;; (bbdb-initialize)
+
+  (require 'bbdb-autoloads)))
