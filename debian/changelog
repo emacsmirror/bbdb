@@ -9,8 +9,9 @@ bbdb (2.35.cvs20080316-1) unstable; urgency=low
   * Apply bbdb startup patch from Peter S Galbraith (Closes: #353937)
   * The lisp/Makefile.in target extras mixing .el & .elc files issue has
     been fixed upstream.  (Closes: #366059)
+  * Correct typo.  (Closes: #488729)
 
- -- Barak A. Pearlmutter <bap@debian.org>  Fri, 20 Nov 2009 00:23:35 -0500
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 20 Nov 2009 00:25:25 -0500
 
 bbdb (2.35.cvs20060204-1.2) unstable; urgency=low
 
