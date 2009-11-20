@@ -10,8 +10,14 @@ bbdb (2.35.cvs20080316-1) unstable; urgency=low
   * The lisp/Makefile.in target extras mixing .el & .elc files issue has
     been fixed upstream.  (Closes: #366059)
   * Correct typo.  (Closes: #488729)
+  * debian/copyright updates: FSF address, common license location, expand
+  * Update backquote style in file lisp/bbdb-com.el (Closes: #475600)
+  * Update Debian packaging
+    - avoiding duplicated file (Closes: #557356)
+  * Switch scripts from /usr/bin/bbdb-FOO.pl to /usr/bin/bbdb-FOO
+  * Merge Ununtu patch that symlinks .el files at emacsen-install time
 
- -- Barak A. Pearlmutter <bap@debian.org>  Fri, 20 Nov 2009 00:25:25 -0500
+ -- Barak A. Pearlmutter <bap@debian.org>  Sat, 21 Nov 2009 21:08:53 -0500
 
 bbdb (2.35.cvs20060204-1.2) unstable; urgency=low
 
