@@ -5,7 +5,7 @@ FLAVOR=$1
 PACKAGE="bbdb"
 
 if [ "X${FLAVOR}" = "X" ]; then
-    echo Need argument to determin FLAVOR of emacs;
+    echo Need argument to determine FLAVOR of emacs;
     exit 1
 fi
 
