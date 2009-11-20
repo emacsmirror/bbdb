@@ -6,12 +6,50 @@ Actual Maintainer: Joerg Jaspert <joerg@debian.org>
 It was downloaded from http://bbdb.sourceforge.net/
 
 Authors:  Jamie Zawinski, Ronan Waide (Waider), Todd Kaufmann,
-		  Boris Goldowsky, Christopher Kline, John Heidemann,
-		  Roland McGrath
+	  Boris Goldowsky, Christopher Kline, John Heidemann,
+	  Roland McGrath
 
 Current Upstream: Ronan Waide
 
 Copyright:
+
+Copyright subsets of 1991-2001, subsets of Jamie Zawinski, Ronan Waide (Waider),
+	  Todd Kaufmann, Boris Goldowsky, Christopher Kline, John Heidemann,
+	  Roland McGrath
+  lisp/*
+  texinfo/*
+  tex/*
+  utils/*
+
+Copyright (c) 1997-1999 Matt Simmons <simmonmt@@acm.org>
+  texinfo/bbdb.texinfo
+
+Copyright (c) 2000 Alex Schroeder
+  misc/bbdb-unmigrate-stuff.el
+
+Copyright 1995 Neda Communications, Inc.
+  bits/bbdb-filters/doc/main.texinfo
+  bits/bbdb-filters/bbdb-filters-0.2.sh
+
+Copyright (C) 1998 Ivar Rummelhoff
+  bits/bbdb-anniv.el
+
+Copyright (C) 1999, 2000, 2001 Shenghuo ZHU
+  bits/bbdb-edit.el
+
+Copyright (C) 1998,2000 by Niels Elgaard Larsen <elgaard@diku.dk>
+  bits/bbdb-ldif.el
+
+Copyright (C) 2001 Colin Rafferty
+  bits/bbdb-obsolete.el
+
+Copyright (C) 1997,1999 Kevin Davidson
+  bits/bbdb-pgp.el
+  bits/bbdb-signature.el
+
+Copyright (C) 1997 Kevin Davidson
+Copyright (C) 1985, 1986, 1992 Free Software Foundation, Inc
+  bits/bbdb-signature.el
 
 ;;; The Insidious Big Brother Database is free software; you can redistribute
 ;;; it and/or modify it under the terms of the GNU General Public License as
@@ -25,8 +63,8 @@ Copyright:
 ;;;
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
-;;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;;; Boston, MA 02111-1307, USA.
+;;; the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+;;; MA 02110-1301, USA.
 
-On Debian systems, the complete text of the GNU General Public
-License can be found in /usr/share/common-licenses/GPL file.
+On Debian systems, the complete text of the GNU General Public License
+version 2 can be found in /usr/share/common-licenses/GPL-2 file.
