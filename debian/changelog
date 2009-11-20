@@ -6,8 +6,9 @@ bbdb (2.35.cvs20080316-1) unstable; urgency=low
   * Regenerate debian/Makepatch to accommodate upstream changes
   * dh 7; rev deb std
   * Fix RMAIL insinuation in Emacs 23.  (Closes: #556993)
+  * Apply bbdb startup patch from Peter S Galbraith (Closes: #353937)
 
- -- Barak A. Pearlmutter <bap@debian.org>  Wed, 18 Nov 2009 15:14:24 -0500
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 20 Nov 2009 00:16:26 -0500
 
 bbdb (2.35.cvs20060204-1.2) unstable; urgency=low
 
