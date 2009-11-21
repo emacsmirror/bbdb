@@ -1,0 +1,14 @@
+*** lisp/Makefile	2009-11-21 19:43:53.000000000 -0500
+--- debian/bbdb/usr/share/emacs/site-lisp/bbdb/lisp/Makefile	2009-11-21 20:27:35.000000000 -0500
+***************
+*** 56,64 ****
+  
+  all: Makefile  gnus   bbdb autoloadsc
+  
+- Makefile: Makefile.in
+- 	cd ..; ./config.status
+- 
+  install-pkg: uninstall-pkg bbdb autoloadsc
+  	@if test "x$(SYMLINKS)" = "xno" ; then                 \
+            mkdir -p -m 0755 $(PACKAGEDIR)/lisp/bbdb;            \
+--- 56,61 ----

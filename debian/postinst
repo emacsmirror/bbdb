@@ -1,9 +1,0 @@
-#!/bin/sh
-
-set -e
-
-install-info --section Emacs Emacs --menuentry="bbdb" \
-	--description='The insidious Big Brother Database for mail and news.' \
-	--quiet /usr/share/info/bbdb.info
-
-#DEBHELPER#

@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH BBDB-UNLAZY-LOCK.PL 1 "March 31, 2002"
+.TH BBDB-CID.PL 1 "March 31, 2002"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -16,20 +16,24 @@
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
 .SH NAME
-bbdb--unlazy-lock.pl \- Removes crap from lazy-lock from your .bbdb
+bbdb-cid \- Caller-ID-logger
 .SH SYNOPSIS
-.B bbdb-unlazy-lock.pl
+.B bbdb-cid
 .SH DESCRIPTION
-Lazy-lock-mode has (had) a nasty habit of munging .bbdb files if you 
-visited them with it on.  This script removes the lazy-lock mung
+Opens the modem and waits for it to print caller-ID data.  When it does,
+it logs it to a file, parses it, and pops up a window using "xmessage".
+If the number is present in your .bbdb file, it shows the name (or company)
+associated with it.  
+
+.IR "You have to edit the Skript and change it to fit into your System!"
 
 This manual page was written for the Debian distribution
 because the original program does not have a manual page.
 Instead, it has documentation in the GNU Info format; see below.
 .SH SEE ALSO
-.BR bbdb-areacode-split.pl (1),
-.BR bbdb-unlazy-lock.pl (1).
-.BR bbdb-srv.pl (1).
+.BR bbdb-areacode-split (1),
+.BR bbdb-unlazy-lock (1).
+.BR bbdb-srv (1).
 .br
 The bbdb is fully documented by
 .IR "The insidious Big Brother Database for mail and news" ,

@@ -1,121 +1,22 @@
 #!/usr/bin/make -f
-# Made with the aid of debmake, by Christoph Lameter,
-# based on the sample debian/rules file for GNU hello by Ian Jackson.
 
-PACKAGE := bbdb
-pwd=$(shell pwd)
+build clean install binary-arch binary-indep binary:
+	dh $@
 
-TOPDIR := $(shell pwd)
-t = ${TOPDIR}/debian/bbdb
+.PHONY: build clean install binary-arch binary-indep binary
 
-_files_only = for f in ${1}; do if [ -f $$f ]; then echo $$f; fi; done
-_install_scripts = set -e;      \
-                   for f in ${1};     \
-                   do   \
-                     b=`basename $$f`;          \
-                     install -m ${2} $$f ${3}/$${b%.debian}; \
-                   done;
+override_dh_auto_build: bits.tar.gz
+	$(MAKE) -C texinfo bbdb.info bbdb.pdf
+	cd texinfo && texi2html -split=chapter bbdb.texinfo
 
-perl_scripts := $(shell $(call _files_only, $(wildcard utils/*.pl)))
+override_dh_install:
+	dh_install
+	cd debian/bbdb/usr/bin && \
+	for f in *.pl; do \
+	  mv $$f $$(basename $$f .pl); \
+	done
+	patch debian/bbdb/usr/share/emacs/site-lisp/bbdb/Makefile debian/Makepatch
+	patch debian/bbdb/usr/share/emacs/site-lisp/bbdb/lisp/Makefile debian/lispMakepatch
 
-
-build: build-stamp
-build-stamp:
-	dh_testdir
-
-	./configure
-
-	cd texinfo && $(MAKE) bbdb.info
-	cd texinfo && /usr/bin/texi2html -split=chapter bbdb.texinfo
-	for f in ${perl_scripts}; \
-	do \
-        sed -e 's@/usr/local/bin/perl.*@/usr/bin/perl@g' \
-		< $$f > $$f.debian; \
-	done;
-
-	touch build-stamp
-
-clean:
-	dh_testdir
-	dh_testroot
-	-rm -f build-stamp
-	-rm -f ${perl_scripts:%=%.debian}
-#	-rm -f texinfo/bbdb.dvi
-	-rm -f texinfo/bbdb/
-	-rm -f texinfo/bbdb.info*
-	dh_clean
-	-rm -f Makefile
-	-rm -f lisp/Makefile
-	-rm -f misc/Makefile
-	-rm -f tex/Makefile
-	-rm -f texinfo/Makefile
-	-rm -f testing/Makefile
-	-rm -f utils/Makefile
-	-rm -f config.status
-	-rm -f config.log
-	-rm -f bits.tar.gz
-
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k
-	dh_installdirs
-
-	cp -a Makefile debian/bbdb-pilot-jwz.el lisp \
-         ${t}/usr/share/emacs/site-lisp/${PACKAGE}/
-	cp -a debian/bbdb-pilot-jwz.el ${t}/usr/share/emacs/site-lisp/${PACKAGE}/lisp/
-	mkdir -p ${t}/usr/share/emacs/site-lisp/${PACKAGE}/tex/
-	cp -a tex/*.tex ${t}/usr/share/emacs/site-lisp/${PACKAGE}/tex/
-	mkdir -p ${t}/usr/share/emacs/site-lisp/${PACKAGE}/utils/
-	cp utils/*.el ${t}/usr/share/emacs/site-lisp/${PACKAGE}/utils/
-	mkdir -p ${t}/usr/share/man/man1/
-	cp debian/bbdb-*.1 ${t}/usr/share/man/man1/
-
-	tar czf bits.tar.gz bits/
-
-# Hey, we dont want to check for configure when emacs-install runs, so remove target for Makefile
-#	sed s/Makefile\ bbdb/bbdb/ <${t}/usr/share/emacs/site-lisp/bbdb/Makefile >Makefile.tmp 
-#	mv -f Makefile.tmp ${t}/usr/share/emacs/site-lisp/bbdb/Makefile 
-	sed s/Makefile\ rmail/rmail/ <${t}/usr/share/emacs/site-lisp/bbdb/lisp/Makefile >Makefile.tmp 
-	mv -f Makefile.tmp ${t}/usr/share/emacs/site-lisp/bbdb/lisp/Makefile
-	patch ${t}/usr/share/emacs/site-lisp/bbdb/Makefile ${TOPDIR}/debian/Makepatch
-
-# Install tex/* into usr/share/texmf/text/bbdb so one could use bbdb-print easy
-	mkdir -p ${t}/usr/share/texmf/tex/bbdb/
-	cp tex/*.tex ${t}/usr/share/texmf/tex/bbdb/
-
-	mkdir -p ${t}/usr/share/info
-	cp texinfo/*.info* ${t}/usr/share/info/
-	gzip -9 ${t}/usr/share/info/*
-	$(call _install_scripts, ${perl_scripts:%=%.debian}, 0755, ${t}/usr/bin)
-
-# Install the generated html Documentation
-	-mkdir -p ${t}/usr/share/doc/bbdb/html/
-	cp texinfo/bbdb/* ${t}/usr/share/doc/bbdb/html/
-
-# Build architecture-independent files here.
-binary-indep: install
-# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: install
-	dh_testdir
-	dh_testroot
-	dh_installemacsen
-	dh_installdocs
-	dh_installchangelogs ChangeLog
-#	dh_installinfo texinfo/*.info*
-	gzip -9 ${t}/usr/share/doc/bbdb/README.Debian
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-.PHONY: build clean install binary-indep binary-arch binary
-
+bits.tar.gz:
+	tar -czf bits.tar.gz bits/

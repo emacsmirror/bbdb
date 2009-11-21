@@ -1,0 +1,8 @@
+Makefile		 usr/share/emacs/site-lisp/bbdb
+lisp/*.el                usr/share/emacs/site-lisp/bbdb/lisp
+lisp/Makefile		 usr/share/emacs/site-lisp/bbdb/lisp
+utils/*.el		 usr/share/emacs/site-lisp/bbdb/utils
+debian/bbdb-pilot-jwz.el usr/share/emacs/site-lisp/bbdb
+tex/*.tex		 usr/share/texmf/tex/bbdb
+texinfo/bbdb/*.html	 usr/share/doc/bbdb/html
+utils/*.pl		 usr/bin
