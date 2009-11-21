@@ -2,7 +2,6 @@ bbdb (2.35.cvs20080316-1) unstable; urgency=low
 
   * Merge in ongoing upstream changes.  (Closes: #440191)
   * Bring into GIT
-  * Begin updating Debian packaging
   * Regenerate debian/Makepatch to accommodate upstream changes
   * dh 7; rev deb std
   * Fix RMAIL insinuation in Emacs 23.  (Closes: #556993)
@@ -15,7 +14,7 @@ bbdb (2.35.cvs20080316-1) unstable; urgency=low
   * Update Debian packaging
     - avoiding duplicated file (Closes: #557356)
   * Switch scripts from /usr/bin/bbdb-FOO.pl to /usr/bin/bbdb-FOO
-  * Merge Ununtu patch that symlinks .el files at emacsen-install time
+  * Merge Ununtu patch that symlinks some .el files at emacsen-install time
 
  -- Barak A. Pearlmutter <bap@debian.org>  Sat, 21 Nov 2009 21:08:53 -0500
 
