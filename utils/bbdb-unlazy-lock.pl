@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 #
 # Author: Christopher Kline <ckline@media.mit.edu>
 #

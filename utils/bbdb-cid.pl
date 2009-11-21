@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl5 -w
+#!/usr/bin/perl -w
 #
 # Caller-ID-logger, by jwz (19-Jan-97)
 # Modified: 24-Apr-97
