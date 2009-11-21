@@ -25,10 +25,10 @@
 (defmacro bbdb-add-to-field (record field text)
   (let ((get (intern (concat "bbdb-record-" (symbol-name field))))
     (set (intern (concat "bbdb-record-set-" (symbol-name field)))))
-    (` (let ((old ((, get) (, record)))
-         (text (, text)))
-     (or (member text old)
-         ((, set) (, record) (nconc old (list text))))))))
+    `(let ((old (,get ,record))
+	   (text ,text))
+       (or (member text old)
+	   (,set ,record (nconc old (list text)))))))
 
 (defcustom bbdb-whois-server (or (and (boundp 'whois-server) whois-server)
                                  "whois.geektools.com")
@@ -150,15 +150,15 @@
 
                 ;; now add each member of the list to the bbdb record
                 ;; it'd be nice if we could be smarter about this.
-                (mapcar (function
-                         (lambda(p)
-                           (if (not (bbdb-find-phone
-                                     p (bbdb-record-phones rec)))
-                               (let ((p-n
-                                      (vector (format "nic-phone-%d" n) p)))
-                                 (bbdb-add-to-field rec phones p-n)
-                                 (setq n (+ 1 n))))))
-                        phone-numbers)
+                (mapc (function
+		       (lambda(p)
+			 (if (not (bbdb-find-phone
+				   p (bbdb-record-phones rec)))
+			     (let ((p-n
+				    (vector (format "nic-phone-%d" n) p)))
+			       (bbdb-add-to-field rec phones p-n)
+			       (setq n (+ 1 n))))))
+		      phone-numbers)
 
                 ;; throw away phones line from what we've snarfed
                 (setq lines (cdr lines))))

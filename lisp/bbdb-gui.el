@@ -203,12 +203,12 @@
         (if (< start (point-min)) (setq start (point-min)))
         (if (> end (point-max)) (setq end (point-max)))
 
-        (mapcar (function (lambda(o)
-                            (if (and o
-                                     (eq (bbdb-extent-property o 'data)
-                                         'bbdb))
-                                (bbdb-delete-extent o))))
-                (bbdb-extents-in start end))
+	(mapc (function (lambda(o)
+			  (if (and o
+				   (eq (bbdb-extent-property o 'data)
+				       'bbdb))
+			      (bbdb-delete-extent o))))
+	      (bbdb-extents-in start end))
 
         (setq extent (bbdb-make-extent start end))
         (bbdb-set-extent-property extent 'highlight t)

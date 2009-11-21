@@ -121,19 +121,19 @@ If you want to reverse the search, bind `bbdb-search-invert' to t."
     (if phone
 	(setq clauses
 	      (cons
-	       (` (let ((rest-of-phones (bbdb-record-phones record))
-			(done nil))
-		    (if rest-of-phones
-			(while (and rest-of-phones (not done))
-			  (setq done (string-match (, phone)
-						   ;; way way wasteful...
-						   (bbdb-phone-string
-						    (car rest-of-phones)))
-				rest-of-phones (cdr rest-of-phones)))
-		      ;; so that "^$" can be used to find entries that
-		      ;; have no phones
-		      (setq done (string-match (, phone) "")))
-		    done))
+	       `(let ((rest-of-phones (bbdb-record-phones record))
+		      (done nil))
+		  (if rest-of-phones
+		      (while (and rest-of-phones (not done))
+			(setq done (string-match ,phone
+						 ;; way way wasteful...
+						 (bbdb-phone-string
+						  (car rest-of-phones)))
+			      rest-of-phones (cdr rest-of-phones)))
+		    ;; so that "^$" can be used to find entries that
+		    ;; have no phones
+		    (setq done (string-match ,phone "")))
+		  done)
 	       clauses)))
     (if notes
 	(setq clauses
@@ -3066,7 +3066,7 @@ bbdb-modem-device. # and * are dialed as-is, and a space is treated as
 a pause in the dial sequence."
   (interactive "sDial number: ")
   (let ((dialed ""))
-    (mapcar
+    (mapc
      (lambda(d)
        (if bbdb-modem-dial
 	   (setq dialed
@@ -3458,8 +3458,8 @@ info: \\[bbdb-info]")))
 ;;; If Sebastian Kremer's minibuffer history package is around, use it.
 (if (and (fboundp 'gmhist-make-magic)
 	 (string-lessp emacs-version "19")) ; v19 has history built in
-    (mapcar 'gmhist-make-magic
-	    '(bbdb bbdb-name bbdb-company bbdb-net bbdb-changed)))
+    (mapc 'gmhist-make-magic
+	  '(bbdb bbdb-name bbdb-company bbdb-net bbdb-changed)))
 
 ;;;###autoload
 (defcustom bbdb-update-records-mode 'annotating

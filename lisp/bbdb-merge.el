@@ -212,12 +212,12 @@ If s1 doesn't contain s2, return s1+sep+s2."
          (bbdb-refile-notes-default-merge-function 'bbdb-merge-strings))
 
     ;; merge everything
-    (mapcar (lambda(rec)
-              (bbdb-merge-record rec
-                                 (and match-fun
-                                      (funcall match-fun rec))
-                                 override))
-            new-records))
+    (mapc (lambda(rec)
+	    (bbdb-merge-record rec
+			       (and match-fun
+				    (funcall match-fun rec))
+			       override))
+	  new-records))
   ;; hack
   (setq bbdb-buffer (or (get-file-buffer bbdb-file) nil)))
 
