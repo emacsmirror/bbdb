@@ -105,6 +105,15 @@ EOF
     gzip -9 ${ELCDIR}/CompilationLog
     chmod 644 ${ELCDIR}/CompilationLog.gz
 
+    # make symlinks for source files that were not copied over to ELCDIR
+    # this makes find-function and find-library work properly
+    cd ${ELDIR}/lisp
+    for f in *.el; do
+        if [ -e ${ELCDIR}/${f}c ] && [ ! -e ${ELCDIR}/${f} ]; then
+            ln -sf ${ELDIR}/lisp/${f} ${ELCDIR}/${f}
+        fi
+    done
+
     echo " done."
     ;;
 esac
