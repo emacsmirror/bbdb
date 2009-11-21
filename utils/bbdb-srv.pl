@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
 # This script reads a block of message headers on stdin, and converts them
 # to an emacs-lisp string (quoting  all dangerous characters) and then 
