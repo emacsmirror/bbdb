@@ -1,24 +1,26 @@
 bbdb (2.35.cvs20080316-1) unstable; urgency=low
 
-  * Merge in ongoing upstream changes.  (Closes: #440191)
-  * Bring into GIT
-  * Regenerate debian/Makepatch to accommodate upstream changes
-  * dh 7; rev deb std
+  * Merge ongoing changes from upstream.  (Closes: #440191)
+    - Includes menu commands (Closes: #96300)
+    - Fixes lisp/Makefile.in target extras mixing .el .elc  (Closes: #366059)
+  * Bring into GIT.
+  * Regenerate debian/Makepatch to accommodate upstream changes.
   * Fix RMAIL insinuation in Emacs 23.  (Closes: #556993)
-  * Apply bbdb startup patch from Peter S Galbraith (Closes: #353937)
-  * The lisp/Makefile.in target extras mixing .el & .elc files issue has
-    been fixed upstream.  (Closes: #366059)
+  * Apply bbdb startup patch from Peter S Galbraith.  (Closes: #353937)
   * Correct typo.  (Closes: #488729)
-  * debian/copyright updates: FSF address, common license location, expand
-  * Update backquote style in file lisp/bbdb-com.el (Closes: #475600)
-  * Update Debian packaging
-    - avoiding duplicated file (Closes: #557356)
-  * Switch scripts from /usr/bin/bbdb-FOO.pl to /usr/bin/bbdb-FOO
-  * Merge Ununtu patch that symlinks some .el files at emacsen-install time
-  * Include PDF documentation
-  * Misc housekeeping, e.g., avoiding double-installing .tex files
+  * Update backquote style in file lisp/bbdb-com.el.  (Closes: #475600)
+  * Update Debian packaging.
+    - Avoiding double-installing bbdb-pilot-jwz.el file.  (Closes: #557356)
+    - Avoiding double-installing .tex files.
+    - dh 7.
+    - rev deb std.
+    - debian/copyright updates: FSF address, common license location, expand.
+    - Misc housekeeping and tracking policy.
+  * Switch scripts from /usr/bin/bbdb-FOO.pl to /usr/bin/bbdb-FOO.
+  * Merge Ununtu patch that symlinks some .el files at emacsen-install time.
+  * Include PDF documentation.
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sat, 21 Nov 2009 21:55:40 -0500
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 22 Nov 2009 07:20:00 -0500
 
 bbdb (2.35.cvs20060204-1.2) unstable; urgency=low
 
