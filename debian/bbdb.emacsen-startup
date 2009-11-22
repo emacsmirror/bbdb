@@ -1,7 +1,7 @@
 ;; bbdb startup file for Debian.
 
 ;; Modified by Peter S Galbraith <psg@debian.org> to skip loading when
-;;  not ess is fully installed, as this file still exists when the
+;;  bbdb is not fully installed, as this file still exists when the
 ;;  package is removed but not purged.
 
 (cond
