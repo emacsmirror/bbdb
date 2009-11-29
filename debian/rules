@@ -7,16 +7,22 @@ build clean install binary-arch binary-indep binary:
 
 override_dh_auto_build: bits.tar.gz
 	$(MAKE) -C texinfo bbdb.info bbdb.pdf
-	cd texinfo && texi2html -split=chapter bbdb.texinfo
+	mkdir -p texinfo/bbdb
+	cd texinfo/bbdb && texi2html -split=chapter ../bbdb.texinfo
 
 override_dh_install:
 	dh_install
+	@echo Give perl executables to implementation-agnostic filenames
 	cd debian/bbdb/usr/bin && \
 	for f in *.pl; do \
 	  mv $$f $$(basename $$f .pl); \
 	done
-	patch debian/bbdb/usr/share/emacs/site-lisp/bbdb/Makefile debian/patch/Makefile.patch
-	patch debian/bbdb/usr/share/emacs/site-lisp/bbdb/lisp/Makefile debian/patch/lisp/Makefile.patch
+	@echo Apply Debian patches
+	for f in $$(find debian/patches -name '*.patch'); do \
+	  echo applying patch: $$f ; \
+	  d=debian/bbdb/usr/share/emacs/site-lisp/bbdb ; \
+	  patch $$d/$$(echo $$f | sed 's|^debian/patches/\(.*\)[.]patch$$|\1|') $$f; \
+	done
 
 bits.tar.gz:
 	tar -czf bits.tar.gz bits/
