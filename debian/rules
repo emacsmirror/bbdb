@@ -15,8 +15,8 @@ override_dh_install:
 	for f in *.pl; do \
 	  mv $$f $$(basename $$f .pl); \
 	done
-	patch debian/bbdb/usr/share/emacs/site-lisp/bbdb/Makefile debian/Makepatch
-	patch debian/bbdb/usr/share/emacs/site-lisp/bbdb/lisp/Makefile debian/lispMakepatch
+	patch debian/bbdb/usr/share/emacs/site-lisp/bbdb/Makefile debian/patch/Makefile.patch
+	patch debian/bbdb/usr/share/emacs/site-lisp/bbdb/lisp/Makefile debian/patch/lisp/Makefile.patch
 
 bits.tar.gz:
 	tar -czf bits.tar.gz bits/
