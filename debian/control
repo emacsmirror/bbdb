@@ -2,7 +2,7 @@ Source: bbdb
 Section: mail
 Priority: optional
 Maintainer: Joerg Jaspert <joerg@debian.org>
-Uploaders: Joerg Jaspert <joerg@debian.org>, Barak A. Pearlmutter <bap@debian.org>
+Uploaders: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: debhelper (>= 7.2.5)
 Build-Depends-Indep: texinfo, texi2html
 Standards-Version: 3.8.3
@@ -12,7 +12,7 @@ Homepage: http://bbdb.sourceforge.net/
 
 Package: bbdb
 Architecture: all
-Depends: make, emacs23 | emacsen, dpkg (>= 1.15.4) | install-info
+Depends: make, emacs23 | emacsen, dpkg (>= 1.15.4) | install-info, ${misc:Depends}
 Suggests: vm, w3-el-e21, gnuserv, gnus|t-gnus, perl
 Description: The Insidious Big Brother Database (email rolodex) for Emacs
  BBDB is a rolodex-like database program for GNU Emacs.  BBDB stands
