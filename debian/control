@@ -6,6 +6,9 @@ Uploaders: Joerg Jaspert <joerg@debian.org>, Barak A. Pearlmutter <bap@debian.or
 Build-Depends: debhelper (>= 7.2.5)
 Build-Depends-Indep: texinfo, texi2html
 Standards-Version: 3.8.3
+Vcs-Git: git://github.com/barak/BBDB.git
+Vcs-Browser: http://github.com/barak/BBDB
+Homepage: http://bbdb.sourceforge.net/
 
 Package: bbdb
 Architecture: all
