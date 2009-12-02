@@ -20,8 +20,9 @@ bbdb (2.35.cvs20080316-1) unstable; urgency=low
   * Switch scripts from /usr/bin/bbdb-FOO.pl to /usr/bin/bbdb-FOO.
   * Merge Ununtu patch that symlinks some .el files at emacsen-install time.
   * Include PDF documentation.
+  * Add Barak A. Pearlmutter <bap@debian.org> as co-maintainer.
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sun, 29 Nov 2009 11:24:51 -0500
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 01 Dec 2009 22:10:39 -0500
 
 bbdb (2.35.cvs20060204-1.2) unstable; urgency=low
 
