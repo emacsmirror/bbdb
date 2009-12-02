@@ -9,6 +9,11 @@ override_dh_auto_build: bits.tar.gz
 	$(MAKE) -C texinfo bbdb.info bbdb.pdf
 	mkdir -p texinfo/bbdb
 	cd texinfo/bbdb && texi2html -split=chapter ../bbdb.texinfo
+	if [ -d texinfo/bbdb/bbdb ]; then \
+	 echo Compensating for old texi2html putting output in subdirectory.; \
+	 mv texinfo/bbdb/bbdb/* texinfo/bbdb/; \
+	 rmdir texinfo/bbdb/bbdb; \
+	fi
 
 override_dh_install:
 	dh_install
