@@ -1,38 +1,39 @@
-From: Geoffroy Ville <ville@isr.umd.edu>
-Subject: bbdb/mail-folders
-Date: 20 Nov 1998 00:00:00 GMT
-Message-ID: <6azlnl56h9v.fsf@einstein.isr.umd.edu>
-Sender: ville@einstein.isr.umd.edu
-Organization: University of Maryland, College Park
-X-Url: http://www.cenaath.cena.dgac.fr/~ville/
-Newsgroups: gnu.emacs.sources,gnu.emacs.vm.info
+;;; From: Geoffroy Ville <ville@isr.umd.edu>
+;;; Subject: bbdb/mail-folders
+;;; Date: 20 Nov 1998 00:00:00 GMT
+;;; Message-ID: <6azlnl56h9v.fsf@einstein.isr.umd.edu>
+;;; Sender: ville@einstein.isr.umd.edu
+;;; Organization: University of Maryland, College Park
+;;; X-Url: http://www.cenaath.cena.dgac.fr/~ville/
+;;; Newsgroups: gnu.emacs.sources,gnu.emacs.vm.info
 
 
-Just thought I would repost this piece of code after today's
-improvement. Cengiz told me he does not use it hence does not maintain it
-anymore.
+;;; Just thought I would repost this piece of code after today's
+;;; improvement. Cengiz told me he does not use it hence does not maintain it
+;;; anymore.
 
-I do not remember where I got it from originally, thus this post in sources
-and vm.info.
+;;; I do not remember where I got it from originally, thus this post in sources
+;;; and vm.info.
 
-For BBDB users, this code allows you to have several mail-folder by default
-for a given author. Saving one mail creates automaically the entry if none, or
-allows you to select which among the existing one you want, or add a new one.
-Very useful when several people you know are involved in many different
-projects. After a while, a typical entry would look like this:
+;;; For BBDB users, this code allows you to have several mail-folder by default
+;;; for a given author. Saving one mail creates automaically the entry if none, or
+;;; allows you to select which among the existing one you want, or add a new one.
+;;; Very useful when several people you know are involved in many different
+;;; projects. After a while, a typical entry would look like this:
 
-   mail-folders: ("~/Mail/project1" "~/Mail/project2" "~/Mail/personal")
+;;;    mail-folders: ("~/Mail/project1" "~/Mail/project2" "~/Mail/personal")
 
-My 2 cts addition is an expand file-name to get rid of possible duplicate
-paths to the same file and a file-name-abbrevation to keep it ~/Mail for
-example (very useful for me because I changed sites twice in the recent years
-and had different home directories).
+;;; My 2 cts addition is an expand file-name to get rid of possible duplicate
+;;; paths to the same file and a file-name-abbrevation to keep it ~/Mail for
+;;; example (very useful for me because I changed sites twice in the recent years
+;;; and had different home directories).
 
-I'm just *sharing* the code and will not have time to maintain it further. But
-if it's buggy or outdated by some new feature of I_do_not_know_what, please
-tell me :-) 
+;;; I'm just *sharing* the code and will not have time to maintain it further. But
+;;; if it's buggy or outdated by some new feature of I_do_not_know_what, please
+;;; tell me :-) 
 
---- bbdb-mail-folders.el ---
+;;; --- bbdb-mail-folders.el ---
+
 ;A while back Roland posted advices to enable a mail-folder
 ;property. This property was used as the default folder name while
 ;saving messages in vm.
@@ -113,9 +114,9 @@ tell me :-)
   )
 
 (provide 'bbdb-mail-folders)
+
+;;; --- end ---
 
---- end ---
+;;; Enjoy,
 
-Enjoy,
-
--- Geoffroy
+;;; -- Geoffroy
