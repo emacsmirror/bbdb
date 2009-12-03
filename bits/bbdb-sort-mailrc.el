@@ -1,21 +1,20 @@
->>>>> Ronan Waide writes:
+;;; >>>>> Ronan Waide writes:
 
->> * birthdays/anniversaries
+;;; >> * birthdays/anniversaries
 
-RW> This /is/ venturing into calendar land. Still, go to yer bbdb buffer
-RW> and create a field with C-o. Again, I prefer not to add baggage to the
-RW> file format unless it's absolutely necessary. Also, you should be able
-RW> to attach bbdb to calendar.el using the bbdb record-dinking hooks so
-RW> that it auto-fills your calendar with goop for you. And maybe get
-RW> working on calendar-pilot.el...
+;;; RW> This /is/ venturing into calendar land. Still, go to yer bbdb buffer
+;;; RW> and create a field with C-o. Again, I prefer not to add baggage to the
+;;; RW> file format unless it's absolutely necessary. Also, you should be able
+;;; RW> to attach bbdb to calendar.el using the bbdb record-dinking hooks so
+;;; RW> that it auto-fills your calendar with goop for you. And maybe get
+;;; RW> working on calendar-pilot.el...
 
-Well, this isn't really release-ready -- but since someone asks, it
-could be a good starting point for someone.  Feel free to
-redistribute, or chop up and use the useful bits.
+;;; Well, this isn't really release-ready -- but since someone asks, it
+;;; could be a good starting point for someone.  Feel free to
+;;; redistribute, or chop up and use the useful bits.
 
-Bng
-
-
+;;; Bng
+
 ;;; BBDB-BNG
 ;;;  Various functions I have added to enhance the big brother database.
 ;;; Boris Goldowsky, <boris@cs.rochester.edu>
