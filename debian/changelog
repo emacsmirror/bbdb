@@ -1,3 +1,11 @@
+bbdb (2.35.cvs20080316-2) unstable; urgency=low
+
+  * Misc additional files in bits/
+  * Minor packaging tweaks
+  * Build dependency for /usr/bin/tex (closes: #560582)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 27 Dec 2009 20:26:22 -0500
+
 bbdb (2.35.cvs20080316-1) unstable; urgency=low
 
   * Merge ongoing changes from upstream.  (Closes: #440191)
