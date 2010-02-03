@@ -1,3 +1,9 @@
+bbdb (2.35.cvs20080316-3) unstable; urgency=low
+
+  * chmod +x configure patch, thanks to Kumar Appaiah (closes: #567197)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 03 Feb 2010 13:43:30 +0000
+
 bbdb (2.35.cvs20080316-2) unstable; urgency=low
 
   * Misc additional files in bits/

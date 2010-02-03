@@ -5,6 +5,10 @@ build clean install binary-arch binary-indep binary:
 
 .PHONY: build clean install binary-arch binary-indep binary
 
+override_dh_auto_configure:
+	if [ ! -x configure ]; then chmod +x configure; fi # debian.diff fails to +x
+	dh_auto_configure
+
 override_dh_auto_build: bits.tar.gz
 	$(MAKE) -C texinfo bbdb.info bbdb.pdf
 	mkdir -p texinfo/bbdb
