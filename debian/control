@@ -5,7 +5,7 @@ Maintainer: Joerg Jaspert <joerg@debian.org>
 Uploaders: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: debhelper (>= 7.2.5)
 Build-Depends-Indep: texinfo, ghostscript, texi2html, texlive-base
-Standards-Version: 3.8.3
+Standards-Version: 3.8.4
 Vcs-Git: git://github.com/barak/BBDB.git
 Vcs-Browser: http://github.com/barak/BBDB
 Homepage: http://bbdb.sourceforge.net/
