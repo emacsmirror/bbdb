@@ -5,9 +5,16 @@ build clean install binary-arch binary-indep binary:
 
 .PHONY: build clean install binary-arch binary-indep binary
 
+## The default upstream build process compiles the .el files, and
+## therefore needs a working emacs.  The debian packaging process
+## leaves this to install time, so at build time we do not actually
+## need an emacs.  The --with-emacs=/bin/echo prevents the
+## configuration process from getting an error on the autobuilders
+## when no emacs is installed.
+
 override_dh_auto_configure:
 	if [ ! -x configure ]; then chmod +x configure; fi # debian.diff fails to +x
-	dh_auto_configure
+	dh_auto_configure -- --with-emacs=/bin/echo
 
 override_dh_auto_build: bits.tar.gz
 	$(MAKE) -C texinfo bbdb.info bbdb.pdf
