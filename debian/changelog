@@ -1,4 +1,4 @@
-bbdb (2.35.cvs20080316-5) UNRELEASED; urgency=low
+bbdb (2.35.cvs20080316-5) unstable; urgency=low
 
   * fiddle with info stuff for robustness
   * require emacs at build, avoiding extras install problem (closes: #571686)
