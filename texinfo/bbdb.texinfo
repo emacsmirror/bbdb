@@ -3943,7 +3943,6 @@ Derek Upham, David Zuhn, Rod Whitby, Richard Mlynarik.
 Last, but not least, thanks to Jamie Zawinski for writing @b{BBDB} in the
 first place.
 
-@ifinfo
 @node _,,,(dir)
 @unnumbered _
 @example
@@ -3964,9 +3963,8 @@ in.sid.i.ous aj   \in-'sid-e-*s\
 
 @menu
 * Top::
+* _::
 @end menu
-
-@end ifinfo
 
 @node Concept Index, Variable Index,, Top
 @unnumbered Concept Index
