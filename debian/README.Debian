@@ -66,4 +66,14 @@ To do an incremental update with upstream changes:
  git cvsimport -v -i -r origin -k -u -a -d :pserver:anonymous@bbdb.cvs.sourceforge.net:/cvsroot/bbdb bbdb
  gitk --all; git merge origin/origin
 
- -- Barak A. Pearlmutter <bap@debian.org>, Thu,  7 Jan 2010 19:03:03 +0100
+
+The default upstream build process compiles the .el files, and
+therefore needs a working emacs.  The debian packaging process leaves
+this to install time, so at build time we do not actually need an
+emacs.  But the configure script looks for one anyway, in order to
+produce a proper lisp/Makefile, whose execution is however deferred
+until installation time.  Tweaking things to cause configuration to
+not bail when no emacs is present is more trouble than just requiring
+one at build time.  So that's what we do.
+
+ -- Barak A. Pearlmutter <bap@debian.org>, Tue,  9 Mar 2010 16:04:29 +0000
