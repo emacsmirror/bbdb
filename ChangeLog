@@ -1,3 +1,8 @@
+2010-03-09  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+
+	* texinfo/bbdb.texinfo: remove @ifinfo guard to eliminate
+	texi2html error.
+
 2009-11-18  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 
 	* lisp/bbdb-rmail.el (bbdb/rmail-get-header-content): Fix RMAIL
