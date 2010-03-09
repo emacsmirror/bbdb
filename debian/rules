@@ -28,4 +28,5 @@ override_dh_install:
 	done
 
 bits.tar.gz:
+	tar -cf - extern/*/* | tar -C bits -xvf -
 	tar -czf bits.tar.gz bits/
