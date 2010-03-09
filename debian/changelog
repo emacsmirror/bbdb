@@ -1,3 +1,9 @@
+bbdb (2.35.cvs20080316-5) UNRELEASED; urgency=low
+
+  * fiddle with info stuff for robustness
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 09 Mar 2010 15:37:33 +0000
+
 bbdb (2.35.cvs20080316-4) unstable; urgency=low
 
   * prevent debian build-time error when emacs not installed (closes: #571434)
