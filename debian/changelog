@@ -1,3 +1,10 @@
+bbdb (2.35.cvs20080316-6) unstable; urgency=low
+
+  * Update bbdb-vcard
+  * Switch to dpkg-source 3.0 (git) format
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 25 Mar 2010 19:06:36 +0000
+
 bbdb (2.35.cvs20080316-5) unstable; urgency=low
 
   * fiddle with info stuff for robustness
