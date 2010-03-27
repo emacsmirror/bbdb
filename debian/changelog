@@ -1,10 +1,10 @@
 bbdb (2.35.cvs20080316-6) unstable; urgency=low
 
   * Update bbdb-vcard
-  * Switch to dpkg-source 3.0 (git) format
   * Suggest multisync-tools for convcard used (default) by bbdb-vcard
+  * Use dpkg-source 1.0 format, as 3.0 (git) cannot handle submodules
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sat, 27 Mar 2010 10:28:47 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Sat, 27 Mar 2010 10:31:32 +0000
 
 bbdb (2.35.cvs20080316-5) unstable; urgency=low
 
