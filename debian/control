@@ -13,7 +13,7 @@ Homepage: http://bbdb.sourceforge.net/
 Package: bbdb
 Architecture: all
 Depends: make, emacs23 | emacsen, ${misc:Depends}, ${perl:Depends}
-Suggests: vm, w3-el-e21, gnuserv, gnus|t-gnus, perl, multisync-tools
+Suggests: vm, w3-el-e21, gnuserv, gnus|t-gnus, perl
 Description: The Insidious Big Brother Database (email rolodex) for Emacs
  BBDB is a rolodex-like database program for GNU Emacs.  BBDB stands
  for Insidious Big Brother Database, and is not, repeat, *not* an
