@@ -1,8 +1,9 @@
 bbdb (2.35.cvs20080316-7) UNRELEASED; urgency=low
 
   * Update to bbdb-vcard 0.2, which no longer uses convcard
+  * Switch to dpkg-source 3.0 (quilt) format
 
- -- Barak A. Pearlmutter <bap@debian.org>  Thu, 01 Apr 2010 18:23:44 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 06 Apr 2010 13:03:47 +0100
 
 bbdb (2.35.cvs20080316-6) unstable; urgency=low
 
