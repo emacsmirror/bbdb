@@ -1,0 +1,5 @@
+version=3
+http://githubredir.debian.net/github/barak/BBDB \
+ /github/barak/BBDB/BBDB\.([0-9].*).tar.gz
+http://githubredir.debian.net/github/barak/BBDB \
+ /github/barak/BBDB/upstream/(.*).tar.gz
