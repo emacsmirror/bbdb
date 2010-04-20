@@ -1,3 +1,10 @@
+bbdb (2.36-1) unstable; urgency=low
+
+  * New "upstream" release.
+  * Look for upstream in github repo (debian/watch)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 20 Apr 2010 20:18:13 +0100
+
 bbdb (2.35.cvs20080316-7) unstable; urgency=low
 
   * Update to bbdb-vcard 0.2, which no longer uses convcard
