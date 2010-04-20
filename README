@@ -1,5 +1,5 @@
 BBDB (The Insidious Big Brother Database) is a rolodex-like database
-program for GNU Emacs.  BBDB can hook into (insinuate) various Emacs
+program for Emacs.  BBDB can hook into (insinuate) various Emacs
 subsystems (email readers, news readers, etc) to automatically create,
 display, and augment relevant entries from its database.  Filters are
 provided to import/export in a variety of formats.
