@@ -65,7 +65,7 @@
  (defvar coding-system-for-write nil)
  )
 
-(defconst bbdb-version "2.36 devo")
+(defconst bbdb-version "2.36")
 
 
 (defmacro bbdb-eval-when (c &rest body)

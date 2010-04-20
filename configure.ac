@@ -23,7 +23,7 @@ dnl Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 dnl Process this file with autoconf to produce a new configure script
 
-AC_PREREQ([2.50])
+AC_PREREQ(2.65)
 
 BBDB_PRE_INIT
 AC_INIT([BBDB], [BBDB_VERSION], [bbdb-info@lists.sourceforge.net])
