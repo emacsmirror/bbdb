@@ -1,3 +1,10 @@
+2010-04-20  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+
+	* README: Emacs, meaning both GNU Emacs and XEmacs.
+	* lisp/bbdb.el: By the powers vested in me by git cvsimport and
+	the state of inebriation, I declare this to be BBDB version 2.36.
+	BBDB-2.36 - Let the games begin.
+
 2010-03-09  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 
 	* texinfo/bbdb.texinfo: remove @ifinfo guard to eliminate
