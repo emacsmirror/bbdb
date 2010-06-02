@@ -3543,6 +3543,9 @@ intended for developers to follow the changes made to the @b{BBDB}
 development version. Developers of the @b{BBDB} should consider to
 subscribe to this list.
 
+There is also an issue tracker associated with the @b{BBDB}
+repository at @code{http://github.com/barak/BBDB}.
+
 @node Changes, The Latest Version, Mailing Lists, Top
 @section Changes in this Version
 
@@ -3601,6 +3604,8 @@ following site:
 WWW: @code{http://bbdb.sourceforge.net}
 @item
 FTP: @code{ftp://ftp.sourceforge.net/pub/bbdb}
+@item
+Git Fork: @code{http://github.com/barak/BBDB}
 @end itemize
 
 @noindent
@@ -3612,6 +3617,8 @@ following ways:
 WWW: @code{http://bbdb.sourceforge.net}
 @item
 Anonymous CVS: See @code{http://bbdb.sourceforge.net} for instructions.
+@item
+Git Fork: @code{http://github.com/barak/BBDB}
 @end itemize
 
 Users of development versions of the @b{BBDB} should subscribe to the
