@@ -1,3 +1,7 @@
+2010-06-03  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+
+	* texinfo/bbdb.texinfo: include pointers to github repo.
+
 2010-04-20  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 
 	* README: Emacs, meaning both GNU Emacs and XEmacs.
