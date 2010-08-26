@@ -1,5 +1,6 @@
 *.elc
 /*-stamp
+/.pc/
 /Makefile
 /bits.tar.gz
 /bits/extern/
