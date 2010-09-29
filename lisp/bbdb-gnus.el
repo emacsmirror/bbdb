@@ -580,13 +580,11 @@ excellent choice."
 (defcustom bbdb/gnus-split-myaddr-regexp
   (concat "^" (user-login-name) "$\\|^"
 	  (user-login-name) "@\\([-a-z0-9]+\\.\\)*"
-	  (or gnus-local-domain (message-make-domain)
+	  (or (message-make-domain)
 	      (system-name) "") "$")
-  "*This regular expression should match your address as found in the
-From header of your mail.  You should make sure gnus-local-domain or
-gnus-use-generic-from are set before loading this module, if they differ
-from (system-name).  If you send mail/news from multiple addresses, then
-you'll likely have to set this yourself anyways."
+  "This regular expression should match your address as found in
+the From header of your mail. If you send mail/news from multiple
+addresses, then you'll likely have to set this yourself anyways."
   :group 'bbdb-mua-specific-gnus-splitting
   :type  'string)
 
