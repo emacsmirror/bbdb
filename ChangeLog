@@ -2,6 +2,11 @@
 
 	* texinfo/bbdb.texinfo: include pointers to github repo.
 
+2010-09-29  Julien Danjou  <julien@danjou.info>
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-split-myaddr-regexp): Remove usage
+	of deprecated gnus-local-domain.
+
 2010-04-20  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 
 	* README: Emacs, meaning both GNU Emacs and XEmacs.
