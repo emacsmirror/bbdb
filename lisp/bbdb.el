@@ -2565,7 +2565,7 @@ Return nil otherwise."
                       (yes-or-no-p "Flush your changes and revert BBDB? ")))
              (unless (file-exists-p bbdb-file)
                (error "BBDB: file %s no longer exists" bbdb-file))
-             (kill-all-local-variables)          ; clear db and caches.
+             (kill-all-local-variables)  ; clear database and caches.
              ;; `revert-buffer-function' has the permanent-local property
              ;; So to avoid looping, we need to bind it to nil explicitly.
              (let (revert-buffer-function)
@@ -2769,7 +2769,8 @@ about updating the name hash-table.  If NEW is t treat RECORD as new."
     ;; splice record into `bbdb-records'
     (bbdb-debug (if (memq record bbdb-records)
                     (error "BBDB record not unique: - %s" record)))
-    (if (bbdb-record-lessp record (car bbdb-records))
+    (if (or (not bbdb-records) ; first record in new database
+            (bbdb-record-lessp record (car bbdb-records)))
         (push record bbdb-records)
       (let ((records bbdb-records))
         (while (and (cdr records)
