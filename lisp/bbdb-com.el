@@ -1635,38 +1635,36 @@ the first mail address of RECORD is used."
                 ln (cdr name)))
       (setq fn (bbdb-record-firstname record)
             ln (bbdb-record-lastname  record)))
-    ;; if the name contains backslashes or double-quotes, backslash them.
-    (if name
-        (setq name (replace-regexp-in-string "[\\\"]" "\\\\\\&" name)))
-    (cond ((eq 'mail-only bbdb-mail-allow-redundancy)
-           mail)
-          ((or (null name)
-               (unless bbdb-mail-allow-redundancy
-                 (cond ((and fn ln)
-                        (or (string-match
-                             (concat "\\`[^!@%]*\\b" (regexp-quote fn)
-                                     "\\b[^!%@]+\\b" (regexp-quote ln) "\\b")
-                             mail)
-                            (string-match
-                             (concat "\\`[^!@%]*\\b" (regexp-quote ln)
-                                     "\\b[^!%@]+\\b" (regexp-quote fn) "\\b")
-                             mail)))
-                       ((or fn ln)
-                        (string-match
-                         (concat "\\`[^!@%]*\\b" (regexp-quote (or fn ln)) "\\b")
-                         mail))))
-               ;; already in "foo <bar>" or "bar <foo>" format.
-               (string-match "\\`[ \t]*[^<]+[ \t]*<" mail)
-               (string-match "\\`[ \t]*[^(]+[ \t]*(" mail))
-           mail)
-          ;; if the name contains control chars or RFC822 specials, it needs
-          ;; to be enclosed in quotes.  Double-quotes and backslashes have
-          ;; already been escaped.  This quotes a few extra characters as
-          ;; well (!,%, and $) just for common sense.
-          ((string-match "[][[:cntrl:]\177()<>@,;:.!$%[:nonascii:]]" name)
-           (format "\"%s\" <%s>" name mail))
-          (t
-           (format "%s <%s>" name mail)))))
+    (if (or (eq 'mail-only bbdb-mail-allow-redundancy)
+            (null name)
+            (unless bbdb-mail-allow-redundancy
+              (cond ((and fn ln)
+                     (or (string-match
+                          (concat "\\`[^!@%]*\\b" (regexp-quote fn)
+                                  "\\b[^!%@]+\\b" (regexp-quote ln) "\\b")
+                          mail)
+                         (string-match
+                          (concat "\\`[^!@%]*\\b" (regexp-quote ln)
+                                  "\\b[^!%@]+\\b" (regexp-quote fn) "\\b")
+                          mail)))
+                    ((or fn ln)
+                     (string-match
+                      (concat "\\`[^!@%]*\\b" (regexp-quote (or fn ln)) "\\b")
+                      mail))))
+            ;; MAIL already in "foo <bar>" or "bar (foo)" format.
+            (string-match "\\`[ \t]*[^<]+[ \t]*<" mail)
+            (string-match "\\`[ \t]*[^(]+[ \t]*(" mail))
+        mail
+      ;; If the name contains backslashes or double-quotes, backslash them.
+      (setq name (replace-regexp-in-string "[\\\"]" "\\\\\\&" name))
+      ;; If the name contains control chars or RFC822 specials, it needs
+      ;; to be enclosed in quotes.  This quotes a few extra characters as
+      ;; well (!,%, and $) just for common sense.
+      ;; `define-mail-alias' uses regexp "[^- !#$%&'*+/0-9=?A-Za-z^_`{|}~]".
+      (format (if (string-match "[][[:cntrl:]\177()<>@,;:.!$%[:nonascii:]]" name)
+                  "\"%s\" <%s>"
+                "%s <%s>")
+              name mail))))
 
 (defun bbdb-compose-mail (&rest args)
   "Start composing a mail message to send.
