@@ -1,3 +1,8 @@
+2010-09-30  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-insert-record-internal): Handle empty
+	database properly.
+	* lisp/bbdb-com.el (bbdb-dwim-mail): Cleanup code.
+
 2010-09-19  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-prompt-for-create): Quit with C-g.
 	(bbdb-annotate-message) Call UPDATE-P only if record is not yet
