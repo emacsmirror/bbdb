@@ -584,7 +584,7 @@ excellent choice."
 	      (system-name) "") "$")
   "This regular expression should match your address as found in
 the From header of your mail. If you send mail/news from multiple
-addresses, then you'll likely have to set this yourself anyways."
+addresses, then you'll likely have to set this yourself anyway."
   :group 'bbdb-mua-specific-gnus-splitting
   :type  'string)
 
