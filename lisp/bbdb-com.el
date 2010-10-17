@@ -36,6 +36,9 @@ In other buffers ask the user."
     (bbdb-completing-read-records prompt)))
 
 (defun bbdb-record-list (records &optional full)
+  "Ensure that RECORDS is a list of records.
+If RECORDS is a single record turn it into a list.
+If FULL is non-nil, assume that RECORDS include display information."
   (if records
       (if full
           (if (vectorp (car records)) (list records) records)
@@ -1622,9 +1625,13 @@ as in John.Doe@SomeHost, or the address is already in the form
 \"Name <foo>\" or \"foo (Name)\", in which case the address is used as-is.
 If `bbdb-mail-allow-redundancy' is non-nil, the name is always included.
 `bbdb-mail-allow-redundancy' is 'mail-only the name is never included!
-MAIL should be one of the mail addresses of RECORD or nil in which case
-the first mail address of RECORD is used."
-  (unless mail (setq mail (car (bbdb-record-mail record))))
+MAIL may be a mail addresses to be used for RECORD.
+If MAIL is an integer, use the MAILth mail address of RECORD.
+If Mail is nil the first mail address of RECORD is used."
+  (unless mail
+    (let ((mails (bbdb-record-mail record)))
+      (setq mail (or (and (integerp mail) (nth mail mails))
+                     (car mail)))))
   (unless mail (error "Record has no mail addresses"))
   (let* ((mail-name (bbdb-record-note record 'mail-name))
          (name (or mail-name (bbdb-record-name record)))
@@ -1637,20 +1644,20 @@ the first mail address of RECORD is used."
             ln (bbdb-record-lastname  record)))
     (if (or (eq 'mail-only bbdb-mail-allow-redundancy)
             (null name)
-            (unless bbdb-mail-allow-redundancy
-              (cond ((and fn ln)
-                     (or (string-match
-                          (concat "\\`[^!@%]*\\b" (regexp-quote fn)
-                                  "\\b[^!%@]+\\b" (regexp-quote ln) "\\b")
-                          mail)
-                         (string-match
-                          (concat "\\`[^!@%]*\\b" (regexp-quote ln)
-                                  "\\b[^!%@]+\\b" (regexp-quote fn) "\\b")
-                          mail)))
-                    ((or fn ln)
-                     (string-match
-                      (concat "\\`[^!@%]*\\b" (regexp-quote (or fn ln)) "\\b")
-                      mail))))
+            (and (not bbdb-mail-allow-redundancy)
+                 (cond ((and fn ln)
+                        (or (string-match
+                             (concat "\\`[^!@%]*\\b" (regexp-quote fn)
+                                     "\\b[^!%@]+\\b" (regexp-quote ln) "\\b")
+                             mail)
+                            (string-match
+                             (concat "\\`[^!@%]*\\b" (regexp-quote ln)
+                                     "\\b[^!%@]+\\b" (regexp-quote fn) "\\b")
+                             mail)))
+                       ((or fn ln)
+                        (string-match
+                         (concat "\\`[^!@%]*\\b" (regexp-quote (or fn ln)) "\\b")
+                         mail))))
             ;; MAIL already in "foo <bar>" or "bar (foo)" format.
             (string-match "\\`[ \t]*[^<]+[ \t]*<" mail)
             (string-match "\\`[ \t]*[^(]+[ \t]*(" mail))
@@ -1674,38 +1681,45 @@ ARGS are passed to `compose-mail'."
     (apply 'compose-mail args)))
 
 ;;;###autoload
-(defun bbdb-mail (records &optional subject)
+(defun bbdb-mail (records &optional subject n)
   "Compose a mail message to RECORDS.
-The first address is used if there are more than one."
-  (interactive (list (bbdb-do-records)))
+If SUBJECT is non-nil, use it as subject of the mail message.
+By default, the first mail address of RECORDS is used.
+If prefix N is a number, use Nth mail address of RECORDS
+\(starting from 1, and provided Nth mail address exists).
+If prefix N is C-u (t in noninteractive calls) use all mail addresses
+of RECORDS."
+  (interactive (list (bbdb-do-records) nil
+                     (or (listp current-prefix-arg)
+                         current-prefix-arg)))
   (setq records (bbdb-record-list records))
-  (cond ((not records) (message "No records"))
-        ((= 1 (length records))
-         (if bbdb-inside-electric-display
-             (bbdb-electric-throw
-              `(bbdb-mail ',records ',subject)))
-         ;; else...
-         (let ((record (car records)))
-           (if (bbdb-record-mail record)
-               (bbdb-compose-mail (bbdb-dwim-mail record) subject)
-             (message "Record does not have a mail addresses."))))
-        (t
-         (if bbdb-inside-electric-display
-             (bbdb-electric-throw
-              `(bbdb-mail ',records ',subject)))
-         ;; else...
-         (let (good bad)
-           (dolist (record records)
-             (if (bbdb-record-mail record)
-                 (push record good)
-               (push record bad)))
-           (when bad
-             (message "Warning: No mail addresses for %s."
-                      (mapconcat 'bbdb-record-name (nreverse bad) ", "))
-             (sit-for 2))
-           (bbdb-compose-mail
-            ;; use one mail address per line
-            (mapconcat 'bbdb-dwim-mail (nreverse good) ",\n\t") subject)))))
+  (if (not records) (message "No records")
+    (if bbdb-inside-electric-display
+        (bbdb-electric-throw
+         `(bbdb-mail ',records ',subject ',n)))
+    ;; else...
+    (let ((good "") bad)
+      (dolist (record records)
+        (let ((mails (bbdb-record-mail record)))
+          (cond ((not mails)
+                 (push record bad))
+                ((eq n t)
+                 (setq good (bbdb-concat ",\n\t"
+                                         good
+                                         (mapcar (lambda (mail)
+                                                   (bbdb-dwim-mail record mail))
+                                                 mails))))
+                (t
+                 (setq good (bbdb-concat ",\n\t" good
+                             (bbdb-dwim-mail record (or (and (numberp n)
+                                                             (nth (1- n) mails))
+                                                        (car mails)))))))))
+      (when bad
+        (message "No mail addresses for %s."
+                 (mapconcat 'bbdb-record-name (nreverse bad) ", "))
+        (unless (string= "" good) (sit-for 2)))
+      (unless (string= "" good)
+        (bbdb-compose-mail good subject)))))
 
 (defun bbdb-yank-addresses ()
   "CC the people displayed in the *BBDB* buffer on this mail message.
