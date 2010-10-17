@@ -996,10 +996,12 @@ all:   Generate the aliases \"<alias>\" and \"<alias>*\" (as for 'star)
                  (symbol :tag "All aliases" all)))
 
 (defcustom bbdb-mail-allow-redundancy nil
-  "If non-nil always use full name when sending mail, even if same as mail."
+  "Mail address to use for BBDB records when sending mail.
+If non-nil always use full name in mail address, even if same as mail.
+If value is mail-only never use full name."
   :group 'bbdb-sendmail
   :type '(choice (const :tag "Disallow redundancy" nil)
-                 (const :tag "Return only the mail" 'mail-only)
+                 (const :tag "Never use full name" 'mail-only)
                  (const :tag "Allow redundancy" t)))
 
 (defcustom bbdb-complete-mail t
@@ -1347,6 +1349,8 @@ Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
      ["Add mail alias" bbdb-add-mail-alias t]
      ["(Re-)Build mail aliases" bbdb-mail-aliases t])
     ("Use database"
+     ["Prefix: do all records" bbdb-do-all-records t]
+     "--"
      ["Send mail" bbdb-mail t]
      ["Dial phone number" bbdb-dial t]
      ["Browse URL" bbdb-browse-url t]
