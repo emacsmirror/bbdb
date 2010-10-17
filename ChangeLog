@@ -1,3 +1,13 @@
+2010-10-17  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mail-allow-redundancy): Doc fix.
+	(bbdb-mode-map): Include bbdb-do-all-records in "Use database"
+	submenu.
+
+	* lisp/bbdb-com.el (bbdb-record-list): Doc fix.
+	(bbdb-dwim-mail): Arg MAIL may be a number,
+	which will pick the MAILth mail address.
+	(bbdb-mail): New optional arg N to pick Nth mail address.
+
 2010-09-30  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-insert-record-internal): Handle empty
 	database properly.
