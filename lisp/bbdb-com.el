@@ -1631,7 +1631,7 @@ If Mail is nil the first mail address of RECORD is used."
   (unless mail
     (let ((mails (bbdb-record-mail record)))
       (setq mail (or (and (integerp mail) (nth mail mails))
-                     (car mail)))))
+                     (car mails)))))
   (unless mail (error "Record has no mail addresses"))
   (let* ((mail-name (bbdb-record-note record 'mail-name))
          (name (or mail-name (bbdb-record-name record)))
