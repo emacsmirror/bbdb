@@ -1,3 +1,13 @@
+2010-11-01  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-wrap-column): New variable.
+	(bbdb-format-list): Use bbdb-wrap-column and bbdb-separator-alist.
+	(bbdb-layout-alist, bbdb-format-address-continental)
+	(bbdb-format-address-default, bbdb-format-record-multi-line):
+	Change value of indentation such that it becomes the total
+	indentation.
+
+	* lisp/bbdb-com.el (bbdb-dwim-mail): Fix typo.
+
 2010-10-17  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mail-allow-redundancy): Doc fix.
 	(bbdb-mode-map): Include bbdb-do-all-records in "Use database"
