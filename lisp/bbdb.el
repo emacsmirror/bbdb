@@ -264,10 +264,10 @@ Lisp Hackers: See also `bbdb-silent-internal'."
                         (toggle    . t))
     (multi-line         (omit      . (creation-date timestamp))
                         (toggle    . t)
-                        (indentation . 18))
+                        (indentation . 21))
     (pop-up-multi-line  (omit      . (creation-date timestamp))
-                        (indentation . 18))
-    (full-multi-line    (indentation . 18)))
+                        (indentation . 21))
+    (full-multi-line    (indentation . 21)))
   "Alist describing each display layout.
 The format of an element is (LAYOUT-NAME OPTION-ALIST).
 
@@ -284,7 +284,7 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
  (order . FIELD-LIST)            +               +              '(phone ...)
  (omit . FIELD-LIST)             +               +              nil
  (name-end . INTEGER)            +               -              40
- (indentation . INTEGER)         -               +              18
+ (indentation . INTEGER)         -               +              21
  (primary . BOOL)                -               +              nil
  (display-p . SEXP)              +               +              nil
 
@@ -378,6 +378,12 @@ layout function, the multi-line layout will be used."
                  (const multi-line)
                  (const full-multi-line)
                  (symbol)))
+
+(defcustom bbdb-wrap-column nil
+  "Wrap column for multi-line display.  If nil do not wrap lines."
+  :group 'bbdb-record-display
+  :type '(choice (const :tag "No line wrapping" nil)
+                 (number :tag "Wrap column")))
 
 (defcustom bbdb-case-fold-search (default-value 'case-fold-search)
   "Value of `case-fold-search' used by BBDB and friends.
@@ -1895,7 +1901,7 @@ The result looks like this:
 
 This function is a possible formatting function for
 `bbdb-address-format-alist'."
-  (let ((indent (+ 3 (or indent 18)))
+  (let ((indent (or indent 21))
         (country (bbdb-address-country address)))
     (bbdb-format-streets address indent)
     (indent-to indent)
@@ -1918,7 +1924,7 @@ The result looks like this:
 
 This function is a possible formatting function for
 `bbdb-address-format-alist'."
-  (let ((indent (+ 3 (or indent 18)))
+  (let ((indent (or indent 21))
         (country (bbdb-address-country address)))
     (bbdb-format-streets address indent)
     (indent-to indent)
@@ -1940,19 +1946,45 @@ This function is a possible formatting function for
         (funcall form address indent))))
 
 (defsubst bbdb-field-property (start field)
+  "Set text property bbdb-field of text between START and point to FIELD."
   (put-text-property start (point) 'bbdb-field field))
 
 (defsubst bbdb-format-text (text field &optional face)
+  "Insert TEXT at point.  Set its text property bbdb-field to FIELD.
+If FACE is non-nil, also add face FACE."
   (let ((start (point)))
     (insert text)
     (bbdb-field-property start field)
     (if face (put-text-property start (point) 'face face))))
 
-(defun bbdb-format-list (list field &optional terminator face)
-  (let (elt)
+(defun bbdb-format-list (list field &optional terminator face indent)
+  "Insert elements of LIST at point.
+For inserted text, set text property bbdb-field to field.
+If TERMINATOR is non-nil use it to terminate the inserted text.
+If INDENT and `bbdb-wrap-column' are integers, insert line breaks in between
+elements of LIST if otherwise inserted text exceeds `bbdb-wrap-column."
+  ;; `truncate-lines' is annyoing for records that are displayed
+  ;; in multi-line format.  Non-nil `word-wrap' would be much nicer.
+  ;; How can we switch between non-nil `truncate-lines' and
+  ;; non-nil `word-wrap' on a per-record basis?  The following code
+  ;; provides an alternative solution using `bbdb-wrap-column'.
+  (let* ((separator (nth 1 (or (cdr (assq field bbdb-separator-alist))
+                               bbdb-default-separator)))
+         (indent-flag (and (integerp bbdb-wrap-column)
+                           (integerp indent)))
+         (prefix (if indent-flag
+                     (concat separator "\n" (make-string indent ?\s))))
+        elt)
     (while (setq elt (pop list))
-      (bbdb-format-text (concat elt (if list ", " (or terminator "")))
-                        (list field elt) face))))
+      (bbdb-format-text elt (list field elt) face)
+      (cond ((and list indent-flag
+                  (> (+ (current-column) (length (car list)))
+                     bbdb-wrap-column))
+             (bbdb-format-text prefix (list field) face))
+            (list
+             (bbdb-format-text separator (list field) face))
+            (terminator
+             (bbdb-format-text terminator (list field) face))))))
 
 (defun bbdb-format-name-organization (record)
   "Insert name, degree, and organization of RECORD."
@@ -2032,8 +2064,10 @@ See `bbdb-layout-alist' for more."
   (bbdb-format-name-organization record)
   (insert "\n")
   (let* ((notes (bbdb-record-notes record))
-         (indent (or (bbdb-layout-get-option layout 'indentation) 18))
-         (fmt (format " %%%ds: " indent))
+         (indent (or (bbdb-layout-get-option layout 'indentation) 21))
+         ;; The format string FMT adds three extra characters.
+         ;; So we subtract those from the value of INDENT.
+         (fmt (format " %%%ds: " (- indent 3)))
          start field formatfun)
     (dolist (field field-list)
       (setq start (point))
@@ -2070,7 +2104,7 @@ See `bbdb-layout-alist' for more."
                                    font-lock-variable-name-face)
                  (bbdb-format-list (if (bbdb-layout-get-option layout 'primary)
                                        (list (car mail)) mail)
-                                   'mail "\n"))))
+                                   'mail "\n" nil indent))))
             ;; AKA
             ((eq field 'aka)
              (let ((aka (bbdb-record-aka record)))
@@ -2081,7 +2115,7 @@ See `bbdb-layout-alist' for more."
             ;; notes
             (t
              (let ((note (assq field notes))
-                   (indent (make-string (length (format fmt "")) ?\s)))
+                   (indent (make-string indent ?\s)))
                (when note
                  (bbdb-format-text (format fmt field)
                                    (list 'note note 'field-name)
