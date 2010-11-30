@@ -30,7 +30,10 @@
 (require 'mailheader)
 
 (defcustom bbdb/rmail-update-records-p
-  (lambda () (if (bbdb/rmail-new-flag) (bbdb-select-message) 'search))
+  (lambda ()
+    (let ((bbdb-update-records-p
+           (if (bbdb/rmail-new-flag) 'query 'search)))
+      (bbdb-select-message)))
   "Controls how `bbdb/rmail-update-records' processes mail addresses.
 Set this to an expression which evaluates to 'search, t. or nil.
 When set to t mail addresses will be fed to
@@ -41,12 +44,20 @@ the right mail.  A value of nil will not do anything.
 The default is to annotate only new messages."
   :group 'bbdb-mua-rmail
   :type '(choice (const :tag "do nothing" nil)
-                 (const :tag "search for existing records" search)
-                 (const :tag "annotate all messages" t)
-                 (const :tag "query annotation of all messages" query)
+                 (const :tag "search for existing records"
+                        (lambda () (let ((bbdb-update-records-p 'search))
+                                     (bbdb-select-message))))
+                 (const :tag "query annotation of all messages"
+                        (lambda () (let ((bbdb-update-records-p 'query))
+                                     (bbdb-select-message))))
                  (const :tag "annotate (query) only new messages"
-                        (lambda () (if (bbdb/rmail-new-flag)
-                                       (bbdb-select-message) 'search)))
+                        (lambda ()
+                          (let ((bbdb-update-records-p
+                                 (if (bbdb/rmail-new-flag) 'query 'search)))
+                            (bbdb-select-message))))
+                 (const :tag "annotate all messages"
+                        (lambda () (let ((bbdb-update-records-p t))
+                                     (bbdb-select-message))))
                  (const :tag "accept messages" bbdb-accept-message)
                  (const :tag "ignore messages" bbdb-ignore-message)
                  (const :tag "select messages" bbdb-select-message)
