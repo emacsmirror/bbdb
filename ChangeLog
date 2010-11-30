@@ -1,3 +1,31 @@
+2010-11-30  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-update-records-p): Fix docstring.
+	(bbdb-message-pop-up): Change default to a less aggressive nil.
+	(bbdb-format-record-one-line): Remove linebreaks from multi-line
+	notes.
+
+	* lisp/bbdb-com.el (bbdb-delete-duplicate-mails)
+	(bbdb-display-records-completely)
+	(bbdb-display-records-with-layout, bbdb-copy-records-as-kill): Doc
+	fix.
+	(bbdb-search-duplicates): Improved interactive spec.  New arg
+	records.  Doc fix
+	(bbdb-delete-field-or-record): Make records a required arg. New
+	arg fields.  Doc fix.
+	(bbdb-delete-records, bbdb-toggle-records-layout)
+	(bbdb-sort-addresses, bbdb-sort-phones, bbdb-sort-notes)
+	(bbdb-add-mail-alias): Make records a required arg.  Doc fix.
+	(bbdb-mail-address): New command bound to M.
+	(bbdb-mail): Use it.  New arg verbose.  Fix interactive spec.
+	(bbdb-mail-yank): Renamed from bbdb-yank-addresses.  Bug fix.
+	(bbdb-yank-addresses): Declared obsolete.
+	(bbdb-browse-url): Simplify.  Doc fix.
+	(bbdb-grab-url): Simplify.
+
+	* lisp/bbdb-vm.el (bbdb/vm-update-records-p)
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records-p)
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-records-p): Improved default.
+
 2010-11-01  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-wrap-column): New variable.
 	(bbdb-format-list): Use bbdb-wrap-column and bbdb-separator-alist.
