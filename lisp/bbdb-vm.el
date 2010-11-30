@@ -37,25 +37,35 @@
   (require 'vm-misc))
 
 (defcustom bbdb/vm-update-records-p
-  (lambda () (if (vm-new-flag (car vm-message-pointer))
-                 (bbdb-select-message) 'search))
+  (lambda ()
+    (let ((bbdb-update-records-p
+           (if (vm-new-flag (car vm-message-pointer))
+               'query 'search)))
+      (bbdb-select-message)))
   "Controls how `bbdb/vm-update-records' processes mail addresses.
-Set this to an expression which evaluates to 'search, t. or nil.
-When set to t mail addresses will be fed to
-`bbdb-annotate-message' in order to update existing records or create
-new ones.  A value of 'search will search just for existing records having
-the right mail.  A value of nil will not do anything.
-
-The default is to annotate (query) only new messages."
+Allowed values are:
+t       Update existing records or create new ones.
+search  Search for existing records.
+nil     Do anything.
+A function which returns one of the above values."
   :group 'bbdb-mua-vm
   :type '(choice (const :tag "do nothing"
                         nil)
-                 (const :tag "search for existing records" search)
-                 (const :tag "annotate all messages" t)
-                 (const :tag "query annotation of all messages" query)
+                 (const :tag "search for existing records"
+                        (lambda () (let ((bbdb-update-records-p 'search))
+                                     (bbdb-select-message))))
+                 (const :tag "query annotation of all messages"
+                        (lambda () (let ((bbdb-update-records-p query))
+                                     (bbdb-select-message))))
                  (const :tag "annotate (query) only new messages"
-                        (lambda () (if (vm-new-flag (car vm-message-pointer))
-                                       (bbdb-select-message) 'search)))
+                        (lambda ()
+                          (let ((bbdb-update-records-p
+                                 (if (vm-new-flag (car vm-message-pointer))
+                                     'query 'search)))
+                            (bbdb-select-message))))
+                 (const :tag "annotate all messages"
+                        (lambda () (let ((bbdb-update-records-p t))
+                                     (bbdb-select-message))))
                  (const :tag "accept messages" bbdb-accept-message)
                  (const :tag "ignore messages" bbdb-ignore-message)
                  (const :tag "select messages" bbdb-select-message)
@@ -106,7 +116,7 @@ If UPDATE-P is nil, use the value of `bbdb/vm-update-records-p'."
   "Make the *BBDB* buffer be displayed along with the VM window(s).
 Displays the records corresponding to the sender respectively
 recipients of the current message.
-See `bbdb-message-headers' and `bbdb-message-all-addresses'
+See `bbdb-message-pop-up', and `bbdb/vm-update-records-p'
 for configuration of what is being displayed.
 Intended for noninteractive use via `vm-select-message-hook'.
 See `bbdb/vm-show-records' for an interactive command."
@@ -305,7 +315,7 @@ Add this function to `bbdb-before-save-hook' and your .vm."
       (when (setq val (bbdb-split bbdb/vm-virtual-folder-field
                                   (bbdb-record-note record bbdb/vm-virtual-folder-field)))
         (setq mail-regexp (regexp-opt (bbdb-record-mail record)))
-        (unless (zerop (length mail-regexp))
+        (unless (string= "" mail-regexp)
           (setq folder (car val)
                 real-folders (mapcar
                               (lambda (f) (if (file-name-absolute-p f) f
