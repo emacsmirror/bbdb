@@ -587,14 +587,19 @@ The default value is the symbol `bbdb-address-edit-default'."
 
 ;;; MUA interface
 (defcustom bbdb-update-records-p 'query
-  "Non-nil return value for `bbdb-select-message' and friends."
+  "Return value for `bbdb-select-message' and friends.
+Allowed values are:
+t       Annotate all messages
+query   Query annotation of all messages
+search  Search for existing records
+nil     Do nothing."
   ;; Also: Used for communication between `bbdb-update-records'
   ;; and `bbdb-prompt-for-create'.
   :group 'bbdb-mua
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records" search)
-                 (const :tag "annotate all messages" t)
-                 (const :tag "query annotation of all messages" query)))
+                 (const :tag "query annotation of all messages" query)
+                 (const :tag "annotate all messages" t)))
 
 (defcustom bbdb-message-headers
   '((sender     . ("From" "Resent-From" "Reply-To" "Sender"))
@@ -675,7 +680,8 @@ the `To' header will be shown instead of the one for the `From' header."
   :type '(regexp :tag "Regexp matching your mail addresses"))
 
 (defcustom bbdb-add-mails 'query
-  "If t, then when BBDB notices a new mail address for a known person,
+  "How to handle new mail addresses for existing BBDB records.
+If t, then when BBDB notices a new mail address for a known person,
 it will automatically add it to the list of mail addresses.
 If it is 'query, query whether to add it.
 If it is nil then new mail addresses will never be automatically added
@@ -685,9 +691,9 @@ If set to a function name the function should return one of these values.
 See also the variable `bbdb-new-mails-always-primary' for control of whether
 the addresses go at the front of the list or the back."
   :group 'bbdb-mua
-  :type '(choice (const :tag "Automatically add new addresses" t)
-                 (const :tag "Ask before adding new addresses" query)
-                 (const :tag "Never add new addresses" nil)
+  :type '(choice (const :tag "Automatically add new mail addresses" t)
+                 (const :tag "Ask before adding new mail addresses" query)
+                 (const :tag "Never add new mail addresses" nil)
                  (const bbdb-select-message)
                  (const bbdb-accept-message)
                  (const bbdb-ignore-message)))
@@ -915,7 +921,7 @@ See also `bbdb-auto-notes-ignore'."
           (string :tag "Header name")
           (regexp :tag "Regexp to match on header value"))))
 
-(defcustom bbdb-message-pop-up t
+(defcustom bbdb-message-pop-up nil
   "If non-nil, display a continuously-updating bbdb window while in VM, MH,
 RMAIL, or Gnus.  If 'horiz, stack the window horizontally if there is room."
   :group 'bbdb-mua
@@ -1280,11 +1286,11 @@ Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
     (define-key km "i"          'bbdb-insert-field)
     (define-key km "s"          'bbdb-save)
     (define-key km "\C-x\C-s"   'bbdb-save)
-    (define-key km "M"          'bbdb-merge-records)
     (define-key km "t"          'bbdb-toggle-records-layout)
     (define-key km "T"          'bbdb-display-records-completely)
     (define-key km "o"          'bbdb-omit-record)
     (define-key km "m"          'bbdb-mail)
+    (define-key km "M"          'bbdb-mail-address)
     (define-key km "\M-d"       'bbdb-dial)
     (define-key km "g"          'bbdb-revert-buffer)
     (define-key km "h"          'bbdb-info)
@@ -1351,6 +1357,7 @@ Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
      ["Show all records" bbdb-display-all-records t])
     ("Mail"
      ["Send mail" bbdb-mail t]
+     ["Save mail address" bbdb-mail-address t]
      "--"
      ["Add mail alias" bbdb-add-mail-alias t]
      ["(Re-)Build mail aliases" bbdb-mail-aliases t])
@@ -1909,7 +1916,7 @@ This function is a possible formatting function for
                          (bbdb-concat " " (bbdb-address-zip address)
                                       (bbdb-address-city address))
                          (bbdb-address-state address)) "\n")
-    (unless (= 0 (length country))
+    (unless (zerop (length country))
       (indent-to indent) (insert country "\n"))))
 
 (defun bbdb-format-address-default (address &optional indent)
@@ -1931,7 +1938,7 @@ This function is a possible formatting function for
     (insert (bbdb-concat ", " (bbdb-address-city address)
                          (bbdb-concat " " (bbdb-address-state address)
                                       (bbdb-address-zip address))) "\n")
-    (unless (= 0 (length country))
+    (unless (zerop (length country))
       (indent-to indent) (insert country "\n"))))
 
 (defun bbdb-format-address (address &optional indent)
@@ -2053,7 +2060,8 @@ See `bbdb-layout-alist' for more info."
             ;; notes
             (t
              (let ((val (bbdb-record-note record field)))
-               (if val (bbdb-format-text (concat val "; ") field))))))
+               (if val (bbdb-format-text (concat (replace-regexp-in-string
+                                                  "\n" "; " val) "; ") field))))))
     ;; delete the trailing "; "
     (backward-delete-char 2)
     (insert "\n")))
