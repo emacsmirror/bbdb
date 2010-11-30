@@ -37,7 +37,8 @@
    (defvar gnus-optional-headers))
 
 (defcustom bbdb/gnus-update-records-p
-  'bbdb-select-message
+  (lambda () (let ((bbdb-update-records-p 'query))
+               (bbdb-select-message)))
   ;; (lambda () (if (gnus-new-flag) 'query 'search))
   "Controls how `bbdb/gnus-update-records' processes mail addresses.
 Set this to an expression which evaluates to 'search, t. or nil.
@@ -49,13 +50,19 @@ the right mail.  A value of nil will not do anything.
 The default is to annotate only new messages."
   :group 'bbdb-mua-gnus
   :type '(choice (const :tag "do nothing" nil)
-                 (const :tag "search for existing records" search)
-                 (const :tag "annotate all messages" t)
-                 (const :tag "query annotation of all messages" query)
+                 (const :tag "search for existing records"
+                        (lambda () (let ((bbdb-update-records-p 'search))
+                                     (bbdb-select-message))))
+                 (const :tag "query annotation of all messages"
+                        (lambda () (let ((bbdb-update-records-p 'query))
+                                     (bbdb-select-message))))
                  (const :tag "annotate (query) only new messages"
                         (if (equal "" (gnus-summary-article-mark
                                        (gnus-summary-article-number)))
                             (bbdb-select-message) 'search))
+                 (const :tag "annotate all messages"
+                        (lambda () (let ((bbdb-update-records-p 't))
+                                     (bbdb-select-message))))
                  (const :tag "accept messages" bbdb-accept-message)
                  (const :tag "ignore messages" bbdb-ignore-message)
                  (const :tag "select messages" bbdb-select-message)
@@ -734,7 +741,7 @@ Note that `\( is the backquote NOT the quote '\(. "
                  (setq folder-attr (cdr (assq 'imap notes-attr))))
         (setq mail-regexp (regexp-opt (mapcar 'downcase
                                                (bbdb-record-mail record))))
-        (unless (zerop (length mail-regexp))
+        (unless (string= "" mail-regexp)
           (setq new-elmnt-list
                 (cons (list "From" mail-regexp (concat folder-prefix
                                                         folder-attr folder-postfix))
