@@ -3,7 +3,8 @@ Section: mail
 Priority: optional
 Maintainer: Joerg Jaspert <joerg@debian.org>
 Uploaders: Barak A. Pearlmutter <bap@debian.org>
-Build-Depends: debhelper (>= 8)
+Build-Depends: debhelper (>= 8),
+    autotools-dev (>= 20100122.1~)
 Build-Depends-Indep: texinfo, texi2html, ghostscript,
     texlive-base, texlive-latex-base,
     emacs23-nox | emacs23 | emacs
