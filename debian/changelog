@@ -2,8 +2,10 @@ bbdb (2.36-2) UNRELEASED; urgency=low
 
   * Update to bbdb-vcard 0.3, which better parses birthdays
   * bump standards version (debian/changelog)
+  * bump to dh 8, dh --parallel, dh --with autotools_dev (debian/compat,
+    debian/control, debian/rules)
 
- -- Barak A. Pearlmutter <bap@debian.org>  Mon, 02 Aug 2010 14:29:14 +0200
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 12 Dec 2010 14:24:53 +0000
 
 bbdb (2.36-1) unstable; urgency=low
 
