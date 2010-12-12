@@ -1,4 +1,4 @@
-bbdb (2.36-2) UNRELEASED; urgency=low
+bbdb (2.36-2) unstable; urgency=low
 
   * Update to bbdb-vcard 0.3, which better parses birthdays
   * bump standards version (debian/changelog)
