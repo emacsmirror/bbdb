@@ -80,7 +80,7 @@ case "${FLAVOR}" in
 	    if [ $FLAVOR != xemacs20 -a $FLAVOR != xemacs21 ]; then
 		echo  "(provide 'bbdb-autoloads)" >> lisp/bbdb-autoloads.el
 	    fi
-	    echo "Byte-compiling bbdb. This takes looooooong..."
+	    echo "Byte-compiling bbdb..."
 	    make  $TARGETS EMACS_PROG=${FLAVOR} \
 		VMDIR=/usr/share/${FLAVOR}/site-lisp/vm \
 		GNUSDIR=${GNUSDIR} \
@@ -95,13 +95,13 @@ case "${FLAVOR}" in
 EOF
 	if [ ! -e ${ELCDIR}/bbdb-gnus.elc ]; then
 	    echo "*** installing not-compiled bbdb-gnus.el ***" >> $LOG
-	    echo "install -m 644 ${ELDIR}/lisp/bbdb-gnus.el ${ELCDIR}" >> $LOG
-	    install -m 644 ${ELDIR}/lisp/bbdb-gnus.el ${ELCDIR}
+	    echo "install -m 644 ${ELDIR}/lisp/bbdb-gnus.el ${ELCDIR}/" >> $LOG
+	    install -m 644 ${ELDIR}/lisp/bbdb-gnus.el ${ELCDIR}/
 	fi
 
 	# a hack to fix #179821, #210248, #233904
-	# If bbdb gets installed before vm then the bbdb doesnt have the bbdb-vm compiled....
-	install -m 644 ${ELDIR}/lisp/bbdb-vm.el ${ELCDIR}
+	# If bbdb is installed before vm, then bbdb does not have bbdb-vm compiled....
+	install -m 644 ${ELDIR}/lisp/bbdb-vm.el ${ELCDIR}/
 
 	# make -k clean >> $LOG
 	mv $LOG ${ELCDIR}/CompilationLog
