@@ -1710,8 +1710,7 @@ If prefix N is a number, use Nth mail address of RECORDS (starting from 1).
 If prefix N is C-u (t noninteractively) use all mail addresses of RECORDS.
 If VERBOSE is non-nil (as in interactive calls) be verbose."
   (interactive (list (bbdb-do-records) nil
-                     (or (and (listp current-prefix-arg)
-                              (car current-prefix-arg) t)
+                     (or (consp current-prefix-arg)
                          current-prefix-arg)
                      t))
   (setq records (bbdb-record-list records))
@@ -1734,8 +1733,7 @@ If prefix N is C-u (t noninteractively) use all mail addresses of RECORDS.
 If KILL-RING-SAVE is non-nil (as in interactive calls), copy mail addresses
 to kill ring.  If VERBOSE is non-nil (as in interactive calls) be verbose."
   (interactive (list (bbdb-do-records)
-                     (or (and (listp current-prefix-arg)
-                              (car current-prefix-arg) t)
+                     (or (consp current-prefix-arg)
                          current-prefix-arg)
                      t t))
   (setq records (bbdb-record-list records))
