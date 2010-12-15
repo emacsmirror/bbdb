@@ -26,28 +26,23 @@
   (require 'bbdb)
   (require 'bbdb-com)
   (require 'bbdb-mua)
-;;  (require 'bbdb-snarf)
+  ;;  (require 'bbdb-snarf)
   (require 'gnus)
   (require 'gnus-win)
   (require 'gnus-sum)
   (require 'gnus-art))
 
-;;; Compiler hushing
-(eval-when-compile
-   (defvar gnus-optional-headers))
-
 (defcustom bbdb/gnus-update-records-p
   (lambda () (let ((bbdb-update-records-p 'query))
                (bbdb-select-message)))
   ;; (lambda () (if (gnus-new-flag) 'query 'search))
-  "Controls how `bbdb/gnus-update-records' processes mail addresses.
-Set this to an expression which evaluates to 'search, t. or nil.
-When set to t mail addresses will be fed to
-`bbdb-annotate-message' in order to update existing records or create
-new ones.  A value of 'search will search just for existing records having
-the right mail.  A value of nil will not do anything.
-
-The default is to annotate only new messages."
+  "How `bbdb-mua-update-records' processes mail addresses in Gnus.
+Allowed values are:
+ nil          Do anything.
+ search       Search for existing records.
+ query        Update existing records or query for creating new ones.
+ create or t  Update existing records or create new ones.
+A function which returns one of the above values."
   :group 'bbdb-mua-gnus
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records"
@@ -61,153 +56,42 @@ The default is to annotate only new messages."
                                        (gnus-summary-article-number)))
                             (bbdb-select-message) 'search))
                  (const :tag "annotate all messages"
-                        (lambda () (let ((bbdb-update-records-p 't))
+                        (lambda () (let ((bbdb-update-records-p 'create))
                                      (bbdb-select-message))))
                  (const :tag "accept messages" bbdb-accept-message)
                  (const :tag "ignore messages" bbdb-ignore-message)
                  (const :tag "select messages" bbdb-select-message)
                  (sexp  :tag "user defined")))
 
-;;;###autoload
-(defun bbdb/gnus-update-records (&optional update-p)
-  "Gnus wrapper for `bbdb-update-records'.
-Return the records corresponding to the current Gnus message,
-creating or modifying them as necessary.
-UPDATE-P may take the same values as in `bbdb-update-records'.
-If UPDATE-P is nil, use the value of `bbdb/gnus-update-records-p'."
-  (let ((msg-id (bbdb-message-header "Message-ID"))
-        records)
-    (unless update-p
-      (setq update-p
-            (if (functionp bbdb/gnus-update-records-p)
-                (funcall bbdb/gnus-update-records-p)
-              bbdb/gnus-update-records-p)))
-    ;; ignore cache if we may be creating a record, since the cache
-    ;; may otherwise tell us that the user did not want a record for
-    ;; this person.
-    (unless (member update-p '(t query))
-      (setq records (bbdb-message-get-cache msg-id)))
-    (unless records
-      (setq records (bbdb-update-records
-                     (bbdb-get-address-components
-                      'gnus-fetch-field gnus-ignored-from-addresses)
-                     update-p))
-      (bbdb-message-set-cache msg-id records))
-    (if bbdb-message-all-addresses
-        records
-      (if records (list (car records))))))
-
-(defun bbdb/gnus-pop-up-bbdb-buffer (&optional update-p)
-  "Make the *BBDB* buffer be displayed along with the Gnus windows.
-Displays the records corresponding to the sender respectively
-recipients of the current message.
-See `bbdb-message-headers' and `bbdb-message-all-addresses'
-for configuration of what is being displayed.
-Intended for noninteractive use via `gnus-article-prepare-hook'.
-See `bbdb/gnus-show-records' for an interactive command."
-  (if bbdb-message-pop-up
-      (let ((bbdb-silent-internal t)
-            (records (bbdb/gnus-update-records update-p)))
-        (if records
-            (bbdb-display-records-internal
-             records nil nil nil
-             (lambda (window)
-               (let ((buffer (current-buffer)))
-                 (set-buffer (window-buffer window))
-                 (prog1 (eq major-mode 'vm-mode)
-                   (set-buffer buffer)))))
-          ;; If there are no records, empty the BBDB window.
-          (bbdb-undisplay-records)))))
-
-;;;###autoload
-(defun bbdb/gnus-show-records (&optional header-class all update-p)
-  "Display the BBDB record(s) for the addresses in this message.
-Prefix arg UPDATE-P toggles insertion of new record.
-See `bbdb/gnus-pop-up-bbdb-buffer' for a non-interactive function
-to be used in `gnus-article-prepare-hook'."
-  (interactive (list nil t (if current-prefix-arg 'query 'search)))
-  (gnus-summary-select-article)
-  (let* ((bbdb-message-headers
-          (if header-class
-              (list (assoc header-class bbdb-message-headers))
-            bbdb-message-headers))
-         (bbdb-message-all-addresses all)
-         bbdb-message-cache gnus-ignored-from-addresses
-         (records (bbdb/gnus-update-records)))
-    (if records (bbdb-display-records-internal records))
-    records))
-
-;;;###autoload
-(defun bbdb/gnus-show-sender (&optional all update-p)
-  "Display the BBDB record(s) for the sender of this message."
-  (interactive (list t (if current-prefix-arg 'query 'search)))
-  (bbdb/gnus-show-records 'sender all update-p))
-
-;;;###autoload
-(defun bbdb/gnus-show-recipients (&optional all update-p)
-  "Display the BBDB record(s) for the recipients of this message."
-  (interactive (list t (if current-prefix-arg 'query 'search)))
-  (bbdb/gnus-show-records 'recipients all update-p))
-
-;;;###autoload
-(defun bbdb/gnus-annotate-sender (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record
-corresponding to the sender of this message.  If REPLACE is non-nil,
-replace the existing notes entry (if any)."
-  (interactive (progn (bbdb-editable) (list (read-string "Comments: "))))
-  (gnus-summary-select-article)
-  (dolist (record (bbdb/gnus-update-records t))
-    (bbdb-annotate-notes record string 'notes replace)))
-
-(defun bbdb/gnus-edit-notes (&optional field)
-  "Edit the notes FIELD of the BBDB record corresponding to the sender
-of this message.
-If called interactively, FIELD defaults to 'notes. With a prefix arg,
-ask interactively for FIELD."
-  (interactive (list (unless current-prefix-arg 'notes)))
-  (gnus-summary-select-article)
-  (let ((records (bbdb/gnus-update-records)))
-    (bbdb-display-records records)
-    (dolist (record records)
-      (bbdb-record-edit-notes record field t))))
-
 ;; Announcing BBDB records in the summary buffer
-
-(defcustom bbdb/gnus-lines-and-from-length 18
-  "The number of characters used to display From: info in Gnus, if you have
-set gnus-optional-headers to 'bbdb/gnus-lines-and-from."
-  :group 'bbdb-mua-gnus
-  :type 'integer)
 
 (defcustom bbdb/gnus-summary-mark-known-posters t
   "If t, mark messages created by people with records in the BBDB.
-In Gnus, this marking will take place in the subject list (assuming
-`gnus-optional-headers' contains `bbdb/gnus-lines-and-from').  In Gnus, the
+In Gnus, this marking will take place in the subject list.  In Gnus, the
 marking will take place in the Summary buffer if the format code defined by
 `bbdb/gnus-summary-user-format-letter' is used in `gnus-summary-line-format'.
 This variable has no effect on the marking controlled by
 `bbdb/gnus-summary-in-bbdb-format-letter'."
   :group 'bbdb-mua-gnus
   :type '(choice (const :tag "Mark known posters" t)
-         (const :tag "Do not mark known posters" nil)))
+                 (const :tag "Do not mark known posters" nil)))
 (defvaralias 'bbdb/gnus-mark-known-posters
   'bbdb/gnus-summary-mark-known-posters)
 
 (defcustom bbdb/gnus-summary-known-poster-mark "+"
   "This is the default character to prefix sender names with if
-bbdb/gnus-summary-mark-known-posters is t.  If the poster's record has
-an entry in the field named by bbdb-message-marker-field, then that will
+`bbdb/gnus-summary-mark-known-posters' is t.  If the poster's record has
+an entry in the field named by `bbdb/gnus-message-marker-field', then that will
 be used instead."
   :group 'bbdb-mua-gnus
-  :type 'character)
+  :type 'string)
 
 (defcustom bbdb/gnus-summary-show-bbdb-names t
   "If both this variable and `bbdb/gnus-summary-prefer-real-names' are t,
 then for messages from senders who are in your database, the name
 displayed will be the primary name in the database, rather than the
 one in the From line of the message.  This does not affect the names of
-people who are not in the database, of course.  (`gnus-optional-headers'
-must be `bbdb/gnus-lines-and-from' for Gnus users.)"
+people who are not in the database, of course."
   :group 'bbdb-mua-gnus
   :type 'boolean)
 (defvaralias 'bbdb/gnus-header-show-bbdb-names
@@ -224,12 +108,11 @@ provided in the From header with data from the BBDB."
 otherwise display his/her primary mail address if we have one.  If it
 is set to the symbol bbdb, then real names will be used from the BBDB
 if present, otherwise the mail address in the post will be used.  If
-bbdb/gnus-summary-prefer-bbdb-data is nil, then this has no effect.
-See `bbdb/gnus-lines-and-from' for Gnus users, or
-`bbdb/gnus-summary-user-format-letter' for Gnus users."
+`bbdb/gnus-summary-prefer-bbdb-data' is nil, then this has no effect.
+See `bbdb/gnus-summary-user-format-letter' for Gnus users."
   :group 'bbdb-mua-gnus
   :type '(choice (const :tag "Prefer real names" t)
-         (const :tag "Prefer mail addresses" nil)))
+                 (const :tag "Prefer mail addresses" nil)))
 (defvaralias 'bbdb/gnus-header-prefer-real-names
   'bbdb/gnus-summary-prefer-real-names)
 
@@ -245,7 +128,7 @@ is nil, no format function will be installed for
 `bbdb/gnus-summary-in-bbdb-format-letter', which installs a format
 code for `bbdb/gnus-summary-sender-in-bbdb'"
   :group 'bbdb-mua-gnus
-  :type 'character)
+  :type 'string)
 
 (defcustom bbdb/gnus-summary-in-bbdb-format-letter "b"
   "This is the gnus-user-format-function- that will be used to insert
@@ -256,15 +139,17 @@ will be installed for `bbdb/gnus-summary-sender-in-bbdb'.  See also
 `bbdb/gnus-summary-user-format-letter', which installs a format code
 for `bbdb/gnus-summary-get-sender'."
   :group 'bbdb-mua-gnus
-  :type 'character)
+  :type 'string)
 
-(defcustom bbdb-message-marker-field 'mark-char
-  "The field whose value will be used to mark messages by this user in Gnus."
+(defcustom bbdb/gnus-message-marker-field 'mark-char
+  "BBDB field whose value will be used to mark messages in Gnus."
   :group 'bbdb-mua-gnus
   :type 'symbol)
+(define-obsolete-variable-alias 'bbdb-message-marker-field
+  'bbdb/gnus-message-marker-field)
 
 (defun bbdb/gnus-summary-get-sender (header)
-  "Given a Gnus message header, returns the appropriate piece of
+  "Given a Gnus message header, return the appropriate piece of
 information to identify the sender in a Gnus summary line, depending on
 the settings of the various configuration variables.  See the
 documentation for the following variables for more details:
@@ -276,56 +161,49 @@ This function is meant to be used with the user function defined in
   `bbdb/gnus-summary-user-format-letter'"
   (let* ((from (mail-header-from header))
          (data (and bbdb/gnus-summary-show-bbdb-names
-                    (condition-case nil
-                        (mail-extract-address-components from)
-                      (error nil))))
+                    (mail-extract-address-components from)))
          (name (car data))
-         (mail (car (cdr data)))
+         (mail (cadr data))
          (record (and data
                       (car (bbdb-message-search
                             name (bbdb-canonicalize-mail mail))))))
     (if (and record name (member (downcase name) (bbdb-record-mail record)))
-    ;; bogon!
-    (setq record nil))
+        ;; bogon!
+        (setq record nil))
     (setq name
-      (or (and bbdb/gnus-summary-prefer-bbdb-data
-           (or (and bbdb/gnus-summary-prefer-real-names
-                (and record (bbdb-record-name record)))
-               (and record (bbdb-record-mail record)
-                (nth 0 (bbdb-record-mail record)))))
-          (and bbdb/gnus-summary-prefer-real-names
-           (or (and (equal bbdb/gnus-summary-prefer-real-names 'bbdb)
-                mail)
-               name))
-          mail from "**UNKNOWN**"))
+          (or (and bbdb/gnus-summary-prefer-bbdb-data
+                   (or (and bbdb/gnus-summary-prefer-real-names
+                            (and record (bbdb-record-name record)))
+                       (and record (bbdb-record-mail record)
+                            (nth 0 (bbdb-record-mail record)))))
+              (and bbdb/gnus-summary-prefer-real-names
+                   (or (and (equal bbdb/gnus-summary-prefer-real-names 'bbdb)
+                            mail)
+                       name))
+              mail from "**UNKNOWN**"))
     (format "%s%s"
-        (or (and record bbdb/gnus-summary-mark-known-posters
-             (or (bbdb-record-note
-              record bbdb-message-marker-field)
-             bbdb/gnus-summary-known-poster-mark))
-        " ")
-        name)))
+            (or (and record bbdb/gnus-summary-mark-known-posters
+                     (or (bbdb-record-note
+                          record bbdb/gnus-message-marker-field)
+                         bbdb/gnus-summary-known-poster-mark))
+                " ")
+            name)))
 
 ;; DEBUG: (bbdb/gnus-summary-sender-in-bbdb "From: simmonmt@acm.org")
 (defun bbdb/gnus-summary-sender-in-bbdb (header)
-  "Given a Gnus message header, returns a mark if the poster is in the BBDB,
+  "Given a Gnus message header, return a mark if the poster is in the BBDB,
 \" \" otherwise.  The mark itself is the value of the field indicated
-by `bbdb-message-marker-field' (`mark-char' by default) if the indicated field
+by `bbdb/gnus-message-marker-field' (`mark-char' by default) if the indicated field
 is in the poster's record, and `bbdb/gnus-summary-known-poster-mark' otherwise."
-  (let* ((from (mail-header-from header))
-         (data (condition-case ()
-                   (mail-extract-address-components from)
-                 (error nil)))
-         (name (car data))
-         (mail (cadr data))
+  (let* ((data (mail-extract-address-components (mail-header-from header)))
          record)
     (if (and data
              (setq record
                    (car (bbdb-message-search
-                         name (bbdb-canonicalize-mail mail)))))
-        (or (bbdb-record-note
-             record bbdb-message-marker-field)
-            bbdb/gnus-summary-known-poster-mark) " ")))
+                         (car data) (bbdb-canonicalize-mail (cadr data))))))
+        (or (bbdb-record-note record bbdb/gnus-message-marker-field)
+            bbdb/gnus-summary-known-poster-mark)
+      " ")))
 
 ;;
 ;; Gnus-specific snarfing (see also bbdb-snarf.el)
@@ -362,7 +240,7 @@ an associated score field will be assigned this score.  A value of nil
 implies a default score of zero."
   :group 'bbdb-mua-gnus-scoring
   :type '(choice (const :tag "Do not assign default score")
-         (integer :tag "Assign this default score" 0)))
+                 (integer :tag "Assign this default score" 0)))
 
 (defvar bbdb/gnus-score-default-internal nil
   "Internal variable for detecting changes to
@@ -393,49 +271,38 @@ field.  This allows the BBDB to serve as a supplemental global score
 file, with the advantage that it can keep up with multiple and changing
 addresses better than the traditionally static global scorefile."
   (list (list
-   (condition-case nil
-       (read (bbdb/gnus-score-as-text group))
-     (error (setq bbdb/gnus-score-rebuild-alist t)
-        (message "Problem building BBDB score table.")
-        (ding) (sit-for 2)
-        nil)))))
+         (condition-case nil
+             (read (bbdb/gnus-score-as-text group))
+           (error (setq bbdb/gnus-score-rebuild-alist t)
+                  (message "Problem building BBDB score table.")
+                  (ding) (sit-for 2)
+                  nil)))))
 
 (defun bbdb/gnus-score-as-text (group)
   "Returns a SCORE file format string built from the BBDB."
   (cond ((or (cond ((/= (or bbdb/gnus-score-default 0)
-            (or bbdb/gnus-score-default-internal 0))
-            (setq bbdb/gnus-score-default-internal
-              bbdb/gnus-score-default)
-            t))
-        (not bbdb/gnus-score-alist)
-        bbdb/gnus-score-rebuild-alist)
-    (setq bbdb/gnus-score-rebuild-alist nil)
-    (setq bbdb/gnus-score-alist
-      (concat "((touched nil) (\"from\"\n"
-          (mapconcat
-           (lambda (record)
-             (let ((score (or (bbdb-record-note record bbdb/gnus-score-field)
-                              bbdb/gnus-score-default))
-                   (mail (bbdb-record-mail record)))
-               (when (and score mail)
-                 (mapconcat
-                  (lambda (address)
-                    (format "(\"%s\" %s)\n" address score))
-                  mail ""))))
-           (bbdb-records) "")
-          "))"))))
+                        (or bbdb/gnus-score-default-internal 0))
+                    (setq bbdb/gnus-score-default-internal
+                          bbdb/gnus-score-default)
+                    t))
+             (not bbdb/gnus-score-alist)
+             bbdb/gnus-score-rebuild-alist)
+         (setq bbdb/gnus-score-rebuild-alist nil)
+         (setq bbdb/gnus-score-alist
+               (concat "((touched nil) (\"from\"\n"
+                       (mapconcat
+                        (lambda (record)
+                          (let ((score (or (bbdb-record-note record bbdb/gnus-score-field)
+                                           bbdb/gnus-score-default))
+                                (mail (bbdb-record-mail record)))
+                            (when (and score mail)
+                              (mapconcat
+                               (lambda (address)
+                                 (format "(\"%s\" %s)\n" address score))
+                               mail ""))))
+                        (bbdb-records) "")
+                       "))"))))
   bbdb/gnus-score-alist)
-
-;;;###autoload
-(defun bbdb/gnus-summary-show-all-recipients (not-elided)
-  "Display BBDB records for all recipients of the message."
-  (interactive "P")
-  (let ((bbdb-layout (or (not not-elided)
-                         bbdb-pop-up-layout
-                         bbdb-layout))
-        bbdb-message-all-addresses)
-    (gnus-summary-select-article)
-    (bbdb/gnus-show-records 'recipients)))
 
 ;;; from Brian Edmonds' gnus-bbdb.el
 ;;;
@@ -482,7 +349,7 @@ addresses better than the traditionally static global scorefile."
 ;;; custom bits
 (defcustom bbdb/gnus-split-default-group "mail.misc"
   "If the BBDB does not indicate any group to spool a message to, it will
-be spooled to this group.  If bbdb/gnus-split-crosspost-default is not
+be spooled to this group.  If `bbdb/gnus-split-crosspost-default' is not
 nil, and if the BBDB did not indicate a specific group for one or more
 addresses, messages will be crossposted to this group in addition to any
 group(s) which the BBDB indicated."
@@ -492,7 +359,7 @@ group(s) which the BBDB indicated."
 (defcustom bbdb/gnus-split-nomatch-function nil
   "This function will be called after searching the BBDB if no place to
 file the message could be found.  It should return a group name (or list
-of group names) -- nnmail-split-fancy as provided with Gnus is an
+of group names) -- `nnmail-split-fancy' as provided with Gnus is an
 excellent choice."
   :group 'bbdb-mua-gnus-splitting
   :type  'function)
@@ -503,8 +370,8 @@ excellent choice."
           (or gnus-local-domain (message-make-domain)
               (system-name) "") "$")
   "This regular expression should match your address as found in the
-From header of your mail.  You should make sure gnus-local-domain or
-gnus-use-generic-from are set before loading this module, if they differ
+From header of your mail.  You should make sure `gnus-local-domain' or
+`gnus-use-generic-from' are set before loading this module, if they differ
 from (system-name).  If you send mail/news from multiple addresses, then
 you'll likely have to set this yourself anyways."
   :group 'bbdb-mua-gnus-splitting
@@ -513,7 +380,7 @@ you'll likely have to set this yourself anyways."
 (defcustom bbdb/gnus-split-crosspost-default nil
   "If this variable is not nil, then if the BBDB could not identify a
 group for every mail address, messages will be filed in
-bbdb/gnus-split-default-group in addition to any group(s) which the BBDB
+`bbdb/gnus-split-default-group' in addition to any group(s) which the BBDB
 identified."
   :group 'bbdb-mua-gnus-splitting
   :type  'boolean)
@@ -561,12 +428,11 @@ from the list in question."
 ;; priority.
 
 ;;;#autoload
-(defun bbdb/gnus-split-method nil
+(defun bbdb/gnus-split-method ()
   "This function expects to be called in a buffer which contains a mail
 message to be spooled, and the buffer should be narrowed to the message
 headers.  It returns a list of groups to which the message should be
-spooled, using the addresses in the headers and information from the
-BBDB."
+spooled, using the addresses in the headers and information from BBDB."
   (let ((prq (list (list 0) (list 1) (list 2) (list 3))))
     ;; the From: header is special
     (let* ((hdr (or (mail-fetch-field "resent-from")
@@ -592,46 +458,92 @@ BBDB."
     (while (and prq (not (cdr (car prq)))) (setq prq (cdr prq)))
     ;; and return...
     (if (not (or (not (cdr (car prq)))
-         (and (equal (cdr (car prq)) (list bbdb/gnus-split-default-group))
-                  (symbolp bbdb/gnus-split-nomatch-function)
-              (fboundp bbdb/gnus-split-nomatch-function))))
-    (cdr (car prq))
+                 (and (equal (cdr (car prq)) (list bbdb/gnus-split-default-group))
+                      (symbolp bbdb/gnus-split-nomatch-function)
+                      (fboundp bbdb/gnus-split-nomatch-function))))
+        (cdr (car prq))
       (goto-char (point-min))
       (funcall bbdb/gnus-split-nomatch-function))))
 
 (defun bbdb/gnus-split-to-group (address &optional source)
-  "This function is called from bbdb/gnus-split-method in order to
+  "This function is called from `bbdb/gnus-split-method' in order to
 determine the group and spooling priority for a single address."
   (condition-case tmp
       (progn
-    (setq tmp (mail-extract-address-components address))
-    (let* ((nam (car tmp))
-           (mail (bbdb-canonicalize-mail (car (cdr tmp))))
-           (record (car (bbdb-message-search nam mail)))
-           pub prv rgx)
-      (if (not record) nil
-        (setq prv (bbdb-record-note record bbdb/gnus-split-private-field)
-          pub (bbdb-record-note record bbdb/gnus-split-public-field))
-        (if (and pub (not source) (string-match "^\\([^ ]+\\) \\(.*\\)$" pub))
-        (setq rgx (substring pub (match-beginning 2) (match-end 2))
-              pub (substring pub (match-beginning 1) (match-end 1)))
-          (setq pub nil)))
-      (cond
-       ((and rgx pub
-         (goto-char (point-min))
-         (re-search-forward "^From: \\([^ \n]+\\)[ \n]" nil t)
-         (string-match rgx (buffer-substring (match-beginning 1)
-                                             (match-end 1))))
-        (cons pub 3))
-       (prv
-        (cons prv
-          (- 1 (if source -1 0)
-             (if (string-match bbdb/gnus-split-myaddr-regexp mail) 1 0))))
-       (t
-        (cons bbdb/gnus-split-default-group
-          (if (string-match bbdb/gnus-split-myaddr-regexp mail) 0
-            (if source 2 (if bbdb/gnus-split-crosspost-default 1 0))))))))
+        (setq tmp (mail-extract-address-components address))
+        (let* ((nam (car tmp))
+               (mail (bbdb-canonicalize-mail (car (cdr tmp))))
+               (record (car (bbdb-message-search nam mail)))
+               pub prv rgx)
+          (if (not record) nil
+            (setq prv (bbdb-record-note record bbdb/gnus-split-private-field)
+                  pub (bbdb-record-note record bbdb/gnus-split-public-field))
+            (if (and pub (not source) (string-match "^\\([^ ]+\\) \\(.*\\)$" pub))
+                (setq rgx (substring pub (match-beginning 2) (match-end 2))
+                      pub (substring pub (match-beginning 1) (match-end 1)))
+              (setq pub nil)))
+          (cond
+           ((and rgx pub
+                 (goto-char (point-min))
+                 (re-search-forward "^From: \\([^ \n]+\\)[ \n]" nil t)
+                 (string-match rgx (buffer-substring (match-beginning 1)
+                                                     (match-end 1))))
+            (cons pub 3))
+           (prv
+            (cons prv
+                  (- 1 (if source -1 0)
+                     (if (string-match bbdb/gnus-split-myaddr-regexp mail) 1 0))))
+           (t
+            (cons bbdb/gnus-split-default-group
+                  (if (string-match bbdb/gnus-split-myaddr-regexp mail) 0
+                    (if source 2 (if bbdb/gnus-split-crosspost-default 1 0))))))))
     (error (cons bbdb/gnus-split-default-group 0))))
+
+;; Uwe Brauer
+(defun bbdb/gnus-nnimap-folder-list-from-bbdb ()
+  "Return a list of \( \"From\" mail-regexp imap-folder-name\) tuples
+based on the contents of the bbdb.
+
+The folder-name is the value of the 'imap attribute of the BBDB record;
+the mail-regexp consists of all the mail addresses for the BBDB record
+concatenated with OR.  Records without an 'imap attribute are ignored.
+
+Here  is an example of a relevant BBDB record:
+
+Uwe Brauer
+           mail: oub@mat.ucm.es
+           imap: testimap
+
+This function uses `regexp-opt' to generate the mail-regexp which automatically
+`regexp-quote's its arguments.  Please note: in order that this will work
+with the `nnimap-split-fancy' method you have to use macros, that is your setting
+will look like:
+
+\(setq nnimap-split-rule  'nnimap-split-fancy
+       nnimap-split-inbox \"INBOX\"
+       nnimap-split-fancy
+       `\(| ,@\(bbdb/gnus-nnimap-folder-list-from-bbdb\)
+            ... \)\)
+
+Note that `\( is the backquote, NOT the quote '\(."
+
+  (let (;; the value of the 'imap attribute of a bbdb record
+        folder-attr
+        ;; a regexp matching all the mail addresses from a bbdb record
+        mail-regexp
+        ;; the list of (folder mail) tuples to return
+        new-elmnt-list)
+    ;; Loop over BBDB records.  If an imap attribute exists for
+    ;; the record, generate a regexp matching all the mail addresses
+    ;; and add a tuple (folder mail-regexp) to the new-elmnt-list
+    (dolist (record (bbdb-records))
+      (when (setq folder-attr (bbdb-record-note record 'imap))
+        (setq mail-regexp (regexp-opt (mapcar 'downcase
+                                              (bbdb-record-mail record))))
+        (unless (string= "" mail-regexp)
+          (push (list "From" mail-regexp folder-attr)
+                new-elmnt-list))))
+    new-elmnt-list))
 
 ;;
 ;; Insinuation
@@ -639,114 +551,49 @@ determine the group and spooling priority for a single address."
 
 ;;;###autoload
 (defun bbdb-insinuate-gnus ()
-  "Call this function to hook BBDB into Gnus."
-  (setq gnus-optional-headers 'bbdb/gnus-lines-and-from)
-  (add-hook 'gnus-article-prepare-hook 'bbdb/gnus-pop-up-bbdb-buffer)
-  (define-key gnus-summary-mode-map ":" 'bbdb/gnus-show-sender)
-  (define-key gnus-summary-mode-map ";" 'bbdb/gnus-edit-notes)
+  "Hook BBDB into Gnus."
+  (add-hook 'gnus-article-prepare-hook 'bbdb-mua-pop-up-bbdb-buffer)
+  (define-key gnus-summary-mode-map ":" 'bbdb-mua-display-sender)
+  (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-notes-sender)
 
-  ;; Set up user field for use in gnus-summary-line-format
-  (let ((get-sender-user-fun (intern
-                              (concat "gnus-user-format-function-"
-                                      bbdb/gnus-summary-user-format-letter)))
-        (in-bbdb-user-fun (intern
-                           (concat "gnus-user-format-function-"
-                                   bbdb/gnus-summary-in-bbdb-format-letter))))
-    ;; The big one - whole name
-    (when bbdb/gnus-summary-user-format-letter
-      (if (and (fboundp get-sender-user-fun)
-               (not (eq (symbol-function get-sender-user-fun)
+  ;; Set up user field for use in `gnus-summary-line-format'
+  ;; (1) The big one - whole name
+  (when bbdb/gnus-summary-user-format-letter
+    (let ((fun (intern (concat "gnus-user-format-function-"
+                               bbdb/gnus-summary-user-format-letter))))
+      (if (and (fboundp fun)
+               (not (eq (symbol-function fun)
                         'bbdb/gnus-summary-get-sender)))
           (bbdb-warn
            (format "`gnus-user-format-function-%s' already seems to be in use.
-Please redefine `bbdb/gnus-summary-user-format-letter' to a different letter."
+Redefine `bbdb/gnus-summary-user-format-letter' to a different letter."
                    bbdb/gnus-summary-user-format-letter))
-        (fset get-sender-user-fun 'bbdb/gnus-summary-get-sender)))
+        (fset fun 'bbdb/gnus-summary-get-sender))))
 
-    ;; One tick.  One tick only, please
-    (when bbdb/gnus-summary-in-bbdb-format-letter
-      (if (and (fboundp in-bbdb-user-fun)
-               (not (eq (symbol-function in-bbdb-user-fun)
+  ;; (2) One tick.  One tick only, please
+  (when bbdb/gnus-summary-in-bbdb-format-letter
+    (let ((fun (intern (concat "gnus-user-format-function-"
+                               bbdb/gnus-summary-in-bbdb-format-letter))))
+      (if (and (fboundp fun)
+               (not (eq (symbol-function fun)
                         'bbdb/gnus-summary-sender-in-bbdb)))
           (bbdb-warn
            (format "`gnus-user-format-function-%s' already seems to be in use.
 Redefine `bbdb/gnus-summary-in-bbdb-format-letter' to a different letter."
                    bbdb/gnus-summary-in-bbdb-format-letter))
-        (fset in-bbdb-user-fun 'bbdb/gnus-summary-sender-in-bbdb))))
+        (fset fun 'bbdb/gnus-summary-sender-in-bbdb))))
 
   ;; Scoring
-  (add-hook 'bbdb-after-change-hook 'bbdb/gnus-score-invalidate-alist)
-;  (setq gnus-score-find-score-files-function
-;   (if (boundp 'gnus-score-find-score-files-function)
-;       (cond ((functionp gnus-score-find-score-files-function)
-;          (list gnus-score-find-score-files-function
-;            'bbdb/gnus-score))
-;         ((listp gnus-score-find-score-files-function)
-;          (append gnus-score-find-score-files-function
-;              'bbdb/gnus-score))
-;         (t 'bbdb/gnus-score))
-;     'bbdb/gnus-score))
-  )
-
-;; Uwe Brauer
-(defun bbdb/gnus-nnimap-folder-list-from-bbdb ()
-  "Return a list of \( \"From\" mail-regexp imap-folder-name\) tuples
-based on the contents of the bbdb.
-
-The folder-name is  the  value  of  the  'imap attribute on  the  bbdb
-record;  the mail-regexp consists of  all the mail addresses for the
-bbdb record  concatenated with with  OR.  bbdb records without a 'imap
-attribute are ignored.
-Here  is an example of a relevant BBDB record:
-
-Uwe Brauer
-            mail: oub@mat.ucm.es
-           imap: testimap
-
-
-This function  uses  regexp-opt  to  generate  the mail-regexp  which
-automatically regexp-quotes  its arguments. Please  note: in oder that
-this will   work with the nnimap-split-fancy   method you have  to use
-macros, that is your setting will look like:
-
-\(setq
- nnimap-split-rule  'nnimap-split-fancy
- nnimap-split-inbox \"INBOX\"
- nnimap-split-fancy
- `\(|
-   ,@\(bbdb/gnus-nnimap-folder-list-from-bbdb\)
-   ...
-\)\)
-Note that `\( is the backquote NOT the quote '\(. "
-
-                                        ;(interactive)
-  (let ( ;; the raw-notes attribute of a bbdb record
-        notes-attr
-        ;; the value of the 'imap attribute of a bbdb record
-        folder-attr
-        ;; strings to put before and after the folder-attr
-        (folder-prefix "")
-        (folder-postfix "")
-        ;; a regexp matching all the mail addresses from a bbdb record
-        mail-regexp
-        ;; the list of (folder mail) tuples to return
-        new-elmnt-list
-        )
-    ;; loop over the bbdb-records; if a imap attribute exists on
-    ;; the record, generate a regexp matching all the mail addresses
-    ;; and add a tuple (folder mail-regexp) to the new-elmnt-list
-    (dolist (record (bbdb-records))
-      (setq notes-attr (bbdb-record-notes record))
-      (when (and (listp notes-attr)
-                 (setq folder-attr (cdr (assq 'imap notes-attr))))
-        (setq mail-regexp (regexp-opt (mapcar 'downcase
-                                               (bbdb-record-mail record))))
-        (unless (string= "" mail-regexp)
-          (setq new-elmnt-list
-                (cons (list "From" mail-regexp (concat folder-prefix
-                                                        folder-attr folder-postfix))
-                      new-elmnt-list)))))
-    new-elmnt-list))
-
+  (add-hook 'bbdb-after-change-hook 'bbdb/gnus-score-invalidate-alist))
+  ;;  (setq gnus-score-find-score-files-function
+  ;;   (if (boundp 'gnus-score-find-score-files-function)
+  ;;       (cond ((functionp gnus-score-find-score-files-function)
+  ;;          (list gnus-score-find-score-files-function
+  ;;            'bbdb/gnus-score))
+  ;;         ((listp gnus-score-find-score-files-function)
+  ;;          (append gnus-score-find-score-files-function
+  ;;              'bbdb/gnus-score))
+  ;;         (t 'bbdb/gnus-score))
+  ;;     'bbdb/gnus-score))
 
 (provide 'bbdb-gnus)
