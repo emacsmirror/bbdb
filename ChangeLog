@@ -1,3 +1,66 @@
+2010-12-15  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mua-message): New customization group.
+	(bbdb-update-records-p): Value may also be a function.
+	(bbdb-mua-update-interactive-p): New variable.
+	(bbdb-init-forms): Add message and mail mode support. Sendmail is
+	depreciated (use mail instead). Remove outdated support for
+	reportmail, supercite and w3.
+	(bbdb-initialize): Updated accordingly. Do not test presence of
+	features (which is not needed).
+	(bbdb-insinuate-sendmail): Removed (use bbdb-insinuate-mail).
+	( bbdb-insinuate-message): Moved to bbdb-message.el.
+
+	* lisp/bbdb-com.el (bbdb-mail, bbdb-mail-address): Simplified.
+
+	* lisp/bbdb-mua.el (bbdb-mua, bbdb-message-header): New functions.
+	(bbdb-get-address-components): Use bbdb-message-header.
+	Simplified.
+	(bbdb-update-records): New arg msg-key. Handle message cache.
+	Arg update-p may also be a function.
+	(bbdb-mua-update-records, bbdb-mua-update-mua)
+	(bbdb-mua-update-interactive-p, bbdb-mua-pop-up-bbdb-buffer): New
+	functions.
+	(bbdb-mua-display-records, bbdb-mua-display-sender)
+	(bbdb-mua-display-recipients, bbdb-mua-annotate-sender)
+	(bbdb-mua-annotate-recipients, bbdb-mua-edit-notes-sender)
+	(bbdb-mua-edit-notes-recipients): New commands.
+
+	* lisp/bbdb-vm.el (bbdb/vm-header): Remove MIME decoding.
+	(bbdb/vm-update-records, bbdb/vm-pop-up-bbdb-buffer)
+	(bbdb/vm-show-records, bbdb/vm-show-sender)
+	(bbdb/vm-show-recipients, bbdb/vm-annotate-sender)
+	(bbdb/vm-edit-notes): Obsolete. Use instead generic functions in
+	bbdb-mua.el.
+	(bbdb-insinuate-vm): Use generic commands.
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records)
+	(bbdb/gnus-pop-up-bbdb-buffer, bbdb/gnus-show-records)
+	(bbdb/gnus-show-sender, bbdb/gnus-show-recipients)
+	(bbdb/gnus-annotate-sender, bbdb/gnus-edit-notes)
+	(bbdb/gnus-summary-show-all-recipients): Obsolete. Use instead
+	generic functions in bbdb-mua.el.
+	(bbdb-insinuate-gnus): Use generic commands.
+	(bbdb/gnus-lines-and-from-length): Removed as
+	gnus-optional-headers appears to be obsolete, too.
+	(bbdb/gnus-message-marker-field): New variable.
+	(bbdb-message-marker-field): Declared obsolete.
+	(bbdb/gnus-summary-get-sender, bbdb/gnus-summary-sender-in-bbdb)
+	(bbdb/gnus-nnimap-folder-list-from-bbdb): Simplified.
+
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-records)
+	(bbdb/rmail-pop-up-bbdb-buffer, bbdb/rmail-show-records)
+	(bbdb/rmail-show-sender, bbdb/rmail-show-recipients)
+	(bbdb/rmail-annotate-sender, bbdb/rmail-edit-notes)
+	(bbdb/rmail-summary-show-all-recipients): Obsolete. Use instead
+	generic functions in bbdb-mua.el.
+	(bbdb-insinuate-rmail): Use generic commands.  Remove defadvice
+	which has become obsolete because header Messge-ID is used for
+	message caching.
+
+	* lisp/bbdb-mhe.el, lisp/bbdb-message.el: New files.
+
+	* lisp/Makefile: Updated to compile also the new files.
+
 2010-11-30  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-update-records-p): Fix docstring.
 	(bbdb-message-pop-up): Change default to a less aggressive nil.
