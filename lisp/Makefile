@@ -48,20 +48,19 @@ VM	= -eval '(if (not (string-match "$(VMDIR)" "")) (setq load-path (cons "$(VMDI
 
 GNUS	= -eval '(if (not (string-match "$(GNUSDIR)" "")) (setq load-path (cons "$(GNUSDIR)" load-path)))'
 
-# PUSHPATH = -l .././loadpath.el
 PUSHPATH = -eval '(setq load-path (cons "./" load-path)))'
 
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
-DEPSRCS=	bbdb-com.el  bbdb-mua.el  bbdb-gnus.el \
-		bbdb-rmail.el bbdb-vm.el \
-		bbdb-print.el bbdb-migrate.el
+DEPSRCS=	bbdb-com.el bbdb-print.el bbdb-migrate.el \
+		bbdb-mua.el bbdb-message.el bbdb-rmail.el \
+		bbdb-gnus.el bbdb-mhe.el bbdb-vm.el
 
 DEPBINS=	${DEPSRCS:.el=.elc}
 SRCS=		bbdb.el  $(DEPSRCS)
 BINS=		bbdb.elc $(DEPBINS)
 
-all: Makefile rmail gnus vm bbdb autoloadsc
+all: Makefile bbdb autoloadsc vm
 
 # Makefile: Makefile.in
 # 	@echo "Makefile.in has changed, rerun configure!"
@@ -99,41 +98,46 @@ bbdb-autoloads.el: $(DEPSRCS)
 bbdb-autoloads.elc: bbdb-autoloads.el
 	@$(emacs) -batch -f batch-byte-compile ./$^
 
-bbdb.elc:            bbdb.el
-bbdb-com.elc:        bbdb.elc bbdb-com.el
-bbdb-migrate.elc:    bbdb.elc bbdb-migrate.el
-bbdb-print.elc:      bbdb.elc bbdb-print.el
-
 .el.elc:
-	@$(emacs) -batch $(PUSHPATH) -l ./bbdb.elc -f batch-byte-compile $<
+	@$(emacs) -batch $(PUSHPATH) -f batch-byte-compile $<
 
 bbdb.elc:	bbdb.el
-	@$(emacs) -batch -f batch-byte-compile ./bbdb.el
+	@$(emacs) -batch -f batch-byte-compile $(@:.elc=.el)
 
-bbdb-gnus.elc:	bbdb.elc bbdb-gnus.el
-	@$(emacs) -batch $(PUSHPATH) -l ./bbdb.elc $(GNUS)   \
+bbdb-com.elc:	bbdb.elc bbdb-com.el
+	@$(emacs) -batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
-bbdb-rmail.elc:	bbdb.elc bbdb-rmail.el
-	@$(emacs) -batch $(PUSHPATH) -l ./bbdb.elc $(RMAIL)  \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-vm.elc:	bbdb.elc bbdb-vm.el
-	@$(emacs) -batch $(PUSHPATH) -l ./bbdb.elc $(VM)     \
-		-f batch-byte-compile $(@:.elc=.el)
-
-bbdb-mua.elc:  bbdb.elc bbdb-mua.el
-	@$(emacs) -batch $(PUSHPATH) -l ./bbdb.elc \
-	-eval '(and (not (string= "$(VMDIR)" "")) (setq load-path (cons "$(VMDIR)" load-path)) (load "vm" t t) (load "vm-vars" t t))' \
+bbdb-mua.elc:  bbdb.elc bbdb-com.elc bbdb-mua.el
+	@$(emacs) -batch $(PUSHPATH) \
+	-eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
 	-f batch-byte-compile $(@:.elc=.el)
+bbdb-rmail.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-rmail.el
+	@$(emacs) -batch $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-gnus.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-gnus.el
+	@$(emacs) -batch $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-mhe.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-mhe.el
+	@$(emacs) -batch $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+# VM is not part of GNU Emacs
+bbdb-vm.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-vm.el
+	@$(emacs) -batch $(PUSHPATH) $(VM) \
+		-f batch-byte-compile $(@:.elc=.el)
 
-autoloads: bbdb-autoloads.el
+bbdb-print.elc:	bbdb.elc bbdb-com.elc bbdb-print.el
+	@$(emacs) -batch $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-migrate.elc:	bbdb.elc bbdb-migrate.el
+	@$(emacs) -batch $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
 
 autoloadsc: bbdb-autoloads.elc
 
-extras: bbdb-print.elc bbdb-migrate.elc
-bbdb:	bbdb.elc bbdb-com.elc bbdb-mua.elc autoloadsc extras
-rmail:	bbdb bbdb-rmail.elc
-vm:	bbdb bbdb-vm.elc
-gnus:	bbdb bbdb-gnus.elc
+bbdb:	bbdb.elc bbdb-com.elc autoloadsc bbdb-print.elc bbdb-migrate.elc \
+	bbdb-mua.elc bbdb-message.elc bbdb-rmail.elc bbdb-gnus.elc \
+	bbdb-mhe.elc
+vm:	bbdb-vm.elc
 
 # Assorted clean-up targets
 clean:
