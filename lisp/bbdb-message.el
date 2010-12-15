@@ -1,0 +1,80 @@
+;;; bbdb-message.el --- BBDB interface to Mail Composition Packages.
+
+;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+
+;; This file is part of the Insidious Big Brother Database (aka BBDB),
+
+;; BBDB is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; BBDB is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+;;; This file contains the BBDB interface to Mail Composition Packages.
+;;; See bbdb.texinfo for documentation.
+
+(eval-and-compile
+  (require 'bbdb)
+  (require 'message))
+
+(defcustom bbdb/message-update-records-p 'bbdb-select-message
+  "How `bbdb-mua-update-records' processes mail addresses in outgoing messages.
+Allowed values are:
+ nil          Do anything.
+ search       Search for existing records.
+ query        Update existing records or query for creating new ones.
+ create or t  Update existing records or create new ones.
+A function which returns one of the above values."
+  :group 'bbdb-mua-message
+  :type '(choice (const :tag "do nothing"
+                        nil)
+                 (const :tag "search for existing records"
+                        (lambda () (let ((bbdb-update-records-p 'search))
+                                     (bbdb-select-message))))
+                 (const :tag "query annotation of all messages"
+                        (lambda () (let ((bbdb-update-records-p 'query))
+                                     (bbdb-select-message))))
+                 (const :tag "annotate all messages"
+                        (lambda () (let ((bbdb-update-records-p 'create))
+                                     (bbdb-select-message))))
+                 (const :tag "accept messages" bbdb-accept-message)
+                 (const :tag "ignore messages" bbdb-ignore-message)
+                 (const :tag "select messages" bbdb-select-message)
+                 (sexp  :tag "user defined function")))
+(defvaralias 'bbdb/mail-update-records-p 'bbdb/message-update-records-p)
+
+
+
+;;;###autoload
+(defun bbdb-insinuate-message ()
+  "Hook BBDB into Message Mode."
+  (add-hook 'message-send-hook 'bbdb-mua-pop-up-bbdb-buffer)
+  ;; (define-key message-mode-map ":" 'bbdb-mua-display-records)
+  ;; (define-key message-mode-map "`" 'bbdb-mua-display-sender)
+  ;; (define-key message-mode-map "'" 'bbdb-mua-display-recipients)
+  ;; (define-key message-mode-map ";" 'bbdb-mua-edit-notes-recipients)
+  ;; (define-key message-mode-map "/" 'bbdb)
+  (if bbdb-complete-mail
+      (define-key message-mode-map "\M-\t" 'bbdb-complete-mail)))
+
+;;;###autoload
+(defun bbdb-insinuate-mail ()
+  "Hook BBDB into Mail Mode."
+  (add-hook 'mail-send-hook 'bbdb-mua-pop-up-bbdb-buffer)
+  ;; (define-key mail-mode-map ":" 'bbdb-mua-display-records)
+  ;; (define-key mail-mode-map "`" 'bbdb-mua-display-sender)
+  ;; (define-key mail-mode-map "'" 'bbdb-mua-display-recipients)
+  ;; (define-key mail-mode-map ";" 'bbdb-mua-edit-notes-recipients)
+  ;; (define-key mail-mode-map "/" 'bbdb)
+  (if bbdb-complete-mail
+      (define-key mail-mode-map "\M-\t" 'bbdb-complete-mail)))
+
+(provide 'bbdb-message)
