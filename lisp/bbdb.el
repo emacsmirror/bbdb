@@ -110,6 +110,11 @@
   :group 'bbdb-mua)
 (put 'bbdb-mua-vm 'custom-loads '("bbdb-vm"))
 
+(defgroup bbdb-mua-message nil
+  "Message-specific BBDB customizations"
+  :group 'bbdb-mua)
+(put 'bbdb-mua-message 'custom-loads '("bbdb-message"))
+
 (defgroup bbdb-dialing nil
   "BBDB Customizations for phone number dialing"
   :group 'bbdb)
@@ -588,18 +593,45 @@ The default value is the symbol `bbdb-address-edit-default'."
 ;;; MUA interface
 (defcustom bbdb-update-records-p 'query
   "Return value for `bbdb-select-message' and friends.
-Allowed values are:
-t       Annotate all messages
-query   Query annotation of all messages
-search  Search for existing records
-nil     Do nothing."
+This will be passed to `bbdb-update-records', where it controls the handling
+of the arg ADDRESS (see there).  Allowed values are:
+ nil          Do nothing.
+ search       Search for existing records matching ADDRESS.
+ query        Search for existing records matching ADDRESS;
+                query for creation of a new record if the record does not exist.
+ create or t  Search for existing records matching ADDRESS;
+                create a new record if it does not yet exist.
+ a function   This functions will be called with no arguments.
+                It should return any of the above values."
   ;; Also: Used for communication between `bbdb-update-records'
   ;; and `bbdb-prompt-for-create'.
   :group 'bbdb-mua
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records" search)
                  (const :tag "query annotation of all messages" query)
-                 (const :tag "annotate all messages" t)))
+                 (const :tag "annotate all messages" create)
+                 (function :tag "User-defined function")))
+
+(defcustom bbdb-mua-update-interactive-p '(search . query)
+  "Return values for function `bbdb-mua-update-interactive-p' (see there).
+It is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
+The car is used if the command is called without a prefix.
+The cdr is used if the command is called with a prefix.
+Each element may take the same values as `bbdb-update-records-p'.
+If the value is `read then read the value interactively."
+  :group 'bbdb-mua
+  :type '(cons (choice (const :tag "do nothing" nil)
+                       (const :tag "search for existing records" search)
+                       (const :tag "query annotation of all messages" query)
+                       (const :tag "annotate all messages" create)
+                       (function :tag "User-defined function")
+                       (const :tag "read arg interactively" read))
+               (choice (const :tag "do nothing" nil)
+                       (const :tag "search for existing records" search)
+                       (const :tag "query annotation of all messages" query)
+                       (const :tag "annotate all messages" create)
+                       (function :tag "User-defined function")
+                       (const :tag "read arg interactively" read))))
 
 (defcustom bbdb-message-headers
   '((sender     . ("From" "Resent-From" "Reply-To" "Sender"))
@@ -609,21 +641,22 @@ nil     Do nothing."
   :type 'list)
 
 (defcustom bbdb-message-all-addresses nil
-  "If t `bbdb/MUA-update-records' returns all mail addresses of a message.
+  "If t `bbdb-update-records' returns all mail addresses of a message.
+Otherwise this function returns only the first mail address of each message.
 Changing this variable will show its effect only after clearing the
-`bbdb-message-cache' of a folder or closing and visiting it again."
+`bbdb-message-cache' of a folder (e.g., by closing and re-visiting the folder)."
   :group 'bbdb-mua
   :type 'boolean)
 
 (defcustom bbdb-accept-message-alist t
-  "Alist describing which messages to automatically create BBDB
-records for.  The format of this alist is
+  "Alist describing which messages to automatically create BBDB records for.
+The format of this alist is
    ((HEADER-NAME . REGEXP) ...)
-For example,
+For example, if
    ((\"From\" . \"@.*\\.maximegalon\\.edu\")
     (\"Subject\" . \"time travel\"))
-will cause BBDB records to be made only for messages sent by people at
-Maximegalon U., or people posting about time travel.
+BBDB records are only created for messages sent by people at Maximegalon U.,
+or people posting about time travel.
 A value of t means accept all messages.
 
 See also `bbdb-ignore-message-alist', which has the opposite effect."
@@ -633,13 +666,13 @@ See also `bbdb-ignore-message-alist', which has the opposite effect."
           (regexp :tag "Regexp to match on header value"))))
 
 (defcustom bbdb-ignore-message-alist nil
-  "Alist describing which messages not to automatically create
-BBDB records for.  The format of this alist is
+  "Alist describing which messages not to automatically create BBDB records for.
+The format of this alist is
    ((HEADER-NAME . REGEXP) ... )
-For example,
+For example, if
    ((\"From\" . \"mailer-daemon\")
     ((\"To\" \"CC\") . \"mailing-list-1\\\\|mailing-list-2\"))
-will cause BBDB records to not be made for messages from any mailer daemon,
+no BBDB records are created for messages from any mailer daemon,
 or messages sent to or CCed to either of two mailing lists.
 A value of t means ignore all messages.
 
@@ -728,6 +761,7 @@ this variable to a function like this:
                  (concat (match-string 1 address) (match-string 2 address)))
                 (t address))))
 
+See `bbdb-canonicalize-mail-1' for a more complete example.
 You could also use this function to rewrite UUCP-style addresses into
 domain-style addresses, or any number of things."
   :group 'bbdb-mua
@@ -922,15 +956,15 @@ See also `bbdb-auto-notes-ignore'."
           (regexp :tag "Regexp to match on header value"))))
 
 (defcustom bbdb-message-pop-up nil
-  "If non-nil, display a continuously-updating bbdb window while in VM, MH,
-RMAIL, or Gnus.  If 'horiz, stack the window horizontally if there is room."
+  "If non-nil, display a continuously updated BBDB window while using a MUA.
+If 'horiz, stack the window horizontally if there is room."
   :group 'bbdb-mua
   :type '(choice (const :tag "Automatic BBDB window, stacked vertically" t)
                  (const :tag "Automatic BBDB window, stacked horizontally" 'horiz)
                  (const :tag "No Automatic BBDB window" nil)))
 
 (defcustom bbdb-pop-up-window-size 0.5
-  "Number of lines in a VM/MH/RMAIL/Gnus pop-up bbdb window."
+  "Number of lines in a MUA pop-up BBDB window."
   :group 'bbdb-mua
   :type 'integer)
 
@@ -1186,11 +1220,9 @@ made to BBDB records which the user will not care directly about.")
   "Bind this to t to quiet things down - do not set it.
 See also `bbdb-silent'.")
 
-(defvar bbdb-inside-electric-display nil)
-
 ;; hack hack: a couple of specials that the electric stuff uses for state.
+(defvar bbdb-inside-electric-display nil)
 (defvar bbdb-electric-execute)
-
 (defvar bbdb-electric-done)
 
 (defvar bbdb-notice-hook-pending nil
@@ -1205,21 +1237,16 @@ Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
      (add-hook 'mh-folder-mode-hook 'bbdb-insinuate-mh))
     (rmail                      ; RMAIL
      (add-hook 'rmail-mode-hook 'bbdb-insinuate-rmail))
-    (sendmail                   ; the standard mail user agent
-     (add-hook 'mail-setup-hook 'bbdb-insinuate-sendmail))
-    (vm                      ; newer versions of vm do not have `vm-load-hook'
-     (progn (eval-after-load "vm" '(bbdb-insinuate-vm))))
+    (vm                        ; newer versions of vm do not have `vm-load-hook'
+     (eval-after-load "vm" '(bbdb-insinuate-vm)))
+    (mail                       ; the standard mail user agent
+     (add-hook 'mail-setup-hook 'bbdb-insinuate-mail))
+    (sendmail
+     (progn (message "BBDB: sendmail insinuation depreciated. Use mail.")
+            (add-hook 'mail-setup-hook 'bbdb-insinuate-mail)))
     (message                    ; the gnus mail user agent
-     (add-hook 'message-setup-hook 'bbdb-insinuate-message))
-    (reportmail                 ; mail notification
-     (add-hook 'reportmail-load-hook 'bbdb-insinuate-reportmail))
-    (sc                         ; message citation
-     (add-hook 'sc-load-hook 'bbdb-insinuate-sc))
-    (supercite                  ; same
-     (add-hook 'sc-load-hook 'bbdb-insinuate-sc))
-    (w3                         ; WWW browser
-     (add-hook 'w3-load-hook 'bbdb-insinuate-w3)))
-  "Alist which maps features to insinuation forms.")
+     (add-hook 'message-setup-hook 'bbdb-insinuate-message)))
+  "Alist mapping features to insinuation forms.")
 
 (defvar bbdb-search-invert nil
   "Bind this variable to t in order to invert the result of `bbdb-search'.")
@@ -1254,7 +1281,7 @@ and its elements are (RECORD DISPLAY-FORMAT MARKER-POS).")
 ;; see elisp:Creating Symbols
 (defvar bbdb-hashtable (make-vector 127 0)
   "Hash table for BBDB records.
-It hashes the fields first-last-name, last-first-name, organization, aka,
+Hashes the fields first-last-name, last-first-name, organization, aka,
 and mail.")
 
 (defvar bbdb-notes-names nil)
@@ -1916,7 +1943,7 @@ This function is a possible formatting function for
                          (bbdb-concat " " (bbdb-address-zip address)
                                       (bbdb-address-city address))
                          (bbdb-address-state address)) "\n")
-    (unless (zerop (length country))
+    (unless (string= "" country)
       (indent-to indent) (insert country "\n"))))
 
 (defun bbdb-format-address-default (address &optional indent)
@@ -1938,7 +1965,7 @@ This function is a possible formatting function for
     (insert (bbdb-concat ", " (bbdb-address-city address)
                          (bbdb-concat " " (bbdb-address-state address)
                                       (bbdb-address-zip address))) "\n")
-    (unless (zerop (length country))
+    (unless (string= "" country)
       (indent-to indent) (insert country "\n"))))
 
 (defun bbdb-format-address (address &optional indent)
@@ -3190,52 +3217,24 @@ however, after having used other programs to add records to the BBDB."
 
 
 
-(defun bbdb-initialize (&rest to-insinuate)
-"Initialize the BBDB.  One or more of the following symbols can be
-passed as arguments to initiate the appropriate insinuations.
-
-Initialization of mail/news readers:
-  gnus       Initialize BBDB support for the gnus mail/news reader
-             version 3.15 or newer.  If you pass the `gnus' symbol,
-             you should probably also pass the `message' symbol.
-  mh-e       Initialize BBDB support for the MH-E mail reader.
-  rmail      Initialize BBDB support for the RMAIL mail reader.
-  sendmail   Initialize BBDB support for sendmail (M-x mail).
-  vm         Initialize BBDB support for the VM mail reader.
-             NOTE: For the VM insinuation to work properly, you must
-             either call `bbdb-initialize' with the `vm' symbol from
-             within your VM initialization file (\"~/.vm\") or you
-             must call `bbdb-insinuate-vm' manually from within your
-             VM initialization file.
-
-Initialization of miscellaneous package:
-  message    Initialize BBDB support for Message mode.
-  reportmail Initialize BBDB support for the Reportmail mail
-             notification package.
-  sc or      Initialize BBDB support for the Supercite message
-  supercite  citation package.
-  w3         Initialize BBDB support for Web browsers."
-
+(defun bbdb-initialize (&rest mailers)
+  "Initialize BBDB for MAILERS.
+List MAILERS may include the following symbols
+to initialize the respective mail/news readers and composers:
+  gnus       Gnus mail/news reader.
+  mh-e       MH-E mail reader.
+  rmail      Rmail mail reader.
+  vm         VM mail reader.
+  mail       Mail (M-x mail).
+  message    Message mode."
   (require 'bbdb-autoloads)
-
-  (dolist (feature to-insinuate)
-    (let ((init (assq feature bbdb-init-forms)))
+  (dolist (mailer mailers)
+    (let ((init (assq mailer bbdb-init-forms)))
       (if init
-          (if (or (featurep feature) (locate-library (symbol-name feature)))
-              (eval (cadr init))
-            (bbdb-warn "cannot locate feature `%s'" feature))
-        (bbdb-warn "do not know how to insinuate `%s'" feature))))
+          ;; Should we make sure that each insinuation happens only once?
+          (eval (cadr init))
+        (bbdb-warn "Do not know how to insinuate `%s'" mailer))))
   (run-hooks 'bbdb-initialize-hook))
-
-(defun bbdb-insinuate-sendmail ()
-  "Call this function to hook BBDB into sendmail (that is, M-x mail)."
-  (if bbdb-complete-mail
-      (define-key mail-mode-map "\M-\t" 'bbdb-complete-mail)))
-
-(defun bbdb-insinuate-message ()
-  "Call this function to hook BBDB into `message-mode'."
-  (if bbdb-complete-mail
-      (define-key message-mode-map "\M-\t" 'bbdb-complete-mail)))
 
 
 (provide 'bbdb)
