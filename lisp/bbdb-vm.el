@@ -42,11 +42,12 @@
            (if (vm-new-flag (car vm-message-pointer))
                'query 'search)))
       (bbdb-select-message)))
-  "Controls how `bbdb/vm-update-records' processes mail addresses.
+  "How `bbdb-mua-update-records' processes mail addresses in VM.
 Allowed values are:
-t       Update existing records or create new ones.
-search  Search for existing records.
-nil     Do anything.
+ nil          Do anything.
+ search       Search for existing records.
+ query        Update existing records or query for creating new ones.
+ create or t  Update existing records or create new ones.
 A function which returns one of the above values."
   :group 'bbdb-mua-vm
   :type '(choice (const :tag "do nothing"
@@ -55,7 +56,7 @@ A function which returns one of the above values."
                         (lambda () (let ((bbdb-update-records-p 'search))
                                      (bbdb-select-message))))
                  (const :tag "query annotation of all messages"
-                        (lambda () (let ((bbdb-update-records-p query))
+                        (lambda () (let ((bbdb-update-records-p 'query))
                                      (bbdb-select-message))))
                  (const :tag "annotate (query) only new messages"
                         (lambda ()
@@ -64,7 +65,7 @@ A function which returns one of the above values."
                                      'query 'search)))
                             (bbdb-select-message))))
                  (const :tag "annotate all messages"
-                        (lambda () (let ((bbdb-update-records-p t))
+                        (lambda () (let ((bbdb-update-records-p 'create))
                                      (bbdb-select-message))))
                  (const :tag "accept messages" bbdb-accept-message)
                  (const :tag "ignore messages" bbdb-ignore-message)
@@ -74,117 +75,8 @@ A function which returns one of the above values."
 (defun bbdb/vm-header (header)
   (save-current-buffer
     (vm-select-folder-buffer)
-    (let ((content (vm-get-header-contents (car vm-message-pointer)
-                                           (concat header ":"))))
-      (if content
-          (vm-decode-mime-encoded-words-in-string content)))))
-
-;;;###autoload
-(defun bbdb/vm-update-records (&optional update-p)
-  "VM wrapper for `bbdb-update-records'.
-Return the records corresponding to the current VM message,
-creating or modifying them as necessary.
-UPDATE-P may take the same values as in `bbdb-update-records'.
-If UPDATE-P is nil, use the value of `bbdb/vm-update-records-p'."
-  (vm-select-folder-buffer)
-  (vm-check-for-killed-summary)
-  (vm-error-if-folder-empty)
-  (let ((msg (car vm-message-pointer))
-        (enable-local-variables t)      ; ...or vm bind this to nil.
-        records)
-    (unless update-p
-      (setq update-p
-            (if (functionp bbdb/vm-update-records-p)
-                (funcall bbdb/vm-update-records-p)
-              bbdb/vm-update-records-p)))
-    ;; ignore cache if we may be creating a record, since the cache
-    ;; may otherwise tell us that the user did not want a record for
-    ;; this person.
-    (unless (member update-p '(t query))
-      (setq records (bbdb-message-get-cache msg)))
-    (unless records
-      (setq records (bbdb-update-records
-                     (bbdb-get-address-components
-                      'bbdb/vm-header vm-summary-uninteresting-senders)
-                     update-p))
-      (bbdb-message-set-cache msg records))
-    (if bbdb-message-all-addresses
-        records
-      (if records (list (car records))))))
-
-(defun bbdb/vm-pop-up-bbdb-buffer (&optional update-p)
-  "Make the *BBDB* buffer be displayed along with the VM window(s).
-Displays the records corresponding to the sender respectively
-recipients of the current message.
-See `bbdb-message-pop-up', and `bbdb/vm-update-records-p'
-for configuration of what is being displayed.
-Intended for noninteractive use via `vm-select-message-hook'.
-See `bbdb/vm-show-records' for an interactive command."
-  (if bbdb-message-pop-up
-      (let ((bbdb-silent-internal t)
-            (records (bbdb/vm-update-records update-p)))
-        (if records
-            (bbdb-display-records-internal
-             records nil nil nil
-             (lambda (window)
-               (let ((buffer (current-buffer)))
-                 (set-buffer (window-buffer window))
-                 (prog1 (eq major-mode 'vm-mode)
-                   (set-buffer buffer)))))
-          ;; If there are no records, empty the BBDB window.
-          (bbdb-undisplay-records)))))
-
-;;;###autoload
-(defun bbdb/vm-show-records (&optional header-class all update-p)
-  "Display the BBDB record(s) for the addresses in this message.
-Prefix arg UPDATE-P toggles insertion of new record.
-See `bbdb/vm-pop-up-bbdb-buffer' for a non-interactive function
-to be used in `vm-select-message-hook'."
-  (interactive (list nil t (if current-prefix-arg 'query 'search)))
-  (vm-follow-summary-cursor)
-  (let* ((bbdb-message-headers
-          (if header-class
-              (list (assoc header-class bbdb-message-headers))
-            bbdb-message-headers))
-         (bbdb-message-all-addresses all)
-         bbdb-message-cache vm-summary-uninteresting-senders
-         (records (bbdb/vm-update-records update-p)))
-    (if records (bbdb-display-records-internal records))
-    records))
-
-;;;###autoload
-(defun bbdb/vm-show-sender (&optional all update-p)
-  "Display the BBDB record(s) for the sender of this message."
-  (interactive (list t (if current-prefix-arg 'query 'search)))
-  (bbdb/vm-show-records 'sender all update-p))
-
-;;;###autoload
-(defun bbdb/vm-show-recipients (&optional all update-p)
-  "Display the BBDB record(s) for the recipients of this message."
-  (interactive (list t (if current-prefix-arg 'query 'search)))
-  (bbdb/vm-show-records 'recipients all update-p))
-
-;;;###autoload
-(defun bbdb/vm-annotate-sender (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record
-corresponding to the sender of this message.  If REPLACE is non-nil,
-replace the existing notes entry (if any)."
-  (interactive (progn (bbdb-editable) (list (read-string "Comments: "))))
-  (vm-follow-summary-cursor)
-  (dolist (record (bbdb/vm-update-records))
-    (bbdb-annotate-notes record string 'notes replace)))
-
-(defun bbdb/vm-edit-notes (&optional field)
-  "Edit the notes FIELD of the BBDB record corresponding to the sender
-of this message.
-If called interactively, FIELD defaults to 'notes. With a prefix arg,
-ask interactively for FIELD."
-  (interactive (list (unless current-prefix-arg 'notes)))
-  (vm-follow-summary-cursor)
-  (let ((records (bbdb/vm-update-records)))
-    (bbdb-display-records records)
-    (dolist (record records)
-      (bbdb-record-edit-notes record field t))))
+    (vm-get-header-contents (car vm-message-pointer)
+                            (concat header ":"))))
 
 
 ;; By Alastair Burt <burt@dfki.uni-kl.de>
@@ -401,15 +293,15 @@ This is how you hook it in.
 
 ;;;###autoload
 (defun bbdb-insinuate-vm ()
-  "Call this function to hook BBDB into VM."
-  (add-hook 'vm-select-message-hook 'bbdb/vm-pop-up-bbdb-buffer)
-  (define-key vm-mode-map ":" 'bbdb/vm-show-records)
-  (define-key vm-mode-map "`" 'bbdb/vm-show-sender)
-  (define-key vm-mode-map "'" 'bbdb/vm-show-recipients)
-  (define-key vm-mode-map ";" 'bbdb/vm-edit-notes)
+  "Hook BBDB into VM."
+  (add-hook 'vm-select-message-hook 'bbdb-mua-pop-up-bbdb-buffer)
+  (define-key vm-mode-map ":" 'bbdb-mua-display-records)
+  (define-key vm-mode-map "`" 'bbdb-mua-display-sender)
+  (define-key vm-mode-map "'" 'bbdb-mua-display-recipients)
+  (define-key vm-mode-map ";" 'bbdb-mua-edit-notes-sender)
   (define-key vm-mode-map "/" 'bbdb)
-  ;; VM used to inherit from `mail-mode-map', so `bbdb-insinuate-sendmail'
-  ;; did this.  Kyle, you loser.
+  ;; `mail-mode-map' is the parent of `vm-mail-mode-map'.
+  ;; So the following is also done by `bbdb-insinuate-mail'.
   (if (and bbdb-complete-mail (boundp 'vm-mail-mode-map))
       (define-key vm-mail-mode-map "\M-\t" 'bbdb-complete-mail)))
 
