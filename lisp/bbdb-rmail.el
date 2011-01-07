@@ -1,7 +1,7 @@
 ;;; bbdb-rmail.el --- BBDB interface to Rmail
 
 ;; Copyright (C) 1991, 1992 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -82,8 +82,6 @@ A function which returns one of the above values."
   (define-key rmail-mode-map ":" 'bbdb-mua-display-sender)
   (define-key rmail-mode-map ";" 'bbdb-mua-edit-notes)
   (define-key rmail-summary-mode-map ":" 'bbdb-mua-display-sender)
-  (define-key rmail-summary-mode-map ";" 'bbdb-mua-edit-notes)
-
-  (add-hook 'rmail-show-message-hook 'bbdb-mua-pop-up-bbdb-buffer))
+  (define-key rmail-summary-mode-map ";" 'bbdb-mua-edit-notes))
 
 (provide 'bbdb-rmail)
