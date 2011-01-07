@@ -1,3 +1,42 @@
+2011-01-06  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-message-headers, bbdb-accept-name-mismatch)
+	(bbdb-use-alternate-names): Fix docstring.
+	(bbdb-auto-notes-rules): Renamed from bbdb-auto-notes-alist.  New
+	format.
+	(bbdb-auto-notes-ignore-messages): Renamed from
+	bbdb-auto-notes-ignore-all.
+	(bbdb-auto-notes-ignore-headers): Renamed from
+	bbdb-auto-notes-ignore.
+	(bbdb-pop-up-window-size): Fix docstring.
+	(bbdb-horiz-pop-up-window-size): New variable.
+	(bbdb-pop-up-buffer): Use it.
+	(bbdb-auto-notes-rules-expanded): New variable.
+
+	* lisp/bbdb-com.el: Use eval-and-compile.
+	(bbdb-subint): Moved here from lisp/bbdb.el. Simplified.
+	(bbdb-parse-phone): Return value always includes extension.
+	(bbdb-read-record): Simplified accordingly.
+	(bbdb-prompt-for-new-field): Use phone number style as returned
+	from bbdb-parse-phone.
+
+	* lisp/bbdb-mua.el: Use eval-and-compile.
+	(bbdb-update-records): Avoid name clash with function search in
+	cl-seq.el.
+	(bbdb-message-header-re): New function.
+	(bbdb-accept-message): Use it.
+	(bbdb-get-address-components): Also return MUA.
+	(bbdb-annotate-message): Bug fix.  Simplify.
+	(bbdb-mua-pop-up-init): New function.
+	(bbdb-auto-notes): Complete re-write.
+
+	* lisp/bbdb-message.el (bbdb-insinuate-message)
+	(bbdb-insinuate-mail)
+	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail)
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus)
+	* lisp/bbdb-mhe.el (bbdb-insinuate-mh)
+	* lisp/bbdb-vm.el (bbdb-insinuate-vm): Do not hook in
+	bbdb-mua-pop-up-bbdb-buffer.  (Use instead bbdb-mua-pop-up-init.)
+
 2010-12-15  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mua-message): New customization group.
 	(bbdb-update-records-p): Value may also be a function.
