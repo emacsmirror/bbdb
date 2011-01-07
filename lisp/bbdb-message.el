@@ -1,6 +1,6 @@
 ;;; bbdb-message.el --- BBDB interface to Mail Composition Packages.
 
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -56,7 +56,6 @@ A function which returns one of the above values."
 ;;;###autoload
 (defun bbdb-insinuate-message ()
   "Hook BBDB into Message Mode."
-  (add-hook 'message-send-hook 'bbdb-mua-pop-up-bbdb-buffer)
   ;; (define-key message-mode-map ":" 'bbdb-mua-display-records)
   ;; (define-key message-mode-map "`" 'bbdb-mua-display-sender)
   ;; (define-key message-mode-map "'" 'bbdb-mua-display-recipients)
@@ -68,7 +67,6 @@ A function which returns one of the above values."
 ;;;###autoload
 (defun bbdb-insinuate-mail ()
   "Hook BBDB into Mail Mode."
-  (add-hook 'mail-send-hook 'bbdb-mua-pop-up-bbdb-buffer)
   ;; (define-key mail-mode-map ":" 'bbdb-mua-display-records)
   ;; (define-key mail-mode-map "`" 'bbdb-mua-display-sender)
   ;; (define-key mail-mode-map "'" 'bbdb-mua-display-recipients)
