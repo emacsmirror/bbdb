@@ -1,7 +1,7 @@
 ;;; bbdb-gnus.el --- BBDB interface to Gnus
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -552,7 +552,6 @@ Note that `\( is the backquote, NOT the quote '\(."
 ;;;###autoload
 (defun bbdb-insinuate-gnus ()
   "Hook BBDB into Gnus."
-  (add-hook 'gnus-article-prepare-hook 'bbdb-mua-pop-up-bbdb-buffer)
   (define-key gnus-summary-mode-map ":" 'bbdb-mua-display-sender)
   (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-notes-sender)
 
