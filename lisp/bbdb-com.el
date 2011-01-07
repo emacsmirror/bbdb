@@ -1,7 +1,7 @@
 ;;; bbdb-com.el --- user-level commands of BBDB
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -25,7 +25,7 @@
 (require 'bbdb)
 (require 'mailabbrev)
 
-(eval-when-compile
+(eval-and-compile
   (autoload 'build-mail-aliases "mailalias"))
 
 (defun bbdb-get-records (prompt)
@@ -439,9 +439,13 @@ DATE must be in yyyy-mm-dd format."
 ;;; that this will necessitate yet another change in the database
 ;;; format for people who are using north american numbers.
 
+(defsubst bbdb-subint (string num)
+  "Used for parsing phone numbers."
+  (string-to-number (match-string num string)))
+
 (defun bbdb-parse-phone (string &optional style)
   "Parse a phone number from STRING and return a list of integers the form
-\(area-code exchange number) or (area-code exchange number extension).
+\(area-code exchange number extension).
 This is both lenient and strict in what it will parse - whitespace may
 appear (or not) between any of the groups of digits, parentheses around the
 area code are optional, as is a dash between the exchange and number, and
@@ -454,11 +458,11 @@ All of these are unambigously parsable:
   (1-415) 555-1212 123      -> (415 555 1212 123)
   1 (415)-555-1212 123      -> (415 555 1212 123)
   555-1212 123              -> (0 555 1212 123)
-  555 1212                  -> (0 555 1212)
-  415 555 1212              -> (415 555 1212)
-  1 415 555 1212            -> (415 555 1212)
-  5551212                   -> (0 555 1212)
-  4155551212                -> (415 555 1212)
+  555 1212                  -> (0 555 1212 0)
+  415 555 1212              -> (415 555 1212 0)
+  1 415 555 1212            -> (415 555 1212 0)
+  5551212                   -> (0 555 1212 0)
+  4155551212                -> (415 555 1212 0)
   4155551212123             -> (415 555 1212 123)
   5551212x123               -> (0 555 1212 123)
   1234                      -> (0 0 0 1234)
@@ -468,6 +472,9 @@ Note that \"4151212123\" is ambiguous; it could be interpreted either as
 
 Return a list containing four numbers or one string."
 
+  ;; RW: Missing parts of NANP numbers are replaced by zeros.
+  ;; Is this always correct?  What about an extension zero?
+  ;; Should we use nil instead of zeros?
   (unless style (setq style bbdb-phone-style))
   (let ((area-regexp (concat "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*"
                              "\\([2-9][0-9][0-9]\\)[ \t]*)?[-./ \t]*"))
@@ -483,14 +490,14 @@ Return a list containing four numbers or one string."
           ;; (415) 555-1212
           ((string-match (concat "^[ \t]*" area-regexp main-regexp "$") string)
            (list (bbdb-subint string 1) (bbdb-subint string 2)
-                 (bbdb-subint string 3)))
+                 (bbdb-subint string 3) 0))
           ;; 555-1212 x123
           ((string-match (concat "^[ \t]*" main-regexp ext-regexp "$") string)
            (list 0 (bbdb-subint string 1) (bbdb-subint string 2)
                  (bbdb-subint string 3)))
           ;; 555-1212
           ((string-match (concat "^[ \t]*" main-regexp "$") string)
-           (list 0 (bbdb-subint string 1) (bbdb-subint string 2)))
+           (list 0 (bbdb-subint string 1) (bbdb-subint string 2) 0))
           ;; x123
           ((string-match (concat "^[ \t]*" ext-regexp "$") string)
            (list 0 0 0 (bbdb-subint string 1)))
@@ -601,10 +608,7 @@ but does ensure that there will not be name collisions."
                                     (and (integerp bbdb-default-area-code)
                                          (format "(%03d) "
                                                  bbdb-default-area-code))))))
-               (push (apply 'vector label
-                            (if (= 3 (length phone-list))
-                                (nconc phone-list '(0))
-                              phone-list)) phones))
+               (push (apply 'vector label phone-list) phones))
              (nreverse phones)))
           ;; notes
           (notes (bbdb-read-string "Notes: ")))
@@ -737,12 +741,8 @@ NOTES is an alist associating symbols with strings."
   "Add a new field to the current record; the field type and contents
 are prompted for if not supplied.
 
-If you are inserting a new phone-number field, you can control whether
-it is a north american or european phone number by providing a prefix
-argument.  A prefix arg of C-u means it's to be a euronumber, and any
-other prefix arg means it's to be a a structured north american number.
-Otherwise, which style is used is controlled by the variable
-`bbdb-phone-style'.
+If you are inserting a new phone-number field, the phone number style
+is controlled via `bbdb-phone-style'.  A prefix C-u inverts the style,
 
 If you are inserting a new mail address, you can have BBDB append a
 default domain to any mail address that does not contain one.  Set
@@ -866,20 +866,19 @@ value of \"\", the default) means do not alter the address."
         ((eq field 'aka) (bbdb-read-string "Alternate Names: " init))
         ;; Phone
         ((eq field 'phone)
-         (let* ((bbdb-phone-style
-                 (if current-prefix-arg
-                     (if (eq bbdb-phone-style 'nanp) nil 'nanp)
-                   bbdb-phone-style))
-                (phone (if (eq bbdb-phone-style 'nanp)
-                           (make-vector bbdb-phone-length 0)
-                         (make-vector 2 ""))))
-           (aset phone 0 nil) ; label
-           (if (= bbdb-phone-length (length phone))
-               (aset phone 1
-                     (if (integerp bbdb-default-area-code)
-                         bbdb-default-area-code 0)))
-           (bbdb-record-edit-phone phone)
-           phone))
+         (let ((bbdb-phone-style
+                (if current-prefix-arg
+                    (if (eq bbdb-phone-style 'nanp) nil 'nanp)
+                  bbdb-phone-style)))
+           (apply 'vector
+                  (bbdb-read-string "Label: " nil
+                                    (bbdb-label-completion-list 'phone))
+                  (bbdb-error-retry
+                   (bbdb-parse-phone
+                    (read-string "Phone: "
+                                 (and (integerp bbdb-default-area-code)
+                                      (format "(%03d) "
+                                              bbdb-default-area-code))))))))
         ;; Address
         ((eq field 'address)
          (let ((address (make-vector bbdb-address-length nil)))
@@ -1101,7 +1100,7 @@ Country:         country"
     (unless (= (length phone) 2)
       (bbdb-phone-set-exchange phone (nth 1 newp))
       (bbdb-phone-set-suffix phone (nth 2 newp))
-      (bbdb-phone-set-extension phone (or (nth 3 newp) 0)))))
+      (bbdb-phone-set-extension phone (nth 3 newp)))))
 
 (defun bbdb-record-edit-mail (record)
   (let ((newmails (bbdb-split 'mail
