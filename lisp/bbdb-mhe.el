@@ -3,7 +3,7 @@
 ;; Copyright (C) 1991 Todd Kaufmann <toad@cs.cmu.edu>
 ;; Modified: 28-Jul-94 by Fritz Knabe <knabe@ecrc.de>
 ;;                        Jack Repenning <jackr@dblues.wpd.sgi.com>
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -119,7 +119,6 @@ Returns the empty string if HEADER is not in the message."
   (define-key mh-folder-mode-map ";" 'bbdb-mua-edit-notes)
   (when bbdb-complete-mail
       (define-key mh-letter-mode-map "\M-;" 'bbdb-complete-mail)
-      (define-key mh-letter-mode-map "\e\t" 'bbdb-complete-mail))
-  (add-hook 'mh-show-hook 'bbdb-mua-update-record))
+      (define-key mh-letter-mode-map "\e\t" 'bbdb-complete-mail)))
 
 (provide 'bbdb-mhe)
