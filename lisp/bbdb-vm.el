@@ -1,7 +1,7 @@
 ;;; bbdb-vm.el --- BBDB interface to VM
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -294,7 +294,6 @@ This is how you hook it in.
 ;;;###autoload
 (defun bbdb-insinuate-vm ()
   "Hook BBDB into VM."
-  (add-hook 'vm-select-message-hook 'bbdb-mua-pop-up-bbdb-buffer)
   (define-key vm-mode-map ":" 'bbdb-mua-display-records)
   (define-key vm-mode-map "`" 'bbdb-mua-display-sender)
   (define-key vm-mode-map "'" 'bbdb-mua-display-recipients)
