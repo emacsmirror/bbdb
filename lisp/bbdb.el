@@ -1,7 +1,7 @@
 ;;; bbdb.el --- core of BBDB
 
 ;; Copyright (C) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -42,6 +42,7 @@
 
 (require 'timezone)
 
+;; When running BBDB, we have (require 'bbdb-autoloads)
 (eval-when-compile              ; pacify the compiler.
   (autoload 'widget-group-match "wid-edit")
   (autoload 'Electric-pop-up-window "electric")
@@ -602,7 +603,7 @@ of the arg ADDRESS (see there).  Allowed values are:
  create or t  Search for existing records matching ADDRESS;
                 create a new record if it does not yet exist.
  a function   This functions will be called with no arguments.
-                It should return any of the above values."
+                It should return one of the above values."
   ;; Also: Used for communication between `bbdb-update-records'
   ;; and `bbdb-prompt-for-create'.
   :group 'bbdb-mua
@@ -634,9 +635,15 @@ If the value is `read then read the value interactively."
                        (const :tag "read arg interactively" read))))
 
 (defcustom bbdb-message-headers
-  '((sender     . ("From" "Resent-From" "Reply-To" "Sender"))
-    (recipients . ("Resent-To" "Resent-CC" "To" "CC" "BCC")))
-  "List of headers to search for sender and recipients mail addresses."
+  '((sender     "From" "Resent-From" "Reply-To" "Sender")
+    (recipients "Resent-To" "Resent-CC" "To" "CC" "BCC"))
+  "Alist of headers to search for sender and recipients mail addresses.
+Each element is of the form
+
+  (CLASS HEADER ...)
+
+The symbol CLASS defines a class of headers.
+The strings HEADER belong to CLASS."
   :group 'bbdb-mua
   :type 'list)
 
@@ -683,21 +690,22 @@ See also `bbdb-accept-message-alist', which has the opposite effect."
           (regexp :tag "Regexp to match on header value"))))
 
 (defcustom bbdb-accept-name-mismatch nil
-  "If this is t, then BBDB will ignore a name change, that is,
-when the \"real name\" in a message does not correspond to a record
-already in the database with the same mail address, as in
-\"John Smith <jqs@frob.com>\" versus \"John Q. Smith <jqs@frob.com>\".
-Normally you will be asked if you want to change it.
-If set to a number it is the number of seconds to sit for while
-displaying the mismatch message."
+  "If non-nil accept name mismatches between messages and BBDB records.
+Thus BBDB ignores when the real name in a message differs from the name
+in a BBDB record with the same mail address as in \"John Smith <jqs@frob.com>\"
+versus \"John Q. Smith <jqs@frob.com>\".
+If a number it is the number of seconds BBDB displays the name mismatch.
+If nil BBDB asks if you want to change the name.
+See also `bbdb-use-alternate-names'."
   :group 'bbdb-mua
   :type '(choice (const :tag "Prompt for name changes" nil)
                  (const :tag "Do not prompt for name changes" t)
          (integer :tag "Instead of prompting, warn for this many seconds")))
 
 (defcustom bbdb-use-alternate-names t
-  "If this is t, then when bbdb notices a name change, it will ask you
-if you want both names to map to the same record."
+  "If non-nil collect alternate names for a record as AKA.
+Thus if BBDB changes the name in a record to the new name found in a message
+\(see `bbdb-accept-name-mismatch'), the old name is kept as AKA."
   :group 'bbdb-mua
   :type '(choice (const :tag "Ask to use alternate names field" t)
                  (const :tag "Use alternate names field without asking" nil)))
@@ -706,15 +714,13 @@ if you want both names to map to the same record."
   (and (stringp user-mail-address)
        (string-match "\\`\\([^@]*\\)\\(@\\|\\'\\)" user-mail-address)
        (concat "\\<" (regexp-quote (match-string 1 user-mail-address)) "\\>"))
-  "A regular expression matching your mail addresses.
-If the `From' header of a message matches this regexp, the BBDB record for
-the `To' header will be shown instead of the one for the `From' header."
+  "A regular expression matching your mail addresses."
   :group 'bbdb-mua
   :type '(regexp :tag "Regexp matching your mail addresses"))
 
 (defcustom bbdb-add-mails 'query
   "How to handle new mail addresses for existing BBDB records.
-If t, then when BBDB notices a new mail address for a known person,
+If t, then when BBDB notices a new mail address for a record,
 it will automatically add it to the list of mail addresses.
 If it is 'query, query whether to add it.
 If it is nil then new mail addresses will never be automatically added
@@ -726,10 +732,7 @@ the addresses go at the front of the list or the back."
   :group 'bbdb-mua
   :type '(choice (const :tag "Automatically add new mail addresses" t)
                  (const :tag "Ask before adding new mail addresses" query)
-                 (const :tag "Never add new mail addresses" nil)
-                 (const bbdb-select-message)
-                 (const bbdb-accept-message)
-                 (const bbdb-ignore-message)))
+                 (const :tag "Never add new mail addresses" nil)))
 
 (defcustom bbdb-new-mails-always-primary nil
   "Controls where to put a new mail addresses in the list of known addresses.
@@ -768,7 +771,7 @@ domain-style addresses, or any number of things."
   :type 'function)
 
 (defcustom bbdb-canonicalize-redundant-mails t
-  "If this is non-nil, redundant mail addresses will be ignored.
+  "If non-nil, redundant mail addresses will be ignored.
 If a record has an address of the form foo@baz.com, setting this to t
 will cause subsequently-noticed addresses like foo@bar.baz.com to be
 ignored (since we already have a more general form of that address.)
@@ -796,7 +799,7 @@ be asked that question the first time the message is selected."
 
 (defcustom bbdb-notice-hook nil
   "Hook run each time a BBDB record is \"noticed\", that is,
-each time it is displayed by the news or mail interfaces.  Run with
+each time it is displayed by the MUA interfaces.  Run with
 one argument, the new record.  The record need not have been modified for
 this to be called - use `bbdb-change-hook' for that.  You can use this to,
 for example, add something to the notes field based on the subject of the
@@ -807,13 +810,12 @@ Also note that `bbdb-change-hook' will NOT be called as a result of any
 modifications you may make to the record inside this hook.
 
 Hook functions can use the variable `bbdb-update-records-address' to determine
-the header and class of an mail address according to `bbdb-message-headers'
+the header and class of a mail address according to `bbdb-message-headers'
 the mail address was extracted from.
 
 Beware that if the variable `bbdb-message-caching' is t (a good idea)
-then when you are using VM, MH, or RMAIL, this hook will be called only
-the first time that message is selected.  (The Gnus interface does not use
-caching.)  When debugging the value of this hook, it is a good idea to set
+this hook will be called only the first time that message is selected.
+When debugging the value of this hook, it is a good idea to set
 `bbdb-message-caching' to nil."
   :group 'bbdb-mua
   :type 'hook)
@@ -830,13 +832,55 @@ caching.)  When debugging the value of this hook, it is a good idea to set
   (widget-group-match widget
                       (widget-apply widget :value-to-internal value)))
 
-(defcustom bbdb-auto-notes-alist nil
-  "An alist which lets you have certain pieces of text automatically added
-to the BBDB record representing the sender of the current message based on
-the subject or other header fields.  This only works if `bbdb-notice-hook'
-contains `bbdb-auto-notes'.  The elements of this alist are
+(defcustom bbdb-auto-notes-rules nil
+  "List of rules for adding notes to records of mail addresses of messages.
+This automatically annotates the BBDB record of the sender or recipient
+of a message based on the value of a header such as the Subject header.
+This requires that `bbdb-notice-hook' contains `bbdb-auto-notes' and that
+the record already exists or `bbdb/MUA-update-records-p' returns such that
+the record will be created.  Messages matching `bbdb-auto-notes-ignore-messages'
+are ignored.
 
-   (HEADER [HEADER-CLASS] (REGEXP . STRING) ... )
+The elements of this list are
+
+   (MUA FROM-TO HEADER ANNOTATE ...)
+   (FROM-TO HEADER ANNOTATE ...)
+   (HEADER ANNOTATE ...)
+
+MUA is the active MUA or a list of MUAs (see `bbdb-mua').
+If MUA is missing or t, use this rule for all MUAs.
+
+FROM-TO is a list of headers and/or header classes as in `bbdb-message-headers'.
+The record corresponding to a mail address of a message is considered for
+annotation if this mail address was found in a header matching FROM-TO.
+If FROM-TO is missing or t, records for each mail address are considered
+irrespective of where the mail address was found in a message.
+
+HEADER is a message header that is considered for generating the annotation.
+
+ANNOTATE may take the following values:
+
+  (REGEXP . STRING)       [this is equivalent to (REGEXP notes STRING)]
+  (REGEXP FIELD STRING)
+  (REGEXP FIELD STRING REPLACE)
+
+REGEXP must match the value of HEADER for generating an annotation.
+However, if the value of HEADER also matches an element of
+`bbdb-auto-notes-ignore-headers' no annotation is generated.
+
+The annotation will be added to FIELD of the respective record.
+FIELD defaults to 'notes.
+
+STRING defines a replacement for the match of REGEXP in the value of HEADER.
+It may contain \\& or \\N specials used by `replace-match'.
+The resulting string becomes the annotation.
+If STRING is an integer N, the Nth matching subexpression is used.
+If STRING is a function, it will be called with one arg, the value of HEADER.
+The return value (which must be a string) is then used.
+
+If REPLACE is t, the resulting string replaces the old contents of FIELD.
+If it is nil, the string is appended to the contents of FIELD (unless the
+annotation is already part of the content of field).
 
 For example,
 
@@ -844,64 +888,29 @@ For example,
     (\"Subject\" (\"sprocket\" . \"mail about sprockets\")
                (\"you bonehead\" . \"called me a bonehead\")))
 
-This will cause the text \"VM mailing list\" to be added to the notes field
-of the record corresponding to anyone you get mail from via one of the VM
-mailing lists.  If, that is, `bbdb/mail-auto-create' returns such that the
-record would have been created, or the record already existed.
-
-A HEADER-CLASS as defined in `bbdb-message-headers' is optional.
-By giving a list of header classes, actions will only be performed
-if the currently processed header belongs to HEADER-CLASS.
-By default, actions will be performed only for records of senders of a message.
-HEADER-CLASS can also be an alist with elements (CLASS . HEADER) which allows
-actions only when the current address matches one of the elemets.
-
-Instead of (REGEXP . STRING) the format of elements of this list may also be
-
-    (REGEXP FIELD STRING)
-or
-    (REGEXP FIELD STRING REPLACE-P)
-
-meaning add STRING to the value of FIELD of a BBDB record.
-FIELD  must be `notes', `organization', or the name of a user-defined note field.
-It may not be name, address, phone, or mail.
-\(REGEXP . STRING) is equivalent to (REGEXP notes STRING).
-
-STRING can contain \\& or \\N escapes like in function
-`replace-match'.  For example, to automatically add the contents of the
-\"organization\" HEADER of a message to the \"organization\" FIELD of a BBDB
-record, you can use:
-
-        (\"Organization\" (\".*\" organization \"\\\\&\"))
-
-If STRING is an integer N, the Nth matching subexpression is used, so
-the above example can be written also as
-
-        (\"Organization\" (\".*\" organization 0))
-
-STRING may also be a function, which will be called with one arg, the contents
-of HEADER.  The return value (which must be a string) will be added to the value
-of FIELD.
-
-If REPLACE-P is t, the string replaces the old contents of FIELD instead of
-being appended to it.
+will cause the text \"VM mailing list\" to be added to the notes field
+of the records corresponding to anyone you get mail from via one of the VM
+mailing lists.
 
 If multiple clauses match the message, all of the corresponding strings
 will be added.
 
-This works for news as well.  You might want to arrange for this to have
-a different value when in mail as when in news.
+See also variables `bbdb-auto-notes-ignore-messages' and
+`bbdb-auto-notes-ignore-headers'.
 
-See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'."
+For speed-up, the function `bbdb-auto-notes' actually use expanded rules
+stored in the internal variable `bbdb-auto-notes-rules-expanded'.
+If you change the value of `bbdb-auto-notes-rules'
+set `bbdb-auto-notes-rules-expanded' to nil, so that the expanded rules
+will be re-evaluated."
   :group 'bbdb-mua
   :type '(repeat
           (bbdb-alist-with-header
+           (repeat (choice
+                    (const sender)
+                    (const recipients)))
            (string :tag "Header name")
            (repeat (choice
-                    (cons :tag "Address Class"
-                          (repeat (choice
-                                   (const sender)
-                                   (const recipients))))
                     (cons :tag "Value Pair"
                           (regexp :tag "Regexp to match on header value")
                           (string :tag "String for notes if regexp matches"))
@@ -919,7 +928,28 @@ See also variables `bbdb-auto-notes-ignore' and `bbdb-auto-notes-ignore-all'."
                                   (const :tag "No" nil)
                                   (const :tag "Yes" t))))))))
 
-(defcustom bbdb-auto-notes-ignore nil
+(defcustom bbdb-auto-notes-ignore-messages nil
+  "List of rules for ignoring entire messages in `bbdb-auto-notes'.
+The elements may have the following values:
+  a function  This function is called with one arg, the record
+              that would be annotated.
+              Ignore this message if the function returns non-nil.
+              This function may use `bbdb-update-records-address'.
+  MUA         Ignore messages from MUA (see `bbdb-mua').
+  (HEADER . REGEXP)  Ignore messages where HEADER matches REGEXP.
+              For example,  (\"From\" . bbdb-user-mail-address-re)
+              disables any recording of notes for mail addresses
+              found in messages coming from yourself, see
+              `bbdb-user-mail-address-re'.
+  (MUA HEADER REGEXP)  Ignore messages from MUA where HEADER
+              matches REGEXP.
+See also `bbdb-auto-notes-ignore-headers'."
+  :group 'bbdb-mua
+  :type '(repeat (cons
+          (string :tag "Header name")
+          (regexp :tag "Regexp to match on header value"))))
+
+(defcustom bbdb-auto-notes-ignore-headers nil
   "Alist of headers and regexps to ignore in `bbdb-auto-notes'.
 Each element is of the form
 
@@ -930,26 +960,8 @@ For example,
     (\"Organization\" . \"^Gatewayed from\\\\\|^Source only\")
 
 will exclude the phony `Organization:' headers in GNU mailing-lists
-gatewayed to gnu.* newsgroups.  Note that this exclusion applies only
-to a single field, not to the entire message.
-See also `bbdb-auto-notes-ignore-all'."
-  :group 'bbdb-mua
-  :type '(repeat (cons
-          (string :tag "Header name")
-          (regexp :tag "Regexp to match on header value"))))
-
-(defcustom bbdb-auto-notes-ignore-all nil
-  "Alist of headers and regexps which cause the entire message to be ignored
-in `bbdb-auto-notes'.  Each element is of the form
-
-    (HEADER . REGEXP)
-
-For example,
-
-    (\"From\" . \"BLAT\\\\.COM\")
-
-disables any recording of notes for message coming from BLAT.COM.
-See also `bbdb-auto-notes-ignore'."
+gatewayed to gnu.* newsgroups.
+See also `bbdb-auto-notes-ignore-messages'."
   :group 'bbdb-mua
   :type '(repeat (cons
           (string :tag "Header name")
@@ -964,9 +976,23 @@ If 'horiz, stack the window horizontally if there is room."
                  (const :tag "No Automatic BBDB window" nil)))
 
 (defcustom bbdb-pop-up-window-size 0.5
-  "Number of lines in a MUA pop-up BBDB window."
+  "Vertical size of a MUA pop-up BBDB window (vertical split).
+If it is an integer number, it is the number of lines used by BBDB.
+If it is a fraction between 0 and 1, it is the fraction of the tallest existing
+window that BBDB will take over."
   :group 'bbdb-mua
-  :type 'integer)
+  :type 'number)
+
+(defcustom bbdb-horiz-pop-up-window-size '(112 . 0.3)
+  "Horizontal size of a MUA pop-up BBDB window (horizontal split).
+It is a cons pair (TOTAL . BBDB-SIZE).
+The window that will be considered for horizontal splitting must have
+at least TOTAL columns. BBDB-SIZE is the horizontal size of the BBDB window.
+If it is an integer number, it is the number of columns used by BBDB.
+If it is a fraction between 0 and 1, it is the fraction of the
+window width that BBDB will take over."
+  :group 'bbdb-mua
+  :type '(cons (number) (number)))
 
 
 ;;; Notes processing
@@ -1230,6 +1256,9 @@ See also `bbdb-silent'.")
 Set to t by BBDB when inside the `bbdb-notice-hook'.
 Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
 
+(defvar bbdb-auto-notes-rules-expanded nil
+  "Expanded `bbdb-auto-notes-rules'.")
+
 (defvar bbdb-init-forms
   '((gnus                       ; gnus 3.15 or newer
      (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus))
@@ -1264,7 +1293,7 @@ Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
 (defvar bbdb-update-records-address nil
   "Used for communication between `bbdb-update-records'
 and `bbdb-prompt-for-create'.
-It is a list (NAME MAIL HEADER HEADER-CLASS).")
+It is a list (NAME MAIL HEADER HEADER-CLASS MUA).")
 
 ;;; Buffer-local variables for the database.
 (defvar bbdb-records nil
@@ -1797,12 +1826,6 @@ If REPLACE is non-nil, content is replaced by VALUE."
 (defsubst bbdb-record-lessp (record1 record2)
   (string< (bbdb-record-sortkey record1)
            (bbdb-record-sortkey record2)))
-
-(defsubst bbdb-subint (string match-number)
-  "Used for phone number handling."
-  (string-to-number (substring string
-                               (match-beginning match-number)
-                               (match-end match-number))))
 
 (defmacro bbdb-error-retry (form)
   `(catch '--bbdb-error-retry--
@@ -2428,20 +2451,27 @@ Select this window if SELECT is non-nil.
 If `bbdb-message-pop-up' is 'horiz, and the first window matching
 HORIZ-P is sufficiently wide (> 112 columns) then the window
 will be split vertically rather than horizontally."
-  (cond ((get-buffer-window bbdb-buffer-name)) ;; do nothing
+  (cond (;; We already have a BBDB window so that nothing needs to be done
+         (get-buffer-window bbdb-buffer-name))
 
         ;; try horizontal split
-        ((and (eq bbdb-message-pop-up 'horiz) horiz-p
-              (<= (frame-width) 112)
-              (let* ((cbuffer (current-buffer))
-                     (window-list (window-list))
-                     (selected-window (selected-window))
-                     (search t) window)
+        ((and (eq bbdb-message-pop-up 'horiz)
+              horiz-p
+              (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
+              (let ((cbuffer (current-buffer))
+                    (window-list (window-list))
+                    (selected-window (selected-window))
+                    (b-width (cdr bbdb-horiz-pop-up-window-size))
+                    (search t) window)
                 (while (and (setq window (pop window-list))
                             (setq search (funcall horiz-p window))))
-                (unless (or search (<= (window-width window) 112))
+                (unless (or search (<= (window-width window)
+                                       (car bbdb-horiz-pop-up-window-size)))
                   (select-window window)
-                  (split-window-horizontally 80)
+                  (split-window-horizontally
+                   (if (integerp b-width)
+                       (- (window-width window) b-width)
+                     (round (* (- 1 b-width) (window-width window)))))
                   (select-window (next-window window))
                   (let (pop-up-windows)
                     (switch-to-buffer (get-buffer-create bbdb-buffer-name)))
@@ -2463,7 +2493,7 @@ will be split vertically rather than horizontally."
                (switch-to-buffer (get-buffer-create bbdb-buffer-name))
              (split-window
               tallest-window
-              (if (> bbdb-pop-up-window-size 1)
+              (if (integerp bbdb-pop-up-window-size)
                   (- (window-height tallest-window) 1 ; for mode line
                      (max window-min-height bbdb-pop-up-window-size))
                 (round (* bbdb-pop-up-window-size
