@@ -1,3 +1,18 @@
+2011-01-15  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-update-records): For Gnus use
+	gnus-article-buffer.
+	(bbdb-mua-wrapper): New macro.
+	(bbdb-mua-display-records, bbdb-mua-annotate-sender)
+	(bbdb-mua-annotate-recipients, bbdb-mua-edit-notes-sender)
+	(bbdb-mua-edit-notes-recipients): Use it.
+	(bbdb-mua-update-mua): Removed (obsolete because of
+	bbdb-mua-wrapper).
+
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus): Code doc updated.
+
+	* lisp/bbdb-com.el (bbdb-complete-name): Obsolete alias for
+	bbdb-complete-mail.
+
 2011-01-06  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-message-headers, bbdb-accept-name-mismatch)
 	(bbdb-use-alternate-names): Fix docstring.
@@ -232,7 +247,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+  Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 
