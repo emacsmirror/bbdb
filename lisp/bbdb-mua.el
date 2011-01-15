@@ -39,6 +39,7 @@
 (eval-and-compile
   (autoload 'gnus-fetch-field "gnus-utils")
   (autoload 'gnus-summary-select-article "gnus-sum")
+  (defvar gnus-article-buffer)
 
   (autoload 'bbdb/vm-header "bbdb-vm")
   (autoload 'vm-follow-summary-cursor "vm-motion")
@@ -49,7 +50,9 @@
 
   (autoload 'bbdb/rmail-header "bbdb-rmail")
   (autoload 'rmail-buffer "rmail")
+  (autoload 'rmail-select-summary "rmail")
   (defvar rmail-current-message)
+  (defvar rmail-buffer)
 
   (autoload 'bbdb/mh-header "bbdb-mhe")
   (autoload 'mh-show "mh-show")
@@ -566,46 +569,52 @@ HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'.
 UPDATE-P is defined in `bbdb-update-records'."
   (let ((mua (bbdb-mua)))
-    ;; If below we change buffers, do we ever need a `save-current-buffer'?
-    (cond ;; VM
-          ((eq mua 'vm)
-           (vm-select-folder-buffer)
-           (vm-check-for-killed-summary)
-           (vm-error-if-folder-empty)
-           (let ((enable-local-variables t))  ; ...or vm bind this to nil.
-             (bbdb-update-records (bbdb-get-address-components header-class)
-                                  update-p (car vm-message-pointer))))
-          ;; Gnus
-          ((eq mua 'gnus)
-           (bbdb-update-records (bbdb-get-address-components header-class)
-                                update-p (bbdb-message-header "Message-ID")))
-          ;; MH-E
-          ((eq mua 'mh)
-           (if mh-show-buffer (set-buffer mh-show-buffer))
-           (bbdb-update-records (bbdb-get-address-components header-class)
-                                update-p (bbdb-message-header "Message-ID")))
-          ;; Rmail
-          ((eq mua 'rmail)
-           (if (and (boundp 'rmail-buffer) rmail-buffer)
-               (set-buffer rmail-buffer)
-             (error "Not in an rmail buffer"))
-           (when rmail-current-message
-             (bbdb-update-records (bbdb-get-address-components header-class)
-                                  update-p (bbdb-message-header "Message-ID"))))
-          ;; Message and Mail
-          ((member mua '(message mail))
-           (bbdb-update-records (bbdb-get-address-components header-class)
-                                update-p)))))
+    (save-current-buffer
+      (cond ;; VM
+       ((eq mua 'vm)
+        (vm-select-folder-buffer)
+        (vm-check-for-killed-summary)
+        (vm-error-if-folder-empty)
+        (let ((enable-local-variables t))  ; ...or vm bind this to nil.
+          (bbdb-update-records (bbdb-get-address-components header-class)
+                               update-p (car vm-message-pointer))))
+       ;; Gnus
+       ((eq mua 'gnus)
+        (set-buffer gnus-article-buffer)
+        (bbdb-update-records (bbdb-get-address-components header-class)
+                             update-p (bbdb-message-header "Message-ID")))
+       ;; MH-E
+       ((eq mua 'mh)
+        (if mh-show-buffer (set-buffer mh-show-buffer))
+        (bbdb-update-records (bbdb-get-address-components header-class)
+                             update-p (bbdb-message-header "Message-ID")))
+       ;; Rmail
+       ((eq mua 'rmail)
+        (set-buffer rmail-buffer)
+        (when rmail-current-message
+          (bbdb-update-records (bbdb-get-address-components header-class)
+                               update-p (bbdb-message-header "Message-ID"))))
+       ;; Message and Mail
+       ((member mua '(message mail))
+        (bbdb-update-records (bbdb-get-address-components header-class)
+                             update-p))))))
 
-(defun bbdb-mua-update-mua ()
-  "Update MUA before running a BBDB command."
-  (let ((mua (bbdb-mua)))
-    (cond ((eq mua 'vm) (vm-follow-summary-cursor))
-          ((eq mua 'gnus) (gnus-summary-select-article))
-          ((and (eq mua 'rmail)
-                (boundp 'rmail-buffer) rmail-buffer)
-           (set-buffer rmail-buffer))
-          ((eq mua 'mh) (mh-show) (set-buffer mh-show-buffer)))))
+(defmacro bbdb-mua-wrapper (&rest body)
+  "Perform BODY in a MUA buffer."
+  `(let ((mua (bbdb-mua)))
+     (cond ((eq mua 'vm)
+            (vm-follow-summary-cursor)
+            ,@body)
+           ((eq mua 'gnus)
+            ;; This fails in *Article* buffers, where
+            ;; `gnus-article-read-summary-keys' provides an additional wrapper
+            (save-current-buffer
+              (gnus-summary-select-article) ; sets buffer `gnus-summary-buffer'
+              ,@body))
+           ((eq mua 'rmail)
+            (rmail-select-summary ,@body))
+           ((eq mua 'mh)
+            (mh-show)))))
 
 (defun bbdb-mua-update-interactive-p ()
   "Interactive spec for arg UPDATE-P of `bbdb-mua-display-records' and friends.
@@ -629,11 +638,11 @@ use all classes in `bbdb-message-headers'.
 UPDATE-P may take the same values as `bbdb-update-records-p'.
 For interactive calls, see function `bbdb-mua-update-interactive-p'."
   (interactive (list nil (bbdb-mua-update-interactive-p)))
-  (save-current-buffer ;; rmail and mhe change buffers
-    (bbdb-mua-update-mua)
-    (let ((records (bbdb-mua-update-records header-class update-p)))
-      (if records (bbdb-display-records-internal records))
-      records)))
+  (let (records)
+    (bbdb-mua-wrapper
+     (setq records (bbdb-mua-update-records header-class update-p)))
+    (if records (bbdb-display-records-internal records))
+    records))
 
 ;;;###autoload
 (defun bbdb-mua-display-sender (&optional update-p)
@@ -677,10 +686,9 @@ If REPLACE is non-nil, ANNOTATION replaces the content of FIELD."
 corresponding to the sender(s) of this message.
 If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
   (interactive (list (read-string "Comments: ") current-prefix-arg))
-  (save-current-buffer ;; rmail and mhe change buffers
-    (bbdb-mua-update-mua)
-    (dolist (record (bbdb-mua-update-records 'sender))
-      (bbdb-annotate-notes record string 'notes replace))))
+  (bbdb-mua-wrapper
+   (dolist (record (bbdb-mua-update-records 'sender))
+     (bbdb-annotate-notes record string 'notes replace))))
 
 ;;;###autoload
 (defun bbdb-mua-annotate-recipients (string &optional replace)
@@ -688,10 +696,9 @@ If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
 corresponding to the recipient(s) of this message.
 If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
   (interactive (list (read-string "Comments: ") current-prefix-arg))
-  (save-current-buffer ;; rmail and mhe change buffers
-    (bbdb-mua-update-mua)
-    (dolist (record (bbdb-mua-update-records 'recipients))
-      (bbdb-annotate-notes record string 'notes replace))))
+  (bbdb-mua-wrapper
+   (dolist (record (bbdb-mua-update-records 'recipients))
+     (bbdb-annotate-notes record string 'notes replace))))
 
 (defun bbdb-mua-edit-notes-sender (&optional field)
   "Edit notes FIELD of record corresponding to sender of this message.
@@ -701,12 +708,11 @@ FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
              (intern (completing-read
                       "Field: " (mapcar 'symbol-name bbdb-notes-names))))))
   (unless field (setq field 'notes))
-  (save-current-buffer ;; rmail and mhe change buffers
-    (bbdb-mua-update-mua)
-    (let ((records (bbdb-mua-update-records 'sender)))
-      (bbdb-display-records records)
-      (dolist (record records)
-        (bbdb-record-edit-notes record field t)))))
+  (bbdb-mua-wrapper
+   (let ((records (bbdb-mua-update-records 'sender)))
+     (bbdb-display-records records)
+     (dolist (record records)
+       (bbdb-record-edit-notes record field t)))))
 
 (defun bbdb-mua-edit-notes-recipients (&optional field)
   "Edit notes FIELD of record corresponding to recipient of this message.
@@ -716,12 +722,11 @@ FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
              (intern (completing-read
                       "Field: " (mapcar 'symbol-name bbdb-notes-names))))))
   (unless field (setq field 'notes))
-  (save-current-buffer ;; rmail and mhe change buffers
-    (bbdb-mua-update-mua)
-    (let ((records (bbdb-mua-update-records 'recipients)))
-      (bbdb-display-records records)
-      (dolist (record records)
-        (bbdb-record-edit-notes record field t)))))
+  (bbdb-mua-wrapper
+   (let ((records (bbdb-mua-update-records 'recipients)))
+     (bbdb-display-records records)
+     (dolist (record records)
+       (bbdb-record-edit-notes record field t)))))
 
 ;; Functions for noninteractive use in MUA hooks
 
