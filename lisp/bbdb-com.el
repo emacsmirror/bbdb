@@ -2130,6 +2130,8 @@ as part of the MUA insinuation."
                    (display-completion-list dwim-completions)))
                (unless (eq (selected-window) (minibuffer-window))
                  (message "Making completion list...done")))))))))
+;;;###autoload
+(define-obsolete-function-alias 'bbdb-complete-name 'bbdb-complete-mail)
 
 ;;; interface to mail-abbrevs.el.
 
