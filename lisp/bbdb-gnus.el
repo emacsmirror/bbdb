@@ -552,7 +552,12 @@ Note that `\( is the backquote, NOT the quote '\(."
 ;;;###autoload
 (defun bbdb-insinuate-gnus ()
   "Hook BBDB into Gnus."
+  ;; `bbdb-mua-display-sender' fails in *Article* buffers, where
+  ;; `gnus-article-read-summary-keys' provides an additional wrapper
+  ;; that restores the window configuration.
   (define-key gnus-summary-mode-map ":" 'bbdb-mua-display-sender)
+  ;; For `bbdb-mua-edit-notes-sender' it is probably OK if
+  ;;`gnus-article-read-summary-keys' restores the window configuration.
   (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-notes-sender)
 
   ;; Set up user field for use in `gnus-summary-line-format'
