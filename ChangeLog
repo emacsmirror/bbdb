@@ -1,3 +1,14 @@
+2011-01-16  Roland Winkler  <winkler@gnu.org>
+	* README: Updated.
+
+	* lisp/Makefile: In bbdb-autloads.el, add BBDB lisp directory to
+	load-path.
+
+	* lisp/bbdb.el (bbdb-pop-up-buffer): Use condition-case, in case
+	split-window fails.
+	(bbdb-records, bbdb-mode, bbdb-version, bbdb-initialize): Add
+	autoload cookie.
+
 2011-01-15  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-update-records): For Gnus use
 	gnus-article-buffer.
