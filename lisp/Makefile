@@ -1,4 +1,4 @@
-# Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+# Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 # 
 # This file is part of the Insidious Big Brother Database (aka BBDB),
 # 
@@ -48,7 +48,7 @@ VM	= -eval '(if (not (string-match "$(VMDIR)" "")) (setq load-path (cons "$(VMDI
 
 GNUS	= -eval '(if (not (string-match "$(GNUSDIR)" "")) (setq load-path (cons "$(GNUSDIR)" load-path)))'
 
-PUSHPATH = -eval '(setq load-path (cons "./" load-path)))'
+PUSHPATH = -eval '(push "./" load-path)'
 
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
@@ -85,9 +85,11 @@ install-pkg: uninstall-pkg bbdb autoloadsc
 uninstall-pkg:
 	-$(RM) -r $(PACKAGEDIR)/lisp/bbdb
 
-bbdb-autoloads.el: $(DEPSRCS)
+bbdb-autoloads.el: $(SRCS)
 	@-$(RM) $@;
 	@echo "(provide 'bbdb-autoloads)" > $@;
+	@echo "(if (and load-file-name (file-name-directory load-file-name))" >> $@;
+	@echo "    (add-to-list 'load-path (file-name-directory load-file-name)))\n" >> $@;
 	@echo "" >> $@;
 	@$(emacs) -batch -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
