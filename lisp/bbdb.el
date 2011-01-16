@@ -2468,17 +2468,20 @@ will be split vertically rather than horizontally."
                 (unless (or search (<= (window-width window)
                                        (car bbdb-horiz-pop-up-window-size)))
                   (select-window window)
-                  (split-window-horizontally
-                   (if (integerp b-width)
-                       (- (window-width window) b-width)
-                     (round (* (- 1 b-width) (window-width window)))))
-                  (select-window (next-window window))
-                  (let (pop-up-windows)
-                    (switch-to-buffer (get-buffer-create bbdb-buffer-name)))
-                  (unless select
-                    (select-window selected-window)
-                    (set-buffer cbuffer))
-                  t))))
+                  (condition-case nil ; `split-window-horizontally' might fail
+                      (progn
+                        (split-window-horizontally
+                         (if (integerp b-width)
+                             (- (window-width window) b-width)
+                           (round (* (- 1 b-width) (window-width window)))))
+                        (select-window (next-window window))
+                        (let (pop-up-windows)
+                          (switch-to-buffer (get-buffer-create bbdb-buffer-name)))
+                        (unless select
+                          (select-window selected-window)
+                          (set-buffer cbuffer))
+                        t)
+                    (error nil))))))
 
         (t ;; vertical split
          (let* ((cbuffer (current-buffer))
@@ -2490,20 +2493,24 @@ will be split vertically rather than horizontally."
                  (setq tallest-window window)))
            (select-window tallest-window)   ; select it and split it...
            (if (= bbdb-pop-up-window-size 1)
+               ;; select `bbdb-buffer-name'
                (switch-to-buffer (get-buffer-create bbdb-buffer-name))
-             (split-window
-              tallest-window
-              (if (integerp bbdb-pop-up-window-size)
-                  (- (window-height tallest-window) 1 ; for mode line
-                     (max window-min-height bbdb-pop-up-window-size))
-                (round (* bbdb-pop-up-window-size
-                          (window-height tallest-window)))))
-             (if (memq major-mode
-                       '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
-                 (goto-char (point-min)))  ; make gnus happy...
-             (select-window (next-window)) ; goto the bottom of the two...
-             (let (pop-up-windows)         ; make it display *BBDB*...
-               (switch-to-buffer (get-buffer-create bbdb-buffer-name)))
+             (condition-case nil ; `split-window' might fail
+                 (progn
+                   (split-window
+                    tallest-window
+                    (if (integerp bbdb-pop-up-window-size)
+                        (- (window-height tallest-window) 1 ; for mode line
+                           (max window-min-height bbdb-pop-up-window-size))
+                      (round (* bbdb-pop-up-window-size
+                                (window-height tallest-window)))))
+                   (if (memq major-mode
+                             '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
+                       (goto-char (point-min)))  ; make gnus happy...
+                   (select-window (next-window)) ; goto the bottom of the two...
+                   (let (pop-up-windows)         ; make it display *BBDB*...
+                     (switch-to-buffer (get-buffer-create bbdb-buffer-name))))
+               (error (pop-to-buffer (get-buffer-create bbdb-buffer-name))))
              (unless select
                (select-window selected-window) ; original window we were in
                (set-buffer cbuffer)))))))
@@ -2567,6 +2574,7 @@ will be split vertically rather than horizontally."
 
 ;;; Reading the BBDB
 
+;;;###autoload
 (defun bbdb-records ()
   "Return a list of all BBDB records; read in and parse the db if necessary.
 This function also notices if the disk file has been modified."
@@ -2977,6 +2985,7 @@ Update `bbdb-file' if necessary."
 
 ;;; BBDB mode
 
+;;;###autoload
 (defun bbdb-mode ()
   "Major mode for viewing and editing the Insidious Big Brother Database.
 Letters no longer insert themselves.  Numbers are prefix arguments.
@@ -3204,6 +3213,7 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
         (save-buffer)
       (if noisy (message "(No BBDB changes need to be saved)")))))
 
+;;;###autoload
 (defun bbdb-version (&optional arg)
   "Return string describing the version of BBDB.
 With non-nil prefix ARG, insert string at point."
@@ -3247,6 +3257,7 @@ however, after having used other programs to add records to the BBDB."
 
 
 
+;;;###autoload
 (defun bbdb-initialize (&rest mailers)
   "Initialize BBDB for MAILERS.
 List MAILERS may include the following symbols
