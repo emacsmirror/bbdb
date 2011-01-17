@@ -89,7 +89,7 @@ bbdb-autoloads.el: $(SRCS)
 	@-$(RM) $@;
 	@echo "(provide 'bbdb-autoloads)" > $@;
 	@echo "(if (and load-file-name (file-name-directory load-file-name))" >> $@;
-	@echo "    (add-to-list 'load-path (file-name-directory load-file-name)))\n" >> $@;
+	@echo "    (add-to-list 'load-path (file-name-directory load-file-name)))" >> $@;
 	@echo "" >> $@;
 	@$(emacs) -batch -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
