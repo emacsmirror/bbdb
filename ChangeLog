@@ -1,3 +1,7 @@
+2011-01-17  Roland Winkler  <winkler@gnu.org>
+	* lisp/Makefile: Do not attempt to add empty line to
+	bbdb-autloads.el.
+
 2011-01-16  Roland Winkler  <winkler@gnu.org>
 	* README: Updated.
 
