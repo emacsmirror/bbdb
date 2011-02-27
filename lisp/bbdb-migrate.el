@@ -1,7 +1,7 @@
 ;;; bbdb-migrate.el --- migration functions for BBDB
 
 ;; Copyright (C) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -33,7 +33,7 @@
   from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")
     (4 . "* Country field added.")
     (5 . "* More flexible street address.")
-    (6 . "* Zip codes are stored as plain strings.")
+    (6 . "* postcodes are stored as plain strings.")
     (7 . "* Notes are always lists. Organizations are stored as list.
   New field `degree'.")))
 
@@ -61,7 +61,7 @@
     (4 (bbdb-record-address bbdb-record-set-address
         bbdb-migrate-streets-to-list))
     (5 (bbdb-record-address bbdb-record-set-address
-        bbdb-migrate-zip-codes-to-strings))
+        bbdb-migrate-postcodes-to-strings))
     (6 (bbdb-record-notes bbdb-record-set-notes
         bbdb-migrate-notes-to-list)
        (bbdb-record-organization bbdb-record-set-organization
@@ -95,56 +95,56 @@ results will be saved with SET."
             v0 (1+ v0)))
     (bbdb-migrate-record-lambda spec)))
 
-(defun bbdb-migrate-zip-codes-to-strings (addresses)
-  "Make all zip codes plain strings.
-This uses the code that used to be in bbdb-address-zip."
+(defun bbdb-migrate-postcodes-to-strings (addresses)
+  "Make all postcodes plain strings.
+This uses the code that used to be in `bbdb-address-postcode'."
   ;; apply the function to all addresses in the list and return a
   ;; modified list of addresses
   (mapcar (lambda (address)
-            (let ((zip (if (stringp (bbdb-address-zip address))
-                           (bbdb-address-zip address)
-                         ;; if not a string, make it a string...
-                         (if (consp (bbdb-address-zip address))
-                             ;; if a cons cell with two strings
-                             (if (and (stringp (car (bbdb-address-zip address)))
-                                      (stringp (car (cdr (bbdb-address-zip address)))))
-                                 ;; if the second string starts with 4 digits
-                                 (if (string-match "^[0-9][0-9][0-9][0-9]"
-                                                   (car (cdr (bbdb-address-zip address))))
-                                     (concat (car (bbdb-address-zip address))
-                                             "-"
-                                             (car (cdr (bbdb-address-zip address))))
-                                   ;; if ("abc" "efg")
-                                   (concat (car (bbdb-address-zip address))
-                                           " "
-                                           (car (cdr (bbdb-address-zip address)))))
-                               ;; if ("SE" (123 45))
-                               (if (and (stringp (nth 0 (bbdb-address-zip address)))
-                                        (consp (nth 1 (bbdb-address-zip address)))
-                                        (integerp (nth 0 (nth 1 (bbdb-address-zip address))))
-                                        (integerp (nth 1 (nth 1 (bbdb-address-zip address)))))
-                                   (format "%s-%d %d"
-                                           (nth 0 (bbdb-address-zip address))
-                                           (nth 0 (nth 1 (bbdb-address-zip address)))
-                                           (nth 1 (nth 1 (bbdb-address-zip address))))
-                                 ;; if a cons cell with two numbers
-                                 (if (and (integerp (car (bbdb-address-zip address)))
-                                          (integerp (car (cdr (bbdb-address-zip address)))))
-                                     (format "%05d-%04d" (car (bbdb-address-zip address))
-                                             (car (cdr (bbdb-address-zip address))))
-                                   ;; else a cons cell with a string an a number (possible error
-                                   ;; if a cons cell with a number and a string -- note the
-                                   ;; order!)
-                                   (format "%s-%d" (car (bbdb-address-zip address))
-                                           (car (cdr (bbdb-address-zip address)))))))
-                           ;; if nil or zero
-                           (if (or (eq 0 (bbdb-address-zip address))
-                                   (null (bbdb-address-zip address)))
-                               ""
-                             ;; else a number, could be 3 to 5 digits (possible error: assuming
-                             ;; no leading zeroes in zip codes)
-                             (format "%d" (bbdb-address-zip address)))))))
-              (bbdb-address-set-zip address zip))
+            (let ((postcode (if (stringp (bbdb-address-postcode address))
+                                (bbdb-address-postcode address)
+                              ;; if not a string, make it a string...
+                              (if (consp (bbdb-address-postcode address))
+                                  ;; if a cons cell with two strings
+                                  (if (and (stringp (car (bbdb-address-postcode address)))
+                                           (stringp (car (cdr (bbdb-address-postcode address)))))
+                                      ;; if the second string starts with 4 digits
+                                      (if (string-match "^[0-9][0-9][0-9][0-9]"
+                                                        (car (cdr (bbdb-address-postcode address))))
+                                          (concat (car (bbdb-address-postcode address))
+                                                  "-"
+                                                  (car (cdr (bbdb-address-postcode address))))
+                                        ;; if ("abc" "efg")
+                                        (concat (car (bbdb-address-postcode address))
+                                                " "
+                                                (car (cdr (bbdb-address-postcode address)))))
+                                    ;; if ("SE" (123 45))
+                                    (if (and (stringp (nth 0 (bbdb-address-postcode address)))
+                                             (consp (nth 1 (bbdb-address-postcode address)))
+                                             (integerp (nth 0 (nth 1 (bbdb-address-postcode address))))
+                                             (integerp (nth 1 (nth 1 (bbdb-address-postcode address)))))
+                                        (format "%s-%d %d"
+                                                (nth 0 (bbdb-address-postcode address))
+                                                (nth 0 (nth 1 (bbdb-address-postcode address)))
+                                                (nth 1 (nth 1 (bbdb-address-postcode address))))
+                                      ;; if a cons cell with two numbers
+                                      (if (and (integerp (car (bbdb-address-postcode address)))
+                                               (integerp (car (cdr (bbdb-address-postcode address)))))
+                                          (format "%05d-%04d" (car (bbdb-address-postcode address))
+                                                  (car (cdr (bbdb-address-postcode address))))
+                                        ;; else a cons cell with a string an a number (possible error
+                                        ;; if a cons cell with a number and a string -- note the
+                                        ;; order!)
+                                        (format "%s-%d" (car (bbdb-address-postcode address))
+                                                (car (cdr (bbdb-address-postcode address)))))))
+                                ;; if nil or zero
+                                (if (or (zerop (bbdb-address-postcode address))
+                                        (null (bbdb-address-postcode address)))
+                                    ""
+                                  ;; else a number, could be 3 to 5 digits (possible error: assuming
+                                  ;; no leading zeroes in postcodes)
+                                  (format "%d" (bbdb-address-postcode address)))))))
+              (bbdb-address-set-postcode address postcode))
             address)
           addresses))
 
@@ -232,7 +232,7 @@ argument."
                                             (aref address 3))));street3
                     (aref address 4) ; city
                     (aref address 5) ; state
-                    (aref address 6) ; zip
+                    (aref address 6) ; postcode
                     (aref address 7))) ; country
           addrl))
 
