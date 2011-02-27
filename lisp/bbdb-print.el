@@ -1,7 +1,7 @@
 ;;; bbdb-print.el -- for printing BBDB databases using TeX.
 
 ;; Copyright (C) 1993 Boris Goldowsky
-;; Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 
 ;; Authors: Boris Goldowsky <boris@cs.rochester.edu>
 ;;          Dirk Grunwald <grunwald@cs.colorado.edu>
@@ -270,26 +270,15 @@ Value `all' means print all mail addresses."
   '(("[#$%&_]" . "\\\\\\&")
     ("[<>=]+" . "$\\&$")
     ("[{}]" . "$\\\\\\&$")
-    ("~" . "\\~{}"))
+    ("~" . "\\\\~{}"))
   "Replacement alist for quoting TeX's special characters.
 Each element is of the form (REGEXP . REPLACE)."
   :group 'bbdb-print)
 
-(defcustom bbdb-print-address-format-alist
-  '((bbdb-address-continental-p . bbdb-print-address-continental)
-    (t . bbdb-print-address-default))
-  "Alist of address identifying and address formatting functions for printing.
-The key is an identifying function which accepts an address.  The
-associated value is a formatting function which inserts the formatted
-address in the current buffer.  If the identifying function returns
-non-nil, the formatting function is called.  The key t is a default
-value will always calls the associated formatting function.  Therefore
-you should always have (t . bbdb-print-address-default) as the
-last element in the alist.
-
-The functions must take one argument, the address.
-
-See also `bbdb-address-format-alist'."
+(defcustom bbdb-print-address-format-list bbdb-address-format-list
+  "List of address formatting rules for printing.
+Each element may take the same values as in `bbdb-address-format-list'.
+The EDIT elements of `bbdb-address-format-list' are ignored."
   :group 'bbdb-print)
 
 ;;; Functions:
@@ -333,7 +322,9 @@ The replacement rules are defined in `bbdb-print-tex-quote-alist'."
 ;;;###autoload
 (defun bbdb-print (records file brief)
   "Make a TeX FILE for printing RECORDS.
-With prefix BRIEF non-nil, make a brief \(one-line-per-record) printout.
+Interactively, use BBDB prefix \
+\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
+With prefix BRIEF non-nil, make a brief (one line per record) printout.
 There are various variables for customizing the content and format
 of the printout, notably the variables `bbdb-print-alist' and
 `bbdb-print-require'."
@@ -421,7 +412,8 @@ The return value is the new CURRENT-LETTER."
         (mail    (bbdb-record-mail record))
         (phone   (bbdb-record-phone record))
         (address (bbdb-record-address record))
-        (notes   (bbdb-record-notes record)))
+        (notes   (bbdb-record-notes record))
+        (bbdb-address-format-list bbdb-print-address-format-list))
 
     (when (eval bbdb-print-require)
       ;; Insert section header, if neccessary.
@@ -488,17 +480,16 @@ The return value is the new CURRENT-LETTER."
       ;; Addresses.  FUTURE: If none left, should use phones instead.
       (if n-addresses
           (setq address
-                (bbdb-print-firstn n-addresses address brief)))
-      (dolist (a address)
-        (if (and a (bbdb-print-field-p 'address))
-            (let ((fl bbdb-print-address-format-alist) elt)
-              (while (setq elt (pop fl))
-                (if (functionp (car elt))
-                    (when (funcall (car elt) a)
-                      (funcall (cdr elt) a)
-                      (setq fl nil))
-                  (funcall (cdr elt) a)))) ; default
-          (insert "\\address{}\n"))) ;; needed for brief format
+                (bbdb-print-firstn n-addresses address nil)))
+      (if (and address (bbdb-print-field-p 'address))
+          (dolist (a address)
+            (insert
+             "\\address{"
+             (replace-regexp-in-string
+              "\n" (if brief ", " "\\\\\\\\\n")
+              (bbdb-print-tex-quote (bbdb-format-address a 2)))
+             "}\n"))
+        (insert "\\address{}\n")) ;; needed for brief format
 
       ;; Notes
       (dolist (note notes)
@@ -514,53 +505,6 @@ The return value is the new CURRENT-LETTER."
       (insert "\\endrecord\n%\n")
       (setq current-letter first-letter)))
   current-letter)
-
-(defun bbdb-print-address-continental (address)
-  "Insert formated continental ADDRESS in current buffer for printing.
-This format is used in western Europe, for example.
-
-This function is a possible formatting function for
-`bbdb-print-address-format-alist'.
-
-The result looks like this:
- street
- street
- ...
- zip city, state
- country"
-  (insert
-   (format
-    "\\address{%s}\n"
-    (bbdb-print-tex-quote
-     (bbdb-concat "\\\\\n" (bbdb-address-streets address)
-                  (bbdb-concat ", "
-                               (bbdb-concat " " (bbdb-address-zip address)
-                                            (bbdb-address-city address))
-                               (bbdb-address-state address))
-                  (bbdb-address-country address))))))
-
-(defun bbdb-print-address-default (address)
-  "Insert formated ADDRESS in current buffer for printing.
-This is the default format; it is used in the US, for example.
-
-This function is a possible formatting function for
-`bbdb-print-address-format-alist'.
-
-The result looks like this:
- street
- street
- ...
- city, state  zip
- country"
-  (insert
-   (format
-    "\\address{%s}\n"
-    (bbdb-print-tex-quote
-     (bbdb-concat "\\\\\n" (bbdb-address-streets address)
-                  (bbdb-concat ", " (bbdb-address-city address)
-                               (bbdb-concat " " (bbdb-address-state address)
-                                            (bbdb-address-zip address)))
-                  (bbdb-address-country address))))))
 
 (defun bbdb-print-phone (phone)
   "Format PHONE as a string, obeying omit-area-code setting.
