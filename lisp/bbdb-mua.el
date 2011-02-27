@@ -512,18 +512,17 @@ Return the record matching ADDRESS or nil."
                        (or change-p (setq change-p t)))
               ;; new mail address; ask before adding.
               (unless (let ((mails (bbdb-record-mail record))
-                            (new (downcase mail))
                             elt match)
                         (while (and (setq elt (pop mails)) (null match))
-                          (setq match (string= new (downcase elt))))
+                          (setq match (bbdb-string= mail elt)))
                         match)
                 (let ((add-mails (if (functionp bbdb-add-mails)
                                      (funcall bbdb-add-mails)
                                    bbdb-add-mails)))
                   (when (or (eq add-mails t) ; add it automatically
                             (and (eq add-mails 'query)
-                                 (or (y-or-n-p (format "Add address \"%s\" to \"%s\"? " mail
-                                                       (bbdb-concat 'mail (bbdb-record-mail record))))
+                                 (or (y-or-n-p (format "Add address \"%s\" to %s? " mail
+                                                       (bbdb-record-name record)))
                                      (and (or (eq update-p 'create)
                                               (and (eq update-p 'query)
                                                    (y-or-n-p
@@ -614,7 +613,9 @@ UPDATE-P is defined in `bbdb-update-records'."
            ((eq mua 'rmail)
             (rmail-select-summary ,@body))
            ((eq mua 'mh)
-            (mh-show)))))
+            (mh-show))
+           ((memq mua '(mail message))
+            ,@body))))
 
 (defun bbdb-mua-update-interactive-p ()
   "Interactive spec for arg UPDATE-P of `bbdb-mua-display-records' and friends.
@@ -669,14 +670,14 @@ If the records do not exist, they are generated."
   (let ((bbdb-message-all-addresses t))
     (bbdb-mua-display-records header-class 'create)))
 
-(defun bbdb-annotate-notes (record annotation &optional field replace)
-  "In RECORD add an ANNOTATION to the note FIELD.
-FIELD defaults to notes.
-If REPLACE is non-nil, ANNOTATION replaces the content of FIELD."
+(defun bbdb-annotate-notes (record annotation &optional label replace)
+  "In RECORD add an ANNOTATION to the note LABEL.
+LABEL defaults to notes.
+If REPLACE is non-nil, ANNOTATION replaces the content of LABEL."
   (unless (string= "" (setq annotation (bbdb-string-trim annotation)))
-    (unless field (setq field 'notes))
-    (bbdb-set-notes-names field)
-    (bbdb-merge-note record field annotation replace)
+    (unless label (setq label 'notes))
+    (bbdb-set-notes-labels label)
+    (bbdb-merge-note record label annotation replace)
     (bbdb-change-record record)
     (bbdb-maybe-update-display record)))
 
@@ -706,7 +707,7 @@ FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
   (interactive
    (list (if current-prefix-arg
              (intern (completing-read
-                      "Field: " (mapcar 'symbol-name bbdb-notes-names))))))
+                      "Field: " (mapcar 'symbol-name bbdb-notes-label-list))))))
   (unless field (setq field 'notes))
   (bbdb-mua-wrapper
    (let ((records (bbdb-mua-update-records 'sender)))
@@ -720,7 +721,7 @@ FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
   (interactive
    (list (if current-prefix-arg
              (intern (completing-read
-                      "Field: " (mapcar 'symbol-name bbdb-notes-names))))))
+                      "Field: " (mapcar 'symbol-name bbdb-notes-label-list))))))
   (unless field (setq field 'notes))
   (bbdb-mua-wrapper
    (let ((records (bbdb-mua-update-records 'recipients)))
@@ -730,56 +731,61 @@ FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
 
 ;; Functions for noninteractive use in MUA hooks
 
-(defun bbdb-mua-pop-up-bbdb-buffer (&optional header-class update-p)
-  "Make the *BBDB* buffer be displayed along with the MUA window(s).
-Displays the records corresponding to the sender respectively
-recipients of the current message.
-See `bbdb-message-pop-up', and the MUA-specic variables
-`bbdb/MUA-update-records-p' for configuration of what is being displayed.
-Intended for noninteractive use via appropriate MUA hook.
+;;;###autoload
+(defun bbdb-mua-auto-update (&optional header-class update-p)
+  "Update BBDB automatically based on incoming and outgoing messages.
+See `bbdb/MUA-update-records-p' for configuration of how the messages
+are analyzed.  Return matching records.
+
+If `bbdb-message-pop-up' is non-nil, the *BBDB* buffer is displayed
+along with the MUA window(s), showing the matching records.
+
+This function is intended for noninteractive use via appropriate MUA hooks.
+Call `bbdb-mua-auto-update-init' in your init file to put this function
+into the respective MUA hooks.
 See `bbdb-mua-display-records' and friends for interactive commands."
-  (if bbdb-message-pop-up
-      (let* ((bbdb-silent-internal t)
-             (records (bbdb-mua-update-records header-class update-p))
-             (mua (bbdb-mua))
-             (mode (cond ((eq mua 'vm) 'vm-mode)
-                         ((eq mua 'gnus) 'gnus-article-mode)
-                         ((eq mua 'rmail) 'rmail-mode)
-                         ((eq mua 'mh) 'mh-folder-mode)
-                         ((eq mua 'message) 'message-mode)
-                         ((eq mua 'mail) 'mail-mode))))
-        (if records
-            (bbdb-display-records-internal
-             records nil nil nil
-             `(lambda (window)
-                (with-current-buffer (window-buffer window)
-                  (eq major-mode ',mua))))
-          ;; If there are no records, empty the BBDB window.
-          (bbdb-undisplay-records)))))
+  (let* ((bbdb-silent-internal t)
+         (records (bbdb-mua-update-records header-class update-p)))
+    (if bbdb-message-pop-up
+        (let* ((mua (bbdb-mua))
+               (mode (cond ((eq mua 'vm) 'vm-mode)
+                           ((eq mua 'gnus) 'gnus-article-mode)
+                           ((eq mua 'rmail) 'rmail-mode)
+                           ((eq mua 'mh) 'mh-folder-mode)
+                           ((eq mua 'message) 'message-mode)
+                           ((eq mua 'mail) 'mail-mode))))
+          (if records
+              (bbdb-display-records-internal
+               records nil nil nil
+               `(lambda (window)
+                  (with-current-buffer (window-buffer window)
+                    (eq major-mode ',mua))))
+            ;; If there are no records, empty the BBDB window.
+            (bbdb-undisplay-records))))
+    records))
+
+;; Should the following be replaced by a minor mode??
+;; Or should we make this function interactive in some other way?
 
 ;;;###autoload
-(defun bbdb-mua-pop-up-init (&rest muas)
-  "For MUAs add `bbdb-mua-pop-up-bbdb-buffer' to their presentation hook.
-If a MUA is not an element of MUAs, `bbdb-mua-pop-up-bbdb-buffer' is removed
-from the respective presentation hook."
+(defun bbdb-mua-auto-update-init (&rest muas)
+  "For MUAS add `bbdb-mua-auto-update' to their presentation hook.
+If a MUA is not an element of MUAS, `bbdb-mua-auto-update' is removed
+from the respective presentation hook.
+
+Call this function in you init file to use the auto update feature with MUAS.
+This function is seaparate from the general function `bbdb-initialize'
+as this allows one to initialize the auto update feature for some MUAs only,
+for example only for outgoing messages."
   (dolist (mua '((message . message-send-hook)
                  (mail . mail-send-hook)
                  (rmail . rmail-show-message-hook)
                  (gnus . gnus-article-prepare-hook)
                  (mh . mh-show-hook)
                  (vm . vm-select-message-hook)))
-    (if (member (car mua) muas)
-        (add-hook (cdr mua) 'bbdb-mua-pop-up-bbdb-buffer)
-      (remove-hook (cdr mua) 'bbdb-mua-pop-up-bbdb-buffer))))
-
-;; RW: This appears to be obsolete if BBDB supports message mode
-;;;###autoload
-(defun bbdb-force-record-create (&optional header-class)
-  "Force automatic creation of BBDB record(s) for the current message.
-You might add this to the reply hook of your MUA in order to automatically
-get records added for those people you reply to."
-  (interactive)
-  (bbdb-mua-pop-up-bbdb-buffer header-class 'create))
+    (if (memq (car mua) muas)
+        (add-hook (cdr mua) 'bbdb-mua-auto-update)
+      (remove-hook (cdr mua) 'bbdb-mua-auto-update))))
 
 ;;;###autoload
 (defun bbdb-auto-notes (record)
