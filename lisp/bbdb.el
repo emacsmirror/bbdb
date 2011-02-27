@@ -292,7 +292,7 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
  (name-end . INTEGER)            +               -              40
  (indentation . INTEGER)         -               +              21
  (primary . BOOL)                -               +              nil
- (display-p . SEXP)              +               +              nil
+ (display-p . FUNCTION)          +               +              nil
 
 - toggle: controls if this layout is included when toggeling the layout
 - order: defines a user specific order for the fields, where `t' is a place
@@ -302,7 +302,7 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
 - name-end: sets the column where the name should end in one-line layout.
 - indentation: sets the level of indentation for multi-line display.
 - primary: controls wether only the primary mail is shown or all are shown.
-- display-p: a lisp expression controlling wether the record is to be displayed.
+- display-p: a function controlling wether the record is to be displayed.
 
 When you add a new layout FOO, you can write a corresponding layout
 function `bbdb-format-record-layout-FOO'.  If you do not write your own
@@ -357,17 +357,7 @@ layout function, the multi-line layout will be used."
                (cons :tag "Display-p"
                      (const :tag "Show only records passing this test" display-p)
                      (choice (const :tag "No test" nil)
-                             (cons :tag "List of required fields"
-                                   (const :tag "Choose from the attributes in the following set:" and)
-                                   (set
-                                    (const name)
-                                    (const degree)
-                                    (const organization)
-                                    (const mails)
-                                    (const phone)
-                                    (const address)
-                                    (const notes)))
-                             (sexp :tag "Lisp expression")))))))
+                             (function :tag "Predicate")))))))
 
 (defcustom bbdb-layout 'multi-line
   "Default display layout."
@@ -398,32 +388,81 @@ be different from standard commands like `isearch-forward'."
   :group 'bbdb-record-display
   :type 'boolean)
 
-(defcustom bbdb-address-format-alist
-  '((bbdb-address-continental-p . bbdb-format-address-continental)
-    (t . bbdb-format-address-default))
-  "Alist of address identifying and address formatting functions.
-The key is an identifying function which accepts an address.  The
-associated value is a formatting function which inserts the formatted
-address in the current buffer.  If the identifying function returns
-non-nil, the formatting function is called.  When nil is used as the
-car, then the associated formatting function will always be called.
-Therefore you should always have (nil . bbdb-format-address-default) as
-the last element in the alist.
+;; See http://en.wikipedia.org/wiki/Postal_address
+;; http://www.upu.int/en/activities/addressing/postal-addressing-systems-in-member-countries.html
+(defcustom bbdb-address-format-list
+  '((("Argentina") "spcSC" "@%s\n@%p, @%c@, %S@\n%C@" "@%c@")
+    (("Australia") "scSpC" "@%s\n@%c@ %S@ %p@\n%C@" "@%c@")
+    (("Austria" "Germany" "Spain" "Switzerland")
+     "spcSC" "@%s\n@%p @%c@ (%S)@\n%C@" "@%c@")
+    (("Canada") "scSCp" "@%s\n@%c@, %S@\n%C@ %p@" "@%c@")
+    (("China") "scpSC" "@%s\n@%c@\n%p@%S@\n%C@" "@%c@") ; English format
+    ; (("China") "CpScs" "@%C @%p\n@%S @%c@ %s@" "@%c@") ; Chinese format
+    (("India") "scpSC" "@%s\n@%c@ %p@ (%S)@\n%C@" "@%c@")
+    (("USA") "scSpC" "@%s\n@%c@, %S@ %p@\n%C@" "@%c@")
+    (t bbdb-edit-address-default bbdb-format-address-default "@%c@"))
+  "List of address editing and formatting rules for BBDB.
+Each rule is a list (IDENTIFIER EDIT FORMAT FORMAT).
+The first rule for which IDENTIFIER matches an address is used for editing
+and formatting the address.
 
-All functions should take two arguments, the address and an indentation.
-The indentation argument may be optional.
+IDENTIFIER may be a list of countries.
+IDENTIFIER may also be a function that is called with one arg, the address
+to be used.  The rule is used if the function returns non-nil.
+See `bbdb-address-continental-p' for an example.
+If IDENTIFIER is t, EDIT and FORMAT is used for all entries.
+Usually, this should be the last rule that becomes a fall-back (default).
 
-This alist is used in `bbdb-format-address'.
-See also `bbdb-print-address-format-alist'."
+EDIT may be a function that is called with one argument, the address.
+See `bbdb-edit-address-default' for an example.
+
+EDIT may also be an editting format string.  It is a string containing
+the five letters s, c, p, S, and C that specify the order for editing
+the five elements of an address:
+
+s  streets
+c  city
+p  postcode
+S  state
+C  country
+
+The first FORMAT of each rule is used for multi-line layout, the second FORMAT
+is used for one-line layout.
+
+FORMAT may be a function that is called with one argument, the address.
+See `bbdb-format-address-default' for an example.
+
+FORMAT may also be a format string.  It consists of formatting elements
+separated by a delimiter defined via the first (and last) character of FORMAT.
+Each formatting element may contain one of the following format specifiers:
+
+%s  streets (used repeatedly for each street part)
+%c  city
+%p  postcode
+%S  state
+%C  country
+
+A formatting element will be applied only if the corresponding part
+of the address is a non-empty string.
+
+See also `bbdb-print-address-format-list'."
   :group 'bbdb-record-display
-  :type '(repeat (cons function function)))
+  :type '(repeat (list (choice (const :tag "Default" t)
+                               (function :tag "Function")
+                               (repeat (string)))
+                       (choice (string)
+                               (function :tag "Function"))
+                       (choice (string)
+                               (function :tag "Function"))
+                       (choice (string)
+                               (function :tag "Function")))))
 
-(defcustom bbdb-continental-zip-regexp
+(defcustom bbdb-continental-postcode-regexp
   "^\\s *[A-Z][A-Z]?\\s *-\\s *[0-9][0-9][0-9]"
-  "Regexp matching continental zip codes.
-Addresses with zip codes matching the regexp will be formatted using
-`bbdb-format-address-continental'.  The regexp should match zip codes
-of the form CH-8052, NL-2300RA, and SE-132 54."
+  "Regexp matching continental postcodes.
+Used by address format identifier `bbdb-address-continental-p'.
+The regexp should match postcodes of the form CH-8052, NL-2300RA,
+and SE-132 54."
   :group 'bbdb-record-display
   :type 'regexp)
 
@@ -552,43 +591,35 @@ prompt the users on how to merge records when duplicates are detected."
   :type '(choice (const :tag "None" nil)
                  (string :tag "Default Country")))
 
-(defcustom bbdb-check-zip t
-  "If non-nil, require legal zip codes when entering an address.
-The format of legal zip codes is determined by the variable
-`bbdb-legal-zip-codes'."
+(defcustom bbdb-check-postcode t
+  "If non-nil, require legal postcodes when entering an address.
+The format of legal postcodes is determined by the variable
+`bbdb-legal-postcodes'."
   :group 'bbdb-record-edit
   :type 'boolean)
 
-(defcustom bbdb-legal-zip-codes
+(defcustom bbdb-legal-postcodes
   '(;; empty string
     "^$"
     ;; Matches 1 to 6 digits.
     "^[ \t\n]*[0-9][0-9]?[0-9]?[0-9]?[0-9]?[0-9]?[ \t\n]*$"
     ;; Matches 5 digits and 3 or 4 digits.
     "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]?\\)[ \t\n]*$"
-    ;; Match zip codes for Canada, UK, etc. (result is ("LL47" "U4B")).
+    ;; Match postcodes for Canada, UK, etc. (result is ("LL47" "U4B")).
     "^[ \t\n]*\\([A-Za-z0-9]+\\)[ \t\n]+\\([A-Za-z0-9]+\\)[ \t\n]*$"
-    ;; Match zip codes for continental Europe.  Examples "CH-8057"
+    ;; Match postcodes for continental Europe.  Examples "CH-8057"
     ;; or "F - 83320" (result is ("CH" "8057") or ("F" "83320")).
     ;; Support for "NL-2300RA" added at request from Carsten Dominik
     ;; <dominik@astro.uva.nl>
     "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+ ?[A-Z]*\\)[ \t\n]*$"
-    ;; Match zip codes from Sweden where the five digits are grouped 3+2
+    ;; Match postcodes from Sweden where the five digits are grouped 3+2
     ;; at the request from Mats Lofdahl <MLofdahl@solar.stanford.edu>.
     ;; (result is ("SE" (133 36)))
     "^[ \t\n]*\\([A-Z]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+\\)[ \t\n]+\\([0-9]+\\)[ \t\n]*$")
-  "List of regexps that match legal zip codes.
-Whether this is used at all depends on the variable `bbdb-check-zip'."
+  "List of regexps that match legal postcodes.
+Whether this is used at all depends on the variable `bbdb-check-postcode'."
   :group 'bbdb-record-edit
   :type '(repeat regexp))
-
-(defcustom bbdb-address-edit-function 'bbdb-address-edit-default
-  "Function to use for address editing.
-The function must accept a BBDB address as parameter and allow the
-user to edit it.  This variable is called from `bbdb-record-edit-address'.
-The default value is the symbol `bbdb-address-edit-default'."
-  :group 'bbdb-record-edit
-  :type 'function)
 
 
 ;;; MUA interface
@@ -1105,11 +1136,6 @@ If nil, no completion is offered."
                                  (const primary)
                                  (const mail)))))
 
-(defcustom bbdb-expand-mail-aliases t
-  "If non-nil, expand mail aliases in `bbdb-complete-mail'."
-  :group 'bbdb-sendmail
-  :type 'boolean)
-
 (defcustom bbdb-complete-mail-allow-cycling nil
   "Whether to allow cycling of mail addresses when calling
 `bbdb-complete-mail' on a completed address in a composition buffer."
@@ -1313,7 +1339,8 @@ and its elements are (RECORD DISPLAY-FORMAT MARKER-POS).")
 Hashes the fields first-last-name, last-first-name, organization, aka,
 and mail.")
 
-(defvar bbdb-notes-names nil)
+(defvar bbdb-notes-label-list nil
+  "List of labels for Notes fields.")
 
 (defvar bbdb-modified nil
   "Non-nil if the database has been modified.")
@@ -1464,14 +1491,6 @@ Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
   (ding t)
   (apply 'message args))
 
-(defun bbdb-set-eq (list1 list2)
-  "Return t if LIST1 and LIST2 treated as sets contain the same elements.
-Comparison is done using `eq'.  LIST1 and LIST2 should not contain duplicates."
-  (when (eq (length list1) (length list2))
-    (while (memq (car list1) list2)
-      (pop list1))
-    (not list1)))
-
 (defsubst bbdb-string-trim (string)
   "Remove leading and trailing whitespace and all properties from STRING.
 If STRING is nil return an empty string."
@@ -1581,6 +1600,66 @@ May be used as value of variable `bbdb-multiple-buffers'."
           ((memq major-mode '(mail-mode vm-mail-mode message-mode))
            "message composition"))))
 
+;; BBDB data structure
+(defmacro bbdb-defstruct (name &rest elts)
+  "Define two functions to operate on vector NAME for each ELT in ELTS.
+The function bbdb-NAME-ELT reads the element ELT in vector NAME.
+The function bbdb-NAME-set-ELT sets ELT.
+Also define a constant bbdb-NAME-length that holds the number of ELTS
+in vector NAME."
+  (declare (indent 1))
+  (let* ((count 0)
+         (sname (symbol-name name))
+         (cname (concat "bbdb-" sname "-"))
+         body)
+    (dolist (elt elts)
+      (let* ((selt (symbol-name elt))
+             (setname  (intern (concat cname "set-" selt))))
+        (push (list 'defsubst (intern (concat cname selt)) '(vector)
+                    (format "For BBDB `%s' vector read element %i `%s'."
+                            sname count selt)
+                    `(aref vector ,count)) body)
+        (push (append (list 'defsubst setname '(vector value)
+                            (format "For BBDB `%s' vector set element %i `%s'.
+Return new value."
+                            sname count selt))
+                      (if (string= setname "bbdb-record-set-mail")
+                          '((unless bbdb-mail-aliases-need-rebuilt
+                              (setq bbdb-mail-aliases-need-rebuilt 'edit))))
+                      `((aset vector ,count value))) body))
+      (setq count (1+ count)))
+    (push (list 'defconst (intern (concat cname "length"))
+                (length elts)
+                (concat "Length of BBDB `" sname "' vector.")) body)
+    (cons 'progn body)))
+
+;; Define RECORD:
+(bbdb-defstruct record
+  firstname lastname degree aka organization phone address mail notes cache)
+
+;; Define PHONE:
+(bbdb-defstruct phone
+  label area exchange suffix extension)
+
+;; Define ADDRESS:
+(bbdb-defstruct address
+  label streets city state postcode country)
+
+;; When reading this code, beware that "cache" refers to two things.
+;; It refers to the cache slot of record structures, which is
+;; used for computed properties of the records; and it also refers
+;; to a message-id --> record association list which speeds up
+;; the RMAIL, VM, and MH interfaces.
+
+;; Define record CACHE:
+;; - fl-name (first and last name of the person referred to by the record),
+;; - lf-name (last and first name of the person referred to by the record),
+;; - sortkey (the concatenation of the elements used for sorting the record),
+;; - marker  (record position in `bbdb-file')
+;; - deleted-p (a flag).
+(bbdb-defstruct cache
+  fl-name lf-name sortkey marker deleted-p)
+
 ;; `bbdb-hashtable' associates with each FIELD a list of matching records.
 (defsubst bbdb-puthash (field record)
   (let ((sym (intern (downcase field) bbdb-hashtable)))
@@ -1610,67 +1689,6 @@ May be used as value of variable `bbdb-multiple-buffers'."
   (dolist (mail (bbdb-record-mail record))
     (bbdb-puthash mail record)))
 
-;; BBDB data structure
-(defmacro bbdb-defstruct (name &rest elts)
-  "Define two functions to operate on vector NAME for each ELT in ELTS.
-The function bbdb-NAME-ELT reads the element ELT in vector NAME.
-The function bbdb-NAME-set-ELT sets ELT.
-Also define a constant bbdb-NAME-length that holds the number of ELTS
-in vector NAME."
-  (declare (indent 1))
-  (let* ((count 0)
-         (sname (symbol-name name))
-         (cname (concat "bbdb-" sname "-"))
-         body)
-    (dolist (elt elts)
-      (let* ((selt (symbol-name elt))
-             (readname (intern (concat cname selt)))
-             (setname  (intern (concat cname "set-" selt))))
-        (push (list 'defun readname '(vector)
-                    (format "For BBDB `%s' vector read element %i `%s'."
-                            sname count selt)
-                    (list 'aref 'vector count)) body)
-        (push (list 'defun setname '(vector value)
-                    (format "For BBDB `%s' vector set element %i `%s'.
-Return new value."
-                            sname count selt)
-                    (if (string= setname "bbdb-record-set-mail")
-                        '(unless bbdb-mail-aliases-need-rebuilt
-                           (setq bbdb-mail-aliases-need-rebuilt 'edit)))
-                    (list 'aset 'vector count 'value)) body))
-      (setq count (1+ count)))
-    (push (list 'defconst (intern (concat cname "length"))
-                (length elts)
-                (concat "Length of BBDB `" sname "' vector.")) body)
-    (cons 'progn body)))
-
-;; Define RECORD:
-(bbdb-defstruct record
-  firstname lastname degree aka organization phone address mail notes cache)
-
-;; Define PHONE:
-(bbdb-defstruct phone
-  label area exchange suffix extension)
-
-;; Define ADDRESS:
-(bbdb-defstruct address
-  label streets city state zip country)
-
-;;; When reading this code, beware that "cache" refers to two things.
-;;; It refers to the cache slot of record structures, which is
-;;; used for computed properties of the records; and it also refers
-;;; to a message-id --> record association list which speeds up
-;;; the RMAIL, VM, and MH interfaces.
-
-;; Define record CACHE:
-;; - fl-name (first and last name of the person referred to by the record),
-;; - lf-name (last and first name of the person referred to by the record),
-;; - sortkey (the concatenation of the elements used for sorting the record),
-;; - marker  (record position in `bbdb-file')
-;; - deleted-p (a flag).
-(bbdb-defstruct cache
-  fl-name lf-name sortkey marker deleted-p)
-
 (defun bbdb-record-name (record)
   "Record cache function: Return the full name of a record.
 If the name is not available in the name cache, the name cache value
@@ -1681,21 +1699,21 @@ is generated and stored."
 
 (defun bbdb-record-set-name (record &optional first last)
   "Record cache function: Set the full name of RECORD.
-Set full name in hash. Return first-last name."
+Set full name in cache and hash.  Return first-last name."
   (if first
       (bbdb-record-set-firstname record first)
     (setq first (bbdb-record-firstname record)))
   (if last
       (bbdb-record-set-lastname record last)
     (setq last (bbdb-record-lastname record)))
-  ;; Set cache and hash.
-  ;; For convenience, the hash contains the full name as
-  ;; first-last and last-fist.
   (let ((fl (bbdb-concat " " first last))
         (lf (bbdb-concat " " last first))
         (cache (bbdb-record-cache record)))
+    ;; Set cache
     (bbdb-cache-set-fl-name cache fl)
     (bbdb-cache-set-lf-name cache lf)
+    ;; Set hash.  For convenience, the hash contains the full name as
+    ;; first-last and last-fist.
     (bbdb-puthash fl record)
     (bbdb-puthash lf record)
     fl))
@@ -1706,10 +1724,12 @@ Remove full name in hash."
   (let* ((cache (bbdb-record-cache record))
          (fl-name (bbdb-cache-fl-name cache))
          (lf-name (bbdb-cache-lf-name cache)))
-    (if (> (length fl-name) 0)
-        (bbdb-remhash fl-name record))
-    (if (> (length lf-name) 0)
-        (bbdb-remhash lf-name record))
+    (unless (or (eq fl-name nil)
+                (string= "" fl-name))
+      (bbdb-remhash fl-name record))
+    (unless (or (eq lf-name nil)
+                (string= "" lf-name))
+      (bbdb-remhash lf-name record))
     (bbdb-cache-set-fl-name cache nil)
     (bbdb-cache-set-lf-name cache nil)))
 
@@ -1747,26 +1767,26 @@ Build and store it if necessary."
   "Record cache function: Set and return the `deleted' flag for a record."
   (bbdb-cache-set-deleted-p (bbdb-record-cache record) val))
 
-(defun bbdb-record-note (record note)
-  (if (memq note '(name degree organization address phone mail aka))
-      (error "BBDB: cannot access the %s field this way" note))
+(defun bbdb-record-note (record label)
+  (if (memq label '(name degree organization address phone mail aka))
+      (error "BBDB: cannot access the %s field this way" label))
   (if (consp (bbdb-record-notes record))
-      (cdr (assq note (bbdb-record-notes record)))))
+      (cdr (assq label (bbdb-record-notes record)))))
 
-(defun bbdb-record-note-n (record note &optional n)
-  "Get the Nth element (or all if N is nil) of NOTE of the RECORD.
-If NOTE is absent or there is no Nth element of NOTE return nil."
-  (let ((content (or (bbdb-record-note record note) "")))
+(defun bbdb-record-note-n (record label &optional n)
+  "Get the Nth element (or all if N is nil) of note LABEL of the RECORD.
+If LABEL is absent or there is no Nth element of LABEL return nil."
+  (let ((content (or (bbdb-record-note record label) "")))
     (if (stringp content)
         (let ((str (if n (nth n (split-string content " ,;\t\n\f\r\v"))
                      content)))
           (unless (string= str "") str))
       (if n (nth n content) content))))
 
-(defun bbdb-record-set-note (record note value)
-  (if (memq note '(name degree organization address phone mail aka))
-      (error "BBDB: cannot annotate the %s field this way" note))
-  (let ((oldval (assq note (bbdb-record-notes record))))
+(defun bbdb-record-set-note (record label value)
+  (if (memq label '(name degree organization address phone mail aka))
+      (error "BBDB: cannot annotate the %s field this way" label))
+  (let ((oldval (assq label (bbdb-record-notes record))))
     (cond ((and oldval value)
            (setcdr oldval value))
           (oldval
@@ -1775,29 +1795,29 @@ If NOTE is absent or there is no Nth element of NOTE return nil."
           (value
            (bbdb-record-set-notes record
                                   (append (bbdb-record-notes record)
-                                          (list (cons note value)))))))
+                                          (list (cons label value)))))))
   value)
 
-(defun bbdb-merge-note (record field value &optional replace)
-  "For RECORD merge content of note FIELD with VALUE.
+(defun bbdb-merge-note (record label value &optional replace)
+  "For RECORD merge content of note LABEL with VALUE.
 If REPLACE is non-nil, content is replaced by VALUE."
-  (let ((oldval (bbdb-string-trim (or (bbdb-record-note record field) "")))
+  (let ((oldval (bbdb-string-trim (or (bbdb-record-note record label) "")))
         (value  (bbdb-string-trim value)))
     (unless (or (string= "" value)
                 (string-match (regexp-quote value) oldval))
       (unless bbdb-silent
         (if replace
-            (if (eq field 'notes)
+            (if (eq label 'notes)
                 (message "Replacing with note \"%s\"" value)
-              (message "Replacing field \"%s\" with \"%s\"" field value))
-          (if (eq field 'notes)
+              (message "Replacing field \"%s\" with \"%s\"" label value))
+          (if (eq label 'notes)
               (message "Adding note \"%s\"" value)
-            (message "Adding \"%s\" to field \"%s\"" value field))))
+            (message "Adding \"%s\" to field \"%s\"" value label))))
       (bbdb-record-set-note
-       record field
+       record label
        (if replace
            value
-         (bbdb-concat field oldval value))))))
+         (bbdb-concat label oldval value))))))
 
 (defun bbdb-phone-string (phone)
   ;; Phone numbers should come in two forms:
@@ -1930,77 +1950,82 @@ copy it to `bbdb-file'."
          (cdr option-value))))
 
 (defun bbdb-address-continental-p (address)
-  "Return non-nil if the address ADDRESS is a continental address.
-This is done by comparing the zip code to `bbdb-continental-zip-regexp'.
+  "Return non-nil if ADDRESS is a continental address.
+This is done by comparing the postcode to `bbdb-continental-postcode-regexp'.
 
 This is a possible identifying function for
-`bbdb-address-format-alist' and `bbdb-print-address-format-alist'."
-  (or (string-match bbdb-continental-zip-regexp (bbdb-address-zip address))
-      (let ((country (bbdb-address-country address)))
-        (and (> (length country) 0)
-             (not (string= country "USA"))))))
+`bbdb-address-format-list' and `bbdb-print-address-format-list'."
+  (string-match bbdb-continental-postcode-regexp
+                (bbdb-address-postcode address)))
 
-(defun bbdb-format-streets (address indent)
-  "Insert street subfields of address ADDRESS in current buffer.
-This may be used by formatting functions in `bbdb-address-format-alist'."
-  (dolist (str (bbdb-address-streets address))
-    (indent-to indent)
-    (insert str "\n")))
-
-(defun bbdb-format-address-continental (address &optional indent)
-  "Insert formated continental address ADDRESS in current buffer.
-The result looks like this:
-       label: street
-              street
-              ...
-              zip city, state
-              country
-
-This function is a possible formatting function for
-`bbdb-address-format-alist'."
-  (let ((indent (or indent 21))
-        (country (bbdb-address-country address)))
-    (bbdb-format-streets address indent)
-    (indent-to indent)
-    (insert (bbdb-concat ", "
-                         (bbdb-concat " " (bbdb-address-zip address)
-                                      (bbdb-address-city address))
-                         (bbdb-address-state address)) "\n")
-    (unless (string= "" country)
-      (indent-to indent) (insert country "\n"))))
-
-(defun bbdb-format-address-default (address &optional indent)
-  "Insert formated address ADDRESS in current buffer.
+;; This function can provide some guidance for writing
+;; your own address formatting function
+(defun bbdb-format-address-default (address)
+  "Return formatted ADDRESS as a string.
 This is the default format; it is used in the US, for example.
 The result looks like this:
        label: street
               street
               ...
-              city, state zip
+              city, state postcode
               country.
 
 This function is a possible formatting function for
-`bbdb-address-format-alist'."
-  (let ((indent (or indent 21))
-        (country (bbdb-address-country address)))
-    (bbdb-format-streets address indent)
-    (indent-to indent)
-    (insert (bbdb-concat ", " (bbdb-address-city address)
+`bbdb-address-format-list'."
+  (let ((country (bbdb-address-country address))
+        (streets (bbdb-address-streets address)))
+    (concat (if streets
+                (concat (mapconcat 'identity streets "\n") "\n") "")
+            (bbdb-concat ", " (bbdb-address-city address)
                          (bbdb-concat " " (bbdb-address-state address)
-                                      (bbdb-address-zip address))) "\n")
-    (unless (string= "" country)
-      (indent-to indent) (insert country "\n"))))
+                                      (bbdb-address-postcode address)))
+            (if (string= "" country) ""
+              (concat "\n" country)))))
 
-(defun bbdb-format-address (address &optional indent)
-  "Call appropriate formatting function for address ADDRESS."
-  (let ((alist bbdb-address-format-alist)
-        elt form)
-    (while (setq elt (pop alist))
-      (if (or (eq t (car elt))
-              (funcall (car elt) address))
-          (setq form (cdr elt) alist nil)))
-    (if form
-        (funcall form address indent))))
+(defun bbdb-format-address (address layout)
+  "Format ADDRESS using LAYOUT.  Return result as a string.
+The formatting rules are defined in `bbdb-address-format-list'."
+  (let ((list bbdb-address-format-list)
+        (country (bbdb-address-country address))
+        elt string)
+    (while (and (not string) (setq elt (pop list)))
+      (let ((identifier (car elt))
+            (format (nth layout elt))
+            ;; recognize case for format identifiers
+            case-fold-search str)
+        (when (or (eq t identifier) ; default
+                  (and (functionp identifier)
+                       (funcall identifier address))
+                  (and country
+                       (listp identifier)
+                       ;; ignore case for countries
+                       (member-ignore-case country identifier)))
+          (cond ((functionp format)
+                 (setq string (funcall format address)))
+                ((stringp format)
+                 (setq string "")
+                 (dolist (form (split-string (substring format 1 -1)
+                                             (substring format 0 1) t))
+                   (cond ((string-match "%s" form)
+                          (mapc (lambda (s) (setq string (concat string (format form s))))
+                                (bbdb-address-streets address)))
+                         ((string-match "%c" form)
+                          (unless (string= "" (setq str (bbdb-address-city address)))
+                            (setq string (concat string (format (replace-regexp-in-string "%c" "%s" form) str)))))
+                         ((string-match "%p" form)
+                          (unless (string= ""  (setq str (bbdb-address-postcode address)))
+                            (setq string (concat string (format (replace-regexp-in-string "%p" "%s" form) str)))))
+                         ((string-match "%S" form)
+                          (unless (string= ""  (setq str (bbdb-address-state address)))
+                            (setq string (concat string (format (replace-regexp-in-string "%S" "%s" form t) str)))))
+                         ((string-match "%C" form)
+                          (unless (string= ""  country)
+                            (setq string (concat string (format (replace-regexp-in-string "%C" "%s" form t) country)))))
+                         (t (error "Malformed address format element %s" form)))))
+                (t (error "Malformed address format %s" format))))))
+    (unless string
+      (error "No match of `bbdb-address-format-list'"))
+    string))
 
 (defsubst bbdb-field-property (start field)
   "Set text property bbdb-field of text between START and point to FIELD."
@@ -2019,12 +2044,12 @@ If FACE is non-nil, also add face FACE."
 For inserted text, set text property bbdb-field to field.
 If TERMINATOR is non-nil use it to terminate the inserted text.
 If INDENT and `bbdb-wrap-column' are integers, insert line breaks in between
-elements of LIST if otherwise inserted text exceeds `bbdb-wrap-column."
-  ;; `truncate-lines' is annyoing for records that are displayed
-  ;; in multi-line format.  Non-nil `word-wrap' would be much nicer.
-  ;; How can we switch between non-nil `truncate-lines' and
-  ;; non-nil `word-wrap' on a per-record basis?  The following code
-  ;; provides an alternative solution using `bbdb-wrap-column'.
+elements of LIST if otherwise inserted text exceeds `bbdb-wrap-column'."
+  ;; `truncate-lines' is fine for one-line layout.  But it is  annyoing
+  ;; for records that are displayed with multi-line layout.
+  ;; Non-nil `word-wrap' would be much nicer.  How can we switch between
+  ;; non-nil `truncate-lines' and non-nil `word-wrap' on a per-record basis?
+  ;; The following code is an alternative solution using `bbdb-wrap-column'.
   (let* ((separator (nth 1 (or (cdr (assq field bbdb-separator-alist))
                                bbdb-default-separator)))
          (indent-flag (and (integerp bbdb-wrap-column)
@@ -2091,10 +2116,15 @@ See `bbdb-layout-alist' for more info."
                                        (list 'phone phone (bbdb-phone-label phone)))))))
             ;; address
             ((eq field 'address)
-             (let ((cities (delq nil (mapcar 'bbdb-address-city
-                                             (bbdb-record-address record)))))
-               (if cities
-                   (bbdb-format-list cities 'address "; "))))
+             (let ((addresses (bbdb-record-address record))
+                   start)
+               (if addresses
+                   (dolist (address addresses)
+                     (setq start (point))
+                     (insert (bbdb-format-address address 3))
+                     (bbdb-field-property start (list 'address address
+                                                      (bbdb-address-label address)))
+                     (insert "; ")))))
             ;; mail
             ((eq field 'mail)
              (let ((mail (bbdb-record-mail record)))
@@ -2113,7 +2143,8 @@ See `bbdb-layout-alist' for more info."
                (if val (bbdb-format-text (concat (replace-regexp-in-string
                                                   "\n" "; " val) "; ") field))))))
     ;; delete the trailing "; "
-    (backward-delete-char 2)
+    (if (looking-back "; ")
+        (backward-delete-char 2))
     (insert "\n")))
 
 (defun bbdb-format-record-multi-line (record layout field-list)
@@ -2151,7 +2182,8 @@ See `bbdb-layout-alist' for more."
                                  (list 'address address 'field-name)
                                  font-lock-variable-name-face)
                (setq start (point))
-               (bbdb-format-address address indent)
+               (insert (bbdb-format-address address 2) "\n")
+               (indent-region start (point) indent)
                (bbdb-field-property start (list 'address address
                                                 (bbdb-address-label address)))))
             ;; mail
@@ -2215,17 +2247,8 @@ Move point to the end of the inserted record."
         (beg (point))
         format-function field-list)
     (when (or (not display-p)
-              ;; bind some variables for display-p
-              (let ((name      (bbdb-record-name record))
-                    (degree    (bbdb-record-degree record))
-                    (aka       (bbdb-record-aka  record))
-                    (organization (bbdb-record-organization record))
-                    (mail      (bbdb-record-mail record))
-                    (phones    (bbdb-record-phone record))
-                    (addresses (bbdb-record-address record))
-                    (notes     (bbdb-record-notes record)))
-                ;; this must evaluate to non-nil if the record is to be shown
-                (eval display-p)))
+              (and display-p
+                   (funcall display-p)))
       (if (functionp omit-list)
           (setq omit-list (funcall omit-list record layout)))
       (if (functionp order-list)
@@ -2250,7 +2273,7 @@ Move point to the end of the inserted record."
           (dolist (order order-list)
             (if (eq t order)
                 (setq field-list (append all-fields field-list))
-              (setq field-list (cons order field-list))))))
+              (push order field-list)))))
       ;; call the actual format function
       (setq format-function
             (intern-soft (format "bbdb-format-record-%s" layout)))
@@ -2629,8 +2652,7 @@ This function also notices if the disk file has been modified."
           (add-hook 'after-save-hook hook nil t))
 
         (setq bbdb-changed-records nil
-              bbdb-modified nil
-              bbdb-notes-names nil)
+              bbdb-modified nil)
 
         ;; Flush all caches
         (dolist (buffer (buffer-list))
@@ -2699,11 +2721,6 @@ Return nil otherwise."
       (if (and (not (eq (following-char) ?\[))
                (search-forward "\n[" nil 'move))
           (forward-char -1))
-      ;; Look backwards for `bbdb-notes-names'.
-      (save-excursion
-        (when (re-search-backward "^;+[ \t]*user-fields:[ \t]*\(" nil t)
-          (goto-char (1- (match-end 0)))
-          (setq bbdb-notes-names (read (point-marker)))))
       ;; look backwards for file-format, and convert if necessary.
       (let ((file-format (save-excursion
                            (if (re-search-backward
@@ -2759,6 +2776,9 @@ Return nil otherwise."
     (forward-line 1))
   (setq bbdb-records records)
 
+  (setq bbdb-phone-label-list (bbdb-label-completion-list 'phone)
+        bbdb-address-label-list (bbdb-label-completion-list 'address)
+        bbdb-notes-label-list nil)
   (let (record label name)
     (while (setq record (pop records))
       (bbdb-cache-set-marker
@@ -2767,16 +2787,17 @@ Return nil otherwise."
       (forward-line 1)
 
       ;; frob the label completion lists
-      (setq bbdb-phone-label-list (bbdb-label-completion-list 'phone))
       (dolist (phone (bbdb-record-phone record))
-        (unless (memq (setq label (bbdb-phone-label phone))
-                      bbdb-phone-label-list)
+        (unless (member (setq label (bbdb-phone-label phone))
+                        bbdb-phone-label-list)
           (push label bbdb-phone-label-list)))
-      (setq bbdb-address-label-list (bbdb-label-completion-list 'address))
       (dolist (address (bbdb-record-address record))
-        (unless (memq (setq label (bbdb-address-label address))
+        (unless (member (setq label (bbdb-address-label address))
                         bbdb-address-label-list)
           (push label bbdb-address-label-list)))
+      (dolist (note (bbdb-record-notes record))
+        (unless (memq (setq label (car note)) bbdb-notes-label-list)
+          (push label bbdb-notes-label-list)))
 
       (setq name (bbdb-record-name record))
       (if (and bbdb-no-duplicates name
@@ -2790,6 +2811,8 @@ Return nil otherwise."
       (bbdb-debug
         (if (and records (not (looking-at "[\[]")))
             (error "BBDB corrupted: junk between records at %s" (point))))))
+  (dolist (label (bbdb-layout-get-option 'multi-line 'omit))
+    (setq bbdb-notes-label-list (delq label bbdb-notes-label-list)))
   ;; `bbdb-end-marker' allows us to have comments at the end of `bbdb-file'
   ;; that are ignored.
   (setq bbdb-end-marker (point-marker)))
@@ -2951,36 +2974,16 @@ about updating the name hash-table.  If NEW is t treat RECORD as new."
       (setq bbdb-modified t)
       record)))
 
-;; In principle, this function allows us even to remove unused elements
-;; from `bbdb-notes-names'.  We would need a clean-up function that
-;; calculates the notes names that are actually used.
-(defun bbdb-set-notes-names (newval)
-  "Set `bbdb-notes-names'.
-If NEWVAL is a symbol, it is added to `bbdb-notes-names' if not yet present.
-If NEWVAL is a list, it replaces the current value of `bbdb-notes-names'.
-Update `bbdb-file' if necessary."
-  (when (or (and (listp newval)
-                 (not (bbdb-set-eq bbdb-notes-names newval)))
-            (and (symbolp newval)
-                 (not (memq newval bbdb-notes-names))
-                 (setq newval (cons newval bbdb-notes-names))))
-    (bbdb-with-db-buffer
-      (setq bbdb-notes-names newval)
-      (widen)
-      (goto-char (point-min))
-      (search-forward "\n[" nil 'move)
-      (if (re-search-backward "^;+[ \t]*user-fields:[ \t]*\\(([^)]+)\\)" nil t)
-          (progn
-            (goto-char (match-beginning 1))
-            (delete-region (point) (match-end 1)))
-        (if (re-search-backward "^[ \t]*;.*\n" nil t)
-            (goto-char (match-end 0)))
-        ;; This goes before the begin-marker of the first record
-        ;; in the database!
-        (insert-before-markers ";;; user-fields: \n")
-        (forward-char -1))
-      (prin1 bbdb-notes-names (current-buffer))))
-  bbdb-notes-names)
+(defun bbdb-set-notes-labels (newval)
+  "Set `bbdb-notes-label-list'.
+If NEWVAL is a symbol, it is added to `bbdb-notes-label-list' if not yet present.
+If NEWVAL is a list, it replaces the current value of `bbdb-notes-label-list'."
+  (cond ((listp newval)
+         (setq bbdb-notes-label-list newval))
+        ((and (symbolp newval)
+              (not (memq newval bbdb-notes-label-list)))
+         (push newval bbdb-notes-label-list)))
+  bbdb-notes-label-list)
 
 
 ;;; BBDB mode
@@ -3147,7 +3150,7 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
                               (and (eq field 'aka) (bbdb-record-aka record))
                               (assq field (bbdb-record-notes record)))))))
          (append '(degree organization aka phone address mail)
-                 '("--") bbdb-notes-names))))
+                 '("--") bbdb-notes-label-list))))
 
 (defun bbdb-mouse-menu (event)
   (interactive "e")
@@ -3258,23 +3261,26 @@ however, after having used other programs to add records to the BBDB."
 
 
 ;;;###autoload
-(defun bbdb-initialize (&rest mailers)
-  "Initialize BBDB for MAILERS.
-List MAILERS may include the following symbols
+(defun bbdb-initialize (&rest muas)
+  "Initialize BBDB for MUAS.
+List MUAS may include the following symbols
 to initialize the respective mail/news readers and composers:
   gnus       Gnus mail/news reader.
   mh-e       MH-E mail reader.
   rmail      Rmail mail reader.
   vm         VM mail reader.
   mail       Mail (M-x mail).
-  message    Message mode."
+  message    Message mode.
+See also `bbdb-mua-auto-update-init'.  The latter is a separate function
+as it allows one to initialize the auto update feature for some MUAs only,
+for example only for outgoing messages."
   (require 'bbdb-autoloads)
-  (dolist (mailer mailers)
-    (let ((init (assq mailer bbdb-init-forms)))
+  (dolist (mua muas)
+    (let ((init (assq mua bbdb-init-forms)))
       (if init
           ;; Should we make sure that each insinuation happens only once?
           (eval (cadr init))
-        (bbdb-warn "Do not know how to insinuate `%s'" mailer))))
+        (bbdb-warn "Do not know how to insinuate `%s'" mua))))
   (run-hooks 'bbdb-initialize-hook))
 
 
