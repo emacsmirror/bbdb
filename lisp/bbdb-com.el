@@ -208,15 +208,13 @@ To reverse the search, bind variable `bbdb-search-invert' to t."
                                     (or (bbdb-record-note record 'notes) "")))
                      ((eq (car ,notes) '*)
                       ;; check all notes fields
-                      (let ((notes bbdb-notes-names) done tmp)
+                      (let ((labels bbdb-notes-label-list) done tmp)
                         (if (bbdb-record-notes record)
-                            (while (and (not done) notes)
-                              (setq tmp (bbdb-record-note
-                                         record (car notes))
-                                    done (and tmp (string-match
-                                                   (cdr ,notes)
-                                                   tmp))
-                                    notes (cdr notes)))
+                            (while (and (not done) labels)
+                              (setq tmp (bbdb-record-note record (car labels))
+                                    done (and tmp (string-match (cdr ,notes)
+                                                                tmp))
+                                    labels (cdr labels)))
                           ;; so that "^$" can be used to find records that
                           ;; have no notes
                           (setq done (string-match (cdr ,notes) "")))
@@ -287,7 +285,7 @@ in either the name(s), organization, mail address, or notes."
   "Display all records in the BBDB matching REGEXP in the notes FIELD."
   (interactive
    (let ((field (completing-read "Notes field to search (RET for all): "
-                                 (mapcar 'list bbdb-notes-names) nil t)))
+                                 (mapcar 'list bbdb-notes-label-list) nil t)))
      (list field (bbdb-search-prompt (if (string= field "")
                                          "one field"
                                        field))
@@ -505,27 +503,34 @@ Return a list containing four numbers or one string."
           (t (list (bbdb-string-trim string))))))
 
 (defun bbdb-message-search (name mail)
-  "Return list of BBDB records matching NAME and MAIL."
+  "Return list of BBDB records matching NAME and/or MAIL.
+First try to find a record matching both NAME and MAIL.
+If this fails try to find a record matching MAIL.
+If this fails try to find a record matching NAME."
   (bbdb-records)
   (if name (setq name (downcase name)))
   (let (records)
+    ;; (1) records matching NAME and MAIL
     (or (and name
              (dolist (record (bbdb-gethash mail) records)
                (if (string= name (downcase (bbdb-record-name record)))
                    (push record records))))
-        (bbdb-gethash mail))))
+        ;; (2) records matching MAIL
+        (bbdb-gethash mail)
+        ;; (3) records matching NAME
+        (bbdb-gethash name))))
 
 ;;; Parsing other things
 
-(defun bbdb-parse-zip (string)
-  "Check whether STRING is a legal zip code.
-Do this only if `bbdb-check-zip' is non-nil."
-  (if (and bbdb-check-zip
+(defun bbdb-parse-postcode (string)
+  "Check whether STRING is a legal postcode.
+Do this only if `bbdb-check-postcode' is non-nil."
+  (if (and bbdb-check-postcode
            (not (memq t (mapcar (lambda (regexp)
                                   ;; if it matches, (not (not index-of-match)) returns t
                                   (not (not (string-match regexp string))))
-                                bbdb-legal-zip-codes))))
-      (error "not a valid zip code.")
+                                bbdb-legal-postcodes))))
+      (error "not a valid postcode.")
     string))
 
 (defun bbdb-divide-name (string)
@@ -589,7 +594,7 @@ but does ensure that there will not be name collisions."
                                          (bbdb-label-completion-list
                                           'address)))))
                (setq address (make-vector bbdb-address-length nil))
-               (bbdb-record-edit-address address label)
+               (bbdb-record-edit-address address label t)
                (push address addresses))
              (nreverse addresses)))
           ;; phones
@@ -644,7 +649,7 @@ ORGANIZATIONS is a list of strings.
 MAIL is a comma-separated list of mail addresses, or a list of strings.
 An error is signalled if that name is already in use.
 ADDRESSES is a list of address objects.  An address is a vector of the form
-\[\"label\" (\"line1\" \"line2\" ... ) \"City\" \"State\" \"Zip\" \"Country\"].
+\[\"label\" (\"line1\" \"line2\" ... ) \"City\" \"State\" \"Postcode\" \"Country\"].
 PHONES is a list of phone-number objects.  A phone-number is a vector of
 the form [\"label\" areacode prefix suffix extension-or-nil]
 or [\"label\" \"phone-number\"]
@@ -755,25 +760,29 @@ value of \"\", the default) means do not alter the address."
    (let* ((_ (bbdb-editable))
           (record (or (bbdb-current-record)
                       (error "Point not on a record")))
-          (list (append bbdb-notes-names
+          (list (append bbdb-notes-label-list
                         '(degree organization aka phone address mail)))
           (field "")
           (completion-ignore-case t)
+          (present (mapcar 'car (bbdb-record-notes record)))
           init init-f)
-     (if (bbdb-record-degree record) (setq list (remq 'degree list)))
-     (if (bbdb-record-organization record) (setq list (remq 'organization list)))
-     (if (bbdb-record-mail record) (setq list (remq 'mail list)))
-     (if (bbdb-record-aka record) (setq list (remq 'aka list)))
-     (dolist (field (bbdb-record-notes record))
-       (setq list (remq (car field) list)))
+     (if (bbdb-record-degree record) (push 'degree present))
+     (if (bbdb-record-organization record) (push 'organization present))
+     (if (bbdb-record-mail record) (push 'mail present))
+     (if (bbdb-record-aka record) (push 'aka present))
+     (dolist (field present)
+       (setq list (remq field list)))
      (setq list (mapcar 'symbol-name list))
      (while (string= field "")
        (setq field (downcase (completing-read "Insert Field: " list))))
+     (if (member (intern field) present)
+         (error "Field \"%s\" already exists" field))
      (setq init-f (intern-soft (concat "bbdb-init-" field))
            init   (if (and init-f (functionp init-f))
                       (funcall init-f record) "")
            field (intern field))
-     (list record field (bbdb-prompt-for-new-field field init))))
+     (list record field (bbdb-prompt-for-new-field field init
+                                                   current-prefix-arg))))
 
   (cond (;; degree
          (eq field 'degree)
@@ -838,7 +847,7 @@ value of \"\", the default) means do not alter the address."
            (bbdb-puthash aka record))
          (bbdb-record-set-aka record contents))
         ;; notes
-        ((memq field bbdb-notes-names)
+        ((memq field bbdb-notes-label-list)
          (if (and (consp (bbdb-record-notes record))
                   (assq field (bbdb-record-notes record)))
              (error "Note field \"%s\" already exists" field))
@@ -848,7 +857,8 @@ value of \"\", the default) means do not alter the address."
   (let (bbdb-layout)
     (bbdb-redisplay-record record)))
 
-(defun bbdb-prompt-for-new-field (field &optional init)
+;; Used only for interactive calls of `bbdb-insert-field'.
+(defun bbdb-prompt-for-new-field (field &optional init flag)
   (cond (;; degree
          (eq field 'degree) (bbdb-read-string "Degree: " init))
         ;; organization
@@ -882,21 +892,21 @@ value of \"\", the default) means do not alter the address."
         ;; Address
         ((eq field 'address)
          (let ((address (make-vector bbdb-address-length nil)))
-           (bbdb-record-edit-address address)
+           (bbdb-record-edit-address address nil flag)
            address))
         ;; Notes
-        ((memq field bbdb-notes-names)
+        ((memq field bbdb-notes-label-list)
          (bbdb-read-string (format "%s: " field) init))
         ;; New note fields
         (t
          (if (y-or-n-p
               (format "\"%s\" is an unknown field name.  Define it? " field))
-             (bbdb-set-notes-names field)
+             (bbdb-set-notes-labels field)
            (error "Aborted"))
          (bbdb-read-string (format "%s: " field) init))))
 
 ;;;###autoload
-(defun bbdb-edit-field (record field)
+(defun bbdb-edit-field (record field &optional flag)
   "Edit the contents of the BBDB field on the current line.
 \(This is only meaningful in the \"*BBDB*\" buffer.)
 If point is in the middle of a multi-line field (e.g., address),
@@ -922,8 +932,9 @@ then the entire field is edited, not just the current line."
           ((eq fname 'organization)  (bbdb-record-edit-organization record)) ; possibly
           ((eq fname 'mail)     (bbdb-record-edit-mail record)) ; nil
           ((eq fname 'aka)      (bbdb-record-edit-aka record)) ; nil
-          ((eq fname 'phone)    (bbdb-record-edit-phone value)) ; nil
-          ((eq fname 'address)  (bbdb-record-edit-address value)) ; nil
+          ((eq fname 'phone)    (bbdb-record-edit-phone
+                                 (bbdb-record-phone record) value)) ; nil
+          ((eq fname 'address)  (bbdb-record-edit-address value nil flag)) ; nil
           ((eq fname 'note)     (bbdb-record-edit-notes record type)) ; nil
           (t (error "Unknown field type `%s'" fname)))
 
@@ -989,118 +1000,115 @@ then the entire field is edited, not just the current line."
     (dolist (organization org)
       (bbdb-puthash organization record))))
 
-(defun bbdb-record-edit-address (address &optional label)
-  "Edit an address ADDRESS.
-If optional parameter LABEL is nil, edit the label sub-field
-of the address as well.  The address itself is edited using the editing
-function in `bbdb-address-edit-function'."
+(defun bbdb-record-edit-address (address &optional label default)
+  "Edit ADDRESS.
+If LABEL is nil, edit the label sub-field of the address as well.
+If the country field of ADDRESS is set, use the matching rule from
+`bbdb-address-format-list'.  Otherwise use the default rule according
+to `bbdb-address-format-list'."
   (unless label
     (setq label (bbdb-read-string "Label: "
                                   (bbdb-address-label address)
                                   (bbdb-label-completion-list
                                    'address))))
-  (let ((a-list (if current-prefix-arg
-                    (bbdb-address-edit-default address)
-                  (funcall bbdb-address-edit-function address))))
+  (let ((country (or (bbdb-address-country address) ""))
+        new-addr edit)
+    (unless (or default (string= "" country))
+      (let ((list bbdb-address-format-list)
+            identifier elt)
+        (while (and (not edit) (setq elt (pop list)))
+          (setq identifier (car elt))
+          (if (or (and (listp identifier)
+                       (member-ignore-case country identifier))
+                  (and (functionp identifier)
+                       (funcall identifier address)))
+              (setq edit (nth 1 elt))))))
+    (unless edit
+      (setq edit (nth 1 (assq t bbdb-address-format-list))))
+    (unless edit (error "No address editing function defined"))
+    (if (functionp edit)
+        (setq new-addr (funcall edit address))
+      (setq new-addr (make-vector 5 ""))
+      (dolist (elt (append edit nil))
+        (cond ((eq elt ?s)
+               (aset new-addr 0 (bbdb-edit-address-street
+                                 (bbdb-address-streets address))))
+              ((eq elt ?c)
+               (aset new-addr 1 (bbdb-read-string
+                              "City: " (bbdb-address-city address))))
+              ((eq elt ?S)
+               (aset new-addr 2 (bbdb-read-string
+                              "State: " (bbdb-address-state address))))
+              ((eq elt ?p)
+               (aset new-addr 3
+                     (bbdb-error-retry
+                      (bbdb-parse-postcode
+                       (bbdb-read-string
+                        "Postcode: " (bbdb-address-postcode address))))))
+              ((eq elt ?C)
+               (aset new-addr 4
+                     (bbdb-read-string
+                      "Country: " (or (bbdb-address-country address)
+                                      bbdb-default-country)))))))
     (bbdb-address-set-label address label)
-    (bbdb-address-set-streets address (nth 0 a-list))
-    (bbdb-address-set-city address (nth 1 a-list))
-    (bbdb-address-set-state address (nth 2 a-list))
-    (bbdb-address-set-zip address (nth 3 a-list))
-    (if (string= "" (bbdb-concat "" (nth 0 a-list) (nth 1 a-list)
-                                 (nth 2 a-list) (nth 3 a-list) (nth 4 a-list)))
-        ;; User did not enter anything. this causes a display bug. This
-        ;; is a temporary fix. Ideally, we'd simply discard the entire
-        ;; address entry, but that is going to require bigger hacking.
+    (bbdb-address-set-streets address (elt new-addr 0))
+    (bbdb-address-set-city address (elt new-addr 1))
+    (bbdb-address-set-state address (elt new-addr 2))
+    (bbdb-address-set-postcode address (elt new-addr 3))
+    (if (string= "" (bbdb-concat "" (elt new-addr 0) (elt new-addr 1)
+                                 (elt new-addr 2) (elt new-addr 3)
+                                 (elt new-addr 4)))
+        ;; User did not enter anything. this causes a display bug.
+        ;; The following is a temporary fix.  Ideally, we would simply discard
+        ;; the entire address, but that requires bigger hacking.
         (bbdb-address-set-country address "Emacs")
-      (bbdb-address-set-country address (nth 4 a-list)))))
+      (bbdb-address-set-country address (elt new-addr 4)))))
 
-(defun bbdb-address-edit-street (address)
+(defun bbdb-edit-address-street (streets)
+  "Edit list STREETS."
   (let ((n 0) street list)
     (while (not (string= "" (setq street
                                   (bbdb-read-string
                                    (format "Street, line %d: " (+ 1 n))
-                                   (nth n (bbdb-address-streets address))))))
+                                   (nth n streets)))))
       (push street list)
       (setq n (1+ n)))
     (reverse list)))
 
-(defun bbdb-address-edit-default (address)
+;; This function can provide some guidance for writing
+;; your own address editing function
+(defun bbdb-edit-address-default (address)
   "Function to use for address editing.
-The sub-fields are queried using the default order and using the
-default names.  Set `bbdb-address-edit-function' to an alternate
-address editing function if you do not like this function.  It is
-mostly used for US style addresses.
-
 The sub-fields and the prompts used are:
 Street, line n:  (nth n street)
 City:            city
 State:           state
-Zip Code:        zip
+Postcode:        postcode
 Country:         country"
-  (list (bbdb-address-edit-street address)
+  (list (bbdb-edit-address-street (bbdb-address-streets address))
         (bbdb-read-string "City: " (bbdb-address-city address))
         (bbdb-read-string "State: " (bbdb-address-state address))
         (bbdb-error-retry
-         (bbdb-parse-zip
-          (bbdb-read-string "Zip Code: " (bbdb-address-zip address))))
+         (bbdb-parse-postcode
+          (bbdb-read-string "Postcode: " (bbdb-address-postcode address))))
         (bbdb-read-string "Country: " (or (bbdb-address-country address)
                                           bbdb-default-country))))
 
-(defun bbdb-address-edit-continental (address)
-  "Function to use for address editing.
-The sub-fields are queried using the default order and using the
-default names.  Set `bbdb-address-edit-function' to an alternate
-address editing function if you do not like this function.  It is
-mostly used for European style addresses.
-
-The sub-fields and the prompts used are:
-Street, line n:  (nth n street)
-Zip Code:        zip
-City:            city
-Country:         country"
-  (let ((streets (bbdb-address-edit-street address))
-        (zip (bbdb-error-retry
-              (bbdb-parse-zip
-               (bbdb-read-string "Zip Code: " (bbdb-address-zip address)))))
-        (city (bbdb-read-string "City: " (bbdb-address-city address)))
-        (state "")
-        (country (bbdb-read-string "Country: " (or (bbdb-address-country address)
-                                                   bbdb-default-country))))
-    (list streets city state zip country)))
-
-(defun bbdb-record-edit-phone (phone &optional label)
-  "Edit a PHONE number."
-  ;; RW - FIXME: instead of PHONE, this function should take
-  ;; the arg RECORD and (re)define the length of the PHONE vector
-  ;; according to what the user wants so that we can remove the
-  ;; error message for incompatible vector lengths.
-  (let* ((bbdb-phone-style
-          (if (= (length phone) bbdb-phone-length) 'nanp nil))
-         (newl (or label
-                   (bbdb-read-string "Label: "
-                                     (bbdb-phone-label phone)
-                                     (bbdb-label-completion-list
-                                      'phone))))
-         (newp (bbdb-error-retry
-                (bbdb-parse-phone
-                 (read-string (format "Phone (%s): "
-                                      (if (eq bbdb-phone-style 'nanp)
-                                          ;; Are there more generic shortcuts?
-                                          "US" "EU"))
-                              (bbdb-phone-string phone))))))
-    (if (or (and (eq bbdb-phone-style 'nanp)
-                 (< (length newp) 3))
-            (and (not (eq bbdb-phone-style 'nanp))
-                 (/= (length newp) 1)))
-        (error "Cannot convert phone number types. %s %s"
-               bbdb-phone-style newp))
-    (bbdb-phone-set-label phone newl)
-    (bbdb-phone-set-area phone (nth 0 newp)) ; euronumbers too.
-    (unless (= (length phone) 2)
-      (bbdb-phone-set-exchange phone (nth 1 newp))
-      (bbdb-phone-set-suffix phone (nth 2 newp))
-      (bbdb-phone-set-extension phone (nth 3 newp)))))
+(defun bbdb-record-edit-phone (phones phone)
+  "For list PHONES edit PHONE number."
+  ;; Phone numbers are special.  They are vectors with either
+  ;; two or four elements.  We do not know whether after editing PHONE
+  ;; we still have a number requiring the same format as PHONE.
+  ;; So we take all numbers PHONES of the record so that we can
+  ;; replace the element PHONE in PHONES.
+  (setcar (memq phone phones)
+          (apply 'vector
+                 (bbdb-read-string "Label: "
+                                   (bbdb-phone-label phone)
+                                   (bbdb-label-completion-list 'phone))
+                 (bbdb-error-retry
+                  (bbdb-parse-phone
+                   (read-string "Phone: " (bbdb-phone-string phone)))))))
 
 (defun bbdb-record-edit-mail (record)
   (let ((newmails (bbdb-split 'mail
@@ -1142,7 +1150,7 @@ Country:         country"
   (let* ((note-name (if note (symbol-name note)
                       (completing-read (format "Edit notes of %s: "
                                                (bbdb-record-name record))
-                                       bbdb-notes-names)))
+                                       bbdb-notes-label-list)))
          (note-sym (or note (if (equal "" note-name) 'notes (intern note-name))))
          (string (bbdb-read-string (format "%s: " note-name)
                                    (bbdb-record-note record note-sym))))
@@ -1643,7 +1651,7 @@ unless both the first name and last name are constituents of the address,
 as in John.Doe@SomeHost, or the address is already in the form
 \"Name <foo>\" or \"foo (Name)\", in which case the address is used as-is.
 If `bbdb-mail-allow-redundancy' is non-nil, the name is always included.
-`bbdb-mail-allow-redundancy' is 'mail-only the name is never included!
+`bbdb-mail-allow-redundancy' is 'mail-only the name is never included.
 MAIL may be a mail addresses to be used for RECORD.
 If MAIL is an integer, use the MAILth mail address of RECORD.
 If Mail is nil use the first mail address of RECORD."
@@ -1885,19 +1893,12 @@ completion with."
   (read-from-minibuffer prompt default
                         bbdb-completing-read-mails-map))
 
-;; Restore the saved window configuration
-(defun bbdb-complete-mail-cleanup ()
-  (when bbdb-complete-mail-saved-window-config
-    (when (get-buffer-window "*Completions*")
-      (set-window-configuration bbdb-complete-mail-saved-window-config)
-      (bury-buffer "*Completions*"))
-    (setq bbdb-complete-mail-saved-window-config nil)))
-
 ;;;###autoload
-(defun bbdb-complete-mail (&optional start-pos)
+(defun bbdb-complete-mail (&optional start-pos cycle-completion-buffer)
   "In a mail buffer, complete the user name or mail before point.
 Completion happens up to the preceeding newline, colon, or comma,
 or the value of START-POS).
+Return non-nil if there is a valid completion, else return nil.
 
 Completion behaviour can be controlled with `bbdb-completion-list'.
 If what has been typed is unique, insert an entry of the form
@@ -1905,12 +1906,16 @@ If what has been typed is unique, insert an entry of the form
 If it is a valid completion but not unique, a list of completions is displayed.
 If the completion is done and `bbdb-complete-mail-allow-cycling' is
 t then cycle through the mails for the matching record.
-When called with a prefix arg then display a list of all mails
+With prefix CYCLE-COMPLETION-BUFFER non-nil, display a list of all mails
 available for cycling.
 
 Set variable `bbdb-complete-mail' non-nil for enabling this feature
 as part of the MUA insinuation."
-  (interactive)
+  ;; Should this code issue error messages if, for example,
+  ;; it cannot complete because a record has no mail address?
+  ;; Or should it simply return nil so that possibly a different
+  ;; completion approach can be used?
+  (interactive (list nil current-prefix-arg))
 
   (let* ((end (point))
          (beg (or start-pos
@@ -1921,9 +1926,9 @@ as part of the MUA insinuation."
          (orig (buffer-substring beg end))
          (typed (downcase orig))
          (pattern (bbdb-string-trim typed))
+         (completion-ignore-case t)
          (completion (try-completion pattern bbdb-hashtable))
-         (exact-match (eq completion t))
-         only-one-p all-completions tmp)
+         all-completions dwim-completions one-record done)
 
     ;; We cannot use the return value of the function `all-completions'
     ;; to set the variable `all-completions' because this function
@@ -1932,152 +1937,74 @@ as part of the MUA insinuation."
                      (lambda (sym)
                        (if (bbdb-completion-predicate sym)
                            (push sym all-completions))))
+    ;; Resolve the records matching pattern:
     ;; Multiple completions may match the same record
     (let ((records (delete-dups
                     (apply 'append (mapcar 'symbol-value all-completions)))))
           ;; Is there only one matching record?
-      (setq only-one-p (and (not (cdr records))
+      (setq one-record (and (not (cdr records))
                             (car records))))
 
+    ;; Clean up *Completions* buffer, if it exists
+    (when bbdb-complete-mail-saved-window-config
+      (when (get-buffer-window "*Completions*")
+        (set-window-configuration bbdb-complete-mail-saved-window-config)
+        (bury-buffer "*Completions*"))
+      (setq bbdb-complete-mail-saved-window-config nil))
+
     (cond
-     ;; No matches found OR we are trying completion on an
-     ;; already completed record. In the latter case, we might have to
-     ;; cycle through the mails for that record.
-     ((or (and bbdb-complete-mail-allow-cycling
-               exact-match ;; which is a mail of the record
-               (setq tmp (car (symbol-value (intern-soft pattern bbdb-hashtable))))
-               (member orig (bbdb-record-mail tmp)))
-          (null completion))
-      ;; Clean up the completion buffer, if it exists
-      (bbdb-complete-mail-cleanup)
-      ;; Check for cycling
-      (or (catch 'bbdb-cycling-exit
-            ;; jump straight out if we're not cycling
-            (or bbdb-complete-mail-allow-cycling
-                (throw 'bbdb-cycling-exit nil))
-
-            ;; find the record we're working on.
-            (let* ((address (mail-extract-address-components orig))
-                   (record
-                    (or tmp
-                        (and (listp address)
-                             (car (bbdb-message-search (nth 0 address)
-                                                       (nth 1 address)))))))
-
-              (unless record
-                (throw 'bbdb-cycling-exit nil))
-
-              (if current-prefix-arg
-                  ;; use completion buffer
-                  (let ((standard-output (get-buffer-create "*Completions*")))
-                    ;; a previously existing buffer has to be cleaned first
-                    (with-current-buffer standard-output
-                      (let (buffer-read-only)
-                        (erase-buffer)))
-                    (display-completion-list ; use `standard-output'
-                     (mapcar (lambda (n) (bbdb-dwim-mail record n))
-                             (bbdb-record-mail record)))
-                    (delete-region beg end)
-                    (switch-to-buffer standard-output))
-                ;; use next mail
-                (let* ((mails (bbdb-record-mail record))
-                       (mail (or (nth 1 (or (member (nth 1 address) mails)
-                                            (member orig mails)))
-                                 (nth 0 mails))))
-                  (if (= (length mails) 1)
-                      ;; no alternatives. Do not signal an error.
-                      (throw 'bbdb-cycling-exit t)
-                    ;; replace with new mail address
-                    (delete-region beg end)
-                    (insert (bbdb-dwim-mail record mail))
-                    (run-hooks 'bbdb-complete-mail-hook)
-                    (throw 'bbdb-cycling-exit t))))))
-
-          ;; FALL THROUGH: Check mail aliases
-          (and bbdb-expand-mail-aliases
-               (let ((local-abbrev-table mail-abbrevs))
-                 (or (expand-abbrev)
-                     (mail-abbrev-complete-alias))))
-
-          ;; Everything failed
-          (progn
-            (message "No completion for \"%s\"." pattern)
-            (ding))))
-
-     ;; Match for a single record. If cycling is enabled then we do not
-     ;; care too much about the exact-match part.
-     ((and only-one-p (or exact-match bbdb-complete-mail-allow-cycling))
-      (let ((completion-ignore-case t)
-            (record only-one-p)
-            mail lst elt matched)
-        (unless (bbdb-record-mail record)
+     ;; Match for a single record
+     (one-record
+      (let (mail lst elt matched)
+        (unless (bbdb-record-mail one-record)
           (error "Matching record has no mail field"))
-        ;; Try to match name
-        (if (try-completion pattern
-                            (list (or (bbdb-record-name record) "")))
-            (setq matched t))
-        ;; Try to match AKA
+        ;; Do we have a preferential order for these tests?
+        ;; (1) Try to match name, AKA, or organization
+        (setq matched
+              (try-completion pattern
+                              (append
+                               (list (or (bbdb-record-name one-record) "")
+                                     (or (bbdb-cache-lf-name
+                                          (bbdb-record-cache one-record)) ""))
+                               (bbdb-record-aka one-record)
+                               (bbdb-record-organization one-record))))
+        ;; (2) Try to match mail addresses
         (unless matched
-          (setq lst (bbdb-record-aka record))
-          (while (setq elt (pop lst))
-            (if (try-completion pattern (list elt))
-                (setq matched t
-                      lst nil))))
-        ;; Try to match mail address
-        (unless matched
-          (setq lst (bbdb-record-mail record))
+          (setq lst (bbdb-record-mail one-record))
           (while (setq elt (pop lst))
             (if (try-completion pattern (list elt))
                 (setq mail elt
                       lst  nil
                       matched t))))
-        (unless matched
-          (setq lst (bbdb-record-organization record))
-          (while (setq elt (pop lst))
-            (if (try-completion pattern (list elt))
-                (setq lst     nil
-                      matched t))))
+        ;; This error message indicates a bug!
         (unless matched
           (error "No match for %s" pattern))
 
-        ;; now replace the text with the expansion
-        (delete-region beg end)
-        (insert (bbdb-dwim-mail record mail))
-
-        ;; if we're past fill-column, wrap at the previous comma.
-        (if (and (not (auto-fill-function))
-                 (>= (current-column) fill-column))
-            (save-excursion
-              (when (search-backward "," (line-beginning-position) t)
-                (forward-char 1)
-                (insert "\n   "))))
-
-        ;; Update the *BBDB* buffer if desired.
-        (if bbdb-completion-display-record
-            (let ((bbdb-silent-internal t))
-              (bbdb-pop-up-buffer)
-              (bbdb-display-records-internal (list record) nil t)))
-        (bbdb-complete-mail-cleanup)
-
-        ;; call the exact-completion hook
-        (run-hooks 'bbdb-complete-mail-hook)))
+        (let ((address (bbdb-dwim-mail one-record mail)))
+          (if (string= address (buffer-substring-no-properties beg end))
+              (unless (and bbdb-complete-mail-allow-cycling
+                           (< 1 (length (bbdb-record-mail one-record))))
+                (setq done 'unchanged))
+            ;; now replace the text with the expansion
+            (delete-region beg end)
+            (insert address)
+            (setq done 'unique)))))
 
      ;; Partial completion
-     ;; note, we cannot use the trimmed version of the pattern here or
-     ;; we'll recurse infinitely on e.g. common first names
+     ;; Note: we cannot use the trimmed version of the pattern here
+     ;; or we will recurse infinitely on e.g. common first names
      ((and (stringp completion)
            (not (string= typed completion)))
       (delete-region beg end)
       (insert completion)
-      ;; Check if the partial match really allows only one completion
-      (bbdb-complete-mail beg))
+      (setq done 'partial))
 
      ;; Partial match not allowing further partial completion
-     (t
+     (completion
       (let ((completion-list (if (eq t bbdb-completion-list)
-                                  '(fl-name lf-name mail aka organization)
-                                bbdb-completion-list))
-            dwim-completions sname records)
+                                 '(fl-name lf-name mail aka organization)
+                               bbdb-completion-list))
+            sname records)
         ;; Now collect all the dwim-addresses for each completion, but only
         ;; once for each record!  Add it if the mail is part of the completions
         (dolist (sym all-completions)
@@ -2086,10 +2013,9 @@ as part of the MUA insinuation."
             (unless (memq record records)
               (push record records)
               (let ((mails (bbdb-record-mail record))
-                    (completion-list completion-list)
-                    accept field)
+                    accept)
                 (when mails
-                  (while (setq field (pop completion-list))
+                  (dolist (field completion-list)
                     (cond ((eq field 'fl-name)
                            (if (bbdb-string= sname (bbdb-record-name record))
                                (push (car mails) accept)))
@@ -2097,10 +2023,10 @@ as part of the MUA insinuation."
                            (if (bbdb-string= sname (bbdb-cache-lf-name (bbdb-record-cache record)))
                                (push (car mails) accept)))
                           ((eq field 'aka)
-                           (if (member sname (mapcar 'downcase (bbdb-record-aka record)))
+                           (if (member-ignore-case sname (bbdb-record-aka record))
                                (push (car mails) accept)))
                           ((eq field 'organization)
-                           (if (member sname (mapcar 'downcase (bbdb-record-organization record)))
+                           (if (member-ignore-case sname (bbdb-record-organization record))
                                (push (car mails) accept)))
                           ((eq field 'primary)
                            (if (bbdb-string= sname (car mails))
@@ -2109,27 +2035,85 @@ as part of the MUA insinuation."
                            (dolist (mail mails)
                              (if (bbdb-string= sname mail)
                                  (push mail accept))))))
-                  (dolist (mail (delete-dups accept))
-                    (push (bbdb-dwim-mail record mail) dwim-completions)))))))
+                  (when accept
+                    ;; If in the end dwim-completions contains only one element,
+                    ;; we got here only once.
+                    (setq one-record record)
+                    (dolist (mail (delete-dups accept))
+                      (push (bbdb-dwim-mail record mail) dwim-completions))))))))
 
         (cond ((not dwim-completions)
                (error "No mail address for \"%s\"" orig))
+              ;; This can happen if multiple completions match the same record
               ((eq 1 (length dwim-completions))
                (delete-region beg end)
                (insert (car dwim-completions))
-               (message ""))
-              (t ;; otherwise, pop up a completions window
-               (unless (eq (selected-window) (minibuffer-window))
-                 (message "Making completion list..."))
-               (unless (get-buffer-window "*Completions*")
-                 ;; used by `bbdb-complete-mail-cleanup'
-                 (setq bbdb-complete-mail-saved-window-config
-                       (current-window-configuration)))
-               (let ((completion-base-position (list beg end)))
-                 (with-output-to-temp-buffer "*Completions*"
-                   (display-completion-list dwim-completions)))
-               (unless (eq (selected-window) (minibuffer-window))
-                 (message "Making completion list...done")))))))))
+               (setq done 'unique))
+              (t (setq done 'choose))))))
+
+    ;; Consider cycling
+    (when (and (not done) bbdb-complete-mail-allow-cycling)
+      ;; find the record we are working on.
+      (let* ((address (mail-extract-address-components orig))
+             (record (and (listp address)
+                          (car (or (bbdb-message-search (nth 0 address)
+                                                        (nth 1 address))
+                                   ;; If the mail address of a record contains
+                                   ;; a name explicitly, we need to search for orig.
+                                   (bbdb-message-search orig (nth 1 address))))))
+             (mails (and record (bbdb-record-mail record))))
+        (if mails
+            (cond ((= 1 (length mails))
+                   (setq done 'unchanged))
+                  (cycle-completion-buffer ; use completion buffer
+                   (setq dwim-completions
+                         (mapcar (lambda (n) (bbdb-dwim-mail record n)) mails)
+                         done 'choose))
+                  (t ; use next mail
+                   (let ((mail (or (nth 1 (or (member (nth 1 address) mails)
+                                              (member orig mails)))
+                                   (nth 0 mails))))
+                     ;; replace with new mail address
+                     (delete-region beg end)
+                     (insert (bbdb-dwim-mail record mail))
+                     (setq done 'cycle)))))))
+
+    ;; Clean up
+    (cond ((eq done 'unique)
+           ;; If we are past `fill-column', wrap at the previous comma.
+           (if (and (not (auto-fill-function))
+                    (>= (current-column) fill-column))
+               (save-excursion
+                 (when (search-backward "," (line-beginning-position) t)
+                   (forward-char 1)
+                   (insert "\n   "))))
+
+           ;; Update the *BBDB* buffer if desired.
+           (if bbdb-completion-display-record
+               (let ((bbdb-silent-internal t))
+                 (bbdb-pop-up-buffer)
+                 (bbdb-display-records-internal (list one-record) nil t)))
+
+           ;; call the unique-completion hook
+           (run-hooks 'bbdb-complete-mail-hook))
+
+          ;; Pop up a completions window.
+          ;; `completion-in-region' does not work here as `dwim-completions'
+          ;; is not a collection for completion in the usual sense, but it
+          ;; is really a list of replacements.
+          ((eq done 'choose)
+           (unless (eq (selected-window) (minibuffer-window))
+             (message "Making completion list..."))
+           (unless (get-buffer-window "*Completions*")
+             (setq bbdb-complete-mail-saved-window-config
+                   (current-window-configuration)))
+           (let ((completion-base-position (list beg end)))
+             (with-output-to-temp-buffer "*Completions*"
+               (display-completion-list dwim-completions)))
+           (unless (eq (selected-window) (minibuffer-window))
+             (message "Making completion list...done"))))
+    done))
+
 ;;;###autoload
 (define-obsolete-function-alias 'bbdb-complete-name 'bbdb-complete-mail)
 
@@ -2452,7 +2436,7 @@ Default is the first URL."
   "Grab URL and store it in RECORD."
   (interactive (list (bbdb-completing-read-record "Add URL for: ")
                      (browse-url-url-at-point)))
-  (bbdb-set-notes-names 'url)
+  (bbdb-set-notes-labels 'url)
   (bbdb-merge-note record 'url url)
   (bbdb-change-record record)
   (bbdb-display-records (list record)))
