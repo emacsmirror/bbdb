@@ -1,3 +1,66 @@
+2011-02-27  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-address-format-list): New variable for
+	customization of address formatting and editing. (renamed
+	from bbdb-address-format-alist).
+	(bbdb-format-address): Use it.
+	(bbdb-format-record-one-line, bbdb-format-record-multi-line): Use
+	bbdb-format-address.
+	(bbdb-address-edit-function, bbdb-format-streets)
+	(bbdb-format-address-continental): Removed. Obsolete because of
+	bbdb-address-format-list.
+	(bbdb-format-record): Use funcall instead of eval.
+	(bbdb-continental-postcode-regexp): Renamed from
+	bbdb-continental-zip-regexp.
+	(bbdb-check-postcode): Renamed from bbdb-check-zip.
+	(bbdb-legal-postcodes): Renamed from bbdb-legal-zip-codes.
+	(bbdb-expand-mail-aliases): Removed.
+	(bbdb-notes-label-list): Renamed from bbdb-notes-names.
+	(bbdb-parse-frobnicate): Calculate value of bbdb-notes-label-list
+	instead of reading it.  Use memq instead of member.
+	(bbdb-set-notes-labels): Renamed from bbdb-set-notes-names. Do not
+	write value of bbdb-notes-label-list.
+	(bbdb-set-eq): Removed (obsolete).
+	(bbdb-defstruct): Use defsubst.
+	(bbdb-record-unset-name): Clarify code.
+	(bbdb-initialize): Doc fix.
+
+	* lisp/bbdb-com.el (bbdb-message-search): Use name only if mail
+	address does not match.
+	(bbdb-parse-postcode): Renamed from bbdb-parse-zip.
+	(bbdb-insert-field): In interactive calls ignore fields that are
+	already present.
+	(bbdb-record-edit-phone): Convert format of phone number if old
+	and new format are different.
+	(bbdb-edit-field): Use new bbdb-record-edit-phone.
+	(bbdb-record-edit-address): Use bbdb-address-format-list.
+	(bbdb-edit-address-street): Renamed from
+	bbdb-address-edit-street. Take arg street instead of address.
+	(bbdb-edit-address-default): Renamed from
+	bbdb-address-edit-default.
+	(bbdb-address-edit-continental): Removed (obsolete).
+	(bbdb-complete-mail-cleanup): Removed. Code merged with
+	bbdb-complete-mail.
+	(bbdb-complete-mail): Return non-nil if valid completion
+	exists. Simplify code.
+
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Use bbdb-string=.
+	(bbdb-mua-wrapper): Also handle mail and message mode.
+	(bbdb-mua-auto-update): Renamed from bbdb-mua-pop-up-bbdb-buffer.
+	Perform auto update even if bbdb-message-pop-up is nil.
+	(bbdb-mua-auto-update-init): Renamed from
+	bbdb-mua-pop-up-init. Doc fix. Use memq instead of member.
+	(bbdb-force-record-create): Removed (obsolete).
+
+	* lisp/bbdb-migrate.el (bbdb-migrate-postcodes-to-strings):
+	Renamed from bbdb-migrate-zip-codes-to-strings.
+
+	* lisp/bbdb-print.el (bbdb-print-tex-quote-alist): Fix regexp.
+	(bbdb-print-address-format-list): Renamed from
+	bbdb-print-address-format-alist. Use bbdb-address-format-list as
+	default.
+	(bbdb-print): Use bbdb-format-address.
+	(bbdb-print-address-continental): Removed.
+
 2011-01-17  Roland Winkler  <winkler@gnu.org>
 	* lisp/Makefile: Do not attempt to add empty line to
 	bbdb-autloads.el.
