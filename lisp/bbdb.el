@@ -1351,6 +1351,13 @@ The cache is a buffer-local alist for each MUA or MUA folder.
 Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
 (make-variable-buffer-local 'bbdb-message-cache)
 
+(defvar bbdb-modeline-info (make-vector 4 nil)
+  "Precalculated mode line info for BBDB commands.
+This is a vector [APPEND-M INVERT-M APPEND INVERT].
+APPEND-M is the mode line info if `bbdb-append-display' is non-nil.
+INVERT-M is the mode line info if `bbdb-search-invert' is non-nil.
+APPEND and INVERT appear in the message area.")
+
 ;;; Keymap
 (defvar bbdb-mode-map
   (let ((km (make-sparse-keymap)))
@@ -1387,15 +1394,16 @@ Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
 
     ;; Search keys
     (define-key km "b"          'bbdb)
-    (define-key km "So"         'bbdb-display-records)
+    (define-key km "S1"         'bbdb-display-records)
     (define-key km "Sn"         'bbdb-search-name)
-    (define-key km "Sc"         'bbdb-search-organization)
-    (define-key km "Se"         'bbdb-search-mail)
-    (define-key km "SN"         'bbdb-search-notes)
+    (define-key km "So"         'bbdb-search-organization)
     (define-key km "Sp"         'bbdb-search-phone)
-    (define-key km "SC"         'bbdb-search-changed)
-    (define-key km "Sa"         'bbdb-display-all-records)
+    (define-key km "Sa"         'bbdb-search-address)
+    (define-key km "Sm"         'bbdb-search-mail)
+    (define-key km "SN"         'bbdb-search-notes)
+    (define-key km "Sc"         'bbdb-search-changed)
     (define-key km "Sd"         'bbdb-search-duplicates)
+    (define-key km "SA"         'bbdb-display-all-records)
 
     (define-key km [delete]     'scroll-down)
     (define-key km " "          'scroll-up)
@@ -1415,6 +1423,9 @@ Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
   bbdb-menu bbdb-mode-map "BBDB Menu"
   '("BBDB"
     ("Display"
+     ["Previous record" bbdb-prev-record t]
+     ["Next record" bbdb-next-record t]
+     "--"
      ["Toggle layout" bbdb-toggle-records-layout t]
      ["Show all fields" bbdb-display-records-completely t]
      ["Omit record" bbdb-omit-record t])
@@ -1423,9 +1434,10 @@ Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
      ["Search one record" bbdb-display-records t]
      ["Search name" bbdb-search-name t]
      ["Search organization" bbdb-search-organization t]
+     ["Search phone" bbdb-search-phone t]
+     ["Search address" bbdb-search-address t]
      ["Search mail" bbdb-search-mail t]
      ["Search notes" bbdb-search-notes t]
-     ["Search phone" bbdb-search-phone t]
      ["Search changed records" bbdb-search-changed t]
      ["Search duplicates" bbdb-search-duplicates t]
      "--"
@@ -1436,6 +1448,7 @@ Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
      ["Creation date = time stamp" bbdb-creation-no-change t]
      "--"
      ["Append search" bbdb-append-display t]
+     ["Invert search" bbdb-search-invert t]
      "--"
      ["Show all records" bbdb-display-all-records t])
     ("Mail"
@@ -1655,7 +1668,7 @@ Return new value."
 ;; - fl-name (first and last name of the person referred to by the record),
 ;; - lf-name (last and first name of the person referred to by the record),
 ;; - sortkey (the concatenation of the elements used for sorting the record),
-;; - marker  (record position in `bbdb-file')
+;; - marker  (position of beginning of record in `bbdb-file')
 ;; - deleted-p (a flag).
 (bbdb-defstruct cache
   fl-name lf-name sortkey marker deleted-p)
@@ -3084,10 +3097,9 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
                               ;; So we keep it as simple as possible.
                               (with-current-buffer bbdb-buffer
                                 (length bbdb-records))))
-              '(:eval (cond ((numberp bbdb-append-display)
-                             (format "  (add %dx)" bbdb-append-display))
-                            ((eq t bbdb-append-display) "  Add")
-                            (bbdb-append-display "  add"))))
+              '(:eval (concat "  "
+                              (bbdb-concat " " (elt bbdb-modeline-info 0)
+                                           (elt bbdb-modeline-info 1)))))
         mode-line-modified
         '(bbdb-read-only (bbdb-modified "%*" "%%")
                          (bbdb-modified "**" "--")))
@@ -3247,15 +3259,19 @@ however, after having used other programs to add records to the BBDB."
         (delete-region (point) bbdb-end-marker)
         (let ((print-escape-newlines t)
               (standard-output (current-buffer))
-              (inhibit-quit t) ; really, don't fuck with this
+              (inhibit-quit t) ; really, don't mess with this
               cache)
           (dolist (record bbdb-records)
+            ;; Before printing the record, remove cache (we do not want that
+            ;; written to the file.)  Ater writing, put the cache back
+            ;; and update the cache's marker.
             (setq cache (bbdb-record-cache record))
+            (set-marker (bbdb-cache-marker cache) (point))
             (bbdb-record-set-cache record nil)
             (prin1 record)
             (bbdb-record-set-cache record cache)
             (insert ?\n)))
-        (kill-all-local-variables)
+        (setq bbdb-modified t)
         (message "BBDB was mis-sorted; fixing...done")))))
 
 
@@ -3272,7 +3288,7 @@ to initialize the respective mail/news readers and composers:
   mail       Mail (M-x mail).
   message    Message mode.
 See also `bbdb-mua-auto-update-init'.  The latter is a separate function
-as it allows one to initialize the auto update feature for some MUAs only,
+as this allows one to initialize the auto update feature for some MUAs only,
 for example only for outgoing messages."
   (require 'bbdb-autoloads)
   (dolist (mua muas)
