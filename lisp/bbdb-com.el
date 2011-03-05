@@ -52,6 +52,13 @@ If FULL is non-nil, assume that RECORDS include display information."
           (if (vectorp (car records)) (list records) records)
         (if (vectorp records) (list records) records))))
 
+;; Note about BBDB prefix commands:
+;; - `bbdb-do-all-records' is a proper prefix command in the sense
+;;   that it must immediately precede the main command.
+;; - `bbdb-append-display' and `bbdb-search-invert' are fake prefix
+;;   commands. They need not precede the main commands.
+;;   Also, `bbdb-append-display' can act on multiple commands.
+
 ;;;###autoload
 (defun bbdb-do-all-records ()
   "Command prefix for operating on all records currently displayed.
@@ -75,43 +82,48 @@ If FULL is non-nil, the list of records includes display information."
 
 ;;;###autoload
 (defun bbdb-append-display-p ()
-  (cond ((eq t bbdb-append-display))
-        ((numberp bbdb-append-display)
-         (setq bbdb-append-display (1- bbdb-append-display))
-         (if (zerop bbdb-append-display)
-             (setq bbdb-append-display nil))
-         t)
-        (bbdb-append-display
-         (setq bbdb-append-display nil)
-         t)))
+  "Return variable `bbdb-append-display' and reset."
+  (let ((job (cond ((eq t bbdb-append-display))
+                   ((numberp bbdb-append-display)
+                    (setq bbdb-append-display (1- bbdb-append-display))
+                    (if (zerop bbdb-append-display)
+                        (setq bbdb-append-display nil))
+                    t)
+                   (bbdb-append-display
+                    (setq bbdb-append-display nil)
+                    t))))
+    (cond ((numberp bbdb-append-display)
+           (aset bbdb-modeline-info 0
+                 (format "(add %dx)" bbdb-append-display)))
+          ((not bbdb-append-display)
+           (aset bbdb-modeline-info 0 nil)))
+    job))
 
 ;;;###autoload
 (defun bbdb-append-display (&optional arg)
-  "Typing \\<bbdb-mode-map>\\[bbdb-append-display] \
-in the *BBDB* buffer makes the next search/display command to append
-new records to those in the *BBDB* buffer.
-
-With prefix arg (C-u) toggle between always append and no append.
-With prefix arg that is a positive number append will be enabled for that
-many times.
-With any other argument append will be enabled once."
+  "Toggle appending next searched records in the *BBDB* buffer.
+With prefix ARG \\[universal-argument] always append.
+With ARG a positive number append for that many times.
+With ARG a negative number do not append."
   (interactive "P")
   (setq bbdb-append-display
-        (cond ((and arg (listp arg)) ; toggle
-               (unless bbdb-silent
-                 (if bbdb-append-display
-                     (message "Do not append records.")
-                   (message "Always append records.")))
-               (not bbdb-append-display))
-              ((and (numberp arg) (< 1 arg))
-               (unless bbdb-silent
-                 (message "Append records for the next %d times." arg))
-               arg)
-              (t
-               (unless bbdb-silent
-                 (message (substitute-command-keys
-                           "\\<bbdb-mode-map>\\[bbdb-append-display]")))
-               'once))))
+        (cond ((and arg (listp arg)) t)
+              ((and (numberp arg) (< 1 arg)) arg)
+              ((or (and (numberp arg) (< arg 0)) bbdb-append-display) nil)
+              (t 'once)))
+  (aset bbdb-modeline-info 0
+        (cond ((numberp bbdb-append-display)
+               (format "(add %dx)" bbdb-append-display))
+              ((eq t bbdb-append-display) "Add")
+              (bbdb-append-display "add")
+              (t nil)))
+  (aset bbdb-modeline-info 2
+        (if bbdb-append-display
+            (substitute-command-keys
+             "\\<bbdb-mode-map>\\[bbdb-append-display]")))
+  (let ((msg (bbdb-concat " " (elt bbdb-modeline-info 2)
+                          (elt bbdb-modeline-info 3))))
+    (unless (string= "" msg) (message "%s" msg))))
 
 (defsubst bbdb-layout-prefix ()
   "Set the LAYOUT arg interactively using the prefix arg."
@@ -129,20 +141,32 @@ With any other argument append will be enabled once."
 To set it again, use command `bbdb-search-invert'."
   (let ((result bbdb-search-invert))
     (setq bbdb-search-invert nil)
+    (aset bbdb-modeline-info 1 nil)
+    (aset bbdb-modeline-info 3 nil)
     result))
 
 ;;;###autoload
-(defun bbdb-search-invert ()
-  "Typing \\<bbdb-mode-map>\\[bbdb-search-invert] inverts the meaning of the next search command.
-Sets `bbdb-search-invert' to t.
-Call this command again, if you want to do repeated inverted searches."
-  (interactive)
-  (setq bbdb-search-invert t)
-  (message (substitute-command-keys
-            "\\<bbdb-mode-map>\\[bbdb-search-invert]")))
+(defun bbdb-search-invert (&optional arg)
+  "Toggle inversion of the next search command.
+With prefix ARG a positive number, invert next search.
+With prefix ARG a negative number, do not invert next search."
+  (interactive "P")
+  (if (setq bbdb-search-invert
+            (or (and (numberp arg) (< 0 arg))
+                (and (not (numberp arg)) (not bbdb-search-invert))))
+      (progn
+        (aset bbdb-modeline-info 1 "inv")
+        (aset bbdb-modeline-info 3
+              (substitute-command-keys
+               "\\<bbdb-mode-map>\\[bbdb-search-invert]")))
+    (aset bbdb-modeline-info 1 nil)
+    (aset bbdb-modeline-info 3 nil))
+  (message "%s" (bbdb-concat " " (elt bbdb-modeline-info 2)
+                             (elt bbdb-modeline-info 3))))
 
-(defmacro bbdb-search (records &optional name organization mail notes phone)
-  "Search RECORDS for fields NAME, ORGANIZATION, MAIL, NOTES, PHONE.
+(defmacro bbdb-search (records &optional name organization mail notes
+                               phone address)
+  "Search RECORDS for fields NAME, ORGANIZATION, MAIL, NOTES, PHONE, ADDRESS.
 This macro only generates code for those fields actually being searched for;
 literal nils at compile-time cause no code to be generated.
 
@@ -189,6 +213,18 @@ To reverse the search, bind variable `bbdb-search-invert' to t."
                    (setq done (string-match ,phone "")))
                  done)
               clauses))
+    (if address
+        (push `(let ((addresses (bbdb-record-address record))
+                     a done)
+                 (if addresses
+                     (while (and (setq a (pop addresses)) (not done))
+                       (setq done (string-match ,address
+                                                (bbdb-format-address a 2))))
+                   ;; so that "^$" can be used to find records that
+                   ;; have no addresses.
+                   (setq done (string-match ,address "")))
+                 done)
+              clauses))
     (if mail
         (push `(let ((mails (bbdb-record-mail record))
                      (bbdb-case-fold-search t) ; there is no case for mails
@@ -228,11 +264,8 @@ To reverse the search, bind variable `bbdb-search-invert' to t."
            (invert (bbdb-search-invert-p))
            matches)
        (dolist (record ,records)
-         (if (or (and invert
-                      (not (or ,@clauses)))
-                 (and (not invert)
-                      (or ,@clauses)))
-             (push record matches)))
+         (unless (eq (not invert) (not (or ,@clauses)))
+           (push record matches)))
        (nreverse matches))))
 
 (defun bbdb-search-prompt (&optional field)
@@ -244,10 +277,10 @@ To reverse the search, bind variable `bbdb-search-invert' to t."
 ;;;###autoload
 (defun bbdb (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP
-in either the name(s), organization, mail address, or notes."
+in either the name(s), organization, address, phone, mail, or notes."
   (interactive (list (bbdb-search-prompt) (bbdb-layout-prefix)))
   (let ((records (bbdb-search (bbdb-records) regexp regexp regexp
-                              (cons '* regexp))))
+                              (cons '* regexp) regexp regexp)))
     (if records
         (bbdb-display-records records layout nil t)
       (message "No records matching '%s'" regexp))))
@@ -266,6 +299,13 @@ in either the name(s), organization, mail address, or notes."
   (bbdb-display-records (bbdb-search (bbdb-records) nil regexp) layout))
 
 ;;;###autoload
+(defun bbdb-search-address (regexp &optional layout)
+  "Display all records in the BBDB matching REGEXP in the address fields."
+  (interactive (list (bbdb-search-prompt "address") (bbdb-layout-prefix)))
+  (bbdb-display-records (bbdb-search (bbdb-records) nil nil nil nil nil regexp)
+                        layout))
+
+;;;###autoload
 (defun bbdb-search-mail (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP in the mail address."
   (interactive (list (bbdb-search-prompt "mail address") (bbdb-layout-prefix)))
@@ -274,9 +314,7 @@ in either the name(s), organization, mail address, or notes."
 ;;;###autoload
 (defun bbdb-search-phone (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP in the phones field."
-  (interactive
-   (list (bbdb-search-prompt "Search records with phone %m regexp: ")
-         (bbdb-layout-prefix)))
+  (interactive (list (bbdb-search-prompt "phone") (bbdb-layout-prefix)))
   (bbdb-display-records
    (bbdb-search (bbdb-records) nil nil nil nil regexp) layout))
 
