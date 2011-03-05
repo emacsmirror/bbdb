@@ -1,3 +1,25 @@
+2011-03-05  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-modeline-info): New variable.
+	(bbdb-mode): Use it.
+	(bbdb-mode-map): Unify keybindings for search commands.
+	(bbdb-sort-records): Update marker positions correctly.
+
+	* lisp/bbdb-com.el (bbdb-append-display-p, bbdb-append-display)
+	(bbdb-search-invert-p, bbdb-search-invert): Use
+	bbdb-modeline-info.
+	(bbdb-search): Also search for addresses.  Simplify codde.
+	(bbdb-search-address): New command.
+	(bbdb-search-phone): Fix prompt.
+
+	* lisp/bbdb-mua.el (bbdb-mua-wrapper): Simplify code.
+	(bbdb-mua-auto-update-init): Doc fix.
+
+	* lisp/bbdb-message.el (bbdb/message-update-records-p)
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-records-p)
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records-p)
+	* lisp/bbdb-mhe.el (bbdb/mh-update-records-p)
+	* lisp/bbdb-vm.el (bbdb/vm-update-records-p): Doc fix.
+
 2011-02-27  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-address-format-list): New variable for
 	customization of address formatting and editing. (renamed
