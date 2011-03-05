@@ -38,7 +38,7 @@
   ;; (lambda () (if (gnus-new-flag) 'query 'search))
   "How `bbdb-mua-update-records' processes mail addresses in Gnus.
 Allowed values are:
- nil          Do anything.
+ nil          Do nothing.
  search       Search for existing records.
  query        Update existing records or query for creating new ones.
  create or t  Update existing records or create new ones.
