@@ -601,10 +601,9 @@ UPDATE-P is defined in `bbdb-update-records'."
 (defmacro bbdb-mua-wrapper (&rest body)
   "Perform BODY in a MUA buffer."
   `(let ((mua (bbdb-mua)))
-     (cond ((eq mua 'vm)
-            (vm-follow-summary-cursor)
-            ,@body)
-           ((eq mua 'gnus)
+     ;; Here we replicate BODY multiple times which gets clumsy
+     ;; for a larger BODY!
+     (cond ((eq mua 'gnus)
             ;; This fails in *Article* buffers, where
             ;; `gnus-article-read-summary-keys' provides an additional wrapper
             (save-current-buffer
@@ -612,9 +611,10 @@ UPDATE-P is defined in `bbdb-update-records'."
               ,@body))
            ((eq mua 'rmail)
             (rmail-select-summary ,@body))
-           ((eq mua 'mh)
-            (mh-show))
-           ((memq mua '(mail message))
+           ((memq mua '(mail message vm mh))
+            (cond ((eq mua 'vm) (vm-follow-summary-cursor))
+                  ((eq mua 'mh) (mh-show)))
+            ;; mail and message do not require any wrapper
             ,@body))))
 
 (defun bbdb-mua-update-interactive-p ()
@@ -773,8 +773,8 @@ See `bbdb-mua-display-records' and friends for interactive commands."
 If a MUA is not an element of MUAS, `bbdb-mua-auto-update' is removed
 from the respective presentation hook.
 
-Call this function in you init file to use the auto update feature with MUAS.
-This function is seaparate from the general function `bbdb-initialize'
+Call this function in your init file to use the auto update feature with MUAS.
+This function is separate from the general function `bbdb-initialize'
 as this allows one to initialize the auto update feature for some MUAs only,
 for example only for outgoing messages."
   (dolist (mua '((message . message-send-hook)
