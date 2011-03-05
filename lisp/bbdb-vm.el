@@ -44,7 +44,7 @@
       (bbdb-select-message)))
   "How `bbdb-mua-update-records' processes mail addresses in VM.
 Allowed values are:
- nil          Do anything.
+ nil          Do nothing.
  search       Search for existing records.
  query        Update existing records or query for creating new ones.
  create or t  Update existing records or create new ones.
@@ -102,7 +102,7 @@ Respects `vm-summary-uninteresting-senders'."
 (defun bbdb/vm-alternate-full-name (address)
   (if address
       (let ((record (car (bbdb-message-search
-                         nil (bbdb-canonicalize-mail address)))))
+                          nil (bbdb-canonicalize-mail address)))))
         (if record
             (or (bbdb-record-note record 'mail-name)
                 (bbdb-record-name record))))))
