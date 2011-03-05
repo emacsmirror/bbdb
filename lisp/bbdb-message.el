@@ -28,7 +28,7 @@
 (defcustom bbdb/message-update-records-p 'bbdb-select-message
   "How `bbdb-mua-update-records' processes mail addresses in outgoing messages.
 Allowed values are:
- nil          Do anything.
+ nil          Do nothing.
  search       Search for existing records.
  query        Update existing records or query for creating new ones.
  create or t  Update existing records or create new ones.
