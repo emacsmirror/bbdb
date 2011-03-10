@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+%:
+	dh $@ --parallel
+
+override_dh_auto_build:
+	dh_auto_build --sourcedirectory=lisp -- bbdb-autoloads.el
