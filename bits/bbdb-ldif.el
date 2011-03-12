@@ -1,6 +1,9 @@
 ;;; Copyright (C) 1998,2000 by Niels Elgaard Larsen <elgaard@diku.dk>
 
 ;;; $Log$
+;;; Revision 1.1  2006/02/04 15:35:15  joerg
+;;; Added
+;;;
 ;;; Revision 1.1  2005/02/13 14:16:03  waider
 ;;; * added new file, with minor abuse to make it work with current BBDB
 ;;;

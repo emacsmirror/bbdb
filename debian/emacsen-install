@@ -1,0 +1,111 @@
+#!/bin/sh
+# /usr/lib/emacsen-common/packages/install/bbdb
+
+FLAVOR=$1
+PACKAGE="bbdb"
+
+if [ "X${FLAVOR}" = "X" ]; then
+    echo Need argument to determin FLAVOR of emacs;
+    exit 1
+fi
+
+if [ "X${PACKAGE}" = "X" ]; then
+    echo Internal error: need package name;
+    exit 1;
+fi
+
+ELDIR=/usr/share/emacs/site-lisp/${PACKAGE}
+ELCDIR=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
+
+COMPILE="-q -batch -f batch-byte-compile"
+
+case "${FLAVOR}" in
+    emacs)
+    echo "install/${PACKAGE}: Ignoring Flavor ${FLAVOR} ..."
+    ;;
+    *)
+
+    echo "install/${PACKAGE}: Byte-compiling for ${FLAVOR} ..."
+
+    rm -rf ${ELCDIR}
+    cd ${ELDIR}
+    TARGETS="rmail mhe gnus bbdb"
+
+    if [ -d /usr/share/${FLAVOR}/site-lisp/vm ]; then
+       TARGETS="$TARGETS vm"
+    elif [ ${FLAVOR} = xemacs20 -o ${FLAVOR} = xemacs21 ]; then
+       TARGETS="$TARGETS vm"
+    fi
+
+    if [ ${FLAVOR} = emacs19 -o ${FLAVOR} = mule2 ]; then
+        MHEDIR=/usr/share/${FLAVOR}/site-lisp/../lisp
+    elif [ ${FLAVOR} = xemacs20 -o ${FLAVOR} = xemacs21 ]; then
+        MHEDIR=/usr/share/${FLAVOR}/site-lisp/../lisp/mh-e
+    else	# emacs20
+        MHEDIR=/usr/share/${FLAVOR}/site-lisp/../lisp/mail
+    fi
+
+    ## for Gnus
+    if [ -d /usr/share/${FLAVOR}/site-lisp/gnus ]; then
+       GNUSDIR=/usr/share/${FLAVOR}/site-lisp/gnus
+    elif [ -d /usr/share/${FLAVOR}/site-lisp/semi-gnus ]; then
+       GNUSDIR=/usr/share/${FLAVOR}/site-lisp/semi-gnus
+    elif [ -d /usr/share/${FLAVOR}/site-lisp/t-gnus ]; then
+       GNUSDIR=/usr/share/${FLAVOR}/site-lisp/t-gnus
+    elif [ -d /usr/share/${FLAVOR}/site-lisp/chaos ]; then
+       GNUSDIR=/usr/share/${FLAVOR}/site-lisp/chaos
+    fi
+
+    if [ -z ${GNUSDIR} ]; then
+       if [ ${FLAVOR} = emacs19 -o ${FLAVOR} = mule2 ]; then
+         GNUSDIR=/usr/share/emacs/19.34/lisp
+       elif [ ${FLAVOR} = xemacs20 ]; then
+         GNUSDIR=/usr/lib/xemacs-20.4/lisp/gnus
+       elif [ ${FLAVOR} = xemacs21 ]; then
+         GNUSDIR=/usr/share/xemacs21/packages/lisp/gnus
+       else
+         GNUSDIR=/usr/share/${FLAVOR}/site-lisp/../lisp/gnus
+       fi
+    fi
+
+    LOG=`tempfile`
+	
+	rm -rf ${ELCDIR} && cp -a ${ELDIR} ${ELCDIR}
+
+	# at ELCDIR
+	( cd ${ELCDIR}
+	echo "Generating bbdb-autoloads..."
+        echo "Generating bbdb-autoloads" >> $LOG
+	make autoloads >> $LOG 2>&1
+	if [ $FLAVOR != xemacs20 -a $FLAVOR != xemacs21 ]; then
+	    echo  "(provide 'bbdb-autoloads)" >> lisp/bbdb-autoloads.el
+	fi
+	echo "Byte-compiling bbdb. This takes looooooong..."
+	make  $TARGETS EMACS_PROG=${FLAVOR} VMDIR=/usr/share/${FLAVOR}/site-lisp/vm GNUSDIR=${GNUSDIR} MHEDIR=${MHEDIR} >> $LOG 2>&1
+	mv lisp/*.elc utils/*.el .
+	rm -rf tex utils lisp Makefile
+	${FLAVOR} ${COMPILE} *.el >> $LOG 2>&1
+	)
+    cat > ${ELCDIR}/load-path.el <<EOF 
+(setq load-path (cons (concat "/usr/share/${FLAVOR}/site-lisp/bbdb") load-path))
+(provide 'bbdb/load-path)
+EOF
+    if [ ! -e ${ELCDIR}/bbdb-gnus.elc ]; then
+	echo "*** installing not-compiled bbdb-gnus.el ***" >> $LOG
+	echo "install -m 644 ${ELDIR}/lisp/bbdb-gnus.el ${ELCDIR}" >> $LOG
+	install -m 644 ${ELDIR}/lisp/bbdb-gnus.el ${ELCDIR}
+    fi
+
+	# a hack to fix #179821, #210248, #233904
+	# If bbdb gets installed before vm then the bbdb doesnt have the bbdb-vm compiled....
+	install -m 644 ${ELDIR}/lisp/bbdb-vm.el ${ELCDIR}
+
+    # make -k clean >> $LOG
+    mv $LOG ${ELCDIR}/CompilationLog
+    gzip -9 ${ELCDIR}/CompilationLog
+    chmod 644 ${ELCDIR}/CompilationLog.gz
+
+    echo " done."
+    ;;
+esac
+

@@ -1,0 +1,47 @@
+To enable bbdb support add a call to bbdb-initialize in your .emacs:
+
+bbdb-initialize is a compiled Lisp function in `bbdb'.
+(bbdb-initialize &rest TO-INSINUATE)
+
+*Initialize the BBDB.  One or more of the following symbols can be
+passed as arguments to initiate the appropriate insinuations.
+
+ Initialization of mail/news readers:
+
+   Gnus       Initialize BBDB support for the Gnus version 3.14 or
+              older.
+   gnus       Initialize BBDB support for the Gnus mail/news reader
+              version 3.15 or newer.  If you pass the `gnus' symbol,
+              you should probably also pass the `message' symbol.
+   mh-e       Initialize BBDB support for the MH-E mail reader.
+   rmail      Initialize BBDB support for the RMAIL mail reader.
+   sendmail   Initialize BBDB support for sendmail (M-x mail).
+   vm         Initialize BBDB support for the VM mail reader.
+              NOTE: For the VM insinuation to work properly, you must
+              either call `bbdb-initialize' with the `vm' symbol from
+              within your VM initialization file ("~/.vm") or you
+              must call `bbdb-insinuate-vm' manually from within your
+              VM initialization file.
+
+ Initialization of miscellaneous package:
+
+   message    Initialize BBDB support for Message mode.
+   reportmail Initialize BBDB support for the Reportmail mail
+              notification package.
+   sc         Initialize BBDB support for the Supercite message
+              citation package.
+   w3         Initialize BBDB support for Web browsers.
+
+---+++---
+
+In bits.tar.gz is the bits/ Subdir of the bbdb-Source packaged.
+The README there states this:
+
+This is the collection of bits and pieces located on the net or mailed to me
+by various folk that may or may not wind up in BBDB proper. They shouldn't
+be considered part of the bbdb as-is, nor should you complain to me about
+their failure to work.
+
+Look at it if you find something useful. If there is enough demand for some of the
+files i can install them with bbdb. Just ask me. :)
+

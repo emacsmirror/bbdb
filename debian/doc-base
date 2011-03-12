@@ -1,0 +1,12 @@
+Document: bbdb
+Title:  Insidious Big Brother Database User Manual
+Author: Jamie Zawinski, Matt Simmons and the BBDB Development Team
+Abstract: BBDB is a rolodex-like database program for GNU Emacs and
+ XEmacs. BBDB stands for Insidious Big Brother Database, and is not, 
+ repeat, not an obscure reference to the Buck Rogers TV series.
+Section: mail
+
+Format: HTML
+Index: /usr/share/doc/bbdb/html/bbdb.html
+Files: /usr/share/doc/bbdb/html/*.html
+

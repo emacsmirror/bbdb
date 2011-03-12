@@ -1,0 +1,36 @@
+#!/bin/sh
+# /usr/lib/emacsen-common/packages/remove/bbdb
+
+# I don't think that remove scripts should have -e set, because
+# that makes the package unremovable if the script fails.
+# set -e 
+
+FLAVOR=$1
+PACKAGE="bbdb"
+
+if [ "X${FLAVOR}" = "X" ]; then
+    echo Need argument to determin FLAVOR of emacs;
+    exit 1
+fi
+
+if [ "X${PACKAGE}" = "X" ]; then
+    echo Internal error: need package name;
+    exit 1;
+fi
+
+ELDIR=/usr/share/emacs/site-lisp/${PACKAGE}
+ELCDIR=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
+
+case "${FLAVOR}" in
+   emacs)
+   echo "remove/${PACKAGE}: Ignoring Flavor ${FLAVOR} ..."
+   ;;
+   *)
+   echo -n "remove/${PACKAGE}: Handling removal of emacsen flavor ${FLAVOR} ..."
+   rm -rf ${ELCDIR}
+
+   echo " done."
+   ;;
+esac
+
+exit 0;

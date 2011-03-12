@@ -1,0 +1,360 @@
+bbdb (2.35.cvs20060204-1) unstable; urgency=low
+
+  * New CVS co
+    - Bug fix: "bbdb-news-auto-create-p with 'prompt doesn't work" (Closes: #296577).
+  * Bug fix: "bbdb: File error: "Cannot open load file",
+    'bbdb-autoloads'" (Closes: #344032, #345186, #345297, #350449, #308336, #279920).
+  * Bug fix: "bbdb does not work with gnus-5.10", (works for me [TM]) (Closes: #192904).
+
+ -- Joerg Jaspert <joerg@debian.org>  Sat,  4 Feb 2006 16:32:31 +0100
+
+bbdb (2.35.cvs20040528-1) unstable; urgency=low
+
+  * CVS co - last changes there are from 28.05.2004
+  * Bug fix: "fails to load : missing bbdb-vm.el". (Closes: #179821, #180024, #210248, #233904).
+  * Removed | emacs20 from Depends. (Closes: #232731)
+  * Removed old w3-el-e{20|19} Suggests.
+  * Bug fix: "bbdb: Include /usr/share/emacs/site-lisp/bbdb/tex/", thanks
+    to Mario Lang (Closes: #243211).
+
+ -- Joerg Jaspert <joerg@debian.org>  Wed, 11 Aug 2004 23:12:05 +0200
+
+bbdb (2.35.cvs20030801-1) unstable; urgency=low
+
+  * CVS from 01 August 2003.
+
+ -- Joerg Jaspert <joerg@debian.org>  Sun, 24 Aug 2003 14:51:51 +0200
+
+bbdb (2.34.cvs20030503-1) unstable; urgency=low
+
+  * CVS from 03 Mai 2003.
+  * Removed a suggestion about charsets in .bbdb. It should work without
+    that (closes: #177625)
+
+ -- Joerg Jaspert <joerg@debian.org>  Sat,  3 May 2003 20:16:15 +0200
+
+bbdb (2.34.cvs20030102-1) unstable; urgency=low
+
+  * CVS checkout from 02 Januar 2003.
+  * A note in README.Debian about charsets and .bbdb.
+   (closes: #174006,173817)
+  * This patch for encoding issues is included upstream (closes: #159339)
+  * Standards 3.5.8
+
+ -- Joerg Jaspert <joerg@debian.org>  Sun,  5 Jan 2003 15:38:42 +0100
+
+bbdb (2.34.cvs20021102-1) unstable; urgency=low
+
+  * Newest CVS Checkout. Well, new....
+
+ -- Joerg Jaspert <joerg@debian.org>  Wed, 13 Nov 2002 21:02:25 +0100
+
+bbdb (2.34.cvs20021027-1) unstable; urgency=low
+
+  * Newest CVS checkout. This is really 2.35 :)
+  * Standards-Version: 3.5.7
+  * Removed mk-binary from debian/ dir, it is not used.
+
+ -- Joerg Jaspert <joerg@debian.org>  Sun, 27 Oct 2002 16:09:56 +0100
+
+bbdb (2.34.cvs20020819-1) unstable; urgency=low
+
+  * Newest CVS checkout.
+
+ -- Joerg Jaspert <joerg@debian.org>  Tue, 20 Aug 2002 22:20:26 +0200
+
+bbdb (2.34.cvs20020703-1) unstable; urgency=low
+
+  * Newest cvs checkout.
+  * (require 'bbdb-autloads) in startup file (closes: #152435)
+
+ -- Joerg Jaspert <joerg@debian.org>  Wed, 10 Jul 2002 12:03:34 +0200
+
+bbdb (2.34.cvs20020418-3) unstable; urgency=low
+
+  * Added bbdb-pilot-jwz.el as suggested in (closes: #144465)
+    I dont have a handheld, so i cant test it. (Hint :) )
+
+ -- Joerg Jaspert <joerg@debian.org>  Fri, 26 Apr 2002 00:13:03 +0200
+
+bbdb (2.34.cvs20020418-2) unstable; urgency=high
+
+  * Urgency=high because the Bugfix for #143463 should really go into
+    woody. I have not made any other changes in the emacsen-install files,
+    and there are no Bug Reports since my last Upload, so i think this is OK.
+  * I now generate some html Pages from the texinfo Source and install the
+    doc-base things. So you can read the bbdb documentation from your 
+    Webbrowser if you want that.
+  
+ -- Joerg Jaspert <joerg@debian.org>  Sun, 21 Apr 2002 20:02:31 +0200
+
+bbdb (2.34.cvs20020418-1) unstable; urgency=low
+
+  * New Upstream release. This fixes bbdb-gui which (closes: #143463)
+  * Changed my Email Address.
+
+ -- Joerg Jaspert <joerg@debian.org>  Thu, 18 Apr 2002 20:53:56 +0200
+
+bbdb (2.34.cvs20020404-2) unstable; urgency=low
+
+  * Changed emacsen-install:
+    Hide make autoloads output for the user and redirect it to the Compile-Log  
+    Tell the User that the Byte-Compile of bbdb could be a long-running process.
+
+ -- Joerg Jaspert (JJ) <joerg@goliathbbs.dnsalias.net>  Mon,  8 Apr 2002 15:42:46 +0200
+
+bbdb (2.34.cvs20020404-1) unstable; urgency=low
+
+  * If a Variable in Makefile changes between two releases it is very
+    helpful to change it in the calling installscript too. Thx to
+    James LewisMoss for this. This (closes: #141207)
+  * New CVS checkout. bbdb-merge.el changed.
+  * I now package the bits/ subdir with bbdb. It is *not* official part
+    of bbdb. So i only make a .tar.gz of it and place it into
+    /usr/share/doc/bbdb. Have a look at it and see if you find some
+    things useful. If there is enough demand for one thing i can install it with
+    bbdb (if License is clear).
+
+ -- Joerg Jaspert (JJ) <joerg@goliathbbs.dnsalias.net>  Thu,  4 Apr 2002 23:48:32 +0200
+
+bbdb (2.34.cvs20020330-4) unstable; urgency=low
+
+  * Im so stupid blind. bbdb needs bbdb-autoloads.el. I must generate it before i compile
+    the package at install-time. If not we have a not existing bbdb-autoloads.el so bbdb 
+    cant load anything and crashes. Argh, i hate me. I shold read INSTALL full. Next time...
+    I now generate bbdb-autoloads.el and bbdb works again. Sorry for this stupidity.
+    It (closes: #140968)
+
+ -- Joerg Jaspert (JJ) <joerg@goliathbbs.dnsalias.net>  Wed,  3 Apr 2002 19:45:36 +0200
+
+bbdb (2.34.cvs20020330-3) unstable; urgency=low
+
+  * Hmm, i should look if I really remove all installed files between my tests. I left some
+    crap and all worked fine. So i cant see that Makefile.in is neccessary.
+    Added it again.
+  * Apply a patch to the Makefile in /usr/share/emacs/site-lisp which really should remove
+    checking for configure.ac. This two should (closes: #140868)
+
+ -- Joerg Jaspert (JJ) <joerg@goliathbbs.dnsalias.net>  Tue,  2 Apr 2002 12:38:53 +0200
+
+bbdb (2.34.cvs20020330-2) unstable; urgency=low
+
+  * It now works to look at the bbdb info files with emacs, so this
+    should (closes: #111769)
+  * It should also (closes: #139287)
+  * Argh. If i want to install the info files without dh_installinfo i
+    have to copy them to the Packagedir.
+  * Suggest tetex-base.
+  * Install the .tex files for bbdb-print in /usr/share/texmf/tex/bbdb so
+    one can use bbdb-print without any extra work required. This two
+    changes are for this: (closes: #101282)
+  * -1 was not uploaded. So i just close the bug here again. 
+    New Maintainer. (closes: #140041)
+  * gzip -9 for Readme.Debain
+  * Remove unneccessary Makefile.in from bbdb/lisp dir.
+
+ -- Joerg Jaspert (JJ) <joerg@goliathbbs.dnsalias.net>  Mon,  1 Apr 2002 13:44:19 +0200
+
+bbdb (2.34.cvs20020330-1) unstable; urgency=low
+
+  * New Maintainer. (closes: #140041)
+  * My first Emacs-addon Package. Hope it works.
+  * New Version. Used CVS from 30 March 2002
+  * Added w3-el-e21 to Suggests.
+  * Changed URL in debian/copyright to point to right Site.
+  * Changed Path for License to /usr/share/common-license
+  * Disabled dh_installinfo in debian/rules. We do it manually so we dont need
+    to double it.
+  * Dont install Upstream README. Its just four words: Read the INSTALL file. We
+    dont need this for a Debian Package. :)
+  * Remove Files generated by configure or build-process which are not removed by 
+    Upstream Makefiles clean target.
+  * Changed Depends to emacs21 | emacsen to make Lintian happy.
+  * Wrote manpages for the 4 Perlskripts. Better than a link to dh_undocumented.
+  * Use sed to change the Target all in the Makefiles so emacs-install could work.
+    We dont want to check for configure there so we dont check for it. :)
+
+ -- Joerg Jaspert (JJ) <joerg@goliathbbs.dnsalias.net>  Sun, 31 Mar 2002 20:15:42 +0200
+
+bbdb (2.32-2) unstable; urgency=low
+
+  * don't install FLAVOR/etc/bbdb (closes: #123612)
+    tex be isntalled into document directory
+    utils/*.el be installed into site-lisp/bbdb with byte-compile
+    utils/*.pl be installed into /usr/bin/
+  * install /etc/emacs/site-start.d/50bbdb.el as conffile
+  * Build-Depends: debhelper (>> 3.0.0)
+  * Standards-Version: 3.5.2
+  * DH_COMPAT=3
+
+ -- Takuo KITAME <kitame@northeye.org>  Thu, 13 Dec 2001 00:45:23 +0900
+
+bbdb (2.32-1) unstable; urgency=low
+
+  * New upstream release
+  * fixed bashizm of emacsen-install (closes: Bug#98574)
+  * remove (require 'message) from init.el (closes: Bug#109062)
+
+ -- Takuo KITAME <kitame@northeye.org>  Sat, 25 Aug 2001 11:23:09 +0900
+
+bbdb (2.3-2) unstable; urgency=low
+
+  * debian/emacsen-install: insert (provide 'bbdb-autoloads) if not xemacs20 or xemacs21. (closes: Bug#88471)
+
+ -- Takuo KITAME <kitame@northeye.org>  Mon,  5 Mar 2001 00:24:20 +0900
+
+bbdb (2.3-1) unstable; urgency=low
+
+  * New upstream release
+  * some upstream bug ware fixed (closes: Bug#86816,Bug#83920,Bug#83601)
+  * fix #85283: bbdb doesn't load bbdb-autoload (closes: Bug#85283)
+  * fix #82338: bbdb: upgrade leaves files behind (closes: Bug#82338)
+  * fix #85019: bbdb complains about nonexistent directory (closes: Bug#85019)
+  * fix #78721: calls switch-to-buffer(-1) on exit, xemacs doesn't like this (closes: Bug#78721)
+
+ -- Takuo KITAME <kitame@northeye.org>  Sun,  4 Mar 2001 02:51:34 +0900
+
+bbdb (2.2-1) unstable; urgency=low
+
+  * New upstream release
+  * cloese: #82338: bbdb: upgrade leaves files behind
+  * closes: #81653: bbdb-complete-name fails,
+  * closes: #78564: bbdb breaks gnus
+  * closes: #80838: bbdb: perl scripts broken
+
+ -- Takuo KITAME <kitame@northeye.org>  Fri, 26 Jan 2001 11:57:09 +0900
+
+bbdb (2.00.06.20001116cvs-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Takuo KITAME <kitame@northeye.org>  Wed, 29 Nov 2000 08:22:33 +0900
+
+bbdb (2.00.06.20001015cvs-3) unstable; urgency=low
+
+  * Support xemacs21 (clsoes: Bug#76254)
+
+ -- Takuo KITAME <kitame@northeye.org>  Mon, 13 Nov 2000 10:21:54 +0900
+
+bbdb (2.00.06.20001015cvs-2) unstable; urgency=low
+
+  * install info
+  * debian/bbdb-init.el:
+    (require 'bbdb)
+    (bbdb-initialize)
+  * lisp/bbdb.el: at defun bbdb-insinuate-message,
+    (if (not (boundp 'message-mode-map))
+	  (require 'message))
+    (closes: Bug#74998)
+
+ -- Takuo KITAME <kitame@northeye.org>  Wed, 18 Oct 2000 11:04:30 +0900
+
+bbdb (2.00.06.20001015cvs-1) unstable; urgency=low
+
+  * New upstream release (CVS snapshot)
+  * closes: Bug#72315 bbdb 2.00 is known not to work with Emacs 20.
+  * debian/control: Suggests: w3-el-e20|w3-el-e19 instead of w3-el.
+    (closes: Bug#74194)
+  * put perl script. (closes: Bug#72481)
+  * from lisp/bbdb-hooks.el, 
+    ;; Revision 1.58  2000/04/05 17:09:06  bbdb-writer
+    ;; * Autoload cookie for bbdb-header-start
+   It seems Bug#69182 was fixed. (closes: Bug#69182)
+  * (setq bbdb-electric-p t) is worked. I think it was fixed by Upstream.
+    (closes: Bug#52453)
+  * applied view-mode -1 patch. (closes: Bug#48805)
+
+ -- Takuo KITAME <kitame@northeye.org>  Tue, 17 Oct 2000 16:06:12 +0900
+
+bbdb (2.00.06-1) unstable; urgency=low
+
+  * New upstream release (closes: Bug#48316, Bug#19262)
+  * Work well on XEmacs (closes: Bug#12086)
+  * removing usr/share/xemacs20/etc/bbdb when package remove. 
+    It was fixed in previous release. (closes: Bug#52527)
+  * install.log will be created as mode 644. (closes: Bug#55433)
+ 
+ -- Takuo KITAME <kitame@northeye.org>  Wed, 29 Mar 2000 03:09:33 +0900
+
+bbdb (2.00-6) frozen unstable; urgency=high
+
+  * Maintainer was changed.
+  * Fixed install script for bbdb-gnus.el (closes: Bug#59177)
+
+ -- Takuo KITAME <kitame@northeye.org>  Tue, 28 Mar 2000 13:30:34 +0900
+
+bbdb (2.00-5) unstable frozen; urgency=high
+
+  * ignore xemacs21 in the install stage. Closes: Bug#55432.
+
+ -- Frederic Lepied <Lepied@debian.org>  Thu, 24 Feb 2000 09:36:47 +0100
+
+bbdb (2.00-4) unstable; urgency=low
+
+  * applied documentation fixes from <jrv@vanzandt.mv.com>. Closes: Bug#36225.
+  * (bbdb-print.el): corrected invalid condition-case. Closes: Bug#36846, Bug#44355, Bug#44364.
+  * removed itimer Suggests:.
+  * really install README.debian. Closes: Bug#26687.
+  * (bbdb-print.el): hard code the location of TeX files. CLoses: Bug#36844.
+  * (bbdb-print.tex): applied patch from Mattia Monga to correct the
+  size of tt fonts. Closes: Bug#41268.
+  * avoid aborting the install when a file failed to compile. Closes: Bug#37373, Bug#40379.
+  
+ -- Frederic Lepied <Lepied@debian.org>  Tue, 14 Sep 1999 21:57:24 +0200
+
+bbdb (2.00-3) frozen unstable; urgency=low
+
+  * (install): added vm target for xemacs19 and xemacs20. Fixes Bug#21940.
+  * (install): corrected echo placement. Fixes Bug#21496.
+  * (install): suppressed duplicate. Fixes Bug#21497.
+  * (README.debian): new file to explain how to initialize bbdb. Fixes Bug#21497.
+
+ -- Frederic Lepied <Lepied@debian.org>  Mon,  4 May 1998 05:56:21 +0200
+
+bbdb (2.00-2) frozen unstable; urgency=low
+
+  * (control): added a dependency on make.
+  * (control): priority optional.
+  * (control): suggests vm, w3-el, gnuserv and itimer.
+  * (install): byte compile with -no-site-file.
+	
+ -- Frederic Lepied <Lepied@debian.org>  Sun, 19 Apr 1998 08:11:15 +0200
+
+bbdb (2.00-1) unstable; urgency=low
+
+  * new upstream version.
+
+ -- Frederic Lepied <Lepied@Debian.org>  Wed, 18 Mar 1998 21:45:28 +0100
+
+bbdb (1.55unoff-1.1) unstable; urgency=low
+
+  * Non-maintainer release.
+
+  * Updated for new emacsen requirements.
+
+  * Removed empty README.Debian file.
+
+  * Removed debmake dependencies--made it easier to fix everything else.
+
+  * Updated to standards 2.4.0.0.
+	
+ -- Ben Pfaff <pfaffben@pilot.msu.edu>  Thu, 5 Mar 1998 11:48:24 -0500
+
+bbdb (1.55unoff-1) unstable; urgency=low
+
+  * upstream release.
+  * removed   gnus-bbdb.el for lack  of   copyright  and integration  into
+    upstream bbdb-gnus.
+
+ -- Frederic Lepied <Lepied@debian.org>  Sun, 26 Oct 1997 11:34:06 +0100
+
+bbdb (1.54unoff-1) unstable; urgency=low
+
+  * new maintainer.
+  * new upstream release.
+  * Added the missing P binding for bbdb-print in bbdb.el.
+  * Added gnus-bbdb.el to work with newer version of gnus.
+
+ -- Frederic Lepied <Lepied@debian.org>  Fri, 17 Oct 1997 22:54:11 +0200
+
+

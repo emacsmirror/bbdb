@@ -1,0 +1,32 @@
+This package was debianized by Frederic Lepied <Lepied@debian.org> on
+Mon, 17 Oct 1997 23:09:25 +0200.
+
+Actual Maintainer: Joerg Jaspert <joerg@debian.org>
+
+It was downloaded from http://bbdb.sourceforge.net/
+
+Authors:  Jamie Zawinski, Ronan Waide (Waider), Todd Kaufmann,
+		  Boris Goldowsky, Christopher Kline, John Heidemann,
+		  Roland McGrath
+
+Current Upstream: Ronan Waide
+
+Copyright:
+
+;;; The Insidious Big Brother Database is free software; you can redistribute
+;;; it and/or modify it under the terms of the GNU General Public License as
+;;; published by the Free Software Foundation; either version 2, or (at your
+;;; option) any later version.
+;;;
+;;; BBDB is distributed in the hope that it will be useful, but WITHOUT ANY
+;;; WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+;;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+;;; details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with GNU Emacs; see the file COPYING.  If not, write to
+;;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;;; Boston, MA 02111-1307, USA.
+
+On Debian systems, the complete text of the GNU General Public
+License can be found in /usr/share/common-licenses/GPL file.

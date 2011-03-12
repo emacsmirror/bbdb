@@ -1,0 +1,19 @@
+--- Makefile.orig	Tue Apr  2 12:57:12 2002
++++ Makefile	Tue Apr  2 13:10:16 2002
+@@ -16,15 +16,7 @@
+            aclocal.m4 configure configure.ac install-sh Makefile.in \
+            bits lisp misc tex texinfo utils
+ 
+-all: Makefile bbdb info    gnus
+-
+-Makefile: configure Makefile.in
+-	@echo "Makefile.in or configure has changed. Please rerun configure!"
+-	exit 1
+-
+-configure: configure.ac
+-	@echo "configure.ac has changed. Please rerun autoconf!"
+-	exit 1
++all: bbdb info    gnus
+ 
+ bbdb:
+ 	cd lisp; $(MAKE) bbdb

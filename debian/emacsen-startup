@@ -1,0 +1,20 @@
+;; on Debian GNU/Linux
+;;
+;;
+(setq load-path 
+      (cons 
+       (concat "/usr/share/" (symbol-name debian-emacs-flavor)
+              "/site-lisp/bbdb")
+       load-path))
+
+;; (require 'message)
+
+;; http://bugs.debian.org/85019
+(setq bbdb-sound-files nil)
+(setq bbdb-sound-player nil)
+(setq bbdb-sounds-directory nil)
+
+;; (require 'bbdb) 
+;; (bbdb-initialize)
+
+(require 'bbdb-autoloads)
