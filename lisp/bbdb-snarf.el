@@ -2,7 +2,6 @@
 
 ;;;
 ;;; Copyright (C) 1997 by John Heidemann <johnh@isi.edu>.
-;;; $Id$
 ;;;
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published
@@ -203,11 +202,12 @@ more details."
       ;; name
       (goto-char (point-min))
       ;; This check is horribly english-centric (I think)
-      (while (/= (char-syntax (char-after (point))) ?w)
+      (while (and (not (eobp)) (/= (char-syntax (char-after (point))) ?w))
         (forward-line 1))
-      (re-search-forward "\\(\\sw\\|[ -\.,]\\)*\\sw" nil t)
-      (setq name (match-string 0))
-      (delete-region (match-beginning 0) (match-end 0))
+      (if (re-search-forward "\\(\\sw\\|[ -\.,]\\)*\\sw" nil t)
+          (progn 
+            (setq name (match-string 0))
+            (delete-region (match-beginning 0) (match-end 0))))
 
       ;; address
       (goto-char (point-min))
@@ -281,6 +281,11 @@ more details."
                                         ;         "city: " city "\n"
                                         ;         "state: " state "\n"
                                         ;         "zip: " zip "\n")
+
+      (setq name (or name
+                     (and nets (car (car (bbdb-rfc822-addresses (car nets)))))
+                     "?"))
+      
       (bbdb-merge-interactively name
                                 nil
                                 nets
@@ -390,27 +395,6 @@ more details."
   new-record)
 
 ;;----------------------------------------------------------------------------
-(eval-and-compile
-  (if (fboundp 'replace-in-string)
-      (fset 'bbdb-replace-in-string 'replace-in-string)
-    (if (fboundp 'replace-regexp-in-string) ; defined in e21
-        (fset 'bbdb-replace-regexp-in-string 'replace-regexp-in-string)
-      ;; actually this is `dired-replace-in-string' slightly modified
-      ;; We're not defining the whole thing, just enough for our purposes.
-      (defun bbdb-replace-regexp-in-string (regexp newtext string &optional
-                                                   fixedcase literal)
-        ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.
-        ;; NEWTEXT is taken literally---no \\DIGIT escapes will be recognized.
-        (let ((result "") (start 0) mb me)
-          (while (string-match regexp string start)
-            (setq mb (match-beginning 0)
-                  me (match-end 0)
-                  result (concat result (substring string start mb) newtext)
-                  start me))
-          (concat result (substring string start)))))
-    (defun bbdb-replace-in-string (string regexp newtext &optional literal)
-      (bbdb-replace-regexp-in-string regexp newtext string nil literal))))
-
 (defcustom bbdb-extract-address-component-regexps
     '(
       ;; "surname, firstname" <address>  from Outlookers

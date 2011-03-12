@@ -4,10 +4,6 @@
 @settitle Insidious Big Brother Database User Manual
 @c %**end of header
 
-@c
-@c $Id$
-@c
-
 @ifinfo
 @dircategory Emacs
 @direntry
@@ -16,8 +12,7 @@
 
 This file documents the Insidious Big Brother Database
 
-This is edition $Revision$ of the BBDB User Manual for BBDB
-version 2.34.
+This is the BBDB User Manual for BBDB version 2.36.
 
 Copyright (c) 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 
@@ -29,7 +24,6 @@ Copyright (c) 2000-present The BBDB Development Team
 @titlepage
 @title BBDB User Manual
 @subtitle A phone number and address database program for Emacs
-@subtitle Edition $Revision$, $Date$
 
 @author by Jamie Zawinski, Matt Simmons and the BBDB Development Team
 @page
@@ -38,10 +32,6 @@ Copyright @copyright{} 1991-1994 Jamie Zawinski <jwz@@netscape.com>
 Copyright @copyright{} 1997-1999 Matt Simmons <simmonmt@@acm.org>
 
 Copyright @copyright{} 2000-present The BBDB Development Team
-
-@sp 2
-This is edition $Revision$ of the @cite{BBDB User Manual} for BBDB
-version 2.34, $Date$.@refill
 
 @sp 2
 
@@ -1050,13 +1040,13 @@ can be changed by changing the value of @code{bbdb/gnus-score-field}.
 Value used instead of @code{name} for completion.  @xref{Mail Sending
 Interfaces}.
 @item mail-name
-@i{(Available only when the Reportmail-specific @b{BBDB} functions have been
-enabled)}  Used for the storage of non-default names to be used in the
-reporting of new mail by Reportmail.  For initialization details,
-see @ref{Reportmail Prep}.  For usage details, see @ref{Using Reportmail}.
+Used for the storage of non-default names to be used as name in email
+addresses.  See also @ref{Reportmail Prep} and see @ref{Using Reportmail}.
 @item mark-char
 The field containing the character to be used for marking a given poster
 in the Gnus Summary Buffer.  For usage details, see @ref{Gnus Summary Buffer}.
+@item title
+The field containing the title of a person.  
 @item tex-name
 @cindex Printing records in the database
 @findex bbdb-print
@@ -1158,7 +1148,7 @@ mail or news-reading interfaces (@xref{Interfaces}.). @refill
 @cindex Creating new records
 @cindex Adding new records
 
-There is also @w{@kbd{bbdb-snarf}} (@xref{bbdb-snarf}), which will
+There is also @w{@kbd{bbdb-snarf}} (@pxref{bbdb-snarf}.), which will
 attempt to create a record from a text block. Note that this depends
 on particular formatting and may not do exactly what you want.
 
@@ -1599,6 +1589,7 @@ There are BBDB interfaces for the following news readers:
 
 @findex bbdb-complete-name
 @vindex bbdb-dwim-net-address-allow-redundancy
+@vindex bbdb-dwim-net-address-title-field
 @cindex Name completion
 @cindex Mail address completion
 @cindex Address completion
@@ -1619,7 +1610,10 @@ of the form @w{@code{User Name <email-address>}}; however, if
 @code{User Name} has an address of the form
 @code{<user.name@@somedomain>}, only the @code{<email-address>} portion
 is inserted. This can be overridden by setting
-@code{bbdb-dwim-net-address-allow-redundancy} to @code{t}. @refill
+@code{bbdb-dwim-net-address-allow-redundancy} to @code{t}. 
+If @code{User name} has the field configured by
+@code{bbdb-dwim-net-address-title-field} it will be prepended.
+@refill
 
 This binding is automatically set by the various insinuation functions
 documented earlier in this manual.  (@xref{Initial Configuration}.)
@@ -2393,11 +2387,19 @@ line.  If this is @code{nil}, it will default to the value of
 @vindex bbdb-always-add-addresses
 If this is @code{t}, then whenever the Insidious Big Brother Database
 notices a new email address corresponding to a person who is in the
-database, it will add it to the database.  If this is @code{nil} (the
-default), then whenever a new network address is noticed for a person in
-the database, you will be asked whether to add the address.  If this is
-the symbol @code{never} (really if it is not @code{t} and not @code{nil})
-then new network addresses will never be automatically added. @refill
+database, it will add it to the database.  If this is the symbol
+@code{ask} (the default), then whenever a new network address is
+noticed for a person in the database, you will be asked whether to add
+the address.  If this is @code{nil} then new network addresses will
+never be automatically added. @refill
+
+When set to a function name, @b{BBDB} calls the function to decide
+whether to add the address or not; it should return one of the above
+values.  You may find the functions
+@code{bbdb-ignore-some-messages-hook} or
+@code{bbdb-ignore-most-messages-hook} useful here.  @xref{Predefined
+Hooks}.
+@refill
 
 @item bbdb-new-nets-always-primary
 @vindex bbdb-new-nets-always-primary

@@ -23,8 +23,9 @@
 ;;; various fields when it fills in that buffer (doing that would be slow and
 ;;; cons a lot, so it doesn't seem to be worth it.)
 
-(or (string-match "XEmacs\\|Lucid" emacs-version)
-    (error "This file only works in XEmacs."))
+(eval-and-compile 
+  (if (not (featurep 'xemacs))
+      (error "This file only works in XEmacs.")))
 
 ;; this makes no sense, long-term, but.
 (eval-when-compile

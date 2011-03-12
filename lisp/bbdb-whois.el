@@ -88,7 +88,8 @@
                        bbdb-whois-name)))
 
         ;; clean up & parse buffer, otherwise.
-        (replace-string "\r\n" "\n")
+	(while (re-search-forward "\r\n" (point-max) t)
+	  (replace-match "\n"))
         (goto-char 1)
         (if (re-search-forward
              (concat (if (string-match "^!" bbdb-whois-name)

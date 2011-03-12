@@ -20,10 +20,6 @@
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 ;;;
 
-;;
-;; $Id$
-;;
-
 (require 'bbdb)
 
 ;;; Migrating the BBDB
@@ -51,7 +47,7 @@ disk.  Returns the version for the saved database."
       (set-buffer buf)
       (erase-buffer)
       (goto-char (point-min))
-      (insert-string (format "BBDB new data version notice:
+      (insert (format "BBDB new data version notice:
 =============================
 
 Your BBDB data is stored in an older format (version %d).  At this point,
@@ -62,7 +58,7 @@ versions will be lost.  For your convenience, a list of file format
 changes introduced after version %d is shown below:\n\n" ondisk ondisk))
       (while newfeatures
     (if (> (caar newfeatures) ondisk)
-      (insert-string (concat (if first (setq first nil) "\n\n")
+      (insert (concat (if first (setq first nil) "\n\n")
                  "New features in database version "
                  (format "%d" (caar newfeatures))
                  ":\n\n" (cdar newfeatures))))
@@ -216,7 +212,7 @@ This uses the code that used to be in bbdb-parse-zip-string."
                   (zip (cond ((string-match "^[ \t\n]*$" string) 0)
                              ;; Matches 1 to 6 digits.
                              ((string-match "^[ \t\n]*[0-9][0-9]?[0-9]?[0-9]?[0-9]?[0-9]?[ \t\n]*$" string)
-                              (string-to-int string))
+                              (string-to-number string))
                              ;; Matches 5 digits and 3 or 4 digits.
                              ((string-match "^[ \t\n]*\\([0-9][0-9][0-9][0-9][0-9]\\)[ \t\n]*-?[ \t\n]*\\([0-9][0-9][0-9][0-9]?\\)[ \t\n]*$" string)
                               (list (bbdb-subint string 1) (bbdb-subint string 2)))
@@ -270,9 +266,9 @@ argument."
         ["0" "0" "0" "0" nil])
      (cond ((string-match
          "^\\([0-9]\\{4\\}\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)" date)
-        (setq parsed (vector (string-to-int (match-string 1 date))
-                     (string-to-int (match-string 2 date))
-                     (string-to-int (match-string 3 date))))
+        (setq parsed (vector (string-to-number (match-string 1 date))
+                     (string-to-number (match-string 2 date))
+                     (string-to-number (match-string 3 date))))
         ;; This should be fairly loud for GNU Emacs users
         (bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
                (car field) (cdr field)
@@ -282,9 +278,9 @@ argument."
                (aref parsed 2) (aref parsed 0)))
            ((string-match
          "^\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([0-9]\\{4\\}\\)" date)
-        (setq parsed (vector (string-to-int (match-string 3 date))
-                     (string-to-int (match-string 1 date))
-                     (string-to-int (match-string 2 date))))
+        (setq parsed (vector (string-to-number (match-string 3 date))
+                     (string-to-number (match-string 1 date))
+                     (string-to-number (match-string 2 date))))
         ;; This should be fairly loud for GNU Emacs users
         (bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
                (car field) (cdr field)
@@ -296,11 +292,11 @@ argument."
 
     ;; I like numbers
     (and (stringp (aref parsed 0))
-     (aset parsed 0 (string-to-int (aref parsed 0))))
+     (aset parsed 0 (string-to-number (aref parsed 0))))
     (and (stringp (aref parsed 1))
-     (aset parsed 1 (string-to-int (aref parsed 1))))
+     (aset parsed 1 (string-to-number (aref parsed 1))))
     (and (stringp (aref parsed 2))
-     (aset parsed 2 (string-to-int (aref parsed 2))))
+     (aset parsed 2 (string-to-number (aref parsed 2))))
 
     ;; Sanity check
     (cond ((and (< 0 (aref parsed 0))

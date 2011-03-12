@@ -18,32 +18,30 @@
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
-;;
-;; $Id$
-;;
-
 (eval-and-compile
   (require 'cl)
   (require 'bbdb)
   (require 'bbdb-com)
   (require 'bbdb-snarf)
-  (require 'vm-autoload)
-  (require 'vm)
-
-  (if (not (fboundp 'vm-record-and-change-message-pointer))
-      (load-library "vm-motion"))
-  (if (not (fboundp 'vm-su-from))
-      (load-library "vm-summary"))
-  (or (boundp 'vm-mode-map)
-      (load-library "vm-vars")))
-
+  (require 'vm-version)
+  (require 'vm-macro)
+  (require 'vm-message)
+  (require 'vm-misc)
+  (require 'vm-undo)
+  (require 'vm-motion)
+  (require 'vm-summary)
+  (require 'vm-vars)
+  (require 'vm-folder)
+  (require 'vm-mime))
+  
 (defun bbdb/vm-get-header-content (header-field msg)
   (let ((content (vm-get-header-contents msg (concat header-field ":"))))
     (if content
         (vm-decode-mime-encoded-words-in-string content))))
 
 (defcustom bbdb/vm-update-records-mode
-  '(if (vm-new-flag msg) 'annotating 'searching)
+;  '(if (vm-new-flag msg) 'annotating 'searching)
+  'annotating
   "Controls how `bbdb/vm-update-records' processes email addresses.
 Set this to an expression which evaluates either to 'searching or
 'annotating.  When set to 'annotating email addresses will be fed to
@@ -71,7 +69,7 @@ The default is to annotate only new messages."
 (defun bbdb/vm-update-records (&optional offer-to-create)
   "Returns the records corresponding to the current VM message,
 creating or modifying them as necessary.  A record will be created if
-bbdb/mail-auto-create-p is non-nil or if OFFER-TO-CREATE is true, and
+`bbdb/mail-auto-create-p' is non-nil or if OFFER-TO-CREATE is true, and
 the user confirms the creation.
 
 The variable `bbdb/vm-update-records-mode' controls what actions
@@ -186,7 +184,7 @@ This buffer will be in `bbdb-mode', with associated keybindings."
   "Make the *BBDB* buffer be displayed along with the VM window(s).
 Displays the records corresponding to the sender respectively
 recipients of the current message.
-See `bbdb/vm-get-addresses-headers' and 'bbdb-get-only-first-address-p' for
+See `bbdb-get-addresses-headers' and 'bbdb-get-only-first-address-p' for
 configuration of what is being displayed."
   (save-excursion
     (let ((bbdb-gag-messages t)
@@ -199,7 +197,7 @@ configuration of what is being displayed."
          (function (lambda (w)
                      (let ((b (current-buffer)))
                        (set-buffer (window-buffer w))
-                       (prog1 (eq major-mode 'vm-mode)
+                       (prog1 (member major-mode '(vm-mode vm-presentation-mode))
                          (set-buffer b))))))
 
         ;; Always update the records; if there are no records, empty the
@@ -297,12 +295,8 @@ e.g. define you own function `my-folder-name' and set it to
           (delete
            nil
            (mapcar (lambda (r)
-                     (let ((notes (bbdb-record-raw-notes r)))
-                       (if (and notes
-                                (assq bbdb/vm-set-auto-folder-alist-field
-                                      notes))
-                           r
-                         nil)))
+                     (if (bbdb-record-getprop r bbdb/vm-set-auto-folder-alist-field)
+                         r))
                    (bbdb-records))))
     
     (while headers

@@ -34,8 +34,6 @@
 ;;; |  bbdb-submit-bug-report, which will include all useful version         |
 ;;; |  information plus state information about how you have BBDB set up.    |
 ;;;  ------------------------------------------------------------------------
-;;;
-;;; $Id$
 
 (require 'timezone)
 (eval-when-compile (require 'cl))
@@ -62,10 +60,20 @@
  (defvar message-mode-map) ;; message.el
  (defvar mail-mode-map) ;; sendmail.el
  (defvar gnus-article-buffer) ;; gnus-art.el
+ (defvar temp-buffer-setup-hook nil)
+ (defvar buffer-file-coding-system nil)
+ (defvar coding-system-for-write nil)
  )
 
-(defconst bbdb-version "2.35")
-(defconst bbdb-version-date "$Date$")
+(defconst bbdb-version "2.36 devo")
+
+
+(defmacro bbdb-eval-when (c &rest body)
+  "Emit BODY only if C is true."
+  (if (eval c)
+      (backquote (progn (\,@ body)))))
+
+(put 'bbdb-eval-when 'lisp-indent-hook 'defun)
 
 (defcustom bbdb-gui (if (fboundp 'display-color-p) ; Emacs 21
                         (display-color-p)
@@ -113,6 +121,37 @@ prompt the users on how to merge records when duplicates are detected.")
   (or (fboundp 'set-keymap-prompt)
       (fset 'set-keymap-prompt 'ignore)))
 
+(eval-and-compile
+  (if (fboundp 'replace-in-string)
+      (defalias 'bbdb-replace-in-string 'replace-in-string)
+    (if (fboundp 'replace-regexp-in-string) ; defined in e21
+        (defalias 'bbdb-replace-regexp-in-string 'replace-regexp-in-string)
+      ;; actually this is `dired-replace-in-string' slightly modified
+      ;; We're not defining the whole thing, just enough for our purposes.
+      (defun bbdb-replace-regexp-in-string (regexp newtext string &optional
+                                                   fixedcase literal)
+        ;; Replace REGEXP with NEWTEXT everywhere in STRING and return result.
+        ;; NEWTEXT is taken literally---no \\DIGIT escapes will be recognized.
+        (let ((result "") (start 0) mb me)
+          (while (string-match regexp string start)
+            (setq mb (match-beginning 0)
+                  me (match-end 0)
+                  result (concat result (substring string start mb) newtext)
+                  start me))
+          (concat result (substring string start)))))
+    (defun bbdb-replace-in-string (string regexp newtext &optional literal)
+      (bbdb-replace-regexp-in-string regexp newtext string nil literal))))
+
+(defun bbdb-prin1-to-string (object &optional noescape)
+  (let ((print-length nil)
+        (print-level nil))
+    (prin1-to-string object noescape)))
+
+(defun bbdb-prin1 (object &optional stream)
+  (let ((print-length nil)
+        (print-level nil))
+    (prin1 object stream)))
+
 ;; this should really be in bbdb-com
 ;;;###autoload
 (defun bbdb-submit-bug-report ()
@@ -126,7 +165,6 @@ prompt the users on how to merge records when duplicates are detected.")
    (append
     ;; non user variables
     '(emacs-version
-      bbdb-version-date
       bbdb-file-format
       bbdb-no-duplicates-p)
     ;; user variables
@@ -324,13 +362,16 @@ When nil, you will be asked."
   :group 'bbdb-database
   :type 'boolean)
 
-(unless (fboundp 'primep)
-  (defun primep (num)
-    (let ((lim (sqrt num)) (nu 2) (prime t))
-      (while (and prime (< nu lim))
-        (setq prime (/= 0 (mod num nu))
-              nu (1+ nu)))
-      prime)))
+(defun bbdb-primep (num)
+  "Return t if NUM is a prime number."
+  (if (fboundp 'primep)
+      (primep num) 
+    (and (numberp num) (> num 1) (= num (floor num))
+         (let ((lim (sqrt num)) (nu 2) (prime t))
+           (while (and prime (<= nu lim))
+             (setq prime (/= 0 (mod num nu))
+                   nu (1+ nu)))
+           prime))))
 
 (defcustom bbdb-hashtable-size 1021
   "*The size of the bbdb hashtable.
@@ -342,7 +383,7 @@ you should reload `bbdb-file'."
   :group 'bbdb-database
   :type 'integer
   :set (lambda (symb val)
-         (unless (primep val)
+         (unless (bbdb-primep val)
            (error "`%s' must be prime, not %s" symb val))
          (set symb val)
          (when (fboundp 'bbdb-records)
@@ -407,10 +448,8 @@ commands be different."
   :group 'bbdb
   :type 'boolean)
 
-;; these variables both need to be enabled for gnus mailreading to
-;; work right. that's probably a bug, or something.
 (defcustom bbdb/mail-auto-create-p t
-  "*If this is t, then Gnus, MH, RMAIL, and VM will automatically
+  "*If this is t, then MH, RMAIL, and VM will automatically
 create new bbdb records for people you receive mail from. If this
 is a function name or lambda, then it is called with no arguments
 to decide whether an entry should be automatically created. You
@@ -446,12 +485,23 @@ to a record already in the database with the same network address.  As in,
 \"John Smith <jqs@frob.com>\" versus \"John Q. Smith <jqs@frob.com>\".
 Normally you will be asked if you want to change it.
 If set to a number it is the number of seconds to sit for while
-displaying the mismatch message."
+displaying the mismatch message.
+
+If set to a function it will be called with two arguments, the record and the
+new name and should return nil, t or a number.
+
+If none of the others it must be a sexp evaluating to nil, t or a number.
+
+Any other return value of the function or sexp will be considered as true."
   :group 'bbdb-noticing-records
   :type '(choice (const :tag "Prompt for name changes" nil)
                  (const :tag "Do not prompt for name changes" t)
          (integer :tag
-              "Instead of prompting, warn for this many seconds")))
+              "Instead of prompting, warn for this many seconds")
+         (function :tag "User defined function")
+         (sexp :tag "User defined sexp")
+         (const :tag "Ignore records which has a 'readonly' field"
+                (assq 'readonly (bbdb-record-raw-notes record)))))
 
 (defcustom bbdb-use-alternate-names t
   "*If this is true, then when bbdb notices a name change, it will ask you
@@ -493,16 +543,28 @@ newer than the file is was read from, and will offer to revert."
   :type '(choice (const :tag "Check auto-save file" t)
                  (const :tag "Do not check auto-save file" nil)))
 
-(defcustom bbdb-use-pop-up t
-  "If true, display a continuously-updating bbdb window while in VM, MH,
-RMAIL, or Gnus.  If 'horiz, stack the window horizontally if there is room."
+(defcustom bbdb-use-pop-up 'horizontal
+  "*If not nil, display a continuously-updating bbdb window while in VM, MH,
+RMAIL, Gnus or a composition buffer.
+
+If 'horizontal, stack the window horizontally and give it the number of lines
+specified by `bbdb-pop-up-target-lines'.  
+If 'vertical, stack the window vertically and give it the number of rows
+specified by `bbdb-pop-up-target-columns'."
   :group 'bbdb-record-display
-  :type '(choice (const :tag "Automatic BBDB window, stacked vertically" t)
-                 (const :tag "Automatic BBDB window, stacked horizontally" 'horiz)
+  :type '(choice (const :tag "Automatic BBDB window, stacked vertically" 'vertical)
+                 (const :tag "Automatic BBDB window, stacked horizontally" 'horizontal)
                  (const :tag "No Automatic BBDB window" nil)))
 
 (defcustom bbdb-pop-up-target-lines 5
-  "*Desired number of lines in a VM/MH/RMAIL/Gnus pop-up bbdb window."
+  "*Desired number of lines in a horizontal BBDB buffer pop-up window.
+See `bbdb-use-pop-up' on how to select horizontal splitting."
+  :group 'bbdb-record-display
+  :type 'integer)
+
+(defcustom bbdb-pop-up-target-columns 20
+  "*Desired number of lines in a vertical BBDB buffer pop-up window.
+See `bbdb-use-pop-up' on how to select vertical splitting."
   :group 'bbdb-record-display
   :type 'integer)
 
@@ -524,8 +586,8 @@ first address in the list of addresses for a given user).  If it is
 
 (defcustom bbdb-completion-display-record t
   "*Whether `bbdb-complete-name' (\\<mail-mode-map>\\[bbdb-complete-name]
-in mail-mode) will update the *BBDB* buffer
-to display the record whose email address has just been inserted."
+in mail-mode) will update the *BBDB* buffer to display the record whose email
+address has just been inserted."  
   :group 'bbdb-record-use
   :type '(choice (const :tag "Update the BBDB buffer" t)
                  (const :tag "Don't update the BBDB buffer" nil)))
@@ -757,13 +819,20 @@ You can also set this to a function returning a buffer name."
 
 ;; iso-2022-7bit should be OK (but not optimal for Emacs, at least --
 ;; emacs-mule would be better) with both Emacs 21 and XEmacs.
-(defconst bbdb-file-coding-system
-  (if (fboundp 'coding-system-p)
-      (cond ((coding-system-p 'utf-8-emacs)
-             'utf-8-emacs)
-            (t 'iso-2022-7bit)))
+(defcustom bbdb-file-coding-system
+  (bbdb-eval-when (fboundp 'coding-system-p)
+    (cond ((apply 'coding-system-p '(utf-8-emacs))
+           'utf-8-emacs)
+          (t 'iso-8859-1)))
   "Coding system used for reading and writing `bbdb-file'.
-This should not be changed by users.")
+This should not be changed by users.
+This should not be changed in between BBDB sessions, i.e. before loading the
+BBDB which was stored in a different coding system.  Make a backup of your
+BBDB before changing this variable!"
+  :group 'bbdb
+  :type '(choice (const iso-8859-1)
+                 (const utf-8-emacs)
+                 (const iso-2022-7bit)))
 
 (defvar bbdb-suppress-changed-records-recording nil
   "Whether to record changed records in variable `bbdb-changed-records'.
@@ -942,6 +1011,13 @@ that holds the number of slots."
   (or (bbdb-cache-namecache (bbdb-record-cache record))
       (bbdb-record-name-1 record)))
 
+(defun bbdb-record-lfname (record)
+  (let ((fname (bbdb-record-firstname record))
+        (lname (bbdb-record-lastname record)))
+    (if (and (> (length fname) 0) (> (length lname) 0))
+        (concat lname " " fname)
+      nil)))
+
 ;; Return the sortkey for a record, building (and storing) it if
 ;; necessary.
 (defun bbdb-record-sortkey (record)
@@ -1070,7 +1146,7 @@ If the note is absent, returns a zero length string."
                  (list 'bbdb-record-sortkey record2)))
 
 (defmacro bbdb-subint (string match-number)
-  (list 'string-to-int
+  (list 'string-to-number
         (list 'substring string
               (list 'match-beginning match-number)
               (list 'match-end match-number))))
@@ -1223,9 +1299,9 @@ determined by FORMAT (or `bbdb-time-display-format' if FORMAT not
 present).  Returns a string containing the date in the new format."
   (let ((parts (bbdb-split date "-")))
     (format-time-string (or format bbdb-time-display-format)
-                        (encode-time 0 0 0 (string-to-int (caddr parts))
-                                     (string-to-int (cadr parts))
-                                     (string-to-int (car parts))))))
+                        (encode-time 0 0 0 (string-to-number (caddr parts))
+                                     (string-to-number (cadr parts))
+                                     (string-to-number (car parts))))))
 
 (defalias 'bbdb-format-record-timestamp 'bbdb-time-convert)
 (defalias 'bbdb-format-record-creation-date 'bbdb-time-convert)
@@ -1233,7 +1309,7 @@ present).  Returns a string containing the date in the new format."
 (defconst bbdb-gag-messages nil
   "Bind this to t to quiet things down - do not set it!")
 
-(defconst bbdb-buffer-name "*BBDB*")
+(defvar bbdb-buffer-name "*BBDB*")
 
 (defcustom bbdb-display-layout-alist
   '((one-line   (order     . (phones mail-alias net notes))
@@ -1283,7 +1359,7 @@ layout function, the multi-line layout will be used."
           (choice :tag "Layout type"
                   (const one-line)
                   (const multi-line)
-          (const pop-up-multi-line)
+                  (const pop-up-multi-line)
                   (const full-multi-line)
                   (symbol))
           (set :tag "Properties"
@@ -1346,7 +1422,7 @@ layout function, the multi-line layout will be used."
                  (const full-multi-line)
                  (symbol)))
 
-(defcustom bbdb-pop-up-display-layout 'pop-up-multi-line
+(defcustom bbdb-pop-up-display-layout 'one-line
   "*The default display layout pop-up BBDB buffers, i.e. mail, news."
   :group 'bbdb
   :type '(choice (const one-line)
@@ -1519,7 +1595,7 @@ formatted and inserted into the current buffer.  This is used by
       (put-text-property start (point) 'bbdb-field '(company)))))
 
 (defun bbdb-format-record-one-line-phones (layout record phone)
-  "Return a formatted phone number for one-line display."
+  "Insert a formatted phone number for one-line display."
   (let ((start (point)))
     (insert (format "%s " (aref phone 1)))
     (put-text-property start (point) 'bbdb-field
@@ -1530,10 +1606,17 @@ formatted and inserted into the current buffer.  This is used by
                        (list 'phone phone 'field-name))))
 
 (defun bbdb-format-record-one-line-net (layout record net)
-  "Return a formatted list of nets for one-line display."
+  "Insert a formatted list of nets for one-line display."
   (let ((start (point)))
     (insert net)
     (put-text-property start (point) 'bbdb-field (list 'net net))))
+
+(defun bbdb-format-record-one-line-notes (layout record notes)
+  "Insert formatted notes for one-line display.
+Line breaks will be removed and white space trimmed."
+  (let ((start (point)))
+    (insert (bbdb-replace-in-string notes "[\r\n\t ]+" " "))
+    (put-text-property start (point) 'bbdb-field (list 'notes notes))))
 
 (defun bbdb-format-record-layout-one-line (layout record field-list)
   "Record formatting function for the one-line layout.
@@ -1796,13 +1879,17 @@ multi-line layout."
 
   (let ((b (current-buffer))
         (temp-buffer-setup-hook nil)
-        (temp-buffer-show-hook nil)
+        (temp-buffer-show-function nil)
         (first (car (car records))))
 
-    (if bbdb-multiple-buffers (bbdb-pop-up-bbdb-buffer))
+    ;; just quiet a warning about unused vars 
+    (and temp-buffer-setup-hook temp-buffer-show-function)
 
-    (with-output-to-temp-buffer bbdb-buffer-name
+    (bbdb-pop-up-bbdb-buffer)
+
+    (save-excursion 
       (set-buffer bbdb-buffer-name)
+      (let ((inhibit-read-only t)) (erase-buffer))
 
       ;; If append is set, clear the buffer, otherwise do clean up.
       (unless append (bbdb-undisplay-records))
@@ -1880,7 +1967,7 @@ multi-line layout."
 
 ;;; Electric display stuff
 
-(defconst bbdb-inside-electric-display nil)
+(defvar bbdb-inside-electric-display nil)
 ;; hack hack: a couple of specials that the electric stuff uses for state.
 (defvar bbdb-electric-execute-me)
 (defvar bbdb-electric-completed-normally)
@@ -2140,11 +2227,14 @@ The inverse function of `bbdb-split'."
   "Insert the record in the appropriate hashtables.  This must be called
 while the .bbdb buffer is selected."
   (let ((name    (bbdb-record-name-1  record))  ; faster version
+        (lfname  (bbdb-record-lfname record))
         (company (bbdb-record-company record))
         (aka     (bbdb-record-aka     record))
         (net     (bbdb-record-net     record)))
     (if (> (length name) 0)
         (bbdb-puthash (downcase name)    record bbdb-hashtable))
+    (if (> (length lfname) 0)
+        (bbdb-puthash (downcase lfname)  record bbdb-hashtable))
     (if (> (length company) 0)
         (bbdb-puthash (downcase company) record bbdb-hashtable))
     (while aka
@@ -2483,6 +2573,7 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
                          (bbdb-record-marker (car (cdr tail)))
                          bbdb-end-marker))
       (let ((name    (bbdb-record-name    record))
+            (lfname  (bbdb-record-lfname  record))
             (company (bbdb-record-company record))
             (aka     (bbdb-record-aka     record))
             (nets    (bbdb-record-net     record)))
@@ -2490,6 +2581,8 @@ optional arg DONT-CHECK-DISK is non-nil (which is faster, but hazardous.)"
             (bbdb-remhash (downcase name) record bbdb-hashtable))
         (if (> (length company) 0)
             (bbdb-remhash (downcase company) record bbdb-hashtable))
+        (if (> (length lfname) 0)
+            (bbdb-remhash (downcase lfname) record bbdb-hashtable))
         (while nets
           (bbdb-remhash (downcase (car nets)) record bbdb-hashtable)
           (setq nets (cdr nets)))
@@ -2543,7 +2636,7 @@ Assumes the list is already sorted.  Returns the new head."
                       point)))
           (bbdb-record-set-cache record nil)
           (if unmigrated (bbdb-record-set-cache unmigrated nil))
-          (insert-before-markers (prin1-to-string (or unmigrated record)) "\n")
+          (insert-before-markers (bbdb-prin1-to-string (or unmigrated record)) "\n")
           (set-marker (bbdb-cache-marker cache) point)
           (bbdb-record-set-cache record cache)
 ;;        (if (bbdb-record-name record)
@@ -2589,7 +2682,7 @@ Assumes the list is already sorted.  Returns the new head."
         (bbdb-record-set-cache record nil)
         (if unmigrated (bbdb-record-set-cache unmigrated nil))
 
-        (insert (prin1-to-string (or unmigrated record)) "\n")
+        (insert (bbdb-prin1-to-string (or unmigrated record)) "\n")
         (delete-region (point)
                        (if (cdr tail)
                            (bbdb-record-marker (car (cdr tail)))
@@ -2706,7 +2799,7 @@ doesn't know how to deal with."
       ;; record in the database!
       (insert-before-markers ";;; user-fields: \n")
       (forward-char -1))
-    (prin1 (mapcar (lambda (x) (intern (car x)))
+    (bbdb-prin1 (mapcar (lambda (x) (intern (car x)))
                    bbdb-propnames)
            (current-buffer))
     bbdb-propnames))
@@ -3128,6 +3221,27 @@ and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\"."
       (setq old-nets (cdr old-nets)))
     redundant-addr))
 
+(defun bbdb-name-normalize (name)
+  "Return normalized NAME.
+NAME is converted to lower case and in a MULE enabled Emacs it is converted to
+UTF-8 or unibyte to unify the overlapping ISO-8859-* encodings.
+
+You may advice this function to allow more sophisticated normalizations."
+  (when name 
+    (setq name (downcase name))
+    (cond ((functionp 'encode-coding-string)
+	   (funcall 'encode-coding-string name 'utf-8))
+	  ((functionp 'string-make-unibyte)
+	   (funcall 'string-make-unibyte name))
+	  (t
+	   name))))
+
+(defun bbdb-name= (a b)
+  "Return t if the two names A and B are equal.
+Before comparing A and B they are normalized by calling the function
+`bbdb-name-normalize'."   
+  (string= (bbdb-name-normalize a) (bbdb-name-normalize b)))
+
 
 (defun bbdb-annotate-message-sender (from &optional loudly create-p
                                           prompt-to-create-p)
@@ -3158,6 +3272,7 @@ before the record is created, otherwise it is created without confirmation
           (fname name)
           (lname nil)
           old-name
+          ignore-name-mismatch
           bogon-mode)
       (and record (setq old-name (bbdb-record-name record)))
 
@@ -3168,14 +3283,12 @@ before the record is created, otherwise it is created without confirmation
       ;; corresponding to a person who has a real-name which is the same
       ;; as the network-address of someone in the db already.  This is not
       ;; a good solution.
-      (let (down-name old-net)
-        (if (and record name
-                 (not (equal (setq down-name (downcase name))
-                             (and old-name (downcase old-name)))))
+      (let (old-net)
+        (if (and record name (not (bbdb-name= name old-name)))
             (progn
               (setq old-net (bbdb-record-net record))
               (while old-net
-                (if (equal down-name (downcase (car old-net)))
+                (if (bbdb-name= name (car old-net))
                     (progn
                       (setq bogon-mode t
                             old-net nil)
@@ -3199,7 +3312,6 @@ before the record is created, otherwise it is created without confirmation
             (if (string-match "^[^@]+" net)
                 (setq name (bbdb-clean-username (match-string 0 net)))))
         (setq record (if (or (null prompt-to-create-p)
-                             (eq create-p t) ;; don't skip if it's 'prompt!
                              (if (functionp prompt-to-create-p)
                                  (bbdb-invoke-hook-for-value
                                   prompt-to-create-p)
@@ -3216,8 +3328,7 @@ before the record is created, otherwise it is created without confirmation
         (bbdb-debug (if (bbdb-record-deleted-p record)
                         (error "nasty nasty deleted record nasty.")))
         (if (and name
-                 (not (equal (and name (downcase name))
-                             (and old-name (downcase old-name))))
+                 (not (bbdb-name= name old-name))
                  (or (null bbdb-use-alternate-names)
                      (not (bbdb-check-alternate-name name record)))
                  (let ((fullname (bbdb-divide-name name))
@@ -3232,21 +3343,32 @@ before the record is created, otherwise it is created without confirmation
                                     (and (setq tmp
                                                (bbdb-record-lastname record))
                                          (downcase tmp)))))))
-
+            
             ;; have a message-name, not the same as old name.
             (cond (bbdb-readonly-p nil);; skip if readonly
 
                   ;; ignore name mismatches?
                   ;; NB 'quiet' means 'don't ask', not 'don't mention'
-                  ((and bbdb-quiet-about-name-mismatches old-name)
-                   (let ((sit-for-secs
-                          (if (numberp bbdb-quiet-about-name-mismatches)
-                              bbdb-quiet-about-name-mismatches
-                            2)))
-                     (if (or bbdb-silent-running (= 0 sit-for-secs)) nil
-                       (message "name mismatch: \"%s\" changed to \"%s\""
-                                (bbdb-record-name record) name)
-                       (sit-for sit-for-secs))))
+                  ((and old-name
+                        (setq ignore-name-mismatch bbdb-quiet-about-name-mismatches
+                              ignore-name-mismatch
+                              (cond
+                               ((eq nil ignore-name-mismatch)
+                                nil)
+                               ((eq t ignore-name-mismatch)
+                                2)
+                               ((numberp ignore-name-mismatch)
+                                ignore-name-mismatch)
+                               ((functionp ignore-name-mismatch)
+                                (funcall ignore-name-mismatch record name))
+                               (t
+                                (eval ignore-name-mismatch)))))
+                   (if (or bbdb-silent-running (eq t ignore-name-mismatch))
+                       nil
+                     (message "name mismatch: \"%s\" changed to \"%s\""
+                              (bbdb-record-name record) name)
+                     (if (numberp ignore-name-mismatch)
+                         (sit-for ignore-name-mismatch))))
                   ((or created-p
                        (if bbdb-silent-running t
                          (if (null old-name)
@@ -3449,93 +3571,88 @@ before the record is created, otherwise it is created without confirmation
       (setq bbdb-buffer-name new-name)
       (setq buffer-list (cdr buffer-list)))))
 
-(defun bbdb-pop-up-bbdb-buffer (&optional horiz-predicate)
+(defun bbdb-pop-up-bbdb-buffer (&optional predicate)
   "Find the largest window on the screen, and split it, displaying the
 *BBDB* buffer in the bottom 'bbdb-pop-up-target-lines' lines (unless
 the *BBDB* buffer is already visible, in which case do nothing.)
 
-If 'bbdb-use-pop-up' is the symbol 'horiz, and the first window
-matching HORIZ-PREDICATE is sufficiently wide (> 100 columns) then
-the window will be split vertically rather than horizontally.
+PREDICATE can be a function to select the right window for the split.
+
+`bbdb-use-pop-up' controls how to split the selected window and how many lines
+resp. columns it will get.  If it is 'vertical a vertical split is done otherwise
+a horizontal.
 
 If `bbdb-multiple-buffers' is set we create a new BBDB buffer when not
 already within one.  The new buffer-name starts with a space, i.e. it does
 not clutter the buffer-list."
 
-  (let ((b (current-buffer))
-        new-bbdb-buffer-name)
+  (let ((current-window (selected-window))
+        (current-buffer (current-buffer))
+        new-bbdb-buffer-name
+        window)
 
     ;; create new BBDB buffer if multiple buffers are desired.
     (when (and bbdb-multiple-buffers (not (eq major-mode 'bbdb-mode)))
-      (bbdb-multiple-buffers-set-name (list b)))
+      (bbdb-multiple-buffers-set-name (list current-buffer)))
     (setq new-bbdb-buffer-name bbdb-buffer-name)
 
+
     ;; now get the pop-up
-    (if (get-buffer-window new-bbdb-buffer-name)
-        nil
-      (if (and (eq bbdb-use-pop-up 'horiz)
-               horiz-predicate
-               (bbdb-pop-up-bbdb-buffer-horizontally horiz-predicate))
-          nil
-        (let* ((first-window (selected-window))
-               (tallest-window first-window)
-               (window first-window))
-          ;; find the tallest window...
-          (while (not (eq (setq window (previous-window window)) first-window))
+    (if (or (not bbdb-use-pop-up) (get-buffer-window new-bbdb-buffer-name))
+        ;; just create the buffer if necessary 
+        (progn
+          (get-buffer-create new-bbdb-buffer-name)
+          (display-buffer new-bbdb-buffer-name))
+      
+      ;; else find a window to split
+      (when predicate 
+        (setq window current-window)
+        (while (and (not (funcall predicate window))
+                    (not (eq current-window
+                             (setq window (next-window window)))))))
+      
+      ;; find the tallest window if none has been selected so far 
+      (when (null window)
+        (let ((tallest-window current-window))
+          (while (not (eq current-window (setq window (next-window window))))
             (if (> (window-height window) (window-height tallest-window))
                 (setq tallest-window window)))
-          ;; select it and split it...
-          (select-window tallest-window)
-          (let ((size (min
-                       (- (window-height tallest-window)
-                          window-min-height 1)
-                       (- (window-height tallest-window)
-                          (max window-min-height
-                               (1+ bbdb-pop-up-target-lines))))))
-            (split-window tallest-window
-                          (if (> size 0) size window-min-height)))
-          (if (memq major-mode
-                    '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
-              (goto-char (point-min)))  ; make gnus happy...
-          ;; goto the bottom of the two...
-          (select-window (next-window))
-          ;; make it display *BBDB*...
-          (let ((pop-up-windows nil))
-            (switch-to-buffer (get-buffer-create new-bbdb-buffer-name)))
-          ;; select the original window we were in...
-          (select-window first-window)))
-      ;; and make sure the current buffer is correct as well.
-      (set-buffer b)
-      nil)))
+          (setq window tallest-window)))
+      
+      ;; select it and split it...
+      (select-window window)
+      (cond ((eq bbdb-use-pop-up 'vertical)
+             (split-window-horizontally (- bbdb-pop-up-target-columns)))
+            (t
+             (let ((size (min
+                          (- (window-height window) window-min-height 1)
+                          (- (window-height window)
+                             (max window-min-height
+                                  (1+ bbdb-pop-up-target-lines))))))
+               (setq size (if (> size 0) size window-min-height))
+               (split-window window size))))
 
-(defun bbdb-pop-up-bbdb-buffer-horizontally (predicate)
-  (if (<= (frame-width) 112)
-      nil
-    (let* ((first-window (selected-window))
-           (got-it nil)
-           (window first-window))
-      (while (and (not (setq got-it (funcall predicate window)))
-                  (not (eq first-window (setq window (next-window window)))))
-        )
-      (if (or (null got-it)
-              (<= (window-width window) 112))
-          nil
-        (let ((b (current-buffer)))
-          (select-window window)
-          (split-window-horizontally 80)
-          (select-window (next-window window))
-          (let ((pop-up-windows nil))
-            (switch-to-buffer (get-buffer-create bbdb-buffer-name)))
-          (select-window first-window)
-          (set-buffer b)
-          t)))))
+      ;; make gnus happy...
+      (if (memq major-mode
+                '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
+          (goto-char (point-min)))
+      
+      ;; goto the next window, the one created by the split and 
+      ;; make it display the BBDB buffer
+      (select-window (next-window))
+      (let ((pop-up-windows nil))
+        (switch-to-buffer (get-buffer-create new-bbdb-buffer-name)))
+    
+      ;; select the original window we were in
+      (select-window current-window)
+      ;; and make sure the original buffer is selected
+      (set-buffer current-buffer))))
 
 (defun bbdb-version (&optional arg)
   "Return string describing the version of the BBDB that is running.
 When called interactively with a prefix argument, insert string at point."
   (interactive "P")
-  (let ((version-string (format "BBDB version %s (%s)"
-                               bbdb-version bbdb-version-date)))
+  (let ((version-string (format "BBDB version %s" bbdb-version)))
     (cond
      (arg
       (insert (message version-string)))
@@ -3572,7 +3689,7 @@ after having used inferior software to add entries to the BBDB, however."
            (setq record (car records)
                  cache (bbdb-record-cache record))
            (bbdb-record-set-cache record nil)
-           (prin1 (car records))
+           (bbdb-prin1 (car records))
            (bbdb-record-set-cache record cache)
            (insert ?\n)
            (setq records (cdr records))))

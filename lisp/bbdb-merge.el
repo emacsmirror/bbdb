@@ -149,9 +149,12 @@ Returns the Grand Unified Record."
     ;; fix up the in-memory copy.
     (bbdb-change-record merge-record t)
     (let ((name    (bbdb-record-name    merge-record))
+          (lfname  (bbdb-record-lastname    merge-record))
           (company (bbdb-record-company merge-record)))
       (if (> (length name) 0)
           (bbdb-remhash (downcase name) merge-record))
+      (if (> (length lfname) 0)
+          (bbdb-remhash (downcase lfname) merge-record))
       (if (> (length company) 0)
           (bbdb-remhash (downcase company) merge-record)))
     (bbdb-record-set-namecache merge-record nil)

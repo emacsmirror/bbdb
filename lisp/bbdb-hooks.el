@@ -31,12 +31,10 @@
 ;;;
 ;;; Read the docstrings; read the texinfo file.
 
-;;
-;; $Id$
-;;
-
 (require 'bbdb)
 (require 'bbdb-com)
+(require 'bbdb-autoloads)
+(require 'mail-parse)
 
 (eval-when-compile
   (condition-case()
@@ -46,13 +44,17 @@
     (error nil))
   (condition-case()
       (progn
-        (require 'vm)
+        (require 'vm)        
+	(require 'vm-version)
         (require 'bbdb-vm))
     (error nil))
   (autoload 'mh-show "mh-e")
   (condition-case()
       (require 'bbdb-rmail)
-    (error nil)))
+    (error (message "Warning: Could not load RMAIL")))
+  (condition-case()
+      (require 'bbdb-mhe)
+    (error (message "Warning: Could not load MHE"))))
 
 (defvar rmail-buffer)
 (defvar mh-show-buffer)
@@ -147,7 +149,8 @@ beginning of the message headers."
                  (buffer-substring (match-end 0)
                    (progn (end-of-line 2) (point))))))))
         (forward-line 1))
-      done)))
+      (and done
+	   (mail-decode-encoded-word-string done)))))
 
 (defcustom bbdb-ignore-most-messages-alist '()
   "*An alist describing which messages to automatically create BBDB

@@ -16,10 +16,6 @@
 ;;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
-;;
-;; $Id$
-;;
-
 (require 'bbdb-com)
 (require 'browse-url)
 
@@ -35,7 +31,9 @@ means to try all records currently visible.
 Non-interactively, do all records if arg is nonnil."
   (interactive (list (bbdb-get-record "Visit (WWW): ")
                      (or current-prefix-arg 0)))
-  (browse-url (read-string "fetch: " (bbdb-get-field rec 'www which))))
+  (browse-url (read-string "fetch: "
+                           (or (bbdb-get-field rec 'www which)
+                               (bbdb-get-field rec 'ftp which)))))
 
 ;;;###autoload
 (defun bbdb-www-grab-homepage (record)

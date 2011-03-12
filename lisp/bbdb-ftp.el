@@ -21,8 +21,6 @@
 
 ;;; This file was written by Ivan Vazquez <ivan@haldane.bu.edu>
 
-;;; $Id$
-
 ;;; This file adds the ability to define ftp-sites in a BBDB, much the same
 ;;; way one adds a regular person's name to the BBDB.  It also defines the
 ;;; bbdb-ftp command which allows you to ftp a site that is in a bbdb-record.
@@ -58,6 +56,7 @@
 ;;; (autoload 'bbdb-create-ftp-site     "bbdb-ftp"  "Ftp BBDB Package" t)
 
 (require 'bbdb)
+(require 'bbdb-com)
 
 ;; There must be a better way
 (if (featurep 'efs-cu)
