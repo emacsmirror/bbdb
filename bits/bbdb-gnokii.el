@@ -8,7 +8,7 @@
 ;;          Len Trigg <len@reeltwo.com>
 ;; Maintainer: Martin Schwenke <martin@meltin.net>
 ;; Created: 23 August 2000
-;; $Id: bbdb-gnokii.el,v 1.16 2006/04/19 13:02:09 martins Exp $
+;; $Id$
 ;; Keywords: BBDB, Nokia, gnokii
 ;; X-URL: http://meltin.net/hacks/emacs/
 
@@ -172,7 +172,7 @@
 
 ;;; History:
 
-;; $Log: bbdb-gnokii.el,v $
+;; $Log$
 ;; Revision 1.16  2006/04/19 13:02:09  martins
 ;; Function bbdb-gnokii-do-name now just uses firstname if lastname is
 ;; not set.  Suggested by Magnus Henoch <mange@freemail.hu>.

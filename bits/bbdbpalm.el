@@ -5,7 +5,7 @@
 ;; Author:   Neil W. Van Dyke <neil@neilvandyke.org>
 ;; Version:  0.3
 ;; X-URL:    http://www.neilvandyke.org/bbdbpalm/
-;; X-CVS:    $Id: bbdbpalm.el,v 1.26 2006-11-12 04:46:58 neil Exp $
+;; X-CVS:    $Id$
 
 ;; This is free software; you can redistribute it and/or modify it under the
 ;; terms of the GNU General Public License as published by the Free Software
