@@ -5,7 +5,7 @@
 ;; Maintainer: Noah Friedman <friedman@splode.com>
 ;; Created: 2000-01-21
 
-;; $Id: bbdb-pilot-jwz.el,v 1.8 2001/06/19 03:45:37 friedman Exp $
+;; $Id$
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
