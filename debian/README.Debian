@@ -63,9 +63,21 @@ while the upstream .orig tarballs do.  I have left these out.
 
 To do an incremental update with upstream changes:
  cd src/git/bbdb
- git cvsimport -v -i -r origin -k -u -a -d :pserver:anonymous@bbdb.cvs.sourceforge.net:/cvsroot/bbdb bbdb
- gitk --all; git merge origin/origin
+ git cvsimport -v -k -u -a bbdb -d :pserver:anonymous@bbdb.cvs.sourceforge.net:/cvsroot/bbdb
 
+The file .git/cvs-authors (or file passed via -A to git-cvsimport)
+should contain:
+
+    bbdb-writer=Ronan Waide <waider@waider.ie>
+    drv=Didier Verna <didier@xemacs.org>
+    fenk=Robert Fenk <fenk@users.sourceforge.net>
+    kensanata=Alex Schroeder <kensanata@yahoo.com>
+    kuepper=Jochen Küpper <bbdb@jochen-kuepper.de>
+    sds=Sam Steingold <sds@goems.com>
+    shenghuo=ShengHuo ZHU <zsh@cs.rochester.edu>
+    simmonmt=Matt Simmons <simmonmt@acm.org>
+    waider=Ronan Waide <waider@waider.ie>
+    winkler=Roland Winkler <winkler@gnu.org>
 
 The default upstream build process compiles the .el files, and
 therefore needs a working emacs.  The debian packaging process leaves
@@ -76,4 +88,4 @@ until installation time.  Tweaking things to cause configuration to
 not bail when no emacs is present is more trouble than just requiring
 one at build time.  So that's what we do.
 
- -- Barak A. Pearlmutter <bap@debian.org>, Tue,  9 Mar 2010 16:04:29 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>, Sun, 13 Mar 2011 16:03:13 +0000
