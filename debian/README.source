@@ -1,0 +1,45 @@
+bbdb for Debian
+---------------
+
+The upstream site on sourceforge is moribund: no one seems to have write access to CVS.
+
+I've therefore imported the sources in git.
+
+Originally imported via:
+ git cvsimport -v -C bbdb -s -k -u -a bbdb -d :pserver:anonymous@bbdb.cvs.sourceforge.net:/cvsroot/bbdb
+on 17-Nov-2009
+
+The -s -k was a bug, as it substitutes "-k" for "/" in tags, oops,
+thus disabling the -k, double oops.
+
+Manually merged Debian patches and tagged Debian releases.
+
+Note that the upstream CVS repo did not contain the ./configure file,
+while the upstream .orig tarballs do.  I have left these out.
+
+Because of the bad options on the original import, the it was re-done
+with corrected options.  At this time, proper identity translation was
+also done.  This means that the file .git/cvs-authors (or the file
+passed via -A to git-cvsimport) should contain:
+
+    bbdb-writer=Ronan Waide <waider@waider.ie>
+    drv=Didier Verna <didier@xemacs.org>
+    fenk=Robert Fenk <fenk@users.sourceforge.net>
+    kensanata=Alex Schroeder <kensanata@yahoo.com>
+    kuepper=Jochen Küpper <bbdb@jochen-kuepper.de>
+    sds=Sam Steingold <sds@goems.com>
+    shenghuo=ShengHuo ZHU <zsh@cs.rochester.edu>
+    simmonmt=Matt Simmons <simmonmt@acm.org>
+    waider=Ronan Waide <waider@waider.ie>
+    winkler=Roland Winkler <winkler@gnu.org>
+
+The old imported tree is abandoned, but still present in the
+repository due to release tags.  New work should be done on the
+re-done import tree.
+
+To do an incremental update with upstream changes:
+ cd src/git/BBDB
+ (make sure branch origin exists, i.e., if necessary: git branch origin origin/origin)
+ git cvsimport -v -k -u -a bbdb -d :pserver:anonymous@bbdb.cvs.sourceforge.net:/cvsroot/bbdb
+
+ -- Barak A. Pearlmutter <bap@debian.org>, Sat, 19 Mar 2011 16:18:15 +0000
