@@ -18,7 +18,6 @@
 ;;
 ;; Author: Marcus Crestani <crestani@informatik.uni-tuebingen.de>
 ;; Created: 2008-01-03
-;; Version: $Id$
 ;; Keywords: vcard bbdb
 ;;
 ;; This requires vcard.el by NoahFriedman for the importer to work.

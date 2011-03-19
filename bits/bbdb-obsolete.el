@@ -4,7 +4,6 @@
 
 ;; Author: Colin Rafferty <colin@xemacs.org>
 ;; Keywords: bbdb, net, obsolete
-;; Version: $Id$
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

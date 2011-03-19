@@ -27,7 +27,7 @@
 ;; LCD Archive Entry:
 ;; bbdbadpt-gcc|Uwe Brauer|oub@mat.ucm.es
 ;; |Use the BBDB to insert a  gcc field
-;; |$Date$|$Revision$|~/packages/bbdbadpt-gcc.el
+;; |Date|Revision|~/packages/bbdbadpt-gcc.el
 
 ;;; Commentary:
 ;; I wanted to have the ispell dict selected 
@@ -44,7 +44,6 @@
 ;; 
 
 ;;; Change log:
-;; $Log$
 ;; Revision 1.1  2009/03/17 17:27:31  oub
 ;; Initial revision
 ;;
@@ -56,10 +55,6 @@
 ;;
 
 ;;; Code:
-
-(defconst bbdbadpt-ispell-version (concat "0." (substring "$Revision$" 13 14))
-	"$Id$
-Report bugs to: Uwe Brauer oub@mat.ucm.es")
 
 
 
