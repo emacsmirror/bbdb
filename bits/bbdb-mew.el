@@ -11,7 +11,6 @@
 ;;         Mitsuo Nishizawa <mitsuo@phys2.med.osaka-u.ac.jp>
 ;; Maintenance: Chris Beggy
 ;; Created: 1996/11/04
-;; Version: $Id$
 
 ;; Keywords: mail, BBDB
 

@@ -18,7 +18,6 @@
 ;;; BBDB-BNG
 ;;;  Various functions I have added to enhance the big brother database.
 ;;; Boris Goldowsky, <boris@cs.rochester.edu>
-;;;   $Revision$  $Date$
 ;;;  
 ;;; This file allows you to do the following things:
 ;;;  * Sort by firstname or company rather than last name.

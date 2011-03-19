@@ -1,6 +1,5 @@
 ;;; Copyright (C) 1998,2000 by Niels Elgaard Larsen <elgaard@diku.dk>
 
-;;; $Log$
 ;;; Revision 1.1  2006/02/04 15:35:15  joerg
 ;;; Added
 ;;;

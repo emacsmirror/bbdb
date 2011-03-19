@@ -23,7 +23,7 @@
 ;;; LCD Archive Entry:
 ;;; mail-signature|Kevin Davidson|<tkld@quadstone.com>
 ;;; |Add context sensitive signature
-;;; |$Date$|$Revision$|~/packages/mail-signature.el
+;;; |Date|Revision|~/packages/mail-signature.el
 
 ;;; Commentary:
 
@@ -54,7 +54,6 @@
 ;;; (setq message-signature 'mail-signature)
 
 ;;; Change log:
-;; $Log$
 ;; Revision 1.1  2001/03/01 15:38:31  waider
 ;; More bits, possibly incompatible with 2.00.06. Use at own risk.
 ;;
@@ -78,11 +77,6 @@
 ;
 
 ;;; Code:
-
-(defconst mail-signature-version (substring "$Revision$" 11 -2)
-  "$Id$
-
-Report bugs to: Kevin Davidson <tkld@quadstone.com>")
 
 
 (defvar bbdb-signature-field 'signature

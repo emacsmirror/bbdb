@@ -19,7 +19,6 @@
 ;;
 ;; Author: Jim Hourihan <jimh@panix.com>
 ;; Created: 2002-08-08
-;; Version: $Id$
 ;; Keywords: vcard ipod
 
 ;;; Commentary

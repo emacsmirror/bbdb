@@ -2,9 +2,6 @@
 #
 # Author: Christopher Kline <ckline@media.mit.edu>
 #
-# $Id$
-#
-# $Log$
 # Revision 1.1  1997/10/06 00:56:14  simmonmt
 # Initial revision
 #
