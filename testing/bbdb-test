@@ -1,7 +1,0 @@
-;;; file-version: 6
-;;; user-fields: (mail-alias mailer lastmail vm-folder www dir birthday vm-virtual)
-["Robert" "Fenk" nil "RML" nil nil ("fenk@users.sourceforge.net" "Robert.Fenk@gmx.de" "Robert.Fenk@forwiss.de") ((creation-date . "2002-01-16") (timestamp . "2002-01-17")) nil]
-["First" "Last" nil nil nil nil ("First.Last@location1.org" "first.last@location2.org") ((creation-date . "2002-03-12") (timestamp . "2002-03-12")) nil]
-["Ronan" "Waide" ("Raider") "BBDB" (["Inter" "+111-22-333-4444"] ["National" "022-333-4444"] ["Local" "333-4444"]) nil ("waider@waider.ie" "waider@dspsrv.com" "Ronan.Waide@euroconex.com") ((creation-date . "2002-01-16") (timestamp . "2002-01-17")) nil]
-["Jamie" "Zawinski" nil "Xemacs" nil nil ("jwz@jwz.org") ((creation-date . "2002-01-16") (timestamp . "2002-01-16")) nil]
-["First" "Second" nil nil nil nil ("First.Second@location1.org" "first.second@location2.org") ((creation-date . "2002-03-12") (timestamp . "2002-03-12")) nil]

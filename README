@@ -1,1 +1,83 @@
-Read the INSTALL file.
+Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+See the end of the file for license conditions.
+
+BBDB is the Insidious Big Brother Database for GNU Emacs. It
+provides an address book for email and snail mail addresses, phone
+numbers and the like. It can be linked with various Emacs mail
+clients (Rmail, Gnus, VM). BBDB is fully customizable.
+
+This revised version of BBDB has been tested only with GNU Emacs 23.
+Yet it might be not too difficult to adapt it to other recent
+dialects of emacs. It is unlikely, though, that you can get this
+code running with something like Emacs 18.
+
+This code is under development.  It should work reliably, though.
+Feedback welcome! --  There is a mailing list for discussion of BBDB:       
+
+       bbdb-info@lists.sourceforge.net
+
+To join, send mail to bbdb-info-request@lists.sourceforge.net
+
+==================================================================
+Usage notes (in particular for people who might have used earlier
+versions of BBDB):
+
+I found the usage of the old function bbdb-update-records somewhat
+confusing. The redesigned function is hopefully clearer. 
+
+The function bbdb-update-records provides the interface between MUAs
+and BBDB. Here MUAs currently include Gnus, Rmail, and VM, though I
+have tested only the VM interface; and feedback for Gnus and Rmail
+is appreciated. (It appears that the Mhe interface was never fully
+developed, and it is currently broken. Again, feedback from Mhe
+users is appreciated.) Each MUA has a wrapper bbdb/MUA-update-records,
+
+The actions of bbdb-update-records are now controlled by only one arg
+UPDATE-P. It may take the following values (arranged here in order of
+increasingly aggressive behavior of bbdb-update-records.)
+
+ nil      Do nothing (return nil).
+ search   Search for existing records matching ADDRESS.
+ query    Search for existing records matching ADDRESS;
+          query for creation of a new record if the record does not exist.
+ t        Search for existing records matching ADDRESS;
+          create a new record if it does not yet exist.
+
+Usually, the value of UPDATE-P will be determined by the wrappers
+bbdb/MUA-update-records, which in turn rely on the MUA-specific
+variables bbdb/MUA-update-records-p. So most of the customization of
+the MUA-BBDB interface can go into these variables. If the value of
+these variables is a constant, it becomes the value of UPDATE-P. If
+its value is a function FUNC, its return value becomes the value of
+UPDATE-P. For example, FUNC may analyze the message headers via
+bbdb-select-message (and/or its friends bbdb-accept-message and
+bbdb-ignore-message) which is customized via bbdb-accept-message-alist,
+bbdb-ignore-message-alist and bbdb-update-records-p. The latter
+variable defines the non-nil return value of bbdb-select-message
+(e.g., search or t) which then becomes the argument UPDATE-P of
+bbdb-update-records. So you might want to put more sophisticated
+code into bbdb/MUA-update-records-p according to your needs. See the
+default value of bbdb/vm-update-records-p as an example.
+
+The default values of various customizable variables correspond to
+their least aggressive values. Change this if you like a more
+aggressive behavior of BBDB.
+
+==================================================================
+
+Copyright (C) 2010 Roland Winkler <winkler@gnu.org>
+
+This file is part of the Insidious Big Brother Database (aka BBDB),
+
+BBDB is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+BBDB is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
