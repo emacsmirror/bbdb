@@ -3527,6 +3527,10 @@ where @var{NAME} is the symbol for the name of the note, and
 (If you are looking for a way to create mailing lists with @b{BBDB}, you
 should be looking at the section on @xref{Mail Sending Interfaces}.)
 
+The locus of BBDB development is moving to savannah,
+@code{https://savannah.nongnu.org/projects/bbdb/},
+making the below of mainly historic interest.
+
 There are three mailing lists for the @b{BBDB}.
 @code{bbdb-info@@lists.sourceforge.net} gets moderate traffic, and is
 intended for the discussion and distribution of development versions of
@@ -3594,6 +3598,13 @@ and Courier fonts are used.
 
 @node The Latest Version, The Future, Changes, Top
 @section The Latest Version
+
+The locus of BBDB development is moving to savannah,
+@code{https://savannah.nongnu.org/projects/bbdb/},
+making the below of mainly historic interest.
+Development of the new v3 version, as well and maintenance releases of
+v2.x, will be available in the associated git repository,
+@code{git://git.savannah.nongnu.org/bbdb.git}.
 
 @noindent
 Released versions of the @b{BBDB} can be found at the
