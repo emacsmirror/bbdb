@@ -8,9 +8,9 @@ clients (Message and Mail mode, Rmail, Gnus, MH-E, and VM).
 BBDB is fully customizable.
 
 BBDB is avaiable at
-http://cvs.savannah.gnu.org/viewvc/bbdb/?root=bbdb
+http://savannah.nongnu.org/projects/bbdb/
 To check it out, use
-cvs -d:pserver:anonymous@cvs.sv.gnu.org:/sources/bbdb co bbdb
+git clone git://git.savannah.nongnu.org/bbdb.git
 
 This revised version of BBDB has been tested only with GNU Emacs 23.
 Yet it might be not too difficult to adapt it to other recent
