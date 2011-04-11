@@ -1,4 +1,8 @@
-2011-04-02  Roland Winkler  <winkler@gnu.org>
+2011-04-11  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Ensure initialization of
+	the database.
+
+2011-04-10  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-utilities-anniv): New customization group.
 	(bbdb-create-hook, bbdb-change-hook)
 	(bbdb-after-change-hook, bbdb-notice-hook)

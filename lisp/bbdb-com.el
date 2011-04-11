@@ -1991,6 +1991,8 @@ as part of the MUA insinuation."
   ;; completion approach can be used?
   (interactive (list nil current-prefix-arg))
 
+  (bbdb-records) ; Make sure the database is initialized.
+
   (let* ((end (point))
          (beg (or start-pos
                   (save-excursion
