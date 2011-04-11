@@ -25,7 +25,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 RM   = /bin/rm -f
 LN_S = ln -s
 
-EMACS = /home/winkler/bin/linux/emacs
+EMACS = emacs
 
 # Command line flags for Emacs.
 EMACSOPT = -batch --no-site-file --no-init-file
@@ -34,6 +34,9 @@ EMACSOPT = -batch --no-site-file --no-init-file
 emacs = LC_ALL=C $(EMACS) $(EMACSOPT)
 
 GNUSDIR = 
+# This should point to your vm/lisp directory.
+# If you do not use vm, set this to null and remove vm from the list
+# of dependencies of all.
 VMDIR = ~/emacs/site-lisp/vm/lisp
 OTHERDIRS = 
 
