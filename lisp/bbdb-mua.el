@@ -49,9 +49,6 @@
   (defvar vm-message-pointer)
 
   (autoload 'bbdb/rmail-header "bbdb-rmail")
-  (autoload 'rmail-buffer "rmail")
-  (autoload 'rmail-select-summary "rmail")
-  (defvar rmail-current-message)
   (defvar rmail-buffer)
 
   (autoload 'bbdb/mh-header "bbdb-mhe")
@@ -590,9 +587,8 @@ UPDATE-P is defined in `bbdb-update-records'."
        ;; Rmail
        ((eq mua 'rmail)
         (set-buffer rmail-buffer)
-        (when rmail-current-message
-          (bbdb-update-records (bbdb-get-address-components header-class)
-                               update-p (bbdb-message-header "Message-ID"))))
+        (bbdb-update-records (bbdb-get-address-components header-class)
+                             update-p (bbdb-message-header "Message-ID")))
        ;; Message and Mail
        ((member mua '(message mail))
         (bbdb-update-records (bbdb-get-address-components header-class)
@@ -609,12 +605,10 @@ UPDATE-P is defined in `bbdb-update-records'."
             (save-current-buffer
               (gnus-summary-select-article) ; sets buffer `gnus-summary-buffer'
               ,@body))
-           ((eq mua 'rmail)
-            (rmail-select-summary ,@body))
-           ((memq mua '(mail message vm mh))
+           ((memq mua '(mail message rmail mh vm))
             (cond ((eq mua 'vm) (vm-follow-summary-cursor))
                   ((eq mua 'mh) (mh-show)))
-            ;; mail and message do not require any wrapper
+            ;; rmail, mail and message do not require any wrapper
             ,@body))))
 
 (defun bbdb-mua-update-interactive-p ()
@@ -713,7 +707,7 @@ FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
    (let ((records (bbdb-mua-update-records 'sender)))
      (bbdb-display-records records)
      (dolist (record records)
-       (bbdb-record-edit-notes record field t)))))
+       (bbdb-record-edit-note record field t)))))
 
 (defun bbdb-mua-edit-notes-recipients (&optional field)
   "Edit notes FIELD of record corresponding to recipient of this message.
@@ -727,7 +721,7 @@ FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
    (let ((records (bbdb-mua-update-records 'recipients)))
      (bbdb-display-records records)
      (dolist (record records)
-       (bbdb-record-edit-notes record field t)))))
+       (bbdb-record-edit-note record field t)))))
 
 ;; Functions for noninteractive use in MUA hooks
 
@@ -759,7 +753,7 @@ See `bbdb-mua-display-records' and friends for interactive commands."
                records nil nil nil
                `(lambda (window)
                   (with-current-buffer (window-buffer window)
-                    (eq major-mode ',mua))))
+                    (eq major-mode ',mode))))
             ;; If there are no records, empty the BBDB window.
             (bbdb-undisplay-records))))
     records))

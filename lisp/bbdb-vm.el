@@ -163,9 +163,8 @@ Add this function to `bbdb-before-save-hook' and your .vm."
         (setq folder-list (assoc header vm-auto-folder-alist)))
       (dolist (record records)
         ;; Ignore everything past a comma
-        (setq folder-name (car (bbdb-split bbdb/vm-auto-folder-field
-                                           (bbdb-record-note
-                                            record bbdb/vm-auto-folder-field)))
+        (setq folder-name (car (bbdb-record-note-split
+                                record bbdb/vm-auto-folder-field))
               ;; quote all the mail addresses for the record and join them
               mail-regexp (regexp-opt (bbdb-record-mail record)))
         ;; In general, the values of note fields are strings (required for editing).
@@ -204,8 +203,7 @@ Add this function to `bbdb-before-save-hook' and your .vm."
   (interactive)
   (let (real-folders mail-regexp folder val selector)
     (dolist (record (bbdb-records))
-      (when (setq val (bbdb-split bbdb/vm-virtual-folder-field
-                                  (bbdb-record-note record bbdb/vm-virtual-folder-field)))
+      (when (setq val (bbdb-record-note-split record bbdb/vm-virtual-folder-field))
         (setq mail-regexp (regexp-opt (bbdb-record-mail record)))
         (unless (string= "" mail-regexp)
           (setq folder (car val)
@@ -265,11 +263,10 @@ mail that you send to people (and copy yourself on) is labeled as well.
 This is how you hook it in.
    (add-hook 'bbdb-notice-hook 'bbdb/vm-auto-add-label)"
 ;; This should go into `vm-arrived-message-hook'!
-  (let (field aliases)
+  (let (aliases)
     (and (eq major-mode 'vm-mode)
          (mapcar (lambda (x)
-                   (and (setq field (bbdb-record-note record x))
-                        (setq aliases (append aliases (bbdb-split x field)))))
+                   (setq aliases (append aliases (bbdb-record-note-split record x))))
                  (cond ((listp bbdb/vm-auto-add-label-field)
                         bbdb/vm-auto-add-label-field)
                        ((symbolp bbdb/vm-auto-add-label-field)

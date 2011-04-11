@@ -25,7 +25,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 RM   = /bin/rm -f
 LN_S = ln -s
 
-EMACS = emacs
+EMACS = /home/winkler/bin/linux/emacs
 
 # Command line flags for Emacs.
 EMACSOPT = -batch --no-site-file --no-init-file
@@ -34,9 +34,6 @@ EMACSOPT = -batch --no-site-file --no-init-file
 emacs = LC_ALL=C $(EMACS) $(EMACSOPT)
 
 GNUSDIR = 
-# This should point to your vm/lisp directory.
-# If you do not use vm, set this to null and remove vm from the list
-# of dependencies of all.
 VMDIR = ~/emacs/site-lisp/vm/lisp
 OTHERDIRS = 
 
@@ -52,7 +49,8 @@ PUSHPATH = -eval '(push "./" load-path)'
 
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
-DEPSRCS=	bbdb-com.el bbdb-print.el bbdb-migrate.el \
+DEPSRCS=	bbdb-com.el bbdb-print.el bbdb-anniv.el \
+		bbdb-migrate.el \
 		bbdb-mua.el bbdb-message.el bbdb-rmail.el \
 		bbdb-gnus.el bbdb-mhe.el bbdb-vm.el
 
@@ -133,12 +131,15 @@ bbdb-print.elc:	bbdb.elc bbdb-com.elc bbdb-print.el
 bbdb-migrate.elc:	bbdb.elc bbdb-migrate.el
 	@$(emacs) -batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
+bbdb-anniv.elc:	bbdb.elc bbdb-anniv.el
+	@$(emacs) -batch $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
 
 autoloadsc: bbdb-autoloads.elc
 
-bbdb:	bbdb.elc bbdb-com.elc autoloadsc bbdb-print.elc bbdb-migrate.elc \
-	bbdb-mua.elc bbdb-message.elc bbdb-rmail.elc bbdb-gnus.elc \
-	bbdb-mhe.elc
+bbdb:	bbdb.elc bbdb-com.elc autoloadsc bbdb-print.elc \
+	bbdb-anniv.elc bbdb-migrate.elc bbdb-mua.elc \
+	bbdb-message.elc bbdb-rmail.elc bbdb-gnus.elc bbdb-mhe.elc
 vm:	bbdb-vm.elc
 
 # Assorted clean-up targets

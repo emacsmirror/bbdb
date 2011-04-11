@@ -1,3 +1,66 @@
+2011-04-02  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-utilities-anniv): New customization group.
+	(bbdb-create-hook, bbdb-change-hook)
+	(bbdb-after-change-hook, bbdb-notice-hook)
+	(bbdb-default-separator): Improve doc string.
+	(bbdb-separator-alist): Improve doc string.  Include entries for
+	anniversaries.
+	(bbdb-records):  Use make-variable-buffer-local.
+	(bbdb-current-field):  Do not remove field-name.
+	(bbdb-record-note): Simplified.
+	(bbdb-record-note-n): Removed.
+	(bbdb-record-note-split): New function.
+	(bbdb-record-set-note): Improved documentation.
+	(bbdb-format-note, bbdb-record-format-note): New function.
+	(bbdb-display-text):  Renamed from bbdb-format-text.
+	(bbdb-display-list):  Renamed from bbdb-format-list.
+	(bbdb-display-name-organization): Renamed from
+	bbdb-format-name-organization.
+	(bbdb-display-record-one-line): Renamed from
+	bbdb-format-record-one-line.  Unify text properties.
+	(bbdb-display-record-multi-line): Renamed from
+	bbdb-format-record-multi-line.  Unify text properties.
+	(bbdb-display-record-full-multi-line): Renamed from
+	bbdb-format-record-full-multi-line.
+	(bbdb-display-record-pop-up-multi-line): Renamed from
+	bbdb-format-record-pop-up-multi-line.
+	(bbdb-display-record): Renamed from bbdb-format-record.
+	(bbdb-parse-internal, bbdb-parse-frobnicate): Simplified search
+	for first record.
+	(bbdb-delete-record-internal, bbdb-overwrite-record-internal):
+	Disentangle code.
+
+	* lisp/bbdb-com.el (bbdb-editable): Throw error if *BBDB* buffer
+	is out of sync with database.
+	(bbdb-search): Use suffix -re for all args that are regular
+	expressions.
+	(bbdb-delete-duplicate-mails, bbdb-sort-addresses)
+	(bbdb-sort-phones, bbdb-sort-notes): New optional arg update.
+	(bbdb-record-edit-note): Renamed from bbdb-record-edit-notes.
+	(bbdb-list-transpose, bbdb-ident-point): New functions.
+	(bbdb-transpose-fields): Use them.  Make code more robust such
+	that it can be applied to any subfields of the same type.
+	(bbdb-field-equal, bbdb-next-field): Removed (obolete).
+	(bbdb-mail-aliases, bbdb-get-mail-aliases, bbdb-add-mail-alias)
+	(bbdb-browse-url): Use bbdb-record-note-split.
+
+	* lisp/bbdb-mua.el (bbdb-mua-wrapper): Do not use
+	rmail-select-summary.
+	(bbdb-mua-auto-update): Bug fix.
+
+	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail)
+	* lisp/bbdb-mhe.el (bbdb-insinuate-mh): Bind to
+	bbdb-mua-edit-notes-sender.
+
+	* lisp/bbdb-vm.el (bbdb/vm-auto-folder, bbdb/vm-virtual-folder)
+	(bbdb/vm-auto-add-label): Use bbdb-record-note-split.
+
+	* lisp/bbdb-print.el (bbdb-print-omit-fields): Remove `omit'.
+
+	* lisp/bbdb-anniv.el: New file.
+
+	* lisp/Makefile: Honor lisp/bbdb-anniv.el.
+
 2011-03-05  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-modeline-info): New variable.
 	(bbdb-mode): Use it.

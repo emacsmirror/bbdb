@@ -80,8 +80,8 @@ A function which returns one of the above values."
 (defun bbdb-insinuate-rmail ()
   "Hook BBDB into RMAIL."
   (define-key rmail-mode-map ":" 'bbdb-mua-display-sender)
-  (define-key rmail-mode-map ";" 'bbdb-mua-edit-notes)
+  (define-key rmail-mode-map ";" 'bbdb-mua-edit-notes-sender)
   (define-key rmail-summary-mode-map ":" 'bbdb-mua-display-sender)
-  (define-key rmail-summary-mode-map ";" 'bbdb-mua-edit-notes))
+  (define-key rmail-summary-mode-map ";" 'bbdb-mua-edit-notes-sender))
 
 (provide 'bbdb-rmail)

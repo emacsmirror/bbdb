@@ -80,7 +80,7 @@
   :type 'file)
 
 (defcustom bbdb-print-omit-fields
-  '(omit tex-name aka mail-alias creation-date timestamp vm-folder)
+  '(tex-name aka mail-alias creation-date timestamp vm-folder)
   "List of fields NOT to print in address list.
 See also `bbdb-print-require'."
   :group 'bbdb-print
