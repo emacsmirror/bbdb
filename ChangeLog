@@ -1,3 +1,7 @@
+2011-04-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-create-hook, bbdb-change-hook):  Call
+	add-hook for the default hook functions.
+
 2011-04-11  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-complete-mail): Ensure initialization of
 	the database.
