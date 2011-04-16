@@ -26,7 +26,8 @@
 (require 'mailabbrev)
 
 (eval-and-compile
-  (autoload 'build-mail-aliases "mailalias"))
+  (autoload 'build-mail-aliases "mailalias")
+  (autoload 'browse-url-url-at-point "browse-url"))
 
 (defun bbdb-get-records (prompt)
   "If inside the *BBDB* buffer get the current records.
