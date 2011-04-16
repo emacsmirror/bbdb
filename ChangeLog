@@ -1,4 +1,10 @@
 2011-04-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mode-map): Inherit from special-mode-map.
+	(bbdb-quit-window): Renamed from bbdb-bury-buffer.  Use
+	quit-window.
+	(bbdb-mode):  Use define-derived-mode.
+
+2011-04-16  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-indent-string): New function.
 	(bbdb-display-record-multi-line): Use it.  (Bug#33101)
 

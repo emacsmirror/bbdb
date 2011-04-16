@@ -1386,7 +1386,7 @@ APPEND and INVERT appear in the message area.")
 ;;; Keymap
 (defvar bbdb-mode-map
   (let ((km (make-sparse-keymap)))
-    (suppress-keymap km)
+    (set-keymap-parent km special-mode-map)
     (define-key km "*"          'bbdb-do-all-records)
     (define-key km "+"          'bbdb-append-display)
     (define-key km "!"          'bbdb-search-invert)
@@ -1407,10 +1407,9 @@ APPEND and INVERT appear in the message area.")
     (define-key km "m"          'bbdb-mail)
     (define-key km "M"          'bbdb-mail-address)
     (define-key km "\M-d"       'bbdb-dial)
-    (define-key km "g"          'bbdb-revert-buffer)
     (define-key km "h"          'bbdb-info)
     (define-key km "?"          'bbdb-help)
-    (define-key km "q"          'bbdb-bury-buffer)
+    (define-key km "q"          'bbdb-quit-window)
     (define-key km "\C-x\C-t"   'bbdb-transpose-fields)
     (define-key km "C"          'bbdb-copy-records-as-kill)
     (define-key km "u"          'bbdb-browse-url)
@@ -1512,7 +1511,7 @@ APPEND and INVERT appear in the message area.")
      ["Brief help" bbdb-help t]
      ["BBDB Manual" bbdb-info t])
     "--"
-    ["Quit" bbdb-bury-buffer t]))
+    ["Quit" bbdb-quit-window t]))
 
 (defvar bbdb-completing-read-mails-map
   (let ((map (copy-keymap minibuffer-local-completion-map)))
@@ -2625,11 +2624,11 @@ will be split vertically rather than horizontally."
   (interactive)
   (throw 'electric-bbdb-list-select t))
 
-(defun bbdb-bury-buffer ()
+(defun bbdb-quit-window ()
   (interactive)
   (if bbdb-inside-electric-display
       (bbdb-electric-done)
-    (bury-buffer)))
+    (quit-window)))
 
 
 ;;; Reading the BBDB
@@ -3034,7 +3033,7 @@ If NEWVAL is a list, it replaces the current value of `bbdb-notes-label-list'."
 ;;; BBDB mode
 
 ;;;###autoload
-(defun bbdb-mode ()
+(define-derived-mode bbdb-mode special-mode "BBDB"
   "Major mode for viewing and editing the Insidious Big Brother Database.
 Letters no longer insert themselves.  Numbers are prefix arguments.
 You can move around using the usual cursor motion commands.
@@ -3114,10 +3113,7 @@ Important variables:
 There are numerous hooks.  M-x apropos ^bbdb.*hook RET
 
 \\{bbdb-mode-map}"
-  (setq major-mode 'bbdb-mode
-        mode-name "BBDB"
-        truncate-lines t
-        buffer-read-only t
+  (setq truncate-lines t
         default-directory (file-name-directory bbdb-file)
         mode-line-buffer-identification
         (list 24 (buffer-name) "  "
@@ -3135,9 +3131,11 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
         mode-line-modified
         '(bbdb-read-only (bbdb-modified "%*" "%%")
                          (bbdb-modified "**" "--")))
-  (add-hook 'post-command-hook 'force-mode-line-update nil t)
-  (use-local-map bbdb-mode-map)
-  (run-hooks 'bbdb-mode-hook))
+  ;; `bbdb-revert-buffer' acts on `bbdb-buffer'.  Yet this command is usually
+  ;; called from the *BBDB* buffer.
+  (set (make-local-variable 'revert-buffer-function)
+       'bbdb-revert-buffer)
+  (add-hook 'post-command-hook 'force-mode-line-update nil t))
 
 
 
