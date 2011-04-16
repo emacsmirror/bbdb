@@ -1,4 +1,7 @@
 2011-04-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-time-stamp-format): Includes timezone info.
+
+2011-04-16  Roland Winkler  <winkler@gnu.org>
 	* TODO: New file.
 
 2011-04-16  Roland Winkler  <winkler@gnu.org>

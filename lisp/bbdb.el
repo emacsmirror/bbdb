@@ -64,7 +64,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02")
-(defconst bbdb-version-date "$Date: 2011/04/11 15:06:11 $")
+(defconst bbdb-version-date "$Date: 2011/04/16 22:07:00 $")
 
 ;; Custom groups
 
@@ -240,7 +240,7 @@ first, followed by a call of this hook."
   :type 'hook)
 (add-hook 'bbdb-change-hook 'bbdb-timestamp)
 
-(defcustom bbdb-time-stamp-format "%Y-%m-%d %T"
+(defcustom bbdb-time-stamp-format "%Y-%m-%d %T %z"
   "The BBDB time stamp format.  See `format-time-string'.
 This function is called with arg UNIVERSAL being non-nil."
   :group 'bbdb
