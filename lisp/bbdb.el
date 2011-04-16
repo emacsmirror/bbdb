@@ -1576,6 +1576,15 @@ The inverse function of `bbdb-split'."
                                                                (list x) x))
                                                strings))) separator))
 
+;; A call of `indent-region' swallows any indentation
+;; that might be part of the field itself.  So we indent manually.
+(defsubst bbdb-indent-string (string column)
+  "Indent nonempty lines in STRING to COLUMN (except first line).
+This happens in addition to any pre-defined indentation of STRING."
+  (replace-regexp-in-string "\n\\([^\n]\\)"
+                            (concat "\n" (make-string column ?\s) "\\1")
+                            string))
+
 (defun bbdb-read-string (prompt &optional default collection)
   "Read a string, trimming whitespace and text properties.
 DEFAULT appears as initial input, which is convenient for editing
@@ -2218,8 +2227,8 @@ See `bbdb-layout-alist' for more."
                                   (list 'address address 'field-label)
                                   font-lock-variable-name-face)
                (setq start (point))
-               (insert (bbdb-format-address address 2) "\n")
-               (indent-region start (point) indent)
+               (insert (bbdb-indent-string (bbdb-format-address address 2) indent)
+                       "\n")
                (bbdb-field-property start (list 'address address))))
             ;; mail
             ((eq field 'mail)
@@ -2245,8 +2254,7 @@ See `bbdb-layout-alist' for more."
                                     (list 'note note 'field-label)
                                     font-lock-variable-name-face)
                  (setq start (point))
-                 (insert (cdr note) "\n")
-                 (indent-region start (point) indent)
+                 (insert (bbdb-indent-string (cdr note) indent) "\n")
                  (bbdb-field-property start (list 'note note)))))))
     (insert "\n")))
 

@@ -1,4 +1,8 @@
 2011-04-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-indent-string): New function.
+	(bbdb-display-record-multi-line): Use it.  (Bug#33101)
+
+2011-04-16  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el:  Autoload browse-url-url-at-point.
 
 2011-04-16  Roland Winkler  <winkler@gnu.org>
