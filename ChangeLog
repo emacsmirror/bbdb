@@ -1,4 +1,10 @@
 2011-04-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-faces): Group of faces used by BBDB.
+	(bbdb-name, bbdb-organization, bbdb-field-name): New faces.
+	(bbdb-display-name-organization, bbdb-display-record-one-line)
+	(bbdb-display-record-multi-line): Use them.
+
+2011-04-16  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mode-map): Inherit from special-mode-map.
 	(bbdb-quit-window): Renamed from bbdb-bury-buffer.  Use
 	quit-window.

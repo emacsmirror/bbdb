@@ -1521,6 +1521,28 @@ APPEND and INVERT appear in the message area.")
     map))
 
 
+;; Faces for font-lock
+(defgroup bbdb-faces nil
+  "Faces used by BBDB."
+  :group 'proced
+  :group 'faces)
+
+(defface bbdb-name
+  '((t (:inherit font-lock-function-name-face)))
+  "Face used for BBDB names."
+  :group 'bbdb-faces)
+
+(defface bbdb-organization
+  '((t (:inherit font-lock-comment-face)))
+  "Face used for BBDB names."
+  :group 'bbdb-faces)
+
+(defface bbdb-field-name
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face used for BBDB names."
+  :group 'bbdb-faces)
+
+
 
 ;;; Helper functions
 
@@ -2119,7 +2141,7 @@ elements of LIST if otherwise inserted text exceeds `bbdb-wrap-column'."
   "Insert name, degree, and organization of RECORD."
   ;; Name
   (bbdb-display-text (or (bbdb-record-name record) "???")
-                     '(name) font-lock-function-name-face)
+                     '(name) 'bbdb-name)
   ;; Degree
   (let ((degree (bbdb-record-degree record)))
     (when degree
@@ -2130,7 +2152,7 @@ elements of LIST if otherwise inserted text exceeds `bbdb-wrap-column'."
     (when organization
       (insert " - ")
       (bbdb-display-list organization 'organization nil
-                         font-lock-comment-face))))
+                         'bbdb-organization))))
 
 (defun bbdb-display-record-one-line (record layout field-list)
   "Record formatting function for the one-line layout.
@@ -2157,7 +2179,7 @@ See `bbdb-layout-alist' for more info."
                    (while (setq phone (pop phones))
                      (bbdb-display-text (format "%s " (aref phone 0))
                                         (list 'phone phone 'field-label)
-                                        font-lock-variable-name-face)
+                                        'bbdb-field-name)
                      (bbdb-display-text (format "%s%s" (aref phone 1)
                                                 (if phones " " "; "))
                                         (list 'phone phone))))))
@@ -2214,7 +2236,7 @@ See `bbdb-layout-alist' for more."
                                                       (bbdb-phone-label phone)
                                                       ")"))
                                   (list 'phone phone 'field-label)
-                                  font-lock-variable-name-face)
+                                  'bbdb-field-name)
                (bbdb-display-text (concat (bbdb-phone-string phone) "\n")
                                   (list 'phone phone))))
             ;; address
@@ -2224,7 +2246,7 @@ See `bbdb-layout-alist' for more."
                                                       (bbdb-address-label address)
                                                       ")"))
                                   (list 'address address 'field-label)
-                                  font-lock-variable-name-face)
+                                  'bbdb-field-name)
                (setq start (point))
                (insert (bbdb-indent-string (bbdb-format-address address 2) indent)
                        "\n")
@@ -2234,7 +2256,7 @@ See `bbdb-layout-alist' for more."
              (let ((mail (bbdb-record-mail record)))
                (when mail
                  (bbdb-display-text (format fmt "mail") '(mail nil field-label)
-                                    font-lock-variable-name-face)
+                                    'bbdb-field-name)
                  (bbdb-display-list (if (bbdb-layout-get-option layout 'primary)
                                         (list (car mail)) mail)
                                     'mail "\n" nil indent))))
@@ -2243,7 +2265,7 @@ See `bbdb-layout-alist' for more."
              (let ((aka (bbdb-record-aka record)))
                (when aka
                  (bbdb-display-text (format fmt "AKA") '(aka nil field-label)
-                                    font-lock-variable-name-face)
+                                    'bbdb-field-name)
                  (bbdb-display-list aka 'aka "\n"))))
             ;; notes
             (t
@@ -2251,7 +2273,7 @@ See `bbdb-layout-alist' for more."
                (when note
                  (bbdb-display-text (format fmt field)
                                     (list 'note note 'field-label)
-                                    font-lock-variable-name-face)
+                                    'bbdb-field-name)
                  (setq start (point))
                  (insert (bbdb-indent-string (cdr note) indent) "\n")
                  (bbdb-field-property start (list 'note note)))))))
