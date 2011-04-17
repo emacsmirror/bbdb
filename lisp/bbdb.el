@@ -212,32 +212,30 @@ If this file is newer than `bbdb-file', BBDB will offer to revert."
 ;; default value of a hook variable because a non-nil INITVALUE for `defvar'
 ;; or `defcustom' has no effect if a variable is already bound.
 ;; Therefore, the following code calls `add-hook' unconditionally.
-;; Yet this is not a perfect solution either.  If the user wants to remove
-;; the default functions from the respective hooks, the current solution
-;; requires that he or she calls `remove-hook' *after* loading bbdb.el.
-;; However, it is probably more likely that users call `add-hook' on these
-;; variables in their init files than calling `remove-hook'.  In that
-;; sense, the following should work for most people.
+;; Yet this is not a perfect solution either for two reasons.
+;; First, `defcustom' gets confused if the default is set outside `defcustom'.
+;; So we use `defvar', though these are really user variables.
+;; Second, if the user wants to remove the default functions from the
+;; respective hooks, the current solution requires that he or she calls
+;; `remove-hook' *after* loading bbdb.el.  However, it is more likely that
+;; users call `add-hook' on these variables in their init files than calling
+;; `remove-hook'.  In that sense, the following should work for most people.
 ;; Nonetheless, suggestions for better solutions are appreciated!
-(defcustom bbdb-create-hook nil
-  "Hook run each time a new BBDB record is created.
+(defvar bbdb-create-hook nil
+  "*Hook run each time a new BBDB record is created.
 Run with one argument, the new record.  This is called before the record is
-added to the database.  followed by a call of `bbdb-change-hook'.
+added to the database, followed by a call of `bbdb-change-hook'.
 
 If a record has been created by analyzing a mail message, hook functions
 can use the variable `bbdb-update-records-address' to determine the header
-and class of the mail address according to `bbdb-message-headers'."
-  :group 'bbdb
-  :type 'hook)
+and class of the mail address according to `bbdb-message-headers'.")
 (add-hook 'bbdb-create-hook 'bbdb-creation-date)
 
-(defcustom bbdb-change-hook nil
-  "Hook run each time a BBDB record is changed.
+(defvar bbdb-change-hook nil
+  "*Hook run each time a BBDB record is changed.
 Run with one argument, the record.  This is called before the database
 is modified.  If a new bbdb record is created, `bbdb-create-hook' is called
-first, followed by a call of this hook."
-  :group 'bbdb
-  :type 'hook)
+first, followed by a call of this hook.")
 (add-hook 'bbdb-change-hook 'bbdb-timestamp)
 
 (defcustom bbdb-time-stamp-format "%Y-%m-%d %T %z"
