@@ -1384,7 +1384,6 @@ APPEND and INVERT appear in the message area.")
 ;;; Keymap
 (defvar bbdb-mode-map
   (let ((km (make-sparse-keymap)))
-    (set-keymap-parent km special-mode-map)
     (define-key km "*"          'bbdb-do-all-records)
     (define-key km "+"          'bbdb-append-display)
     (define-key km "!"          'bbdb-search-invert)
@@ -1439,7 +1438,8 @@ APPEND and INVERT appear in the message area.")
                                     (bbdb-toggle-records-layout
                                      (bbdb-do-records t) current-prefix-arg))))
     km)
-  "Keymap for Insidious Big Brother Database.")
+  "Keymap for Insidious Big Brother Database.
+This is a child of `special-mode-map'.")
 
 (easy-menu-define
   bbdb-menu bbdb-mode-map "BBDB Menu"
@@ -1504,7 +1504,8 @@ APPEND and INVERT appear in the message area.")
      ["Sort database" bbdb-sort-records t]
      ["Delete duplicate mails" bbdb-delete-duplicate-mails t]
      "--"
-     ["Save BBDB" bbdb-save t])
+     ["Save BBDB" bbdb-save t]
+     ["Revert BBDB" revert-buffer t])
     ("Help"
      ["Brief help" bbdb-help t]
      ["BBDB Manual" bbdb-info t])

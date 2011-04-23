@@ -1,3 +1,8 @@
+2011-04-23  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mode-map): Do no call set-keymap-parent which
+	is done already by define-derived-mode.  Reported by Sam Steingold
+	<sds@gnu.org>.  Add menu binding for revert-buffer.
+
 2011-04-16  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-create-hook, bbdb-change-hook): Use defvar.
 
