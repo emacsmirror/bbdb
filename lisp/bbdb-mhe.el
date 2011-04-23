@@ -114,9 +114,14 @@ Returns the empty string if HEADER is not in the message."
 
 ;;;###autoload
 (defun bbdb-insinuate-mh ()
-  "Call this function to hook BBDB into MH-E."
+  "Call this function to hook BBDB into MH-E.
+Do not call this in your init file.  Use `bbdb-initialize'."
   (define-key mh-folder-mode-map ":" 'bbdb-mua-display-sender)
   (define-key mh-folder-mode-map ";" 'bbdb-mua-edit-notes-sender)
+  ;; Do we need keybindings for more commands?  Suggestions welcome.
+  ;; (define-key mh-folder-mode-map ":" 'bbdb-mua-display-records)
+  ;; (define-key mh-folder-mode-map "'" 'bbdb-mua-display-recipients)
+  ;; (define-key mh-folder-mode-map ";" 'bbdb-mua-edit-notes-recipients)
   (when bbdb-complete-mail
       (define-key mh-letter-mode-map "\M-;" 'bbdb-complete-mail)
       (define-key mh-letter-mode-map "\e\t" 'bbdb-complete-mail)))

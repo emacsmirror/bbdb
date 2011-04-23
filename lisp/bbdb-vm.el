@@ -290,11 +290,14 @@ This is how you hook it in.
 
 ;;;###autoload
 (defun bbdb-insinuate-vm ()
-  "Hook BBDB into VM."
+  "Hook BBDB into VM.
+Do not call this in your init file.  Use `bbdb-initialize'."
   (define-key vm-mode-map ":" 'bbdb-mua-display-records)
   (define-key vm-mode-map "`" 'bbdb-mua-display-sender)
   (define-key vm-mode-map "'" 'bbdb-mua-display-recipients)
   (define-key vm-mode-map ";" 'bbdb-mua-edit-notes-sender)
+  ;; Do we need keybindings for more commands?  Suggestions welcome.
+  ;; (define-key vm-mode-map "'" 'bbdb-mua-edit-notes-recipients)
   (define-key vm-mode-map "/" 'bbdb)
   ;; `mail-mode-map' is the parent of `vm-mail-mode-map'.
   ;; So the following is also done by `bbdb-insinuate-mail'.

@@ -1,4 +1,12 @@
 2011-04-23  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-message.el (bbdb-insinuate-message)
+	(bbdb-insinuate-mail)
+	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail)
+	* lisp/bbdb-gnus.el (bbdb-insinuate-gnus)
+	* lisp/bbdb-mhe.el (bbdb-insinuate-mh)
+	* lisp/bbdb-vm.el (bbdb-insinuate-vm): Fix docstring.
+
+2011-04-23  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mode-map): Do no call set-keymap-parent which
 	is done already by define-derived-mode.  Reported by Sam Steingold
 	<sds@gnu.org>.  Add menu binding for revert-buffer.

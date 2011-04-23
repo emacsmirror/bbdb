@@ -55,9 +55,10 @@ A function which returns one of the above values."
 
 ;;;###autoload
 (defun bbdb-insinuate-message ()
-  "Hook BBDB into Message Mode."
-  ;; (define-key message-mode-map ":" 'bbdb-mua-display-records)
-  ;; (define-key message-mode-map "`" 'bbdb-mua-display-sender)
+  "Hook BBDB into Message Mode.
+Do not call this in your init file.  Use `bbdb-initialize'."
+  ;; Suggestions welcome: What are good keybindings for the following
+  ;; commands that do not collide with existing bindings?
   ;; (define-key message-mode-map "'" 'bbdb-mua-display-recipients)
   ;; (define-key message-mode-map ";" 'bbdb-mua-edit-notes-recipients)
   ;; (define-key message-mode-map "/" 'bbdb)
@@ -66,9 +67,10 @@ A function which returns one of the above values."
 
 ;;;###autoload
 (defun bbdb-insinuate-mail ()
-  "Hook BBDB into Mail Mode."
-  ;; (define-key mail-mode-map ":" 'bbdb-mua-display-records)
-  ;; (define-key mail-mode-map "`" 'bbdb-mua-display-sender)
+  "Hook BBDB into Mail Mode.
+Do not call this in your init file.  Use `bbdb-initialize'."
+  ;; Suggestions welcome: What are good keybindings for the following
+  ;; commands that do not collide with existing bindings?
   ;; (define-key mail-mode-map "'" 'bbdb-mua-display-recipients)
   ;; (define-key mail-mode-map ";" 'bbdb-mua-edit-notes-recipients)
   ;; (define-key mail-mode-map "/" 'bbdb)

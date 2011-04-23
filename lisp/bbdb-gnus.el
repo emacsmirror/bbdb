@@ -551,7 +551,8 @@ Note that `\( is the backquote, NOT the quote '\(."
 
 ;;;###autoload
 (defun bbdb-insinuate-gnus ()
-  "Hook BBDB into Gnus."
+  "Hook BBDB into Gnus.
+Do not call this in your init file.  Use `bbdb-initialize'."
   ;; `bbdb-mua-display-sender' fails in *Article* buffers, where
   ;; `gnus-article-read-summary-keys' provides an additional wrapper
   ;; that restores the window configuration.
@@ -559,6 +560,10 @@ Note that `\( is the backquote, NOT the quote '\(."
   ;; For `bbdb-mua-edit-notes-sender' it is probably OK if
   ;;`gnus-article-read-summary-keys' restores the window configuration.
   (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-notes-sender)
+  ;; Do we need keybindings for more commands?  Suggestions welcome.
+  ;; (define-key gnus-summary-mode-map ":" 'bbdb-mua-display-records)
+  ;; (define-key gnus-summary-mode-map "'" 'bbdb-mua-display-recipients)
+  ;; (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-notes-recipients)
 
   ;; Set up user field for use in `gnus-summary-line-format'
   ;; (1) The big one - whole name

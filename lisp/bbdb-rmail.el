@@ -78,9 +78,14 @@ A function which returns one of the above values."
 
 ;;;###autoload
 (defun bbdb-insinuate-rmail ()
-  "Hook BBDB into RMAIL."
+  "Hook BBDB into RMAIL.
+Do not call this in your init file.  Use `bbdb-initialize'."
+  ;; Do we need keybindings for more commands?  Suggestions welcome.
+  ;; (define-key rmail-mode-map ":" 'bbdb-mua-display-records)
+  ;; (define-key rmail-mode-map "'" 'bbdb-mua-display-recipients)
   (define-key rmail-mode-map ":" 'bbdb-mua-display-sender)
   (define-key rmail-mode-map ";" 'bbdb-mua-edit-notes-sender)
+  ;; (define-key rmail-mode-map ";" 'bbdb-mua-edit-notes-recipients)
   (define-key rmail-summary-mode-map ":" 'bbdb-mua-display-sender)
   (define-key rmail-summary-mode-map ";" 'bbdb-mua-edit-notes-sender))
 
