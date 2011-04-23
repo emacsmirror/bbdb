@@ -2168,7 +2168,7 @@ as part of the MUA insinuation."
            ;; Update the *BBDB* buffer if desired.
            (if bbdb-completion-display-record
                (let ((bbdb-silent-internal t))
-                 (bbdb-pop-up-buffer)
+                 (bbdb-pop-up-window)
                  (bbdb-display-records-internal (list one-record) nil t)))
 
            ;; call the unique-completion hook

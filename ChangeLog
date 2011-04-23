@@ -1,4 +1,14 @@
 2011-04-23  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-pop-up-window): Rename from
+	bbdb-pop-up-buffer.
+	* lisp/bbdb.el (bbdb-display-records-internal)
+	* lisp/bbdb-com.el (bbdb-complete-mail): Use new name.
+
+2011-04-23  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb.el (bbdb-pop-up-buffer): Distinguish 1 and 1.0 in
+	bbdb-pop-up-window-size.
+
+2011-04-23  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-message.el (bbdb-insinuate-message)
 	(bbdb-insinuate-mail)
 	* lisp/bbdb-rmail.el (bbdb-insinuate-rmail)

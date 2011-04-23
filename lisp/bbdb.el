@@ -1031,8 +1031,8 @@ If 'horiz, stack the window horizontally if there is room."
 (defcustom bbdb-pop-up-window-size 0.5
   "Vertical size of a MUA pop-up BBDB window (vertical split).
 If it is an integer number, it is the number of lines used by BBDB.
-If it is a fraction between 0 and 1, it is the fraction of the tallest existing
-window that BBDB will take over."
+If it is a fraction between 0 and 1.0 (inclusive), it is the fraction
+of the tallest existing window that BBDB will take over."
   :group 'bbdb-mua
   :type 'number)
 
@@ -2391,7 +2391,7 @@ Move point to the end of the inserted record."
             (set (make-local-variable 'bbdb-buffer-name) new-name)))))
 
     (unless (get-buffer-window bbdb-buffer-name)
-      (bbdb-pop-up-buffer select horiz-p))
+      (bbdb-pop-up-window select horiz-p))
     (set-buffer bbdb-buffer-name) ;; *BBDB*
 
     ;; If we're appending RECORDS to the ones already displayed,
@@ -2522,7 +2522,7 @@ The *BBDB* buffer must be current when this is called."
 
 
 ;;; window configuration hackery
-(defun bbdb-pop-up-buffer (&optional select horiz-p)
+(defun bbdb-pop-up-window (&optional select horiz-p)
   "Find the largest window on the screen, and split it, displaying the
 *BBDB* buffer in the bottom `bbdb-pop-up-window-size' lines (unless
 the *BBDB* buffer is already visible, in which case do nothing.)
@@ -2572,7 +2572,7 @@ will be split vertically rather than horizontally."
              (if (> (window-height window) (window-height tallest-window))
                  (setq tallest-window window)))
            (select-window tallest-window)   ; select it and split it...
-           (if (= bbdb-pop-up-window-size 1)
+           (if (eql bbdb-pop-up-window-size 1.0)
                ;; select `bbdb-buffer-name'
                (switch-to-buffer (get-buffer-create bbdb-buffer-name))
              (condition-case nil ; `split-window' might fail
