@@ -1,2 +1,3 @@
 *.elc
 /lisp/bbdb-autoloads.el
+/lisp/TAGS
