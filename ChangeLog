@@ -1,3 +1,11 @@
+2011-04-29  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-display-name-organization): Include name in
+	text property.
+	(bbdb-scan-property): New function.
+	(bbdb-next-record, bbdb-prev-record): Use it.
+	(bbdb-next-field, bbdb-prev-field): New commands bound to "N" and
+	"P".
+
 2011-04-23  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-pop-up-window): Rename from
 	bbdb-pop-up-buffer.

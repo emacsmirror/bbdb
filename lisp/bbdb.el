@@ -64,7 +64,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02")
-(defconst bbdb-version-date "$Date: 2011/04/16 22:07:00 $")
+(defconst bbdb-version-date "$Date: 2011/04/23 21:49:14 $")
 
 ;; Custom groups
 
@@ -1393,6 +1393,10 @@ APPEND and INVERT appear in the message area.")
     (define-key km "e"          'bbdb-edit-field)
     (define-key km "n"          'bbdb-next-record)
     (define-key km "p"          'bbdb-prev-record)
+    (define-key km "N"          'bbdb-next-field)
+    (define-key km "\t"         'bbdb-next-field) ; TAB
+    (define-key km "P"          'bbdb-prev-field)
+    (define-key km "\d"         'bbdb-prev-field) ; DEL
     (define-key km "d"          'bbdb-delete-field-or-record)
     (define-key km "\C-k"       'bbdb-delete-field-or-record)
     (define-key km "i"          'bbdb-insert-field)
@@ -1410,7 +1414,7 @@ APPEND and INVERT appear in the message area.")
     (define-key km "\C-x\C-t"   'bbdb-transpose-fields)
     (define-key km "C"          'bbdb-copy-records-as-kill)
     (define-key km "u"          'bbdb-browse-url)
-    (define-key km "P"          'bbdb-print)
+    ;; (define-key km "P"          'bbdb-print)
     (define-key km "="          'delete-other-windows)
 
     ;; Search keys
@@ -1445,6 +1449,8 @@ This is a child of `special-mode-map'.")
   bbdb-menu bbdb-mode-map "BBDB Menu"
   '("BBDB"
     ("Display"
+     ["Previous field" bbdb-prev-field t]
+     ["Next field" bbdb-next-field t]
      ["Previous record" bbdb-prev-record t]
      ["Next record" bbdb-next-record t]
      "--"
@@ -2139,8 +2145,8 @@ elements of LIST if otherwise inserted text exceeds `bbdb-wrap-column'."
 (defun bbdb-display-name-organization (record)
   "Insert name, degree, and organization of RECORD."
   ;; Name
-  (bbdb-display-text (or (bbdb-record-name record) "???")
-                     '(name) 'bbdb-name)
+  (let ((name (or (bbdb-record-name record) "???")))
+    (bbdb-display-text name (list 'name name) 'bbdb-name))
   ;; Degree
   (let ((degree (bbdb-record-degree record)))
     (when degree
@@ -3244,26 +3250,72 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
           (if menu
               (append ["--"] ["User Defined Commands"] menu)))))))
 
-(defun bbdb-next-record (p)
-  "Move point to the first line of the next BBDB record."
-  (interactive "p")
-  (if (< p 0)
-      (bbdb-prev-record (- p))
-    (forward-char)
-    (dotimes (i p)
-      (unless (re-search-forward "^[^ \t\n]" nil t)
-        (beginning-of-line)
-        (error "no next record")))
-    (beginning-of-line)))
+(defun bbdb-scan-property (property predicate n)
+  "Scan for change of PROPERTY matching PREDICATE for N times.
+Return position of beginning of matching interval."
+  (let ((fun (if (< 0 n) 'next-single-property-change
+               'previous-single-property-change))
+        (limit (if (< 0 n) (point-max) (point-min)))
+        (nn (abs n))
+        (i 0)
+        (opoint (point))
+        npoint)
+    ;; For backward search, move point to beginning of interval with PROPERTY.
+    (if (and (<= n 0)
+             (< (point-min) opoint)
+             (let ((prop (get-text-property opoint property)))
+               (and (eq prop (get-text-property (1- opoint) property))
+                    (funcall predicate prop))))
+        (setq opoint (previous-single-property-change opoint property nil limit)))
+    (if (zerop n)
+        opoint ; Return beginning of interval point is in
+      (while (and (< i nn)
+                  (let (done)
+                    (while (and (not done)
+                                (setq npoint (funcall fun opoint property nil limit)))
+                      (cond ((and (/= opoint npoint)
+                                  (funcall predicate (get-text-property
+                                                      npoint property)))
+                             (setq opoint npoint done t))
+                            ((= opoint npoint)
+                             ;; Search reached beg or end of buffer: abort.
+                             (setq done t i nn npoint nil))
+                            (t (setq opoint npoint))))
+                    done))
+        (setq i (1+ i)))
+      npoint)))
 
-(defun bbdb-prev-record (p)
-  "Move point to the first line of the previous BBDB record."
+(defun bbdb-next-record (n)
+  "Move point to the beginning of the next BBDB record.
+With prefix N move forward N records."
   (interactive "p")
-  (if (< p 0)
-      (bbdb-next-record (- p))
-    (dotimes (i p)
-      (unless (re-search-backward "^[^ \t\n]" nil t)
-        (error "no previous record")))))
+  (let ((npoint (bbdb-scan-property 'bbdb-record-number 'integerp n)))
+    (if npoint (goto-char npoint)
+      (error "No %s record" (if (< 0 n) "next" "previous")))))
+
+(defun bbdb-prev-record (n)
+  "Move point to the beginning of the previous BBDB record.
+With prefix N move backwards N records."
+  (interactive "p")
+  (bbdb-next-record (- n)))
+
+(defun bbdb-next-field (n)
+  "Move point to next (sub)field.
+With prefix N move forward N (sub)fields."
+  (interactive "p")
+  (let ((npoint (bbdb-scan-property
+                 'bbdb-field
+                 (lambda (p) (and (nth 1 p)
+                                  (not (eq (nth 2 p) 'field-label))))
+                 n)))
+    (if npoint (goto-char npoint)
+      (error "No %s field" (if (< 0 n) "next" "previous")))))
+
+(defun bbdb-prev-field (n)
+  "Move point to previous (sub)field.
+With prefix N move backwards N (sub)fields."
+  (interactive "p")
+  (bbdb-next-field (- n)))
 
 (defun bbdb-save (&optional prompt-first noisy)
   "Save the BBDB if it is modified."
