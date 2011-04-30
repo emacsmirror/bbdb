@@ -1,4 +1,8 @@
 2011-04-29  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el, lisp/bbdb-com.el, lisp/bbdb-migrate.el,
+	lisp/bbdb-print.el: Rename degree field to affix.
+
+2011-04-29  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-display-name-organization): Include name in
 	text property.
 	(bbdb-scan-property): New function.

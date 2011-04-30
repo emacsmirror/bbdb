@@ -695,7 +695,7 @@ Call `bbdb-create-internal' instead."
   (unless (funcall predicate place)
     (signal 'wrong-type-argument (list predicate place))))
 
-(defun bbdb-create-internal (name &optional degree aka organizations mail
+(defun bbdb-create-internal (name &optional affix aka organizations mail
                                   phones addresses notes)
   "Adds a record to the database; this function does a fair amount of
 error-checking on the passed in values, so it is safe to call this from
@@ -721,8 +721,8 @@ NOTES is an alist associating symbols with strings."
              (bbdb-gethash (bbdb-concat " " firstname lastname)))
         (error "%s %s is already in the database"
                (or firstname "") (or lastname "")))
-    ;; degree
-    (if degree (bbdb-check-type degree 'listp))
+    ;; affix
+    (if affix (bbdb-check-type affix 'listp))
     ;; aka
     (if aka (bbdb-check-type aka 'listp))
     ;; organizations
@@ -768,7 +768,7 @@ NOTES is an alist associating symbols with strings."
       (bbdb-check-type (cdr note) 'stringp))
     ;; record
     (let ((record
-           (vector firstname lastname degree aka organizations phones
+           (vector firstname lastname affix aka organizations phones
                    addresses mail notes
                    (make-vector bbdb-cache-length nil))))
       (run-hook-with-args 'bbdb-create-hook record)
@@ -779,7 +779,7 @@ NOTES is an alist associating symbols with strings."
 
 (defun bbdb-record-get-field (record field)
   (cond ((eq field 'name)     (bbdb-record-name record))
-        ((eq field 'degree)   (bbdb-record-degree record))
+        ((eq field 'affix)    (bbdb-record-affix record))
         ((eq field 'organization)  (bbdb-record-organization record))
         ((eq field 'mail)     (bbdb-record-mail record))
         ((eq field 'aka)      (bbdb-record-aka record))
@@ -790,7 +790,7 @@ NOTES is an alist associating symbols with strings."
 
 (defun bbdb-record-set-field (record field value)
   (cond ((eq field 'name)     (error "does not work on names"))
-        ((eq field 'degree)   (bbdb-record-set-degree record value))
+        ((eq field 'affix)    (bbdb-record-set-affix record value))
         ((eq field 'organization)  (bbdb-record-set-organization record value))
         ((eq field 'mail)     (bbdb-record-set-mail record value))
         ((eq field 'aka)      (bbdb-record-set-aka record value))
@@ -819,12 +819,12 @@ value of \"\", the default) means do not alter the address."
           (record (or (bbdb-current-record)
                       (error "Point not on a record")))
           (list (append bbdb-notes-label-list
-                        '(degree organization aka phone address mail)))
+                        '(affix organization aka phone address mail)))
           (field "")
           (completion-ignore-case t)
           (present (mapcar 'car (bbdb-record-notes record)))
           init init-f)
-     (if (bbdb-record-degree record) (push 'degree present))
+     (if (bbdb-record-affix record) (push 'affix present))
      (if (bbdb-record-organization record) (push 'organization present))
      (if (bbdb-record-mail record) (push 'mail present))
      (if (bbdb-record-aka record) (push 'aka present))
@@ -842,15 +842,15 @@ value of \"\", the default) means do not alter the address."
      (list record field (bbdb-prompt-for-new-field field init
                                                    current-prefix-arg))))
 
-  (cond (;; degree
-         (eq field 'degree)
-         (if (bbdb-record-degree record)
-             (error "Degree field exists already"))
+  (cond (;; affix
+         (eq field 'affix)
+         (if (bbdb-record-affix record)
+             (error "Affix field exists already"))
          (if (stringp contents)
-             (setq contents (bbdb-split 'degree contents)))
-         (dolist (degree contents)
-             (bbdb-puthash degree record))
-         (bbdb-record-set-degree record contents))
+             (setq contents (bbdb-split 'affix contents)))
+         (dolist (affix contents)
+           (bbdb-puthash affix record))
+         (bbdb-record-set-affix record contents))
         ;; organization
         ((eq field 'organization)
          (if (bbdb-record-organization record)
@@ -916,8 +916,8 @@ value of \"\", the default) means do not alter the address."
 
 ;; Used by `bbdb-insert-field' and `bbdb-insert-field-menu'.
 (defun bbdb-prompt-for-new-field (field &optional init flag)
-  (cond (;; degree
-         (eq field 'degree) (bbdb-read-string "Degree: " init))
+  (cond (;; affix
+         (eq field 'affix) (bbdb-read-string "Affix: " init))
         ;; organization
         ((eq field 'organization) (bbdb-read-string "Organization: " init))
         ;; mail
@@ -985,7 +985,7 @@ then the entire field is edited, not just the current line."
          bbdb-need-to-sort)
     ;; Some editing commands require re-sorting records
     (cond ((eq fname 'name)     (bbdb-record-edit-name record)) ; possibly
-          ((eq fname 'degree)   (bbdb-record-edit-degree record)) ; nil
+          ((eq fname 'affix)    (bbdb-record-edit-affix record)) ; nil
           ((eq fname 'organization)  (bbdb-record-edit-organization record)) ; possibly
           ((eq fname 'mail)     (bbdb-record-edit-mail record)) ; nil
           ((eq fname 'aka)      (bbdb-record-edit-aka record)) ; nil
@@ -1035,10 +1035,10 @@ then the entire field is edited, not just the current line."
     (bbdb-record-unset-name record)       ; delete old cache entry
     (bbdb-record-set-name record fn ln)))
 
-(defun bbdb-record-edit-degree (record)
-  (bbdb-record-set-degree record
-                          (bbdb-split  'degree (bbdb-read-string "Degree: "
-                          (bbdb-concat 'degree (bbdb-record-degree record))))))
+(defun bbdb-record-edit-affix (record)
+  (bbdb-record-set-affix record
+                         (bbdb-split  'affix (bbdb-read-string "Affix: "
+                         (bbdb-concat 'affix (bbdb-record-affix record))))))
 
 (defun bbdb-record-edit-organization (record)
   (let ((org (bbdb-split  'organization (bbdb-read-string "Organization: "
@@ -1358,8 +1358,8 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
                 record type
                 (delq (nth 1 field)
                       (bbdb-record-get-field record type))))
-              ((eq type 'degree)
-               (bbdb-record-set-degree record nil))
+              ((eq type 'affix)
+               (bbdb-record-set-affix record nil))
               ((memq type '(mail aka))
                (dolist (ff (bbdb-record-get-field record type))
                  (bbdb-remhash ff record))
@@ -1576,11 +1576,11 @@ That is somebody elses problem (something like `bbdb-merge-records')."
                           (bbdb-record-aka new-record) old-aka
                           'bbdb-string=))
 
-    (bbdb-record-set-degree new-record
-                            (bbdb-merge-lists
-                             (bbdb-record-degree new-record)
-                             (bbdb-record-degree old-record)
-                             'bbdb-string=))
+    (bbdb-record-set-affix new-record
+                           (bbdb-merge-lists
+                            (bbdb-record-affix new-record)
+                            (bbdb-record-affix old-record)
+                            'bbdb-string=))
 
     (bbdb-record-set-organization new-record
                                   (bbdb-merge-lists

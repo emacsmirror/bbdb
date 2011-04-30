@@ -495,7 +495,7 @@ This is used for fields which do not have an entry in `bbdb-separator-alist'."
   :type '(list regexp string))
 
 (defcustom bbdb-separator-alist
-  '((organization "[,;]" ", ") (degree "[,;]"  ", ") (aka ";" "; ")
+  '((organization "[,;]" ", ") (affix "[,;]"  ", ") (aka ";" "; ")
     (mail "[,;]" ", ") (mail-alias "[,;]" ", ") (vm-folder "[,;]" ", ")
     (birthday "\n" "\n") (wedding "\n" "\n") (anniversary "\n" "\n")
     (notes "\n" "\n"))
@@ -1708,7 +1708,7 @@ Return new value."
 
 ;; Define RECORD:
 (bbdb-defstruct record
-  firstname lastname degree aka organization phone address mail notes cache)
+  firstname lastname affix aka organization phone address mail notes cache)
 
 ;; Define PHONE:
 (bbdb-defstruct phone
@@ -2143,15 +2143,15 @@ elements of LIST if otherwise inserted text exceeds `bbdb-wrap-column'."
              (bbdb-display-text terminator (list field) face))))))
 
 (defun bbdb-display-name-organization (record)
-  "Insert name, degree, and organization of RECORD."
+  "Insert name, affix, and organization of RECORD."
   ;; Name
   (let ((name (or (bbdb-record-name record) "???")))
     (bbdb-display-text name (list 'name name) 'bbdb-name))
-  ;; Degree
-  (let ((degree (bbdb-record-degree record)))
-    (when degree
+  ;; Affix
+  (let ((affix (bbdb-record-affix record)))
+    (when affix
       (insert ", ")
-      (bbdb-display-list degree 'degree)))
+      (bbdb-display-list affix 'affix)))
   ;; Organization
   (let ((organization (bbdb-record-organization record)))
     (when organization
@@ -2162,7 +2162,7 @@ elements of LIST if otherwise inserted text exceeds `bbdb-wrap-column'."
 (defun bbdb-display-record-one-line (record layout field-list)
   "Record formatting function for the one-line layout.
 See `bbdb-layout-alist' for more info."
-  ;; Name, degree, and organizations
+  ;; Name, affix, and organizations
   (bbdb-display-name-organization record)
   (let ((name-end (or (bbdb-layout-get-option layout 'name-end)
                       40))
@@ -3189,7 +3189,7 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
                      (concat "\"" (symbol-name (car (nth 1 field)))
                              "\" field:"))
                     ((eq type 'name) "Name field:")
-                    ((eq type 'degree) "Degree field:")
+                    ((eq type 'affix) "Affix field:")
                     ((eq type 'organization) "Organization field:")
                     ((eq type 'aka) "Alternate Names field:")
                     ((eq type 'mail) "Mail Addresses field:")
@@ -3212,12 +3212,12 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
              (vector (symbol-name field)
                      `(bbdb-insert-field
                        ,record ',field (bbdb-prompt-for-new-field ',field))
-                     (not (or (and (eq field 'degree) (bbdb-record-degree record))
+                     (not (or (and (eq field 'affix) (bbdb-record-affix record))
                               (and (eq field 'organization) (bbdb-record-organization record))
                               (and (eq field 'mail) (bbdb-record-mail record))
                               (and (eq field 'aka) (bbdb-record-aka record))
                               (assq field (bbdb-record-notes record)))))))
-         (append '(degree organization aka phone address mail)
+         (append '(affix organization aka phone address mail)
                  '("--") bbdb-notes-label-list))))
 
 (defun bbdb-mouse-menu (event)

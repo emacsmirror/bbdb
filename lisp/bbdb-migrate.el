@@ -35,13 +35,13 @@
     (5 . "* More flexible street address.")
     (6 . "* postcodes are stored as plain strings.")
     (7 . "* Notes are always lists. Organizations are stored as list.
-  New field `degree'.")))
+  New field `affix'.")))
 
 ;;;###autoload
 (defun bbdb-migrate (records old-format)
   "Migrate the BBDB from the version on disk to the current version
 \(in `bbdb-file-format')."
-  ;; Add new field `degree'.
+  ;; Add new field `affix'.
   (if (< old-format 7)
       (let ((temp records) record)
         (while (setq record (car temp))

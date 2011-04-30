@@ -408,7 +408,7 @@ The return value is the new CURRENT-LETTER."
                      (bbdb-print-tex-quote
                       (bbdb-record-name record))))
         (organization (bbdb-record-organization record))
-        (degree  (bbdb-record-degree record))
+        (affix   (bbdb-record-affix record))
         (mail    (bbdb-record-mail record))
         (phone   (bbdb-record-phone record))
         (address (bbdb-record-address record))
