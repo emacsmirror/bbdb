@@ -1,3 +1,6 @@
+2011-04-29  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+	* lisp/Makefile: Use option --batch.  New target TAGS.
+
 2011-04-29  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el, lisp/bbdb-com.el, lisp/bbdb-migrate.el,
 	lisp/bbdb-print.el: Rename degree field to affix.

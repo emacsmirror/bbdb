@@ -28,7 +28,7 @@ LN_S = ln -s
 EMACS = emacs
 
 # Command line flags for Emacs.
-EMACSOPT = -batch --no-site-file --no-init-file
+EMACSOPT = --batch --no-site-file --no-init-file
 
 # The actual Emacs command run in the targets below.
 emacs = LC_ALL=C $(EMACS) $(EMACSOPT)
@@ -92,50 +92,50 @@ bbdb-autoloads.el: $(SRCS)
 	@echo "(if (and load-file-name (file-name-directory load-file-name))" >> $@;
 	@echo "    (add-to-list 'load-path (file-name-directory load-file-name)))" >> $@;
 	@echo "" >> $@;
-	@$(emacs) -batch -l autoload \
+	@$(emacs) --batch -l autoload \
 		--eval '(setq generated-autoload-file "'`pwd`'/$@")' \
 		--eval '(setq make-backup-files nil)' \
 		--eval '(setq autoload-package-name "bbdb")' \
 		-f batch-update-autoloads `pwd`
 
 bbdb-autoloads.elc: bbdb-autoloads.el
-	@$(emacs) -batch -f batch-byte-compile ./$^
+	@$(emacs) --batch -f batch-byte-compile ./$^
 
 .el.elc:
-	@$(emacs) -batch $(PUSHPATH) -f batch-byte-compile $<
+	@$(emacs) --batch $(PUSHPATH) -f batch-byte-compile $<
 
 bbdb.elc:	bbdb.el
-	@$(emacs) -batch -f batch-byte-compile $(@:.elc=.el)
+	@$(emacs) --batch -f batch-byte-compile $(@:.elc=.el)
 
 bbdb-com.elc:	bbdb.elc bbdb-com.el
-	@$(emacs) -batch $(PUSHPATH) \
+	@$(emacs) --batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
 bbdb-mua.elc:  bbdb.elc bbdb-com.elc bbdb-mua.el
-	@$(emacs) -batch $(PUSHPATH) \
+	@$(emacs) --batch $(PUSHPATH) \
 	-eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
 	-f batch-byte-compile $(@:.elc=.el)
 bbdb-rmail.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-rmail.el
-	@$(emacs) -batch $(PUSHPATH) \
+	@$(emacs) --batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
 bbdb-gnus.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-gnus.el
-	@$(emacs) -batch $(PUSHPATH) \
+	@$(emacs) --batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
 bbdb-mhe.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-mhe.el
-	@$(emacs) -batch $(PUSHPATH) \
+	@$(emacs) --batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
 # VM is not part of GNU Emacs
 bbdb-vm.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-vm.el
-	@$(emacs) -batch $(PUSHPATH) $(VM) \
+	@$(emacs) --batch $(PUSHPATH) $(VM) \
 		-f batch-byte-compile $(@:.elc=.el)
 
 bbdb-print.elc:	bbdb.elc bbdb-com.elc bbdb-print.el
-	@$(emacs) -batch $(PUSHPATH) \
+	@$(emacs) --batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
 bbdb-migrate.elc:	bbdb.elc bbdb-migrate.el
-	@$(emacs) -batch $(PUSHPATH) \
+	@$(emacs) --batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
 bbdb-anniv.elc:	bbdb.elc bbdb-anniv.el
-	@$(emacs) -batch $(PUSHPATH) \
+	@$(emacs) --batch $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
 
 autoloadsc: bbdb-autoloads.elc
@@ -145,9 +145,12 @@ bbdb:	bbdb.elc bbdb-com.elc autoloadsc bbdb-print.elc \
 	bbdb-message.elc bbdb-rmail.elc bbdb-gnus.elc bbdb-mhe.elc
 vm:	bbdb-vm.elc
 
+TAGS: $(SRCS)
+	etags $(SRCS)
+
 # Assorted clean-up targets
 clean:
-	-$(RM) bbdb*.elc
+	-$(RM) bbdb*.elc TAGS
 
 distclean: clean
 
