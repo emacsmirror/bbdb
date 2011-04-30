@@ -37,10 +37,26 @@
     (7 . "* Notes are always lists. Organizations are stored as list.
   New field `affix'.")))
 
+(defun bbdb-peel-the-onion (lis)
+  "Remove outer layers of parens around singleton lists.
+This is done until we get a list which is either not a singleton list
+or does not contain a list.  This is a utility function used in recovering
+slightly munged old BBDB files."
+  (while (and (consp lis)
+	      (null (cdr lis))
+	      (listp (car lis)))
+    (setq lis (car lis)))
+  lis)
+
 ;;;###autoload
 (defun bbdb-migrate (records old-format)
   "Migrate the BBDB from the version on disk to the current version
 \(in `bbdb-file-format')."
+  ;; Some BBDB files were corrupted by random outer layers of
+  ;; parentheses surrounding the actual correct data.  We attempt to
+  ;; compensate for this.
+  (setq records (bbdb-peel-the-onion records))
+
   ;; Add new field `affix'.
   (if (< old-format 7)
       (let ((temp records) record)

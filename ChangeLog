@@ -1,4 +1,8 @@
 2011-04-29  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+	* lisp/bbdb-migrate.el (bbdb-peel-the-onion): New function.
+	(bbdb-migrate): Use it for cleaning up corrupted BBDB files.
+
+2011-04-29  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 	* lisp/Makefile: Use option --batch.  New target TAGS.
 
 2011-04-29  Roland Winkler  <winkler@gnu.org>
