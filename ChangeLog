@@ -1,3 +1,10 @@
+2011-05-07  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-display-current-record): New command.
+	(bbdb-display-all-records): Improve docstring.
+
+	* lisp/bbdb.el (bbdb-mode-map): Key bindings for
+	bbdb-display-all-records and bbdb-display-current-record.
+
 2011-04-29  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 	* lisp/bbdb.el (bbdb-init-forms): Fix typo.
 	(bbdb-parse-internal): Clarify error message.

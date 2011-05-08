@@ -64,7 +64,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02")
-(defconst bbdb-version-date "$Date: 2011/04/30 03:02:55 $")
+(defconst bbdb-version-date "$Date: 2011/05/08 04:18:38 $")
 
 ;; Custom groups
 
@@ -1428,7 +1428,8 @@ APPEND and INVERT appear in the message area.")
     (define-key km "SN"         'bbdb-search-notes)
     (define-key km "Sc"         'bbdb-search-changed)
     (define-key km "Sd"         'bbdb-search-duplicates)
-    (define-key km "SA"         'bbdb-display-all-records)
+    (define-key km "\C-xnw"     'bbdb-display-all-records)
+    (define-key km "\C-xnd"     'bbdb-display-current-record)
 
     (define-key km [delete]     'scroll-down)
     (define-key km " "          'scroll-up)
@@ -1454,9 +1455,12 @@ This is a child of `special-mode-map'.")
      ["Previous record" bbdb-prev-record t]
      ["Next record" bbdb-next-record t]
      "--"
+     ["Show all records" bbdb-display-all-records t]
+     ["Show current record" bbdb-display-current-record t]
+     ["Omit record" bbdb-omit-record t]
+     "--"
      ["Toggle layout" bbdb-toggle-records-layout t]
-     ["Show all fields" bbdb-display-records-completely t]
-     ["Omit record" bbdb-omit-record t])
+     ["Show all fields" bbdb-display-records-completely t])
     ("Searching"
      ["General search" bbdb t]
      ["Search one record" bbdb-display-records t]
@@ -1476,9 +1480,7 @@ This is a child of `special-mode-map'.")
      ["Creation date = time stamp" bbdb-creation-no-change t]
      "--"
      ["Append search" bbdb-append-display t]
-     ["Invert search" bbdb-search-invert t]
-     "--"
-     ["Show all records" bbdb-display-all-records t])
+     ["Invert search" bbdb-search-invert t])
     ("Mail"
      ["Send mail" bbdb-mail t]
      ["Save mail address" bbdb-mail-address t]

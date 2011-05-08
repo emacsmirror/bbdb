@@ -1086,7 +1086,7 @@ to `bbdb-address-format-list'."
     (if (functionp edit)
         (setq new-addr (funcall edit address))
       (setq new-addr (make-vector 5 ""))
-      (dolist (elt (append edit nil))
+      (dolist (elt (string-to-list edit))
         (cond ((eq elt ?s)
                (aset new-addr 0 (bbdb-edit-address-street
                                  (bbdb-address-streets address))))
@@ -1397,9 +1397,20 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
 
 ;;;###autoload
 (defun bbdb-display-all-records (&optional layout)
-  "Show all records."
+  "Show all records.
+If invoked in a *BBDB* buffer point stays on the currently visible record.
+Inverse of `bbdb-display-current-record'."
   (interactive (list (bbdb-layout-prefix)))
-  (bbdb-display-records (bbdb-records) layout))
+  (let ((current (ignore-errors (bbdb-current-record))))
+    (bbdb-display-records (bbdb-records) layout)
+    (when (setq current (assq current bbdb-records))
+      (set-window-point (selected-window) (nth 2 current)))))
+
+;;;###autoload
+(defun bbdb-display-current-record (&optional layout)
+  "Narrow to current record.  Inverse of `bbdb-display-all-records'."
+  (interactive (list (bbdb-layout-prefix)))
+  (bbdb-display-records (list (bbdb-current-record)) layout))
 
 (defun bbdb-change-records-layout (records layout)
   (dolist (record records)
