@@ -12,13 +12,13 @@ if [ ${FLAVOR} = emacs ]; then exit 0; fi
 
 echo install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}
 
-#FLAVORTEST=`echo $FLAVOR | cut -c-6`
+#FLAVORTEST=$(echo $FLAVOR | cut -c-6)
 #if [ ${FLAVORTEST} = xemacs ] ; then
 #    SITEFLAG="-no-site-file"
 #else
 #    SITEFLAG="--no-site-file"
 #fi
-FLAGS="${SITEFLAG} -q --batch -l path.el -f batch-byte-compile"
+FLAGS="${SITEFLAG} --no-init-file --batch --load path.el --funcall batch-byte-compile"
 
 ELDIR=/usr/share/emacs/site-lisp/${PACKAGE}
 ELCDIR=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
@@ -32,8 +32,8 @@ fi
 
 install -m 755 -d ${ELCDIR}
 cd ${ELDIR}
-FILES=`echo *.el`
-cp ${FILES} ${ELCDIR}
+FILES=*.el
+cp ${FILES} ${ELCDIR}/
 cd ${ELCDIR}
 
 cat << EOF > path.el
