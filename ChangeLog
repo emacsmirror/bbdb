@@ -1,4 +1,8 @@
 2011-04-29  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+	* lisp/bbdb.el (bbdb-init-forms): Fix typo.
+	(bbdb-parse-internal): Clarify error message.
+
+2011-04-29  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 	* lisp/bbdb-migrate.el (bbdb-peel-the-onion): New function.
 	(bbdb-migrate): Use it for cleaning up corrupted BBDB files.
 
@@ -298,7 +302,7 @@
 	(bbdb-update-records-p): Value may also be a function.
 	(bbdb-mua-update-interactive-p): New variable.
 	(bbdb-init-forms): Add message and mail mode support. Sendmail is
-	depreciated (use mail instead). Remove outdated support for
+	deprecated (use mail instead). Remove outdated support for
 	reportmail, supercite and w3.
 	(bbdb-initialize): Updated accordingly. Do not test presence of
 	features (which is not needed).

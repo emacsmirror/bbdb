@@ -1319,7 +1319,7 @@ Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
     (mail                       ; the standard mail user agent
      (add-hook 'mail-setup-hook 'bbdb-insinuate-mail))
     (sendmail
-     (progn (message "BBDB: sendmail insinuation depreciated. Use mail.")
+     (progn (message "BBDB: sendmail insinuation deprecated. Use mail.")
             (add-hook 'mail-setup-hook 'bbdb-insinuate-mail)))
     (message                    ; the gnus mail user agent
      (add-hook 'message-setup-hook 'bbdb-insinuate-message)))
@@ -2793,8 +2793,8 @@ Return nil otherwise."
         (unless file-format ; current file-format, but no file-format: line.
           (error "BBDB corrupted: no file-format line"))
         (if (> file-format bbdb-file-format)
-            (error "BBDB version %s does not understand file format %s."
-                   bbdb-version file-format))
+            (error "BBDB version %s understands file format %s but not %s."
+                   bbdb-version bbdb-file-format file-format))
 
         (or (eobp) (looking-at "\\[")
             (error "BBDB corrupted: no following bracket"))
