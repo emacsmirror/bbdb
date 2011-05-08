@@ -1,3 +1,7 @@
+2011-05-08  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-display-all-records): Use redisplay.  Why
+	needed?
+
 2011-05-08  Leo  <sdl.web@gmail.com>
 	* lisp/bbdb-com.el (bbdb-merge-records-internal): Fix typo
 

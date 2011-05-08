@@ -1404,7 +1404,9 @@ Inverse of `bbdb-display-current-record'."
   (let ((current (ignore-errors (bbdb-current-record))))
     (bbdb-display-records (bbdb-records) layout)
     (when (setq current (assq current bbdb-records))
-      (set-window-point (selected-window) (nth 2 current)))))
+      (redisplay) ; Strange display bug??
+      (goto-char (nth 2 current)))))
+      ;; (set-window-point (selected-window) (nth 2 current)))))
 
 ;;;###autoload
 (defun bbdb-display-current-record (&optional layout)
