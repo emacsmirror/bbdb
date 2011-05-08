@@ -1,3 +1,9 @@
+2011-05-08  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb-com.el (bbdb-merge-records-internal): Fix typo
+
+2011-05-08  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb-mua.el (bbdb-auto-notes): Fix typo
+
 2011-05-07  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-display-current-record): New command.
 	(bbdb-display-all-records): Improve docstring.

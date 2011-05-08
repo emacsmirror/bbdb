@@ -812,7 +812,7 @@ For use as an element of `bbdb-notice-hook'."
       ;; For speed-up expanded rules are stored in `bbdb-auto-notes-rules-expanded'.
       (when (and bbdb-auto-notes-rules
                  (not bbdb-auto-notes-rules-expanded))
-        (let (expanded mua from-to)
+        (let (expanded mua from-to header)
           (dolist (rule bbdb-auto-notes-rules)
             ;; Which MUA do we want?
             (if (or (stringp (car rule))
@@ -825,6 +825,7 @@ For use as an element of `bbdb-notice-hook'."
                 (setq from-to t)
               (setq from-to (car rule)
                     rule (cdr rule)))
+            (setq header (car rule))
             (let (string field replace elt-e)
               (dolist (elt (cdr rule))
                 (if (consp (setq string (cdr elt)))
@@ -835,7 +836,7 @@ For use as an element of `bbdb-notice-hook'."
                   (setq field 'notes
                         replace nil))
                 (push (list (car elt) field string replace) elt-e))
-              (push (append (list mua from-to) (nreverse elt-e)) expanded)))
+              (push (append (list mua from-to header) (nreverse elt-e)) expanded)))
           (setq bbdb-auto-notes-rules-expanded (nreverse expanded))))
 
       (dolist (rule bbdb-auto-notes-rules-expanded)

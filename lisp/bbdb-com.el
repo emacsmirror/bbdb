@@ -1575,7 +1575,7 @@ That is somebody elses problem (something like `bbdb-merge-records')."
                      (unless (and bbdb-use-alternate-names
                                   (y-or-n-p
                                    (format "Keep \"%s\" as an alternate name? "
-                                           (bbdb-record-name extra-name))))
+                                           extra-name)))
                        (setq extra-name nil)))))))
 
     (bbdb-record-unset-name new-record)
