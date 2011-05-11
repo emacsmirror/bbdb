@@ -1,4 +1,8 @@
 2011-05-11  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-update-records): Fix previous patch.
+	(bbdb-prompt-for-create): Use special-mode.
+
+2011-05-11  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-notice-mail-hook): Rename from
 	bbdb-notice-hook.
 	(bbdb-notice-record-hook): New variable.

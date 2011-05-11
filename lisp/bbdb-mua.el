@@ -264,8 +264,8 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
       ;; update cache
       (if msg-key (bbdb-message-set-cache msg-key records)))
 
-    (unless (and bbdb-message-all-addresses records)
-      (setq records (list (car records))))
+    (if (and records (not bbdb-message-all-addresses))
+        (setq records (list (car records))))
 
     ;; only invoke `bbdb-notice-record-hook' if we actually noticed something
     (if records
@@ -314,7 +314,7 @@ Honor previous answers such as \"!\"."
                     (window (or (get-buffer-window buffer)
                                 (split-window (get-lru-window)))))
                (with-current-buffer buffer
-                 (setq buffer-read-only t)
+                 (special-mode)
                  (let (buffer-read-only)
                    (erase-buffer)
                    (insert
