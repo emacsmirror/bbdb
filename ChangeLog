@@ -1,3 +1,15 @@
+2011-05-11  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-notice-mail-hook): Rename from
+	bbdb-notice-hook.
+	(bbdb-notice-record-hook): New variable.
+	(bbdb-notice-hook-pending): Update doc string.
+
+	* lisp/bbdb-mua.el (bbdb-update-records): Call
+	bbdb-notice-record-hook.
+	(bbdb-annotate-message): Use bbdb-notice-mail-hook.
+
+	* lisb/bbdb-vm.el (bbdb/vm-auto-add-label): Update doc string.
+
 2011-05-08  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-display-all-records): Use redisplay.  Why
 	needed?

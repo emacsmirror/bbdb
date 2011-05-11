@@ -250,7 +250,7 @@ Defaults to `bbdb-mail-alias-field' which defaults to `mail-alias'."
 
 (defun bbdb/vm-auto-add-label (record)
   "Automatically add labels to messages based on the mail-alias field.
-Add this to `bbdb-notice-hook' and if using VM each message that bbdb
+Add this to `bbdb-notice-mail-hook' and if using VM each message that bbdb
 notices will be checked.  If the sender has a value in the
 `bbdb/vm-auto-add-label-field' in their BBDB record that matches a value
 in `bbdb/vm-auto-add-label-list' then a VM label will be added
@@ -258,11 +258,8 @@ to the message.  VM labels can be used, e.g., to mark messages or define
 virtual folders.
 
 This works great when `bbdb-user-mail-address-re' is set.  As a result
-mail that you send to people (and copy yourself on) is labeled as well.
-
-This is how you hook it in.
-   (add-hook 'bbdb-notice-hook 'bbdb/vm-auto-add-label)"
-;; This should go into `vm-arrived-message-hook'!
+mail that you send to people (and copy yourself on) is labeled as well."
+  ;; This should go into `vm-arrived-message-hook'!
   (let (aliases)
     (and (eq major-mode 'vm-mode)
          (mapcar (lambda (x)

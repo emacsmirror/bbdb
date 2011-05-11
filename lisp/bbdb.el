@@ -64,7 +64,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02")
-(defconst bbdb-version-date "$Date: 2011/05/08 04:18:38 $")
+(defconst bbdb-version-date "$Date: 2011/05/11 14:11:26 $")
 
 ;; Custom groups
 
@@ -418,7 +418,7 @@ be different from standard commands like `isearch-forward'."
     (("Austria" "Germany" "Spain" "Switzerland")
      "spcSC" "@%s\n@%p @%c@ (%S)@\n%C@" "@%c@")
     (("Canada") "scSCp" "@%s\n@%c@, %S@\n%C@ %p@" "@%c@")
-    (("China") "scpSC" "@%s\n@%c@\n%p@%S@\n%C@" "@%c@") ; English format
+    (("China") "scpSC" "@%s\n@%c@\n%p@ %S@\n%C@" "@%c@") ; English format
     ; (("China") "CpScs" "@%C @%p\n@%S @%c@ %s@" "@%c@") ; Chinese format
     (("India") "scpSC" "@%s\n@%c@ %p@ (%S)@\n%C@" "@%c@")
     (("USA") "scSpC" "@%s\n@%c@, %S@ %p@\n%C@" "@%c@")
@@ -842,34 +842,59 @@ manipulation which is performed before any database access.)"
 (defcustom bbdb-message-caching t
   "Whether caching of the message->record association should be used
 for the interfaces which support it (VM, MH, and RMAIL).  This can speed
-things up a lot.  One implication of this variable being t is that the
-`bbdb-notice-hook' will not be called each time a message is selected, but
-only the first time.  Likewise, if selecting a message would generate a
-question (whether to add an address, change the name, etc) you will only
-be asked that question the first time the message is selected."
+things up a lot.  One implication of this variable being t is that
+`bbdb-notice-mail-hook' and `bbdb-notice-record-hook' will not be called
+each time a message is selected, but only the first time.
+Likewise, if selecting a message would generate a question
+\(whether to add an address, change the name, etc) you will only be asked
+that question the first time the message is selected."
   :group 'bbdb-mua
   :type '(choice (const :tag "Enable caching" t)
                  (const :tag "Disable caching" nil)))
 
-(defcustom bbdb-notice-hook nil
-  "Hook run each time a BBDB record is \"noticed\", that is,
-each time it is displayed by the MUA interfaces.  Run with
-one argument, the new record.  The record need not have been modified for
-this to be called - use `bbdb-change-hook' for that.  You can use this to,
-for example, add something to the notes field based on the subject of the
-current message.  It is up to your hook to determine whether it is running
-in Gnus, VM, MH, or RMAIL, and to act appropriately.
+(defcustom bbdb-notice-mail-hook nil
+  "Hook run each time a mail address of a record is \"noticed\" in a message.
+This means that the mail address in a message belongs to an existing BBDB record
+or it is a record BBDB has created for the mail address.
 
-Also note that `bbdb-change-hook' will NOT be called as a result of any
-modifications you may make to the record inside this hook.
+Run with one argument, the record.  It is up to the hook function
+to determine which MUA is used and to act appropriately.
+Hook functions can use the variable `bbdb-update-records-address'
+to determine the header and class of the mail address according
+to `bbdb-message-headers'.  See `bbdb-auto-notes' for how to annotate records
+using `bbdb-update-records-address' and the headers of a mail message.
 
-Hook functions can use the variable `bbdb-update-records-address' to determine
-the header and class of the mail address according to `bbdb-message-headers'.
+The record need not have been modified for this hook to be called;
+use `bbdb-change-hook' for that.  `bbdb-change-hook' will NOT be called
+as a result of modifications you may make to the record inside this hook.
 
-Beware that if the variable `bbdb-message-caching' is t (a good idea)
-this hook will be called only the first time that message is selected.
-Thus when debugging the value of this hook, it can help to set
-`bbdb-message-caching' to nil."
+If a message contains multiple mail addresses belonging to one BBDB record,
+this hook is run for each mail address.  Use `bbdb-notice-record-hook'
+if you want to notice each record only once per message.
+
+If the variable `bbdb-message-caching' is t this hook will be called
+only the first time that message is selected.  Thus when debugging
+the value of this hook, it can help to set `bbdb-message-caching' to nil."
+  :group 'bbdb-mua
+  :type 'hook)
+
+(defcustom bbdb-notice-record-hook nil
+  "Hook run each time a BBDB record is \"noticed\" in a message.
+This means that one of the mail addresses in a message belongs to an existing
+record or it is a record BBDB has created for the mail address.  If a message
+contains multiple mail addresses belonging to one BBDB record, this hook
+is nonetheless run only once.  Use `bbdb-notice-mail-hook' if you want to run
+a hook function for each mail address in a message.
+
+The record need not have been modified for this hook to be called;
+use `bbdb-change-hook' for that.  `bbdb-change-hook' will NOT be called
+as a result of modifications you may make to the record inside this hook.
+
+If the variable `bbdb-message-caching' is t this hook will be called
+only the first time that message is selected.  Thus when debugging
+the value of this hook, it can help to set `bbdb-message-caching' to nil.
+
+Hook is run with one argument, the record."
   :group 'bbdb-mua
   :type 'hook)
 
@@ -889,7 +914,7 @@ Thus when debugging the value of this hook, it can help to set
   "List of rules for adding notes to records of mail addresses of messages.
 This automatically annotates the BBDB record of the sender or recipient
 of a message based on the value of a header such as the Subject header.
-This requires that `bbdb-notice-hook' contains `bbdb-auto-notes' and that
+This requires that `bbdb-notice-mail-hook' contains `bbdb-auto-notes' and that
 the record already exists or `bbdb/MUA-update-records-p' returns such that
 the record will be created.  Messages matching `bbdb-auto-notes-ignore-messages'
 are ignored.
@@ -1300,8 +1325,7 @@ See also `bbdb-silent'.")
 (defvar bbdb-electric-done)
 
 (defvar bbdb-notice-hook-pending nil
-  "Internal variable; hands off.
-Set to t by BBDB when inside the `bbdb-notice-hook'.
+  "Bound to t if inside `bbdb-notice-mail-hook' or `bbdb-notice-record-hook'.
 Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
 
 (defvar bbdb-auto-notes-rules-expanded nil

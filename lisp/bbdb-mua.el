@@ -264,9 +264,16 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
       ;; update cache
       (if msg-key (bbdb-message-set-cache msg-key records)))
 
-    (if bbdb-message-all-addresses
-        records
-      (if records (list (car records))))))
+    (unless (and bbdb-message-all-addresses records)
+      (setq records (list (car records))))
+
+    ;; only invoke `bbdb-notice-record-hook' if we actually noticed something
+    (if records
+        (let ((bbdb-notice-hook-pending t))
+          (dolist (record records)
+            (run-hook-with-args 'bbdb-notice-record-hook record))))
+
+    records))
 
 (defun bbdb-prompt-for-create ()
   "Interactive query used by `bbdb-update-records'.
@@ -552,10 +559,10 @@ Return the record matching ADDRESS or nil."
         (if created-p (run-hook-with-args 'bbdb-create-hook record))
         (if change-p (bbdb-change-record record (eq change-p 'sort) created-p))
 
-        ;; only invoke `bbdb-notice-hook' if we actually noticed something
+        ;; only invoke `bbdb-notice-mail-hook' if we actually noticed something
         (if record
             (let ((bbdb-notice-hook-pending t))
-              (run-hook-with-args 'bbdb-notice-hook record)))
+              (run-hook-with-args 'bbdb-notice-mail-hook record)))
 
         record))))
 
@@ -786,7 +793,7 @@ for example only for outgoing messages."
   "Automatically annotate RECORD based on the headers of the current message.
 See the variables `bbdb-auto-notes-rules', `bbdb-auto-notes-ignore-messages'
 and `bbdb-auto-notes-ignore-headers'.
-For use as an element of `bbdb-notice-hook'."
+For use as an element of `bbdb-notice-mail-hook'."
   ;; This code re-evaluates the annotations each time a message is viewed.
   ;; It would be faster if we could somehow store (permanently?) that we
   ;; have already annotated a message.
