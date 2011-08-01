@@ -1,9 +1,11 @@
 #!/usr/bin/make -f
 
-build clean install binary-arch binary-indep binary:
+dh_targets=binary binary-arch binary-indep build build-arch build-indep clean install
+
+$(dh_targets) %:
 	dh $@ --with autotools_dev --parallel
 
-.PHONY: build clean install binary-arch binary-indep binary
+.PHONY: $(dh_targets)
 
 override_dh_auto_configure:
 	if [ ! -x configure ]; then chmod +x configure; fi # debian.diff fails to +x
