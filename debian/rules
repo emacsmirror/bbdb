@@ -2,8 +2,12 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-%:
+dh_targets=binary binary-arch binary-indep build build-arch build-indep clean install
+
+$(dh_targets) %:
 	dh $@ --parallel
+
+.PHONY: $(dh_targets)
 
 override_dh_auto_build:
 	dh_auto_build --sourcedirectory=lisp -- bbdb-autoloads.el
