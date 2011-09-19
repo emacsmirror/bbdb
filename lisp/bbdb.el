@@ -64,7 +64,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02")
-(defconst bbdb-version-date "$Date: 2011/05/11 14:11:26 $")
+(defconst bbdb-version-date "$Date: 2011/09/19 06:54:27 $")
 
 ;; Custom groups
 
@@ -667,6 +667,7 @@ of the arg ADDRESS (see there).  Allowed values are:
                  (const :tag "annotate all messages" create)
                  (function :tag "User-defined function")))
 
+;;; Fixme: This docstring is too confusing!
 (defcustom bbdb-mua-update-interactive-p '(search . query)
   "Return values for function `bbdb-mua-update-interactive-p' (see there).
 It is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
@@ -855,7 +856,7 @@ that question the first time the message is selected."
 (defcustom bbdb-notice-mail-hook nil
   "Hook run each time a mail address of a record is \"noticed\" in a message.
 This means that the mail address in a message belongs to an existing BBDB record
-or it is a record BBDB has created for the mail address.
+or to a record BBDB has created for the mail address.
 
 Run with one argument, the record.  It is up to the hook function
 to determine which MUA is used and to act appropriately.
@@ -3359,13 +3360,12 @@ With prefix N move backwards N (sub)fields."
 ;;;###autoload
 (defun bbdb-version (&optional arg)
   "Return string describing the version of BBDB.
-With non-nil prefix ARG, insert string at point."
-  (interactive "P")
+With prefix ARG, insert string at point."
+  (interactive (list (or (and current-prefix-arg 1) t)))
   (let ((version-string (format "BBDB version %s (%s)"
                                 bbdb-version bbdb-version-date)))
-    (cond (arg (insert (message version-string)))
-          ((interactive-p)
-           (message version-string))
+    (cond ((numberp arg) (insert (message version-string)))
+          ((eq t arg) (message version-string))
           (t version-string))))
 
 

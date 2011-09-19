@@ -603,7 +603,7 @@ Case is ignored.  Return name as (FIRST . LAST)."
                       string)
         (setq suffix (concat " " (match-string 1 string))
               string (substring string 0 (match-beginning 0))))
-    (if (string-match (concat "[- \t]*\\(\\(?:"
+    (if (string-match (concat "[- \t]*\\(\\(?:\\<"
                               (regexp-opt bbdb-lastname-prefixes)
                               ;; multiple last names concatenated by `-'
                               "[- \t]+\\)?\\(?:\\w+[ \t]*-[ \t]*\\)*\\w+\\)\\'")
