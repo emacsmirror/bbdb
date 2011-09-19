@@ -2373,8 +2373,11 @@ If pefix DELETE is non-nil, remove ALIAS from RECORD."
            (completing-read
             (format "%s mail alias: "
                     (if current-prefix-arg "Remove" "Add"))
-            (bbdb-get-mail-aliases) nil nil
-            init) current-prefix-arg)))
+            (if current-prefix-arg
+                (or (bbdb-record-note-split record bbdb-mail-alias-field)
+                    (error "Record has no alias"))
+              (bbdb-get-mail-aliases))
+            nil nil init) current-prefix-arg)))
   (setq alias (bbdb-string-trim alias))
   (unless (string= "" alias)
     (let ((aliases (bbdb-record-note-split record bbdb-mail-alias-field)))

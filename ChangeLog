@@ -1,3 +1,7 @@
+2011-09-19  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb-com.el (bbdb-add-mail-alias): Fix completion list used
+	in interactive calls for deleting an alias.
+
 2011-09-19  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mode-map): Use / as search prefix.
 
