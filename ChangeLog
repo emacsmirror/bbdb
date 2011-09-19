@@ -1,3 +1,15 @@
+2011-09-19  Abhi Yerra  <abhi@berkeley.edu>
+	* lisp/bbdb.el (bbdb-dial-function): New variable.
+	(bbdb-sound-player, bbdb-sound-files, bbdb-modem-dial)
+	(bbdb-modem-device, bbdb-sound-volume): Removed (obsolete).
+
+	* lisp/bbdb-com.el (bbdb-dial-number): Use browse-url and
+	bbdb-dial-function.
+	(bbdb-play-sound): Removed (obsolete)
+
+2011-09-19  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-dial): First remove extension.  Simplify.
+
 2011-09-19  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-version): Do not use interactive-p.
 

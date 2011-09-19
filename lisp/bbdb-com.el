@@ -2395,69 +2395,21 @@ If pefix DELETE is non-nil, remove ALIAS from RECORD."
 
 ;;; Dialing numbers from BBDB
 
-(defun bbdb-play-sound (num &optional volume)
-  "Play the specified touchtone number NUM at VOLUME.
-Uses external program `bbdb-sound-player' if set, otherwise
-try to use internal sound if available."
-  ;; We cannot tell a priori if Emacs facility will actually work.
-  (cond ((not (condition-case nil
-                  (play-sound (list 'sound
-                                    :file (aref bbdb-sound-files
-                                                (string-to-number num))
-                                    :volume (or volume bbdb-sound-volume)))
-                (error nil))))
-        ((and bbdb-sound-player
-              (file-exists-p bbdb-sound-player))
-         (call-process bbdb-sound-player nil nil nil
-                       (aref bbdb-sound-files num)))
-        ((error "BBDB has no means of playing sound."))))
-
 (defun bbdb-dial-number (phone-string)
   "Dial the number specified by PHONE-STRING.
-The number is dialed either by playing touchtones through the audio
-device using `bbdb-sound-player', or by sending a dial sequence to
-`bbdb-modem-device'. # and * are dialed as-is, and a space is treated as
-a pause in the dial sequence."
+This uses the tel URI syntax passed to `browse-url' to make the call.
+If `bbdb-dial-function' is non-nil then that is called to make the phone call."
   (interactive "sDial number: ")
-  (if bbdb-modem-dial
-      (with-temp-buffer
-        (insert bbdb-modem-dial)
-        (insert (mapconcat
-                 (lambda (d)
-                   (cond ((eq ?\s d) ",")
-                         ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?* ?#))
-                          (format "%c" d))
-                         (t "")))
-                 phone-string "") ";\r\n")
-        (write-region (point-min) (point-max) bbdb-modem-device t)
-        (message "%s dialed. Pick up the phone now and hit any key ..."
-                 phone-string)
-        (read-event)
-        (erase-buffer)
-        (insert "ATH\r\n")
-        (write-region (point-min) (point-max) bbdb-modem-device t))
-
-    (mapc (lambda (d)
-            (cond
-             ((eq ?# d)
-              (bbdb-play-sound 10))
-             ((eq ?* d)
-              (bbdb-play-sound 11))
-             ((eq ?\s d)
-              ;; if we use `sit-for', the user can interrupt!
-              (sleep-for 1)) ;; configurable?
-             ((memq d '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-              (bbdb-play-sound (- d ?0)))
-             (t)))
-          phone-string)))
+  (if bbdb-dial-function
+      (funcall bbdb-dial-function phone-string)
+    (browse-url (concat "tel:" phone-string))))
 
 ;;;###autoload
 (defun bbdb-dial (phone force-area-code)
   "Dial the number at point.
-If the point is at the beginning of a record, dial the first
-phone number.  Does not dial the extension.  Does not apply the
-transformations from bbdb-dial-local-prefix-alist if a prefix arg
-is given."
+If the point is at the beginning of a record, dial the first phone number.
+Use rules from `bbdb-dial-local-prefix-alist' unless prefix FORCE-AREA-CODE
+is non-nil.  Do not dial the extension."
   (interactive (list (bbdb-current-field) current-prefix-arg))
   (if (eq (car-safe phone) 'name)
       (setq phone (car (bbdb-record-phone (bbdb-current-record)))))
@@ -2465,33 +2417,36 @@ is given."
       (setq phone (car (cdr phone))))
   (or (vectorp phone) (error "Not on a phone field"))
 
-  (let* ((number (bbdb-phone-string phone)) shortnumber elt)
-    (when (not force-area-code)
-      (let ((alist bbdb-dial-local-prefix-alist))
-        (while (setq elt (pop alist))
-          (if (string-match (concat "^" (eval (car elt))) number)
-              (setq shortnumber (concat (cdr elt)
-                                        (substring number (match-end 0)))
-                    alist nil)))))
+  (let ((number (bbdb-phone-string phone))
+        shortnumber)
 
     ;; cut off the extension
     (if (string-match "x[0-9]+$" number)
         (setq number (substring number 0 (match-beginning 0))))
 
-    ;; This is terrifically Americanized...
-    ;; Leading 0 => local number (?)
-    (if (and (not shortnumber) bbdb-dial-local-prefix
-             (string-match "^0" number))
-        (setq number (concat bbdb-dial-local-prefix number)))
+    (unless force-area-code
+      (let ((alist bbdb-dial-local-prefix-alist) prefix)
+        (while (setq prefix (pop alist))
+          (if (string-match (concat "^" (eval (car prefix))) number)
+              (setq shortnumber (concat (cdr prefix)
+                                        (substring number (match-end 0)))
+                    alist nil)))))
 
-    ;; Leading + => long distance/international number
-    (if (and (not shortnumber) bbdb-dial-long-distance-prefix
-             (string-match "^\+" number))
-        (setq number (concat bbdb-dial-long-distance-prefix " "
-                             (substring number 1))))
+    (if shortnumber
+        (setq number shortnumber)
 
-    ;; use the short number if it's available
-    (setq number (or shortnumber number))
+      ;; This is terrifically Americanized...
+      ;; Leading 0 => local number (?)
+      (if (and bbdb-dial-local-prefix
+               (string-match "^0" number))
+          (setq number (concat bbdb-dial-local-prefix number)))
+
+      ;; Leading + => long distance/international number
+      (if (and bbdb-dial-long-distance-prefix
+               (string-match "^\+" number))
+          (setq number (concat bbdb-dial-long-distance-prefix " "
+                               (substring number 1)))))
+
     (unless bbdb-silent
       (message "Dialing %s" number))
     (bbdb-dial-number number)))

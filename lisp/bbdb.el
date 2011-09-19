@@ -64,7 +64,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02")
-(defconst bbdb-version-date "$Date: 2011/09/19 06:54:27 $")
+(defconst bbdb-version-date "$Date: 2011/09/19 07:52:22 $")
 
 ;; Custom groups
 
@@ -1247,41 +1247,14 @@ when dialling (international dialing prefix.)"
   :type '(choice (const :tag "No digits required" nil)
                  (string :tag "Dial this first" "1")))
 
-(defcustom bbdb-sound-player nil
-  "The program to be used to play the sounds for the touch-tone digits."
+(defcustom bbdb-dial-function nil
+  "If non-nil this should be a function used for dialing phone numbers.
+This function is used by `bbdb-dial-number'.  It requires one
+argument which is a string for the number that is dialed.
+If nil then `bbdb-dial-number' uses the tel URI syntax passed to `browse-url'
+to make the call."
   :group 'bbdb-dialing
-  :type '(choice (const :tag "No External Player" nil)
-                 (file :tag "Sound Player" "/usr/local/bin/play")))
-
-(defcustom bbdb-sound-files
-  (vconcat
-   (mapcar (lambda (x) (format "/usr/demo/SOUND/sounds/touchtone.%s.au" x))
-           '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "pound" "star")))
-  "Vector of sound files to be used for dialing.
-They correspond to the 0, 1, 2, ... 9 digits, pound and star, respectively."
-  :group 'bbdb-dialing
-  :type 'vector)
-
-(defcustom bbdb-modem-dial nil
-  "Type of dialing to use.
-If this value is nil, the audio device is used for dialing. Otherwise,
-this string is fed to the modem before the phone number digits."
-  :group 'bbdb-dialing
-  :type '(choice (const  :tag "audio" nil)
-                 (string :tag "tone dialing" "ATDT ")
-                 (string :tag "pulse dialing" "ATDP ")))
-
-(defcustom bbdb-modem-device "/dev/modem"
-  "The name of the modem device.
-This is only used if `bbdb-modem-dial' is set to something other than nil."
-  :group 'bbdb-dialing
-  :type 'string)
-
-(defcustom bbdb-sound-volume 50
-  "The volume to play back dial tones at. The range is 0 to 100.
-This is only used if `bbdb-modem-dial' is set to nil."
-  :group 'bbdb-dialing
-  :type 'integer)
+  :type 'function)
 
 ;;; Internal variables
 (eval-and-compile
