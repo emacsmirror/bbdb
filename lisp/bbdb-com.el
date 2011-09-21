@@ -2464,7 +2464,8 @@ Interactively, use BBDB prefix \
 Prefix WHICH specifies which URL in field `url' is used (starting from 0).
 Default is the first URL."
   (interactive (list (bbdb-get-records "Visit (URL): ")
-                     current-prefix-arg))
+                     (and current-prefix-arg
+                          (prefix-numeric-value current-prefix-arg))))
   (unless which (setq which 0))
   (dolist (record (bbdb-record-list records))
     (let ((url (bbdb-record-note-split record 'url)))

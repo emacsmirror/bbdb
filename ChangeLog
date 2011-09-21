@@ -1,3 +1,6 @@
+2011-09-21  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb-com.el (bbdb-browse-url): Fix usage of prefix arg.
+
 2011-09-19  Leo  <sdl.web@gmail.com>
 	* lisp/bbdb-com.el (bbdb-add-mail-alias): Fix completion list used
 	in interactive calls for deleting an alias.
