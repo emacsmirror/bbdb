@@ -64,7 +64,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02")
-(defconst bbdb-version-date "$Date: 2011/09/19 07:52:22 $")
+(defconst bbdb-version-date "$Date: 2011/09/22 15:25:37 $")
 
 ;; Custom groups
 
@@ -2590,9 +2590,6 @@ will be split vertically rather than horizontally."
                            (max window-min-height bbdb-pop-up-window-size))
                       (round (* bbdb-pop-up-window-size
                                 (window-height tallest-window)))))
-                   (if (memq major-mode
-                             '(gnus-Group-mode gnus-Subject-mode gnus-Article-mode))
-                       (goto-char (point-min)))  ; make gnus happy...
                    (select-window (next-window)) ; goto the bottom of the two...
                    (let (pop-up-windows)         ; make it display *BBDB*...
                      (switch-to-buffer (get-buffer-create bbdb-buffer-name))))
