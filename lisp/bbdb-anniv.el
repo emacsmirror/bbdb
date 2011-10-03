@@ -65,7 +65,7 @@ of each record."
 ;; `diary-list-entries' selects the entries for NUMBER days starting with DATE.
 
 (defvar original-date) ; defined in diary-lib
-(defvar number) ; defined in diary-lib
+(with-no-warnings (defvar number)) ; defined in diary-lib
 
 ;;;###autoload
 (defun bbdb-anniv-diary-entries ()

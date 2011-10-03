@@ -1,3 +1,39 @@
+2011-09-22  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb.el (bbdb-pop-up-window): Remove Gnus-specific code
+	which is not required anymore by recent versions of Gnus.
+
+2011-09-21  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb-com.el (bbdb-browse-url): Fix usage of prefix arg.
+
+2011-09-19  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb-com.el (bbdb-add-mail-alias): Fix completion list used
+	in interactive calls for deleting an alias.
+
+2011-09-19  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mode-map): Use / as search prefix.
+
+2011-09-19  Abhi Yerra  <abhi@berkeley.edu>
+	* lisp/bbdb.el (bbdb-dial-function): New variable.
+	(bbdb-sound-player, bbdb-sound-files, bbdb-modem-dial)
+	(bbdb-modem-device, bbdb-sound-volume): Removed (obsolete).
+
+	* lisp/bbdb-com.el (bbdb-dial-number): Use browse-url and
+	bbdb-dial-function.
+	(bbdb-play-sound): Removed (obsolete)
+
+2011-09-19  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-dial): First remove extension.  Simplify.
+
+2011-09-19  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-version): Do not use interactive-p.
+
+	* lisp/bbdb-message.el: Require sendmail for mail-mode-map.
+
+	* lisp/bbdb-anniv.el (number): Use with-no-warnings.
+
+	* lisp/bbdb-com.el (bbdb-divide-name): Fix regexp for matching
+	last name prefixes.
+
 2011-05-11  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-update-records): Fix previous patch.
 	(bbdb-prompt-for-create): Use special-mode.

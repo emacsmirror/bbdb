@@ -23,7 +23,8 @@
 
 (eval-and-compile
   (require 'bbdb)
-  (require 'message))
+  (require 'message)
+  (require 'sendmail))
 
 (defcustom bbdb/message-update-records-p 'bbdb-select-message
   "How `bbdb-mua-update-records' processes mail addresses in outgoing messages.
