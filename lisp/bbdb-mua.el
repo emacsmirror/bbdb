@@ -162,7 +162,6 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
         (ignore-address (or ignore-address bbdb-user-mail-address-re))
         address-list address name mail mail-list content)
     (dolist (headers message-headers)
-      (setq header-class (car headers)) ; sender or recipient
       (dolist (header (cdr headers))
         (when (setq content (bbdb-message-header header))
           ;; Real work is done by `mail-extract-address-components'.
@@ -182,8 +181,14 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
               ;; `bbdb-message-headers' is relevant.  The "most important"
               ;; headers should be first in `bbdb-message-headers'.
               (push mail mail-list)
-              (push (list name mail header header-class mua) address-list))))))
-    (nreverse address-list)))
+              (push (list name mail header (car headers) mua) address-list))))))
+    (or (nreverse address-list)
+        (and header-class bbdb-message-try-all-headers
+             ;; Try again the remaining header classes
+             (let ((bbdb-message-headers
+                    (remove (assoc header-class bbdb-message-headers)
+                            bbdb-message-headers)))
+               (bbdb-get-address-components nil ignore-address))))))
 
 ;;;###autoload
 (defun bbdb-update-records (address-list &optional update-p msg-key)
@@ -671,14 +676,14 @@ If the records do not exist, they are generated."
   (let ((bbdb-message-all-addresses t))
     (bbdb-mua-display-records header-class 'create)))
 
-(defun bbdb-annotate-notes (record annotation &optional label replace)
-  "In RECORD add an ANNOTATION to the note LABEL.
-LABEL defaults to notes.
+(defun bbdb-annotate-record (record annotation &optional label replace)
+  "In RECORD add an ANNOTATION to field LABEL.
+LABEL defaults to note field `notes'.
 If REPLACE is non-nil, ANNOTATION replaces the content of LABEL."
   (unless (string= "" (setq annotation (bbdb-string-trim annotation)))
     (unless label (setq label 'notes))
     (bbdb-set-notes-labels label)
-    (bbdb-merge-note record label annotation replace)
+    (bbdb-record-set-field record label annotation (not replace))
     (bbdb-change-record record)
     (bbdb-maybe-update-display record)))
 
@@ -690,7 +695,7 @@ If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
   (interactive (list (read-string "Comments: ") current-prefix-arg))
   (bbdb-mua-wrapper
    (dolist (record (bbdb-mua-update-records 'sender))
-     (bbdb-annotate-notes record string 'notes replace))))
+     (bbdb-annotate-record record string 'notes replace))))
 
 ;;;###autoload
 (defun bbdb-mua-annotate-recipients (string &optional replace)
@@ -700,7 +705,7 @@ If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
   (interactive (list (read-string "Comments: ") current-prefix-arg))
   (bbdb-mua-wrapper
    (dolist (record (bbdb-mua-update-records 'recipients))
-     (bbdb-annotate-notes record string 'notes replace))))
+     (bbdb-annotate-record record string 'notes replace))))
 
 (defun bbdb-mua-edit-notes-sender (&optional field)
   "Edit notes FIELD of record corresponding to sender of this message.
@@ -869,8 +874,8 @@ For use as an element of `bbdb-notice-mail-hook'."
                             ((functionp string)
                              (funcall string hd-val))
                             (t (error "Illegal value: %s" string))))
-                (bbdb-annotate-notes record annotation
-                                     (nth 1 elt) (nth 3 elt))))))))))
+                (bbdb-annotate-record record annotation
+                                      (nth 1 elt) (nth 3 elt))))))))))
 
 ;;; Massage of mail addresses
 

@@ -370,15 +370,6 @@ of the printout, notably the variables `bbdb-print-alist' and
                   ((= 3 columns) "\\threecol")
                   ((= 2 columns) "\\twocol")
                   ((= 1 columns) "\\onecol"))
-            ;; catcodes are font-encoding specific !
-            ;; Add more if you know them
-            (if (equal psstring "ps")
-                (concat "\n\n"
-                        ;; Adobe Times and Courier
-                        )
-              (concat "\n\n"
-                      ;; ec fonts
-                      "\\catcode`\u00df=\\active\\chardef\u00df=\"FF"))
             "\n\n\\beginaddresses\n")
     (dolist (record (bbdb-record-list records))
       (setq current-letter

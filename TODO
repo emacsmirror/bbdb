@@ -5,21 +5,15 @@ See the end of the file for license conditions.
 
 * Bug fixes
 
-** Fix bbdb/rmail-edit-notes inconsistency
-   2011-04-11 "Barak A. Pearlmutter" <barak@cs.nuim.ie>
-
-** Fix MUA keybinding inconsistency
-   2011-04-13 "Barak A. Pearlmutter" <barak@cs.nuim.ie>
-
 * Release BBDB v3.
 
 ** Facilitate update BBDB v2.x to v3
    Compile list of changes BBDB v3 versus v2.x.
-   Which variables / functions / commands / concepts in v3 have
-   replaced which ones from v2.x?
+   Which variables / functions / commands / key bindings / concepts
+   in v3 have replaced which ones from v2?
 
    Is it possible / meaningful to set up a file bbdb-v2.el with
-   aliases for v2.x variable and function names mapping to the names
+   aliases for v2 variable and function names mapping to the names
    used in v3?
 
 ** Update / rewrite texinfo manual
@@ -29,7 +23,13 @@ See the end of the file for license conditions.
 ** Copyright
    Identify contributors.  Assign copyright to FSF.
 
+** Get BBDB on the GNU ELPA
+
+** Write BBDB tests using ERT
+
 * Features
+
+** Command bbdb-copy-fields-as-kill
 
 ** Prioritize BBDB records
    2011-04-11 Sam Steingold <sds@gnu.org>
@@ -45,6 +45,11 @@ See the end of the file for license conditions.
    2011-04-05 Leo <sdl.web@gmail.com>
 
 ** Allow splitting of bbdb-file into multiple files
+
+* Internals
+
+** Remove bbdb-auto-notes-rules-expanded?
+   2011-05-05 Leo <sdl.web@gmail.com>
 
 
 Copyright (C) 2011 Roland Winkler <winkler@gnu.org>

@@ -1,3 +1,53 @@
+2011-10-17  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-name-format, bbdb-read-name-format)
+	(bbdb-name-face-alist): New user variables.
+	(bbdb-record-name-lf): New function.
+	(bbdb-display-name-organization): Use bbdb-name-format for
+	customizable display of name. Use note field name-face for
+	customizable font-locking of name of a record.
+	(bbdb-layout-list): Omit name-format and name-face
+	for multi-line and pop-up-multi-line format.
+	(bbdb-separator-alist): New default values for name-first-last and
+	name-last-first.
+	(bbdb-record-set-name): Use them.
+	* lisp/bbdb-com.el (bbdb-read-name): New function.
+	(bbdb-read-record, bbdb-record-edit-name): Use it.  New optional
+	arg first-and-last.
+
+	* lisp/bbdb.el:	(bbdb-merge-notes-function): Removed (obsolete).
+	(bbdb-record-type): New internal variable.
+	(bbdb-check-type): Moved here from lisp/bbdb-com.el. Use the
+	pseudo-code of bbdb-record-type.
+	(bbdb-record-get-field, bbdb-merge-concat)
+	(bbdb-merge-concat-remove-duplicates, bbdb-merge-string-least)
+	(bbdb-merge-string-most, bbdb-merge-lists, bbdb-divide-name)
+	(bbdb-parse-postcode): Moved here from lisp/bbdb-com.el.
+	(bbdb-merge-note): Rewrite.
+	(bbdb-record-set-field): Moved here from lisp/bbdb-com.el.  New
+	optional args check and merge.
+	(bbdb-record-note-intern): New function.
+	(bbdb-record-set-note): Throw error if the name of a note field
+	equals the name of any other record field.
+	(bbdb-parse-frobnicate): Include all note fields in
+	bbdb-notes-label-list.
+	* lisp/bbdb-com.el (bbdb-create-internal): Use bbdb-check-type.
+	(bbdb-merge-records-internal): Removed (merged with
+	bbdb-merge-records).
+	(bbdb-merge-records): Use bbdb-record-set-field.
+	* lisp/bbdb-mua.el (bbdb-annotate-record): Renamed from
+	bbdb-annotate-note.  Use bbdb-record-set-field.
+
+	* lisp/bbdb.el (bbdb-initialize): Do not require bbdb-autoloads.
+
+	* lisp/bbdb.el (bbdb-phone-string): Fix error message.
+
+	* lisp/bbdb.el (bbdb-error-retry): Use progn.
+
+	* lisp/bbdb.el (bbdb-message-try-all-headers): New user variable.
+	* lisp/bbdb-mua.el (bbdb-get-address-components): Use it.
+
+	* lisp/bbdb-print.el (bbdb-print): Do not use \catcode.
+
 2011-09-22  Leo  <sdl.web@gmail.com>
 	* lisp/bbdb.el (bbdb-pop-up-window): Remove Gnus-specific code
 	which is not required anymore by recent versions of Gnus.
