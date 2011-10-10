@@ -11,7 +11,9 @@ Vcs-Browser: http://git.debian.org/?p=collab-maint/bbdb3.git;a=summary
 Package: bbdb3
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, vm
-Conflicts: bbdb (<< 3)
+Replaces: bbdb
+Provides: bbdb
+Breaks: bbdb (<< 3)
 Description: Reboot of the BBDB Insidious Big Brother Database for Emacs
  This is a reboot of BBDB, the Insidious Big Brother Database for
  Emacs.  It provides an address book for email and snail mail
