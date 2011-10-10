@@ -578,65 +578,21 @@ If this fails try to find a record matching NAME."
         ;; (3) records matching NAME
         (bbdb-gethash name))))
 
-;;; Parsing other things
-
-(defun bbdb-parse-postcode (string)
-  "Check whether STRING is a legal postcode.
-Do this only if `bbdb-check-postcode' is non-nil."
-  (if (and bbdb-check-postcode
-           (not (memq t (mapcar (lambda (regexp)
-                                  ;; if it matches, (not (not index-of-match)) returns t
-                                  (not (not (string-match regexp string))))
-                                bbdb-legal-postcodes))))
-      (error "not a valid postcode.")
-    string))
-
-(defun bbdb-divide-name (string)
-  "Divide STRING into a first name and a last name.
-Case is ignored.  Return name as (FIRST . LAST)."
-  (let ((case-fold-search t)
-        first last suffix)
-    (if (string-match (concat "[-,. \t/\\]+\\("
-                              (regexp-opt bbdb-lastname-suffixes)
-                              ;; suffices are complemented by optional `.'.
-                              "\\.?\\)\\W*\\'")
-                      string)
-        (setq suffix (concat " " (match-string 1 string))
-              string (substring string 0 (match-beginning 0))))
-    (if (string-match (concat "[- \t]*\\(\\(?:\\<"
-                              (regexp-opt bbdb-lastname-prefixes)
-                              ;; multiple last names concatenated by `-'
-                              "[- \t]+\\)?\\(?:\\w+[ \t]*-[ \t]*\\)*\\w+\\)\\'")
-                      string)
-        (progn
-          (setq last (match-string 1 string))
-          (unless (zerop (match-beginning 0))
-            (setq first (substring string 0 (match-beginning 0)))))
-      (setq last (bbdb-string-trim string))) ; strange case
-    (cons first (concat last suffix))))
-
-(defun bbdb-read-record ()
+(defun bbdb-read-record (&optional first-and-last)
   "Prompt for and return a new BBDB record.
 Does not insert it into the database or update the hashtables,
 but does ensure that there will not be name collisions."
   (bbdb-records)                        ; make sure database is loaded
   (if bbdb-read-only
       (error "The Insidious Big Brother Database is read-only."))
-  (let (firstname lastname)
+  (let (name)
     (bbdb-error-retry
-     (progn
-       (if current-prefix-arg
-           (setq firstname (bbdb-read-string "First Name: ")
-                 lastname (bbdb-read-string "Last Name: "))
-         (let ((name (bbdb-divide-name (bbdb-read-string "Name: "))))
-           (setq firstname (car name)
-                 lastname (cdr name))))
-       (if (string= firstname "") (setq firstname nil))
-       (if (string= lastname "") (setq lastname nil))
-       (if (and bbdb-no-duplicates
-                (bbdb-gethash (bbdb-concat " " firstname lastname)))
-           (error "%s %s is already in the database"
-                  (or firstname "") (or lastname "")))))
+     (setq name (bbdb-read-name first-and-last))
+     (if (and bbdb-no-duplicates
+              (bbdb-gethash (bbdb-concat 'name-first-last
+                                         (car name) (cdr name))))
+         (error "%s %s is already in the database"
+                (or (car name) "") (or (cdr name) ""))))
     (let ((organizations (bbdb-split 'organization
                                      (bbdb-read-string "Organizations: ")))
           ;; mail
@@ -677,8 +633,41 @@ but does ensure that there will not be name collisions."
           (notes (bbdb-read-string "Notes: ")))
       (setq notes (unless (string= notes "")
                     `((notes . ,notes))))
-      (vector firstname lastname nil nil organizations phones addresses
+      (vector (car name) (cdr name) nil nil organizations phones addresses
               mail notes (make-vector bbdb-cache-length nil)))))
+
+(defun bbdb-read-name (&optional first-and-last dfirst dlast)
+  "Read name for a record from minibuffer.
+FIRST-AND-LAST controls the reading mode:
+If it is 'first-last read first and last name separately.
+If it is 'last-first read last and first name separately.
+If it is 'fullname read full name at once.
+If it is t read name parts separately, obeying `bbdb-read-name-format' if possible.
+Otherwise use `bbdb-read-name-format'.
+DFIRST and DLAST are default values for the first and last name.
+Return cons with first and last name."
+  (unless (member first-and-last '(first-last last-first fullname))
+    ;; We do not yet know how to read the name
+    (setq first-and-last
+          (if (and first-and-last
+                   (not (member bbdb-read-name-format '(first-last last-first))))
+              'first-last
+            bbdb-read-name-format)))
+  (let ((name (cond ((eq first-and-last 'last-first)
+                     (let (fn ln)
+                       (setq ln (bbdb-read-string "Last Name: " dlast)
+                             fn (bbdb-read-string "First Name: " dfirst))
+                       (cons fn ln)))
+                    ((eq first-and-last 'first-last)
+                     (cons (bbdb-read-string "First Name: " dfirst)
+                           (bbdb-read-string "Last Name: " dlast)))
+                    (t
+                     (bbdb-divide-name (bbdb-read-string
+                                        "Name: " (bbdb-concat 'name-first-last
+                                                              dfirst dlast)))))))
+    (if (string= (car name) "") (setcar name nil))
+    (if (string= (cdr name) "") (setcdr name nil))
+    name))
 
 ;;;###autoload
 (defun bbdb-create (record)
@@ -686,118 +675,61 @@ but does ensure that there will not be name collisions."
 using the echo area, inserts the new record in BBDB, sorted alphabetically,
 and offers to save the BBDB file.  DO NOT call this from a program.
 Call `bbdb-create-internal' instead."
-  (interactive (list (bbdb-read-record)))
+  (interactive (list (bbdb-read-record current-prefix-arg)))
   (run-hook-with-args 'bbdb-create-hook record)
   (bbdb-change-record record t t)
   (bbdb-display-records (list record)))
 
-(defsubst bbdb-check-type (place predicate)
-  (unless (funcall predicate place)
-    (signal 'wrong-type-argument (list predicate place))))
-
-(defun bbdb-create-internal (name &optional affix aka organizations mail
-                                  phones addresses notes)
+(defun bbdb-create-internal (name &optional affix aka organization mail
+                                  phone address notes)
   "Adds a record to the database; this function does a fair amount of
 error-checking on the passed in values, so it is safe to call this from
 other programs.
 
-NAME is a string, the name of the person to add.  An error is signalled
-if that name is already in use and `bbdb-no-duplicates' is t.
-ORGANIZATIONS is a list of strings.
-MAIL is a comma-separated list of mail addresses, or a list of strings.
-An error is signalled if that name is already in use.
-ADDRESSES is a list of address objects.  An address is a vector of the form
+NAME is a string or a cons cell (FIRST . LAST), the name of the person to add.
+An error is signalled if NAME is already in use and `bbdb-no-duplicates' is t.
+ORGANIZATION is a list of strings.
+MAIL is a comma-separated list of mail address, or a list of strings.
+An error is signalled if that mail address is already in use.
+ADDRESS is a list of address objects.  An address is a vector of the form
 \[\"label\" (\"line1\" \"line2\" ... ) \"City\" \"State\" \"Postcode\" \"Country\"].
-PHONES is a list of phone-number objects.  A phone-number is a vector of
+PHONE is a list of phone-number objects.  A phone-number is a vector of
 the form [\"label\" areacode prefix suffix extension-or-nil]
 or [\"label\" \"phone-number\"]
 NOTES is an alist associating symbols with strings."
-  (bbdb-check-type name 'stringp)
   ;; name
-  (setq name (bbdb-divide-name name))
+  (if (stringp name)
+      (setq name (bbdb-divide-name name))
+    (bbdb-check-type name '(cons string string) t))
   (let ((firstname (car name))
-        (lastname (cdr name)))
+        (lastname (cdr name))
+        (record-type (cdr bbdb-record-type)))
     (if (and bbdb-no-duplicates
-             (bbdb-gethash (bbdb-concat " " firstname lastname)))
+             (bbdb-gethash (bbdb-concat 'name-fist-last firstname lastname)))
         (error "%s %s is already in the database"
                (or firstname "") (or lastname "")))
-    ;; affix
-    (if affix (bbdb-check-type affix 'listp))
-    ;; aka
-    (if aka (bbdb-check-type aka 'listp))
-    ;; organizations
-    (if organizations (bbdb-check-type organizations 'listp))
     ;; mail addresses
     (if (stringp mail)
-        (setq mail (bbdb-split 'mail mail)))
+        (setq mail (bbdb-split 'mail mail))
+      (bbdb-check-type mail (bbdb-record-mail record-type) t))
     (if bbdb-no-duplicates
         (dolist (elt mail)
           (if (bbdb-gethash elt)
               (error "%s is already in the database" elt))))
-    ;; phone numbers
-    (dolist (phone phones)
-      (unless (and (vectorp phone)
-                   (or (= (length phone) 2)
-                       (= (length phone) bbdb-phone-length)))
-        (signal 'wrong-type-argument (list 'vectorp phone)))
-      (bbdb-check-type (aref phone 0) 'stringp)
-      (if (= 2 (length phone))
-          (bbdb-check-type (aref phone 1) 'stringp)
-        (bbdb-check-type (aref phone 1) 'integerp)
-        (bbdb-check-type (aref phone 2) 'integerp)
-        (bbdb-check-type (aref phone 3) 'integerp)
-        (and (aref phone 4)
-             (bbdb-check-type (aref phone 4) 'integerp))
-        (if (zerop (aref phone 4))
-            (aset phone 4 nil))))
-    ;; addresses
-    (dolist (address addresses)
-      (unless (and (vectorp address)
-                   (= (length address) bbdb-address-length))
-        (signal 'wrong-type-argument (list 'vectorp address)))
-      (bbdb-check-type (aref address 0) 'stringp) ;;; XXX use bbdb-addresses
-      (bbdb-check-type (aref address 1) 'listp)
-      (bbdb-check-type (aref address 2) 'stringp)
-      (bbdb-check-type (aref address 3) 'stringp)
-      (bbdb-check-type (aref address 4) 'stringp)
-      (bbdb-check-type (aref address 5) 'stringp))
-    ;; notes
-    (dolist (note notes)
-      (bbdb-check-type note 'consp)
-      (bbdb-check-type (car note) 'symbolp)
-      (bbdb-check-type (cdr note) 'stringp))
-    ;; record
+    ;; other fields
+    (bbdb-check-type affix (bbdb-record-affix record-type) t)
+    (bbdb-check-type aka (bbdb-record-aka record-type) t)
+    (bbdb-check-type organization (bbdb-record-organization record-type) t)
+    (bbdb-check-type phone (bbdb-record-phone record-type) t)
+    (bbdb-check-type address (bbdb-record-address record-type) t)
+    (bbdb-check-type notes (bbdb-record-notes record-type) t)
     (let ((record
-           (vector firstname lastname affix aka organizations phones
-                   addresses mail notes
+           (vector firstname lastname affix aka organization phone
+                   address mail notes
                    (make-vector bbdb-cache-length nil))))
       (run-hook-with-args 'bbdb-create-hook record)
       (bbdb-change-record record t t)
       record)))
-
-;;; bbdb-mode stuff
-
-(defun bbdb-record-get-field (record field)
-  (cond ((eq field 'name)     (bbdb-record-name record))
-        ((eq field 'affix)    (bbdb-record-affix record))
-        ((eq field 'organization)  (bbdb-record-organization record))
-        ((eq field 'mail)     (bbdb-record-mail record))
-        ((eq field 'aka)      (bbdb-record-aka record))
-        ((eq field 'phone)    (bbdb-record-phone record))
-        ((eq field 'address)  (bbdb-record-address record))
-        ((eq field 'note)     (bbdb-record-notes record))
-        (t (error "Unknown field type `%s'" field))))
-
-(defun bbdb-record-set-field (record field value)
-  (cond ((eq field 'name)     (error "does not work on names"))
-        ((eq field 'affix)    (bbdb-record-set-affix record value))
-        ((eq field 'organization)  (bbdb-record-set-organization record value))
-        ((eq field 'mail)     (bbdb-record-set-mail record value))
-        ((eq field 'aka)      (bbdb-record-set-aka record value))
-        ((eq field 'phone)    (bbdb-record-set-phone record value))
-        ((eq field 'address)  (bbdb-record-set-address record value))
-        ((eq field 'note)     (bbdb-record-set-notes record value))
-        (t (error "Unknown field type `%s'" field))))
 
 ;;;###autoload
 (defun bbdb-insert-field (record field contents)
@@ -977,14 +909,14 @@ then the entire field is edited, not just the current line."
      (let ((record (bbdb-current-record))
            (field (bbdb-current-field)))
        (unless field (error "Point not in a field"))
-       (list record field))))
+       (list record field current-prefix-arg))))
   ;;
   (let* ((fname (car field))
          (value (nth 1 field))
          (type (elt value 0))
          bbdb-need-to-sort)
     ;; Some editing commands require re-sorting records
-    (cond ((eq fname 'name)     (bbdb-record-edit-name record)) ; possibly
+    (cond ((eq fname 'name)     (bbdb-record-edit-name record flag)) ; possibly
           ((eq fname 'affix)    (bbdb-record-edit-affix record)) ; nil
           ((eq fname 'organization)  (bbdb-record-edit-organization record)) ; possibly
           ((eq fname 'mail)     (bbdb-record-edit-mail record)) ; nil
@@ -1001,36 +933,31 @@ then the entire field is edited, not just the current line."
              (memq type '(mail-alias mail)))
         (setq bbdb-mail-aliases-need-rebuilt 'edit))))
 
-(defun bbdb-record-edit-name (record)
+(defun bbdb-record-edit-name (record &optional first-and-last)
   (let (fn ln new-name old-name)
     (bbdb-error-retry
-     (progn
-       (if current-prefix-arg
-           (setq fn (bbdb-read-string "First Name: "
-                                      (bbdb-record-firstname record))
-                 ln (bbdb-read-string "Last Name: "
-                                      (bbdb-record-lastname record)))
-         (let ((name (bbdb-divide-name
-                      (bbdb-read-string "Name: "
-                                        (bbdb-record-name record)))))
-           (setq fn (car name)
-                 ln (cdr name))))
-       (if (string= "" fn) (setq fn nil))
-       (if (string= "" ln) (setq ln nil))
-       ;; check for collisions
-       (setq new-name (if (and fn ln) (concat fn " " ln)
-                        (or fn ln))
-             old-name (bbdb-record-name record))
-       (if (and bbdb-no-duplicates
-                new-name
-                (not (bbdb-string= new-name old-name))
-                (bbdb-gethash new-name))
-           (error "%s is already in BBDB" new-name))))
+     (setq new-name
+           (bbdb-read-name (if first-and-last
+                               ;; Here we try to obey the name-format field for
+                               ;; editing the name field.  Is this useful?  Or is this
+                               ;; irritating overkill and we better obey consistently
+                               ;; `bbdb-read-name-format'?
+                               (or (bbdb-record-note-intern record 'name-format)
+                                   first-and-last))
+                           (bbdb-record-firstname record)
+                           (bbdb-record-lastname record)))
+     ;; check for collisions
+     (setq fn (car new-name) ln (cdr new-name)
+           new-name (bbdb-concat 'name-first-last fn ln)
+           old-name (bbdb-record-name record))
+     (if (and bbdb-no-duplicates
+              new-name
+              (not (bbdb-string= new-name old-name))
+              (bbdb-gethash new-name))
+         (error "%s is already in BBDB" new-name)))
     (setq bbdb-need-to-sort
-          (or (not (string= fn
-                            (or (bbdb-record-firstname record) "")))
-              (not (string= ln
-                            (or (bbdb-record-lastname record) "")))))
+          (or (not (string= fn (or (bbdb-record-firstname record) "")))
+              (not (string= ln (or (bbdb-record-lastname record) "")))))
     ;;
     (bbdb-record-unset-name record)       ; delete old cache entry
     (bbdb-record-set-name record fn ln)))
@@ -1493,64 +1420,35 @@ With prefix N, omit the next N records.  If negative, omit backwards."
     (setq n (if (> n 0) (1- n) (1+ n)))))
 
 ;;; Fixing up bogus records
-(defun bbdb-merge-concat (string1 string2 &optional separator)
-  "Returns the concatenation of STRING1 and STRING2"
-  (concat string1 (if (stringp separator) separator "\n") string2))
 
-(defun bbdb-merge-concat-remove-duplicates (string1 string2)
-  "Concatenate STRING1 and STRING2, but remove duplicate lines."
-  (let ((note1 (split-string string1 "\n")))
-    (dolist (line (split-string string2 "\n"))
-      (unless (member line note1)
-        (push line note1)))
-    (bbdb-concat "\n" note1)))
+;;;###autoload
+(defun bbdb-merge-records (old-record new-record)
+  "Merge the current record into some other record; that is, delete the
+record under point after copying all of the data within it into some other
+record.  This is useful if you realize that somehow a redundant record has
+gotten into the database, and you want to merge it with another.
 
-(defun bbdb-merge-string-least (string1 string2)
-  "Returns the string that is lessp."
-  (if (string-lessp string1 string2)
-      string1
-    string2))
+If both records have names and/or organizations, you are asked which to use.
+Phone numbers, addresses, and mail addresses are simply concatenated.
+The first record is the record under the point; the second is prompted for."
+  (interactive
+   (let* ((old-record (bbdb-current-record))
+          (name (bbdb-record-name old-record)))
+     (list old-record
+           (if current-prefix-arg
+               ;; take the first record with the same name
+               (car (delq old-record (bbdb-search (bbdb-records) name)))
+             (bbdb-completing-read-record
+              (format "merge record \"%s\" into: "
+                      (or (bbdb-record-name old-record)
+                          (car (bbdb-record-mail old-record))
+                          "???"))
+              (list old-record))))))
 
-(defun bbdb-merge-string-most (string1 string2)
-  "Returns the string that is not lessp."
-  (if (string-lessp string1 string2)
-      string2
-    string1))
+  (cond ((eq old-record new-record) (error "Records are equal"))
+        ((null new-record) (error "No record to merge with")))
 
-(defun bbdb-merge-lists (l1 l2 cmp &optional mod)
-  "Merge two lists L1 and L2 modifying L1.
-An element from L2 is added to L1 if CMP returns nil for all elements of L1.
-If optional arg MOD is non-nil, it must be a function that is applied
-to the elements of L1 and L2 prior to evaluating CMP."
-  (if (null l1)
-      l2
-    (let ((end (last l1))
-          (chk (if mod (mapcar mod l1) l1)))
-      (dolist (elt l2)
-        (let ((src1 chk)
-              (val (if mod (funcall mod elt) elt))
-              fail)
-          (while src1
-            (if (funcall cmp (car src1) val)
-                (setq src1 nil
-                      fail t)
-              (setq src1 (cdr src1))))
-          (unless fail
-            (setcdr end (list elt))
-            (setq end (cdr end)))))
-      l1)))
-
-(defun bbdb-merge-records-internal (old-record new-record)
-  "Merge the contents of OLD-RECORD into NEW-RECORD.
-OLD-RECORD remains unchanged.  If names differ, query which one to use.
-All other fields are concatenated.  Idealy this would be better about
-checking for duplicate entries in other fields, as well as possibly
-querying about differing values.
-
-This function does nothing to ensure the integrity of the rest of BBBDB.
-That is somebody elses problem (something like `bbdb-merge-records')."
-  (if (or (null new-record) (eq old-record new-record))
-      (error "Merging record with itself"))
+  ;; Merge names
   (let* ((new-name (bbdb-record-name new-record))
          (old-name (bbdb-record-name old-record))
          (old-aka  (bbdb-record-aka  old-record))
@@ -1584,82 +1482,20 @@ That is somebody elses problem (something like `bbdb-merge-records')."
     (bbdb-record-set-name new-record (car name) (cdr name))
 
     (if extra-name (push extra-name old-aka))
-    (bbdb-record-set-aka new-record
-                         (bbdb-merge-lists
-                          (bbdb-record-aka new-record) old-aka
-                          'bbdb-string=))
+    (bbdb-record-set-field new-record 'aka old-aka t))
 
-    (bbdb-record-set-affix new-record
-                           (bbdb-merge-lists
-                            (bbdb-record-affix new-record)
-                            (bbdb-record-affix old-record)
-                            'bbdb-string=))
-
-    (bbdb-record-set-organization new-record
-                                  (bbdb-merge-lists
-                                   (bbdb-record-organization new-record)
-                                   (bbdb-record-organization old-record)
-                                   'bbdb-string=))
-
-    (bbdb-record-set-phone new-record
-                            (bbdb-merge-lists
-                             (bbdb-record-phone new-record)
-                             (bbdb-record-phone old-record)
-                             'bbdb-string=))
-    (bbdb-record-set-address new-record
-                               (bbdb-merge-lists
-                                (bbdb-record-address new-record)
-                                (bbdb-record-address old-record)
-                                'bbdb-string=))
-
-    (bbdb-record-set-mail new-record
-                           (bbdb-merge-lists
-                            (bbdb-record-mail new-record)
-                            (bbdb-record-mail old-record)
-                            'bbdb-string=))
-
-    (let ((new-notes (bbdb-record-notes new-record))
-          new-field)
-      (dolist (old-field (bbdb-record-notes old-record))
-        (if (setq new-field (assq (car old-field) new-notes))
-            ;; merge field contents
-            (setcdr new-field
-                    (funcall
-                     (or (cdr (assq (car old-field)
-                                    bbdb-merge-notes-function-alist))
-                         bbdb-merge-notes-function)
-                     (cdr new-field) (cdr old-field)))
-          (push old-field new-notes)))
-      (bbdb-record-set-notes new-record new-notes))
-    new-record))
-
-;;;###autoload
-(defun bbdb-merge-records (old-record new-record)
-  "Merge the current record into some other record; that is, delete the
-record under point after copying all of the data within it into some other
-record.  This is useful if you realize that somehow a redundant record has
-gotten into the database, and you want to merge it with another.
-
-If both records have names and/or organizations, you are asked which to use.
-Phone numbers, addresses, and mail addresses are simply concatenated.
-The first record is the record under the point; the second is prompted for."
-  (interactive
-   (let* ((old-record (bbdb-current-record))
-          (name (bbdb-record-name old-record)))
-     (list old-record
-           (if current-prefix-arg
-               ;; take the first record with the same name
-               (car (delq old-record (bbdb-search (bbdb-records) name)))
-             (bbdb-completing-read-record
-              (format "merge record \"%s\" into: "
-                      (or (bbdb-record-name old-record)
-                          (car (bbdb-record-mail old-record))
-                          "???"))
-              (list old-record))))))
-
-  (if (or (null new-record) (eq old-record new-record))
-      (error "Records are equal"))
-  (setq new-record (bbdb-merge-records-internal old-record new-record))
+  ;; Merge other stuff
+  (bbdb-record-set-field new-record 'organization
+                         (bbdb-record-organization old-record) t)
+  (bbdb-record-set-field new-record 'phone
+                         (bbdb-record-phone old-record) t)
+  (bbdb-record-set-field new-record 'address
+                         (bbdb-record-address old-record) t)
+  (bbdb-record-set-field new-record 'mail
+                         (bbdb-record-mail old-record) t)
+  ;; `note' and `notes' are not quite consistent...
+  (bbdb-record-set-field new-record 'note
+                         (bbdb-record-notes old-record) t)
 
   (bbdb-delete-records (list old-record) 'noprompt)
   (bbdb-change-record new-record t t)
@@ -2480,7 +2316,7 @@ Default is the first URL."
   (interactive (list (bbdb-completing-read-record "Add URL for: ")
                      (browse-url-url-at-point)))
   (bbdb-set-notes-labels 'url)
-  (bbdb-merge-note record 'url url)
+  (bbdb-record-set-field record 'url url t)
   (bbdb-change-record record)
   (bbdb-display-records (list record)))
 
