@@ -47,6 +47,7 @@
   (autoload 'widget-group-match "wid-edit")
   (autoload 'Electric-pop-up-window "electric")
   (autoload 'Electric-command-loop "electric")
+  (autoload 'bbdb-insinuate-gnus "bbdb-gnus")
   (autoload 'bbdb-migrate "bbdb-migrate")
   (autoload 'bbdb-do-records "bbdb-com")
   (autoload 'bbdb-append-display-p "bbdb-com")
