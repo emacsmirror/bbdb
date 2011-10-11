@@ -56,6 +56,12 @@
   (autoload 'bbdb-completing-read-records "bbdb-com")
   (autoload 'mail-position-on-field "sendmail")
   (autoload 'vm-select-folder-buffer "vm-folder")
+  ;; autoload the insinuations
+  (autoload 'bbdb-insinuate-gnus "bbdb-gnus")
+  (autoload 'bbdb-insinuate-message "bbdb-message")
+  (autoload 'bbdb-insinuate-mh "bbdb-mhe")
+  (autoload 'bbdb-insinuate-rmail "bbdb-rmail")
+  (autoload 'bbdb-insinuate-vm "bbdb-vm")
 
   ;; cannot use autoload for variables...
   (defvar message-mode-map) ;; message.el

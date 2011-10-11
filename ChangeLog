@@ -1,3 +1,9 @@
+2011-10-11  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* lisp/bbdb.el: Autoload `bbdb-insinuate-gnus' from bbdb-gnus.el
+	so `bbdb-initialize' won't throw an error when passed 'gnus.
+	Ditto 'message, 'rmail, 'vm, and 'mh-e.
+
 2011-10-17  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-name-format, bbdb-read-name-format)
 	(bbdb-name-face-alist): New user variables.
