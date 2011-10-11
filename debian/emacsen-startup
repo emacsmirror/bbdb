@@ -20,6 +20,5 @@
   ;; removed but not purged, and we should skip the setup.
   (when (file-directory-p package-dir)
     (setq load-path (cons package-dir load-path))
-    (autoload 'bbdb-mode "bbdb-mode"
-      "Major mode for editing bbdb files." t)
+    (require 'bbdb-autoloads)
     (add-to-list 'auto-mode-alist '("\\.bbdb$" . bbdb-mode))))
