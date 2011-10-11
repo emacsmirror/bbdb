@@ -47,7 +47,6 @@
   (autoload 'widget-group-match "wid-edit")
   (autoload 'Electric-pop-up-window "electric")
   (autoload 'Electric-command-loop "electric")
-  (autoload 'bbdb-insinuate-gnus "bbdb-gnus")
   (autoload 'bbdb-migrate "bbdb-migrate")
   (autoload 'bbdb-do-records "bbdb-com")
   (autoload 'bbdb-append-display-p "bbdb-com")
@@ -57,6 +56,12 @@
   (autoload 'bbdb-completing-read-records "bbdb-com")
   (autoload 'mail-position-on-field "sendmail")
   (autoload 'vm-select-folder-buffer "vm-folder")
+  ;; autoload the insinuations
+  (autoload 'bbdb-insinuate-gnus "bbdb-gnus")
+  (autoload 'bbdb-insinuate-message "bbdb-message")
+  (autoload 'bbdb-insinuate-mh "bbdb-mhe")
+  (autoload 'bbdb-insinuate-rmail "bbdb-rmail")
+  (autoload 'bbdb-insinuate-vm "bbdb-vm")
 
   ;; cannot use autoload for variables...
   (defvar message-mode-map) ;; message.el
