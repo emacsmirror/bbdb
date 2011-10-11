@@ -6,6 +6,7 @@
 ;; Originally contributed by Nils Naumann <naumann@unileoben.ac.at>
 ;; Modified by Dirk Eddelbuettel <edd@debian.org>
 ;; Adapted for dh-make by Jim Van Zandt <jrv@debian.org>
+;; Updated by Barak A. Pearlmutter <bap@debian.org>
 
 ;; The bbdb3 package follows the Debian/GNU Linux 'emacsen' policy and
 ;; byte-compiles its elisp files for each 'emacs flavor' (emacs19,
@@ -13,13 +14,12 @@
 ;; installed in a subdirectory of the respective site-lisp directory.
 ;; We have to add this to the load-path:
 (let ((package-dir (concat "/usr/share/"
-                           (symbol-name flavor)
-                           "/site-lisp/bbdb3")))
-;; If package-dir does not exist, the bbdb3 package must have
-;; removed but not purged, and we should skip the setup.
+			   (symbol-name flavor)
+			   "/site-lisp/bbdb3")))
+  ;; If package-dir does not exist the bbdb3 package must have been
+  ;; removed but not purged, and we should skip the setup.
   (when (file-directory-p package-dir)
     (setq load-path (cons package-dir load-path))
-    (autoload 'bbdb3-mode "bbdb3-mode"
-      "Major mode for editing bbdb3 files." t)
-    (add-to-list 'auto-mode-alist '("\\.bbdb3$" . bbdb3-mode))))
-
+    (autoload 'bbdb-mode "bbdb-mode"
+      "Major mode for editing bbdb files." t)
+    (add-to-list 'auto-mode-alist '("\\.bbdb$" . bbdb-mode))))
