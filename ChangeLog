@@ -1,10 +1,63 @@
+2011-11-20  Roland Winkler  <winkler@gnu.org>
+	* README: Updated.
+
+	* lisp/bbdb.el (bbdb-message-try-all-headers)
+	(bbdb-user-mail-address-re): Clarify doc string.
+	(bbdb-defstruct): Do not update bbdb-mail-aliases-need-rebuilt.
+	(bbdb-record-set-note): Update bbdb-mail-aliases-need-rebuilt.
+	(bbdb-record-set-name): Update name in cache and hash.
+	(bbdb-record-unset-name): Removed (obsolete).
+	(bbdb-hash-update): New function.
+	(bbdb-record-set-field): Use it.
+	(bbdb-records): Initiate variable bbdb-records.
+	(bbdb-parse-internal): Use bbdb-goto-first-record.
+	(bbdb-goto-first-record): Move backward only if we found a first
+	record.
+
+	* lisp/bbdb-com.el (bbdb-insert-field)
+	(bbdb-delete-field-or-record): Use bbdb-record-set-field.
+	(bbdb-edit-field): New optional arg value.  Handle affix,
+	organization, mail, aka, and note fields directly.
+	(bbdb-record-edit-affix, bbdb-record-edit-organziation)
+	(bbdb-record-edit-mail, bbdb-record-edit-aka)
+	(bbdb-record-edit-note): Removed.
+
+	* lisp/bbdb.el (bbdb-mail-avoid-redundancy) Renamed from
+	bbdb-mail-allow-redundancy.
+	* lisp/bbdb-com.el (bbdb-dwim-mail): Update it accordingly.
+
+	* lisp/bbdb.el (bbdb-update-records-p): Change default to less
+	agressive `search'.
+	(bbdb-mua-auto-update-p): New variable
+	* lisp/bbdb-mua.el (bbdb-mua-auto-update): Use it.
+	(bbdb-update-records): Resolve arg update-p up to two times.
+	* lisp/bbdb-message.el (bbdb/message-update-records-p)
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-records-p)
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records-p)
+	* lisp/bbdb-mhe.el (bbdb/mh-update-records-p)
+	* lisp/bbdb-vm.el (bbdb/vm-update-records-p): Doc fix.
+
+	* lisp/bbdb-mua.el (bbdb-annotate-record): Convert annotation into
+	list if field is affix, organization, mail or aka.
+	(bbdb-mua-edit-field-interactive): New function.
+	(bbdb-mua-edit-field): New command.
+	(bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients): Use
+	it.
+
+	* lisp/bbdb.el (bbdb-image, bbdb-image-path, bbdb-image-suffixes):
+	New variables.
+	(bbdb-display-name-organization): Use them to display images for
+	BBDB records.  Suggested by Ivan Kanis <apple@kanis.fr>.
+
+	* lisp/bbdb-migrate.el (bbdb-undocumented-variables): New command.
+
 2011-10-11  Teodor Zlatanov  <tzz@lifelogs.com>
 
 	* lisp/bbdb.el: Autoload `bbdb-insinuate-gnus' from bbdb-gnus.el
 	so `bbdb-initialize' won't throw an error when passed 'gnus.
 	Ditto 'message, 'rmail, 'vm, and 'mh-e.
 
-2011-10-17  Roland Winkler  <winkler@gnu.org>
+2011-10-10  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-name-format, bbdb-read-name-format)
 	(bbdb-name-face-alist): New user variables.
 	(bbdb-record-name-lf): New function.
@@ -20,7 +73,7 @@
 	(bbdb-read-record, bbdb-record-edit-name): Use it.  New optional
 	arg first-and-last.
 
-	* lisp/bbdb.el:	(bbdb-merge-notes-function): Removed (obsolete).
+	* lisp/bbdb.el: (bbdb-merge-notes-function): Removed (obsolete).
 	(bbdb-record-type): New internal variable.
 	(bbdb-check-type): Moved here from lisp/bbdb-com.el. Use the
 	pseudo-code of bbdb-record-type.

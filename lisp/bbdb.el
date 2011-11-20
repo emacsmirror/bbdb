@@ -68,8 +68,9 @@
   (defvar mail-mode-map) ;; sendmail.el
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
-(defconst bbdb-version "3.02")
-(defconst bbdb-version-date "$Date: 2011/10/10 18:04:34 $")
+(defconst bbdb-version "3.02" "Version of BBDB.")
+(defconst bbdb-version-date "$Date: 2011/11/20 20:13:17 $"
+  "Version date of BBDB.")
 
 ;; Custom groups
 
@@ -552,6 +553,32 @@ Here a value may be the predefined function `bbdb-multiple-buffers-default'."
                  (function :tag "Enabled" bbdb-multiple-buffers-default)
                  (function :tag "User defined function")))
 
+(defcustom bbdb-image nil
+  "If non-nil display records with an image.
+If a symbol this should be a note field holding the name of the image file
+associated with the record.  If it is `name' or `fl-name', the first and last
+name of the record are used as file name.  If it is `lf-name', the last and
+first name of the record are used as file name.
+If a function it is called with one arg, the record, and it should return
+the name of the image file.
+The file is searched in the directories in `bbdb-image-path'.
+File name suffixes are appended according to `bbdb-image-suffixes'.
+See `locate-file'."
+  :group 'bbdb-record-display
+  :type '(choice (const :tag "Disabled" nil)
+                 (function :tag "User defined function")
+                 (symbol :tag "Record field")))
+
+(defcustom bbdb-image-path nil
+  "List of directories to search for `bbdb-image'."
+  :group 'bbdb-record-display
+  :type '(repeat (directory)))
+
+(defcustom bbdb-image-suffixes '(".png" ".jpg" ".gif" ".xmp")
+  "List of file name suffixes searched for `bbdb-image'."
+  :group 'bbdb-record-display
+  :type '(repeat (string :tag "File suffixes")))
+
 
 ;;; Record editing
 (defcustom bbdb-read-name-format 'fullname
@@ -676,10 +703,67 @@ Whether this is used at all depends on the variable `bbdb-check-postcode'."
 
 
 ;;; MUA interface
-(defcustom bbdb-update-records-p 'query
+
+(defcustom bbdb-mua-update-interactive-p '(search . query)
+  "How BBDB's interactive MUA commands update BBDB records.
+This is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
+The car is used if the command is called without a prefix.
+The cdr is used if the command is called with a prefix.
+
+Allowed values are (here ADDRESS is an email address found in a message):
+ nil          Do nothing.
+ search       Search for existing records matching ADDRESS.
+ query        Search for existing records matching ADDRESS;
+                query for creation of a new record if the record does not exist.
+ create or t  Search for existing records matching ADDRESS;
+                create a new record if it does not yet exist.
+ a function   This functions will be called with no arguments.
+                It should return one of the above values.
+
+ read         Read the value interactively."
+  :group 'bbdb-mua
+  :type '(cons (choice (const :tag "do nothing" nil)
+                       (const :tag "search for existing records" search)
+                       (const :tag "query annotation of all messages" query)
+                       (const :tag "annotate all messages" create)
+                       (function :tag "User-defined function")
+                       (const :tag "read arg interactively" read))
+               (choice (const :tag "do nothing" nil)
+                       (const :tag "search for existing records" search)
+                       (const :tag "query annotation of all messages" query)
+                       (const :tag "annotate all messages" create)
+                       (function :tag "User-defined function")
+                       (const :tag "read arg interactively" read))))
+
+(defcustom bbdb-mua-auto-update-p 'bbdb-select-message
+  "How `bbdb-mua-auto-update' updates BBDB records automatically.
+
+Allowed values are (here ADDRESS is an email address found in a message):
+ nil          Do nothing.
+ search       Search for existing records matching ADDRESS.
+ query        Search for existing records matching ADDRESS;
+                query for creation of a new record if the record does not exist.
+ create or t  Search for existing records matching ADDRESS;
+                create a new record if it does not yet exist.
+ a function   This functions will be called with no arguments.
+                It should return one of the above values.
+
+To initiate auto-updating of BBDB records, call `bbdb-mua-auto-update-init'
+for the respective MUAs in your init file."
+  :group 'bbdb-mua
+  :type '(choice (const :tag "do nothing" nil)
+                 (const :tag "search for existing records" search)
+                 (const :tag "query annotation of all messages" query)
+                 (const :tag "annotate all messages" create)
+                 (function :tag "User-defined function")))
+
+(defcustom bbdb-update-records-p 'search
   "Return value for `bbdb-select-message' and friends.
-This will be passed to `bbdb-update-records', where it controls the handling
-of the arg ADDRESS (see there).  Allowed values are:
+These commands can select messages for further processing by BBDB,
+The amount of subsequent processing is determined `bbdb-update-records-p'.
+
+Allowed values are (here ADDRESS is an email address selected
+by `bbdb-select-message'):
  nil          Do nothing.
  search       Search for existing records matching ADDRESS.
  query        Search for existing records matching ADDRESS;
@@ -696,28 +780,6 @@ of the arg ADDRESS (see there).  Allowed values are:
                  (const :tag "query annotation of all messages" query)
                  (const :tag "annotate all messages" create)
                  (function :tag "User-defined function")))
-
-;;; Fixme: This docstring is too confusing!
-(defcustom bbdb-mua-update-interactive-p '(search . query)
-  "Return values for function `bbdb-mua-update-interactive-p' (see there).
-It is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
-The car is used if the command is called without a prefix.
-The cdr is used if the command is called with a prefix.
-Each element may take the same values as `bbdb-update-records-p'.
-If the value is `read then read the value interactively."
-  :group 'bbdb-mua
-  :type '(cons (choice (const :tag "do nothing" nil)
-                       (const :tag "search for existing records" search)
-                       (const :tag "query annotation of all messages" query)
-                       (const :tag "annotate all messages" create)
-                       (function :tag "User-defined function")
-                       (const :tag "read arg interactively" read))
-               (choice (const :tag "do nothing" nil)
-                       (const :tag "search for existing records" search)
-                       (const :tag "query annotation of all messages" query)
-                       (const :tag "annotate all messages" create)
-                       (function :tag "User-defined function")
-                       (const :tag "read arg interactively" read))))
 
 (defcustom bbdb-message-headers
   '((sender     "From" "Resent-From" "Reply-To" "Sender")
@@ -741,12 +803,13 @@ Changing this variable will show its effect only after clearing the
   :type 'boolean)
 
 (defcustom bbdb-message-try-all-headers nil
-  "If t try all message headers to extract a mail address from a message.
-Several commands extract either the sender or the recipients' addresses from a message
-according to `bbdb-message-headers'.  If BBDB does not find any address
-\(for example, because an address is excluded because of `bbdb-user-mail-address-re')
+  "If t try all message headers to extract an email address from a message.
+Several BBDB commands extract either the sender or the recipients' email
+addresses from a message according to `bbdb-message-headers'.  If BBDB does not
+find any email address in this subset of message headers (for example, because
+an email address is excluded because of `bbdb-user-mail-address-re')
 but `bbdb-message-try-all-headers' is t, then these commands will also consider
-the remaining headers."
+the email addresses in the remaining headers."
   :group 'bbdb-mua
   :type 'boolean)
 
@@ -759,7 +822,7 @@ For example, if
     (\"Subject\" . \"time travel\"))
 BBDB records are only created for messages sent by people at Maximegalon U.,
 or people posting about time travel.
-A value of t means accept all messages.
+If t accept all messages.  If nil do not accept any messages.
 
 See also `bbdb-ignore-message-alist', which has the opposite effect."
   :group 'bbdb-mua
@@ -776,7 +839,7 @@ For example, if
     ((\"To\" \"CC\") . \"mailing-list-1\\\\|mailing-list-2\"))
 no BBDB records are created for messages from any mailer daemon,
 or messages sent to or CCed to either of two mailing lists.
-A value of t means ignore all messages.
+If t ignore all messages.  If nil do not ignore any messages.
 
 See also `bbdb-accept-message-alist', which has the opposite effect."
   :group 'bbdb-mua
@@ -809,18 +872,24 @@ Thus if BBDB changes the name in a record to the new name found in a message
   (and (stringp user-mail-address)
        (string-match "\\`\\([^@]*\\)\\(@\\|\\'\\)" user-mail-address)
        (concat "\\<" (regexp-quote (match-string 1 user-mail-address)) "\\>"))
-  "A regular expression matching your mail addresses."
+  "A regular expression matching your mail addresses.
+Several BBDB commands extract either the sender or the recipients' email
+addresses from a message according to `bbdb-message-headers'.  Yet an email
+address will be ignored if it matches `bbdb-user-mail-address-re'.  This way
+the commands will not operate on your own record.
+See also `bbdb-message-try-all-headers'."
   :group 'bbdb-mua
   :type '(regexp :tag "Regexp matching your mail addresses"))
 
 (defcustom bbdb-add-mails 'query
   "How to handle new mail addresses for existing BBDB records.
-If t, then when BBDB notices a new mail address for a record,
-it will automatically add it to the list of mail addresses.
-If it is 'query, query whether to add it.
-If it is nil then new mail addresses will never be automatically added
-nor the user will be asked.
-If set to a function name the function should return one of these values.
+Allowed values are:
+ t           When BBDB notices a new mail address for a record,
+               it will automatically add it to the list of mail addresses.
+ query       Query whether to add it.
+ nil         New mail addresses will never be automatically added
+               nor the user will be asked.
+ a function  The function should return one of these values.
 
 See also the variable `bbdb-new-mails-always-primary' for control of whether
 the addresses go at the front of the list or the back."
@@ -955,8 +1024,8 @@ Hook is run with one argument, the record."
   "List of rules for adding notes to records of mail addresses of messages.
 This automatically annotates the BBDB record of the sender or recipient
 of a message based on the value of a header such as the Subject header.
-This requires that `bbdb-notice-mail-hook' contains `bbdb-auto-notes' and that
-the record already exists or `bbdb/MUA-update-records-p' returns such that
+This requires that `bbdb-notice-mail-hook' contains `bbdb-auto-notes'
+and that the record already exists or `bbdb-update-records-p' returns such that
 the record will be created.  Messages matching `bbdb-auto-notes-ignore-messages'
 are ignored.
 
@@ -1159,7 +1228,7 @@ Allowed values are those allowed for `mail-user-agent'."
                 (const :tag "Default" nil)))
 
 (defcustom bbdb-mail-alias-field 'mail-alias
-  "Field holding the base alias for a record.
+  "Note field holding the base alias for a record.
 Used by `bbdb-mail-aliases'.  See also `bbdb-mail-alias'."
   :group 'bbdb-sendmail
   :type 'symbol)
@@ -1178,14 +1247,14 @@ all:   Generate the aliases \"<alias>\" and \"<alias>*\" (as for 'star)
                  (symbol :tag "<alias>* for all mails" star)
                  (symbol :tag "All aliases" all)))
 
-(defcustom bbdb-mail-allow-redundancy nil
+(defcustom bbdb-mail-avoid-redundancy nil
   "Mail address to use for BBDB records when sending mail.
-If non-nil always use full name in mail address, even if same as mail.
+If non-nil do not use full name in mail address when same as mail.
 If value is mail-only never use full name."
   :group 'bbdb-sendmail
-  :type '(choice (const :tag "Disallow redundancy" nil)
+  :type '(choice (const :tag "Allow redundancy" nil)
                  (const :tag "Never use full name" 'mail-only)
-                 (const :tag "Allow redundancy" t)))
+                 (const :tag "Avoid redundancy" t)))
 
 (defcustom bbdb-complete-mail t
   "If t MUA insinuation provides key binding for command `bbdb-complete-mail'."
@@ -1347,7 +1416,8 @@ You really should not disable debugging.  But it will speed things up."))
 (defconst bbdb-file-coding-system 'utf-8
   "Coding system used for reading and writing `bbdb-file'.")
 
-(defvar bbdb-mail-aliases-need-rebuilt nil)
+(defvar bbdb-mail-aliases-need-rebuilt nil
+  "Non-nil if mail aliases need to be rebuilt.")
 
 (defvar bbdb-need-to-sort nil
   "Non-nil if records require sorting after editing.")
@@ -1364,18 +1434,21 @@ You should bind this variable, not set it. The `!!' is a useful user interface
 feature, and should only be suppressed when changes need to be automatically
 made to BBDB records which the user will not care directly about.")
 
-(defvar bbdb-buffer nil)
+(defvar bbdb-buffer nil "Buffer visiting `bbdb-file'.")
 
-(defvar bbdb-buffer-name "*BBDB*")
+(defvar bbdb-buffer-name "*BBDB*" "Name of the BBDB buffer.")
 
 (defvar bbdb-silent-internal nil
   "Bind this to t to quiet things down - do not set it.
 See also `bbdb-silent'.")
 
 ;; hack hack: a couple of specials that the electric stuff uses for state.
-(defvar bbdb-inside-electric-display nil)
-(defvar bbdb-electric-execute)
-(defvar bbdb-electric-done)
+(defvar bbdb-inside-electric-display nil
+  "Non-nil if BBDB is inside an electric display.")
+(defvar bbdb-electric-execute nil
+  "Form to execute when leaving the electric command loop.")
+(defvar bbdb-electric-done nil
+  "Non-nil if we can leave the electric command loop.")
 
 (defvar bbdb-notice-hook-pending nil
   "Bound to t if inside `bbdb-notice-mail-hook' or `bbdb-notice-record-hook'.
@@ -1428,9 +1501,11 @@ In the *BBDB* buffers it includes the records that are actually displayed
 and its elements are (RECORD DISPLAY-FORMAT MARKER-POS).")
 (make-variable-buffer-local 'bbdb-records)
 
-(defvar bbdb-changed-records nil)
+(defvar bbdb-changed-records nil
+  "List of records that has been changed since BBDB was last saved.")
 
-(defvar bbdb-end-marker nil)
+(defvar bbdb-end-marker nil
+  "Marker holding the buffer position of the end of the last record.")
 
 ;; The value 127 is an arbitrary prime number.
 ;; see elisp:Creating Symbols
@@ -1602,7 +1677,8 @@ This is a child of `special-mode-map'.")
     (define-key map " " 'self-insert-command)
     (define-key map "\t" 'bbdb-complete-mail)
     (define-key map "\M-\t" 'bbdb-complete-mail)
-    map))
+    map)
+  "Keymap used by `bbdb-completing-read-mails'.")
 
 
 
@@ -1691,6 +1767,7 @@ If FULL is non-nil record includes the display information."
     (if full record (car record))))
 
 (defun bbdb-current-field ()
+  "Return current field point is on."
   (unless (bbdb-current-record) (error "Not a BBDB record"))
   (get-text-property (point) 'bbdb-field))
 
@@ -1751,14 +1828,11 @@ in vector NAME."
                     ;; Use `elt' instead of `aref' so that these functions
                     ;; also work for the `bbdb-record-type' pseudo-code.
                     `(elt vector ,count)) body)
-        (push (append (list 'defsubst setname '(vector value)
-                            (format "For BBDB `%s' vector set element %i `%s'.
+        (push (list 'defsubst setname '(vector value)
+                    (format "For BBDB `%s' vector set element %i `%s'.
 Return new value."
-                            sname count selt))
-                      (if (string= setname "bbdb-record-set-mail")
-                          '((unless bbdb-mail-aliases-need-rebuilt
-                              (setq bbdb-mail-aliases-need-rebuilt 'edit))))
-                      `((aset vector ,count value))) body))
+                            sname count selt)
+                    `(aset vector ,count value)) body))
       (setq count (1+ count)))
     (push (list 'defconst (intern (concat cname "length")) count
                 (concat "Length of BBDB `" sname "' vector.")) body)
@@ -1793,6 +1867,7 @@ Return new value."
 
 ;; `bbdb-hashtable' associates with each FIELD a list of matching records.
 (defsubst bbdb-puthash (field record)
+  "Associate RECORD with FIELD in `bbdb-hashtable'."
   (let ((sym (intern (downcase field) bbdb-hashtable)))
     (if (boundp sym)
         (unless (memq record (symbol-value sym))
@@ -1800,15 +1875,18 @@ Return new value."
       (set sym (list record)))))
 
 (defsubst bbdb-gethash (field)
+  "Return list of records associated with FIELD in `bbdb-hashtable'."
   (if field
       (symbol-value (intern-soft (downcase field) bbdb-hashtable))))
 
 (defsubst bbdb-remhash (field record)
-  (let ((sym (intern-soft (downcase field) bbdb-hashtable))
-        val)
-    (when sym
-      (setq val (delq record (symbol-value sym)))
-      (if val (set sym val) (unintern sym bbdb-hashtable)))))
+  "Remove RECORD from list of records associated with FIELD."
+  (let ((sym (intern-soft (downcase field) bbdb-hashtable)))
+    (if sym
+        (let ((val (delq record (symbol-value sym))))
+          (if val
+              (set sym val)
+            (unintern sym bbdb-hashtable))))))
 
 (defun bbdb-hash-record (record)
   "Insert the record in `bbdb-hashtable'."
@@ -1819,6 +1897,13 @@ Return new value."
     (bbdb-puthash aka record))
   (dolist (mail (bbdb-record-mail record))
     (bbdb-puthash mail record)))
+
+(defun bbdb-hash-update (record old new)
+  "Update hash for RECORD.  Remove OLD, insert NEW."
+  (dolist (elt old)
+    (bbdb-remhash elt record))
+  (dolist (elt new)
+    (bbdb-puthash elt record)))
 
 (defun bbdb-record-name (record)
   "Record cache function: Return the full name of a record.
@@ -1840,6 +1925,11 @@ is generated and stored."
 (defun bbdb-record-set-name (record &optional first last)
   "Record cache function: Set the full name of RECORD.
 Set full name in cache and hash.  Return first-last name."
+  (let* ((cache (bbdb-record-cache record))
+         (fl-name (bbdb-cache-fl-name cache))
+         (lf-name (bbdb-cache-lf-name cache)))
+    (if fl-name (bbdb-remhash fl-name record))
+    (if lf-name (bbdb-remhash lf-name record)))
   (if first
       (bbdb-record-set-firstname record first)
     (setq first (bbdb-record-firstname record)))
@@ -1857,21 +1947,6 @@ Set full name in cache and hash.  Return first-last name."
     (bbdb-puthash fl record)
     (bbdb-puthash lf record)
     fl))
-
-(defun bbdb-record-unset-name (record)
-  "Record cache function: Unset the full name of RECORD.
-Remove full name in hash."
-  (let* ((cache (bbdb-record-cache record))
-         (fl-name (bbdb-cache-fl-name cache))
-         (lf-name (bbdb-cache-lf-name cache)))
-    (unless (or (eq fl-name nil)
-                (string= "" fl-name))
-      (bbdb-remhash fl-name record))
-    (unless (or (eq lf-name nil)
-                (string= "" lf-name))
-      (bbdb-remhash lf-name record))
-    (bbdb-cache-set-fl-name cache nil)
-    (bbdb-cache-set-lf-name cache nil)))
 
 (defun bbdb-record-sortkey (record)
   "Record cache function: Return the sortkey for a record.
@@ -1931,9 +2006,12 @@ Splitting is based on `bbdb-separator-alist'."
 If VALUE is nil, remove note LABEL from RECORD.  Return VALUE."
   ;; In principle we can also have note labels `name' or `mail', etc.
   ;; Yet the actual code would get rather confused.  So we throw an error.
-  ;; Better use `bbdb-record-set-field'.
-  (if (memq label '(name affix organization mail aka phone address note))
+  (if (memq label '(name firstname lastname affix organization
+                         mail aka phone address note))
       (error "Note label `%s' illegal" label))
+  (bbdb-set-notes-labels label)
+  (if (eq label 'mail-alias)
+      (setq bbdb-mail-aliases-need-rebuilt 'edit))
   (if (and value (string= "" value)) (setq value nil))
   (let ((oldval (assq label (bbdb-record-notes record))))
     ;; Do nothing if both oldval and value are nil.
@@ -2033,62 +2111,87 @@ TYPE is a pseudo-code as in `bbdb-record-type'."
 
 (defun bbdb-record-set-field (record field value &optional merge check)
   "For RECORD set FIELD to VALUE.  Return VALUE.
-If MERGE is non-nil, merge VALUE with the current value of FIELD."
+If MERGE is non-nil, merge VALUE with the current value of FIELD.
+If CHECK is non-nil, check whether FIELD may take VALUE.
+This function also updates the hash table."
   (let ((record-type (cdr bbdb-record-type)))
     (cond ((eq field 'firstname) ; First name
            (if merge (error "Does not merge names"))
            (if check (bbdb-check-type value (bbdb-record-affix record-type) t))
-           (bbdb-record-set-firstname record value))
+           (setq bbdb-need-to-sort t)
+           (bbdb-record-set-name record value))
+
           ;; Last name
           ((eq field 'lastname)
            (if merge (error "Does not merge names"))
            (if check (bbdb-check-type value (bbdb-record-lastname record-type) t))
-           (bbdb-record-set-lastname record value))
+           (setq bbdb-need-to-sort t)
+           (bbdb-record-set-name record nil value))
+
           ;; Name
           ((eq field 'name)
            (if merge (error "Does not merge names"))
            (if (stringp value)
                (setq value (bbdb-divide-name value))
              (if check (bbdb-check-type value '(cons string string) t)))
-           (bbdb-record-set-firstname record (car value))
-           (bbdb-record-set-lastname record (cdr value))
-           value)
+           (setq bbdb-need-to-sort t)
+           (bbdb-record-set-name record (car value) (cdr value)))
+
           ;; Affix
           ((eq field 'affix)
            (setq value (if merge (bbdb-merge-lists (bbdb-record-affix record)
                                                    value 'bbdb-string=) value))
            (if check (bbdb-check-type value (bbdb-record-affix record-type) t))
            (bbdb-record-set-affix record value))
+
           ;; Organization
           ((eq field 'organization)
            (setq value (if merge (bbdb-merge-lists (bbdb-record-organization record)
                                                    value 'bbdb-string=) value))
            (if check (bbdb-check-type value (bbdb-record-organization record-type) t))
+           (bbdb-hash-update record (bbdb-record-organization record) value)
            (bbdb-record-set-organization record value))
-          ;; Mail
-          ((eq field 'mail)
-           (setq value (if merge (bbdb-merge-lists (bbdb-record-mail record)
-                                                   value 'bbdb-string=) value))
-           (if check (bbdb-check-type value (bbdb-record-mail record-type) t))
-           (bbdb-record-set-mail record value))
+
           ;; AKA
           ((eq field 'aka)
            (setq value (if merge (bbdb-merge-lists (bbdb-record-aka record)
                                                    value 'bbdb-string=) value))
            (if check (bbdb-check-type value (bbdb-record-aka record-type) t))
+           (if bbdb-no-duplicates
+               (dolist (aka value)
+                 (let ((old (remq record (bbdb-gethash aka))))
+                   (if old (error "Alternate name address \"%s\" is used by \"%s\""
+                                  aka (mapconcat 'bbdb-record-name old ", "))))))
+           (bbdb-hash-update record (bbdb-record-aka record) value)
            (bbdb-record-set-aka record value))
+
+          ;; Mail
+          ((eq field 'mail)
+           (setq value (if merge (bbdb-merge-lists (bbdb-record-mail record)
+                                                   value 'bbdb-string=) value))
+           (if check (bbdb-check-type value (bbdb-record-mail record-type) t))
+           (if bbdb-no-duplicates
+               (dolist (mail value)
+                 (let ((old (remq record (bbdb-gethash mail))))
+                   (if old (error "Mail address \"%s\" is used by \"%s\""
+                                  mail (mapconcat 'bbdb-record-name old ", "))))))
+           (bbdb-hash-update record (bbdb-record-mail record) value)
+           (bbdb-record-set-mail record value))
+
           ;; Phone
           ((eq field 'phone)
            (setq value (if merge (bbdb-merge-lists (bbdb-record-phone record)
                                                    value 'equal) value))
            (if check (bbdb-check-type value (bbdb-record-phone record-type) t))
            (bbdb-record-set-phone record value))
+
           ;; Address
           ((eq field 'address)
            (setq value (if merge (bbdb-merge-lists (bbdb-record-address record)
                                                    value 'equal) value))
            (if check (bbdb-check-type value (bbdb-record-address record-type) t))
            (bbdb-record-set-address record value))
+
           ;; Note (i.e., merge all note fields)
           ((eq field 'note)
            (let (notes note new-notes)
@@ -2108,7 +2211,9 @@ If MERGE is non-nil, merge VALUE with the current value of FIELD."
            ;; This removes note FIELD if the value is nil.
            (bbdb-record-set-note
             record field (bbdb-merge-note field (bbdb-record-note record field) value)))
-          (t (error "Unknown field type `%s'" field)))))
+
+          (t (error "Unknown field type `%s'" field))))
+  value)
 
 ;; Currently unused (but possible entry for `bbdb-merge-notes-function-alist')
 (defun bbdb-merge-concat (string1 string2 &optional separator)
@@ -2467,6 +2572,8 @@ The value of name-face may be a face that is used directly.
 The value may also be a key in `bbdb-name-face-alist'.  Then the
 corresponding cdr is used.  If none of these schemes succeeds the face
 `bbdb-face' is used."
+  ;; Should this be further customizable?  We could build the following
+  ;; from a customizable list containing function calls and strings.
   ;; Name
   (let ((name (if (eq 'last-first
                       (or (bbdb-record-note-intern record 'name-format)
@@ -2492,7 +2599,23 @@ corresponding cdr is used.  If none of these schemes succeeds the face
     (when organization
       (insert " - ")
       (bbdb-display-list organization 'organization nil
-                         'bbdb-organization))))
+                         'bbdb-organization)))
+  ;; Image
+  (if (and bbdb-image (display-images-p))
+      (let ((image (cond ((functionp bbdb-image)
+                          (funcall bbdb-image record))
+                         ((member bbdb-image '(name fl-name))
+                          (bbdb-record-name record))
+                         ((eq bbdb-image 'lf-name)
+                          (bbdb-record-name-lf record))
+                         (t
+                          (bbdb-record-note record bbdb-image)))))
+        (when (and image
+                   (setq image (locate-file image bbdb-image-path
+                                            bbdb-image-suffixes))
+                   (setq image (create-image image)))
+          (insert " ")
+          (insert-image image)))))
 
 (defun bbdb-display-record-one-line (record layout field-list)
   "Record formatting function for the one-line layout.
@@ -3066,7 +3189,8 @@ This function also notices if the disk file has been modified."
           (insert (format (concat ";; -*- mode: Emacs-Lisp; coding: %s; -*-"
                                   "\n;;; file-format: %d\n")
                           bbdb-file-coding-system bbdb-file-format))
-          (setq bbdb-end-marker (point-marker)))
+          (setq bbdb-end-marker (point-marker)
+                bbdb-records nil)) ; to make `bbdb-records' buffer-local
         (run-hooks 'bbdb-after-read-db-hook))
       ;; return records
       bbdb-records)))
@@ -3112,10 +3236,7 @@ Return nil otherwise."
   (save-excursion
     (save-restriction
       (widen)
-      (goto-char (point-min))
-      ;; Go to where first record begins.  Move to end of file if no records.
-      (if (search-forward "\n[" nil 'move)
-          (forward-char -1))
+      (bbdb-goto-first-record)
       ;; look backwards for file-format, and convert if necessary.
       (let ((file-format (save-excursion
                            (if (re-search-backward
@@ -3164,13 +3285,12 @@ Return nil otherwise."
 (defun bbdb-goto-first-record ()
   "Go to where first record begins,  Move to end of file if no records."
   (goto-char (point-min))
-  (unless (looking-at "\\[")
-    (search-forward "\n[" nil 'move)
-    (forward-char -1)))
+  (if (search-forward "\n[" nil 'move)
+      (forward-char -1)))
 
 (defun bbdb-parse-frobnicate (records)
   ;; now we have to come up with a marker for each record.  Rather than
-  ;; calling read for each record, we read them at once (already done) and
+  ;; calling `read' for each record, we read them at once (already done) and
   ;; assume that the markers are at each newline.  If this is not the case,
   ;; things can go *very* wrong.
   (bbdb-goto-first-record)
@@ -3279,8 +3399,7 @@ about updating the name hash-table.  If NEW is t treat RECORD as new."
                        bbdb-end-marker)))
     (setq bbdb-records (delq record bbdb-records))
     (let ((name (bbdb-record-name record)))
-      (if (> (length name) 0)
-          (bbdb-remhash name record)))
+      (if name (bbdb-remhash name record)))
     (dolist (organization (bbdb-record-organization record))
       (bbdb-remhash organization record))
     (dolist (mail (bbdb-record-mail record))
