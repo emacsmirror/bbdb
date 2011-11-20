@@ -37,12 +37,18 @@
                (bbdb-select-message)))
   ;; (lambda () (if (gnus-new-flag) 'query 'search))
   "How `bbdb-mua-update-records' processes mail addresses in Gnus.
+This Gnus-specific variable is normally not used.  It is a fallback
+if the generic (MUA-independent) variables `bbdb-mua-auto-update-p',
+`bbdb-update-records-p' or `bbdb-mua-update-interactive-p' result
+in a value of nil for the arg UPDATE-P of `bbdb-update-records'.
+
 Allowed values are:
  nil          Do nothing.
  search       Search for existing records.
  query        Update existing records or query for creating new ones.
  create or t  Update existing records or create new ones.
-A function which returns one of the above values."
+ a function   This functions will be called with no arguments.
+                It should return one of the above values."
   :group 'bbdb-mua-gnus
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records"
@@ -557,13 +563,13 @@ Do not call this in your init file.  Use `bbdb-initialize'."
   ;; `gnus-article-read-summary-keys' provides an additional wrapper
   ;; that restores the window configuration.
   (define-key gnus-summary-mode-map ":" 'bbdb-mua-display-sender)
-  ;; For `bbdb-mua-edit-notes-sender' it is probably OK if
+  ;; For `bbdb-mua-edit-field-sender' it is probably OK if
   ;;`gnus-article-read-summary-keys' restores the window configuration.
-  (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-notes-sender)
+  (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-field-sender)
   ;; Do we need keybindings for more commands?  Suggestions welcome.
   ;; (define-key gnus-summary-mode-map ":" 'bbdb-mua-display-records)
   ;; (define-key gnus-summary-mode-map "'" 'bbdb-mua-display-recipients)
-  ;; (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-notes-recipients)
+  ;; (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-field-recipients)
 
   ;; Set up user field for use in `gnus-summary-line-format'
   ;; (1) The big one - whole name

@@ -35,12 +35,18 @@
            (if (bbdb/rmail-new-flag) 'query 'search)))
       (bbdb-select-message)))
   "How `bbdb-mua-update-records' processes mail addresses in Rmail.
+This Rmail-specific variable is normally not used.  It is a fallback
+if the generic (MUA-independent) variables `bbdb-mua-auto-update-p',
+`bbdb-update-records-p' or `bbdb-mua-update-interactive-p' result
+in a value of nil for the arg UPDATE-P of `bbdb-update-records'.
+
 Allowed values are:
  nil          Do nothing.
  search       Search for existing records.
  query        Update existing records or query for creating new ones.
  create or t  Update existing records or create new ones.
-A function which returns one of the above values."
+ a function   This functions will be called with no arguments.
+                It should return one of the above values."
   :group 'bbdb-mua-rmail
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records"
@@ -84,9 +90,9 @@ Do not call this in your init file.  Use `bbdb-initialize'."
   ;; (define-key rmail-mode-map ":" 'bbdb-mua-display-records)
   ;; (define-key rmail-mode-map "'" 'bbdb-mua-display-recipients)
   (define-key rmail-mode-map ":" 'bbdb-mua-display-sender)
-  (define-key rmail-mode-map ";" 'bbdb-mua-edit-notes-sender)
-  ;; (define-key rmail-mode-map ";" 'bbdb-mua-edit-notes-recipients)
+  (define-key rmail-mode-map ";" 'bbdb-mua-edit-field-sender)
+  ;; (define-key rmail-mode-map ";" 'bbdb-mua-edit-field-recipients)
   (define-key rmail-summary-mode-map ":" 'bbdb-mua-display-sender)
-  (define-key rmail-summary-mode-map ";" 'bbdb-mua-edit-notes-sender))
+  (define-key rmail-summary-mode-map ";" 'bbdb-mua-edit-field-sender))
 
 (provide 'bbdb-rmail)

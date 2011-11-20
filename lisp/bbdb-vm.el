@@ -43,12 +43,18 @@
                'query 'search)))
       (bbdb-select-message)))
   "How `bbdb-mua-update-records' processes mail addresses in VM.
+This VM-specific variable is normally not used.  It is a fallback
+if the generic (MUA-independent) variables `bbdb-mua-auto-update-p',
+`bbdb-update-records-p' or `bbdb-mua-update-interactive-p' result
+in a value of nil for the arg UPDATE-P of `bbdb-update-records'.
+
 Allowed values are:
  nil          Do nothing.
  search       Search for existing records.
  query        Update existing records or query for creating new ones.
  create or t  Update existing records or create new ones.
-A function which returns one of the above values."
+ a function   This functions will be called with no arguments.
+                It should return one of the above values."
   :group 'bbdb-mua-vm
   :type '(choice (const :tag "do nothing"
                         nil)
@@ -292,9 +298,9 @@ Do not call this in your init file.  Use `bbdb-initialize'."
   (define-key vm-mode-map ":" 'bbdb-mua-display-records)
   (define-key vm-mode-map "`" 'bbdb-mua-display-sender)
   (define-key vm-mode-map "'" 'bbdb-mua-display-recipients)
-  (define-key vm-mode-map ";" 'bbdb-mua-edit-notes-sender)
+  (define-key vm-mode-map ";" 'bbdb-mua-edit-field-sender)
   ;; Do we need keybindings for more commands?  Suggestions welcome.
-  ;; (define-key vm-mode-map "'" 'bbdb-mua-edit-notes-recipients)
+  ;; (define-key vm-mode-map "'" 'bbdb-mua-edit-field-recipients)
   (define-key vm-mode-map "/" 'bbdb)
   ;; `mail-mode-map' is the parent of `vm-mail-mode-map'.
   ;; So the following is also done by `bbdb-insinuate-mail'.

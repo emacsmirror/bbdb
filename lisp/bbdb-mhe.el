@@ -37,12 +37,18 @@
   (lambda () (let ((bbdb-update-records-p 'query))
                (bbdb-select-message)))
   "How `bbdb-mua-update-records' processes mail addresses in MH-E.
+This MH-E-specific variable is normally not used.  It is a fallback
+if the generic (MUA-independent) variables `bbdb-mua-auto-update-p',
+`bbdb-update-records-p' or `bbdb-mua-update-interactive-p' result
+in a value of nil for the arg UPDATE-P of `bbdb-update-records'.
+
 Allowed values are:
  nil          Do nothing.
  search       Search for existing records.
  query        Update existing records or query for creating new ones.
  create or t  Update existing records or create new ones.
-A function which returns one of the above values."
+ a function   This functions will be called with no arguments.
+                It should return one of the above values."
   :group 'bbdb-mua-gnus
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records"
@@ -117,11 +123,11 @@ Returns the empty string if HEADER is not in the message."
   "Call this function to hook BBDB into MH-E.
 Do not call this in your init file.  Use `bbdb-initialize'."
   (define-key mh-folder-mode-map ":" 'bbdb-mua-display-sender)
-  (define-key mh-folder-mode-map ";" 'bbdb-mua-edit-notes-sender)
+  (define-key mh-folder-mode-map ";" 'bbdb-mua-edit-field-sender)
   ;; Do we need keybindings for more commands?  Suggestions welcome.
   ;; (define-key mh-folder-mode-map ":" 'bbdb-mua-display-records)
   ;; (define-key mh-folder-mode-map "'" 'bbdb-mua-display-recipients)
-  ;; (define-key mh-folder-mode-map ";" 'bbdb-mua-edit-notes-recipients)
+  ;; (define-key mh-folder-mode-map ";" 'bbdb-mua-edit-field-recipients)
   (when bbdb-complete-mail
       (define-key mh-letter-mode-map "\M-;" 'bbdb-complete-mail)
       (define-key mh-letter-mode-map "\e\t" 'bbdb-complete-mail)))

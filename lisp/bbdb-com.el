@@ -732,8 +732,8 @@ NOTES is an alist associating symbols with strings."
       record)))
 
 ;;;###autoload
-(defun bbdb-insert-field (record field contents)
-  "Add a new field to the current record; the field type and contents
+(defun bbdb-insert-field (record field value)
+  "Add a new field to the current record; the FIELD type and VALUE
 are prompted for if not supplied.
 
 If you are inserting a new phone-number field, the phone number style
@@ -778,70 +778,45 @@ value of \"\", the default) means do not alter the address."
          (eq field 'affix)
          (if (bbdb-record-affix record)
              (error "Affix field exists already"))
-         (if (stringp contents)
-             (setq contents (bbdb-split 'affix contents)))
-         (dolist (affix contents)
-           (bbdb-puthash affix record))
-         (bbdb-record-set-affix record contents))
+         (if (stringp value)
+             (setq value (bbdb-split 'affix value)))
+         (bbdb-record-set-field record 'affix value))
         ;; organization
         ((eq field 'organization)
          (if (bbdb-record-organization record)
              (error "Organization field exists already"))
-         (if (stringp contents)
-             (setq contents (bbdb-split 'organization contents)))
-         (dolist (organization contents)
-             (bbdb-puthash organization record))
-         (bbdb-record-set-organization record contents))
+         (if (stringp value)
+             (setq value (bbdb-split 'organization value)))
+         (bbdb-record-set-field record 'organization value))
         ;; phone
         ((eq field 'phone)
-         (bbdb-record-set-phone record
-                                 (nconc (bbdb-record-phone record)
-                                        (list contents))))
+         (bbdb-record-set-field record 'phone
+                                (nconc (bbdb-record-phone record)
+                                       (list value))))
         ;; address
         ((eq field 'address)
-         (bbdb-record-set-address record
-                                    (nconc (bbdb-record-address record)
-                                           (list contents))))
+         (bbdb-record-set-field record 'address
+                                (nconc (bbdb-record-address record)
+                                       (list value))))
         ;; mail
         ((eq field 'mail)
          (if (bbdb-record-mail record)
              (error "Mail field exists already"))
-         (if (stringp contents)
-             (setq contents (bbdb-split 'mail contents)))
-         ;; first detect any conflicts....
-         (if bbdb-no-duplicates
-             (dolist (mail contents)
-               (let ((old (remq record (bbdb-gethash mail))))
-                 (if old
-                     (error "Mail address \"%s\" is used by \"%s\""
-                            mail (mapconcat 'bbdb-record-name old ", "))))))
-         ;; then store.
-         (dolist (mail contents)
-             (bbdb-puthash mail record))
-         (bbdb-record-set-mail record contents))
+         (if (stringp value)
+             (setq value (bbdb-split 'mail value)))
+         (bbdb-record-set-field record 'mail value))
         ;; AKA
         ((eq field 'aka)
          (if (bbdb-record-aka record)
              (error "Alternate names field exists already"))
-         (if (stringp contents)
-             (setq contents (bbdb-split 'aka contents)))
-         ;; first detect any conflicts....
-         (if bbdb-no-duplicates
-             (dolist (aka contents)
-               (let ((old (remq record (bbdb-gethash aka))))
-                 (if old
-                     (error "Alternate name \"%s\" is used by \"%s\""
-                            aka (mapconcat 'bbdb-record-name old ", "))))))
-         ;; then store.
-         (dolist (aka contents)
-           (bbdb-puthash aka record))
-         (bbdb-record-set-aka record contents))
+         (if (stringp value)
+             (setq value (bbdb-split 'aka value)))
+         (bbdb-record-set-field record 'aka value))
         ;; notes
-        ((memq field bbdb-notes-label-list)
+        (t
          (if (assq field (bbdb-record-notes record))
              (error "Note field \"%s\" already exists" field))
-         (bbdb-record-set-note record field contents))
-        (t (error "Unknow field type `%s'" field)))
+         (bbdb-record-set-note record field value)))
   (bbdb-change-record record)
   (let (bbdb-layout)
     (bbdb-redisplay-record record)))
@@ -895,9 +870,8 @@ value of \"\", the default) means do not alter the address."
          (bbdb-read-string (format "%s: " field) init))))
 
 ;;;###autoload
-(defun bbdb-edit-field (record field &optional flag)
-  "Edit the contents of the BBDB field on the current line.
-\(This is only meaningful in the \"*BBDB*\" buffer.)
+(defun bbdb-edit-field (record field &optional value flag)
+  "Edit the contents of FIELD of RECORD.
 If point is in the middle of a multi-line field (e.g., address),
 then the entire field is edited, not just the current line."
   (interactive
@@ -906,32 +880,43 @@ then the entire field is edited, not just the current line."
      ;; when at the end of the line take care of it
      (if (and (eolp) (not (bobp)) (not (bbdb-current-field)))
          (backward-char 1))
-     (let ((record (bbdb-current-record))
-           (field (bbdb-current-field)))
+     (let* ((field-l (bbdb-current-field))
+            (field (car field-l))
+            (value (nth 1 field-l)))
        (unless field (error "Point not in a field"))
-       (list record field current-prefix-arg))))
-  ;;
-  (let* ((fname (car field))
-         (value (nth 1 field))
-         (type (elt value 0))
-         bbdb-need-to-sort)
-    ;; Some editing commands require re-sorting records
-    (cond ((eq fname 'name)     (bbdb-record-edit-name record flag)) ; possibly
-          ((eq fname 'affix)    (bbdb-record-edit-affix record)) ; nil
-          ((eq fname 'organization)  (bbdb-record-edit-organization record)) ; possibly
-          ((eq fname 'mail)     (bbdb-record-edit-mail record)) ; nil
-          ((eq fname 'aka)      (bbdb-record-edit-aka record)) ; nil
-          ((eq fname 'phone)    (bbdb-record-edit-phone
-                                 (bbdb-record-phone record) value)) ; nil
-          ((eq fname 'address)  (bbdb-record-edit-address value nil flag)) ; nil
-          ((eq fname 'note)     (bbdb-record-edit-note record type)) ; nil
-          (t (error "Unknown field type `%s'" fname)))
-
+       (list (bbdb-current-record)
+             (if (memq field '(name affix organization aka mail phone address))
+                 field ; not a note field
+               (elt value 0)) ; note field
+             value current-prefix-arg))))
+  ;; Some editing commands require re-sorting records
+  (let (bbdb-need-to-sort edit-str)
+    (cond ((memq field '(firstname lastname note))
+           (error "Field `%s' not editable this way." field))
+          ((eq field 'name)
+           (bbdb-record-edit-name record flag))
+          ((eq field 'phone)
+           (unless value (error "No phone specified"))
+           (bbdb-record-edit-phone (bbdb-record-phone record) value))
+          ((eq field 'address)
+           (unless value (error "No address specified"))
+           (bbdb-record-edit-address value nil flag))
+          ((setq edit-str (assq field '((affix . "Affix")
+                                        (organization . "Organization")
+                                        (mail . "Mail") (aka . "AKA"))))
+           (bbdb-record-set-field
+            record field
+            (bbdb-split field (bbdb-read-string
+                               (format "%s: " (cdr edit-str))
+                               (bbdb-concat field (funcall (intern (format "bbdb-record-%s" field))
+                                                           record))))))
+          (t ; Note field
+           (bbdb-record-set-note
+            record field
+            (bbdb-read-string (format "%s: " field)
+                              (bbdb-record-note record field)))))
     (bbdb-change-record record bbdb-need-to-sort)
-    (bbdb-redisplay-record record)
-    (if (and (eq 'note fname)
-             (memq type '(mail-alias mail)))
-        (setq bbdb-mail-aliases-need-rebuilt 'edit))))
+    (bbdb-redisplay-record record)))
 
 (defun bbdb-record-edit-name (record &optional first-and-last)
   (let (fn ln new-name old-name)
@@ -959,30 +944,7 @@ then the entire field is edited, not just the current line."
           (or (not (string= fn (or (bbdb-record-firstname record) "")))
               (not (string= ln (or (bbdb-record-lastname record) "")))))
     ;;
-    (bbdb-record-unset-name record)       ; delete old cache entry
     (bbdb-record-set-name record fn ln)))
-
-(defun bbdb-record-edit-affix (record)
-  (bbdb-record-set-affix record
-                         (bbdb-split  'affix (bbdb-read-string "Affix: "
-                         (bbdb-concat 'affix (bbdb-record-affix record))))))
-
-(defun bbdb-record-edit-organization (record)
-  (let ((org (bbdb-split  'organization (bbdb-read-string "Organization: "
-             (bbdb-concat 'organization (bbdb-record-organization record))))))
-
-    (setq bbdb-need-to-sort
-          (not (equal (mapconcat 'downcase org "")
-                      (mapconcat 'downcase (bbdb-record-organization record) ""))))
-
-    ;; delete the old hash entry
-    (dolist (organization (bbdb-record-organization record))
-      (bbdb-remhash organization record))
-
-    (bbdb-record-set-organization record org)
-    ;; add a new hash entry
-    (dolist (organization org)
-      (bbdb-puthash organization record))))
 
 (defun bbdb-record-edit-address (address &optional label default)
   "Edit ADDRESS.
@@ -1093,60 +1055,6 @@ Country:         country"
                  (bbdb-error-retry
                   (bbdb-parse-phone
                    (read-string "Phone: " (bbdb-phone-string phone)))))))
-
-(defun bbdb-record-edit-mail (record)
-  (let ((newmails (bbdb-split 'mail
-                    (bbdb-read-string
-                     "Mail: " (bbdb-concat 'mail (bbdb-record-mail record))))))
-    ;; first check for any conflicts...
-    (if bbdb-no-duplicates
-        (dolist (mail newmails)
-          (let ((old (remq record (bbdb-gethash mail))))
-            (if old (error "Mail address \"%s\" is used by \"%s\""
-                           mail (mapconcat 'bbdb-record-name old ", "))))))
-    ;; then update.
-    (dolist (mail (bbdb-record-mail record))
-      (bbdb-remhash mail record))
-    (dolist (mail newmails)
-      (bbdb-puthash mail record))
-    (bbdb-record-set-mail record newmails)))
-
-(defun bbdb-record-edit-aka (record)
-  (let ((str (bbdb-read-string "AKA: "
-                               (bbdb-concat 'aka (bbdb-record-aka record)))))
-    (let ((oldaka (bbdb-record-aka record))
-          (newaka (bbdb-split 'aka str)))
-      ;; first check for any conflicts...
-      (if bbdb-no-duplicates
-          (dolist (aka newaka)
-            (let ((old (remq record (bbdb-gethash aka))))
-              (if old (error "Alternate name address \"%s\" is used by \"%s\""
-                             aka (mapconcat 'bbdb-record-name old ", "))))))
-      ;; then update.
-      (dolist (aka oldaka)
-        (bbdb-remhash aka record))
-      (dolist (aka newaka)
-        (bbdb-puthash aka record))
-      (bbdb-record-set-aka record newaka))))
-
-;;;###autoload
-(defun bbdb-record-edit-note (record &optional label redisplay)
-  "For RECORD edit note LABEL.
-If REDISPLAY is non-nil, update *BBDB* buffer after editing."
-  (unless label
-    (let ((str (completing-read (format "Edit notes of %s: "
-                                        (bbdb-record-name record))
-                                bbdb-notes-label-list)))
-      (setq label (if (equal "" str) 'notes (intern str)))))
-  (bbdb-record-set-note
-   record label
-   (bbdb-read-string (format "%s: " label)
-                     (bbdb-record-note record label)))
-  ;; Unlike the other editing commands, this one has its own redisplay code
-  ;; because it is used by the mail modes.
-  (if redisplay
-      (with-current-buffer bbdb-buffer-name
-        (bbdb-redisplay-record record))))
 
 ;; (bbdb-list-transpose '(a b c d) 1 3)
 (defun bbdb-list-transpose (list i j)
@@ -1277,6 +1185,8 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
         (bbdb-delete-records records noprompt)
       (if (cdr records)
           (error "Cannot delete same field from multiple records"))
+      (if (memq type '(firstname lastname))
+          (error "Cannot delete field `%s'" type))
       (when (or noprompt
                 (y-or-n-p (format "delete this %s field (of %s)? "
                                   type (bbdb-record-name record))))
@@ -1285,16 +1195,8 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
                 record type
                 (delq (nth 1 field)
                       (bbdb-record-get-field record type))))
-              ((eq type 'affix)
-               (bbdb-record-set-affix record nil))
-              ((memq type '(mail aka))
-               (dolist (ff (bbdb-record-get-field record type))
-                 (bbdb-remhash ff record))
+              ((memq type '(affix organization mail aka))
                (bbdb-record-set-field record type nil))
-              ((eq type 'organization)
-               (dolist (organization (bbdb-record-organization record))
-                 (bbdb-remhash organization record))
-               (bbdb-record-set-organization record nil))
               ((eq type 'note)
                (bbdb-record-set-note record (car (nth 1 field)) nil))
               (t (error "Unknown field %s" type)))
@@ -1478,7 +1380,6 @@ The first record is the record under the point; the second is prompted for."
                                            extra-name)))
                        (setq extra-name nil)))))))
 
-    (bbdb-record-unset-name new-record)
     (bbdb-record-set-name new-record (car name) (cdr name))
 
     (if extra-name (push extra-name old-aka))
@@ -1570,13 +1471,12 @@ in `bbdb-change-hook')."
 (defun bbdb-dwim-mail (record &optional mail)
   ;; Do What I Mean!
   "Return a string to use as the mail address of RECORD.
-The mail address is formatted like \"Firstname Lastname <address>\"
-unless both the first name and last name are constituents of the address,
-as in John.Doe@SomeHost, or the address is already in the form
-\"Name <foo>\" or \"foo (Name)\", in which case the address is used as-is.
-If `bbdb-mail-allow-redundancy' is non-nil, the name is always included.
-`bbdb-mail-allow-redundancy' is 'mail-only the name is never included.
-MAIL may be a mail addresses to be used for RECORD.
+The mail address is formatted like \"Firstname Lastname <address>\".
+If both the first name and last name are constituents of the address
+as in John.Doe@Some.Host, and `bbdb-mail-avoid-redundancy' is non-nil,
+then the address is used as is.
+If `bbdb-mail-avoid-redundancy' is 'mail-only the name is never included.
+MAIL may be a mail address to be used for RECORD.
 If MAIL is an integer, use the MAILth mail address of RECORD.
 If Mail is nil use the first mail address of RECORD."
   (unless mail
@@ -1593,9 +1493,9 @@ If Mail is nil use the first mail address of RECORD."
                 ln (cdr name)))
       (setq fn (bbdb-record-firstname record)
             ln (bbdb-record-lastname  record)))
-    (if (or (eq 'mail-only bbdb-mail-allow-redundancy)
+    (if (or (eq 'mail-only bbdb-mail-avoid-redundancy)
             (null name)
-            (and (not bbdb-mail-allow-redundancy)
+            (and bbdb-mail-avoid-redundancy
                  (cond ((and fn ln)
                         (or (string-match
                              (concat "\\`[^!@%]*\\b" (regexp-quote fn)
@@ -2315,7 +2215,6 @@ Default is the first URL."
   "Grab URL and store it in RECORD."
   (interactive (list (bbdb-completing-read-record "Add URL for: ")
                      (browse-url-url-at-point)))
-  (bbdb-set-notes-labels 'url)
   (bbdb-record-set-field record 'url url t)
   (bbdb-change-record record)
   (bbdb-display-records (list record)))

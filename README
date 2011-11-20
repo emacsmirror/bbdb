@@ -7,12 +7,12 @@ numbers and the like. It can be linked with various Emacs mail
 clients (Message and Mail mode, Rmail, Gnus, MH-E, and VM).
 BBDB is fully customizable.
 
-BBDB is avaiable at
+BBDB is available at
 http://savannah.nongnu.org/projects/bbdb/
 To check it out, use
 git clone git://git.savannah.nongnu.org/bbdb.git
 
-This revised version of BBDB has been tested only with GNU Emacs 23.
+This revised version of BBDB has been tested only with GNU Emacs 23 and 24.
 Yet it might be not too difficult to adapt it to other recent
 dialects of emacs. It is unlikely, though, that you can get this
 code running with something like Emacs 18.
@@ -31,48 +31,91 @@ Feedback welcome! --  There is a mailing list for discussion of BBDB:
 To join, send mail to bbdb-info-request@lists.sourceforge.net
 
 ==================================================================
-Usage notes (in particular for people who might have used earlier
-versions of BBDB):
+Usage notes
 
-I found the usage of the old function bbdb-update-records somewhat
-confusing. The redesigned function is hopefully clearer. 
+The texinfo manual is still awaiting a more complete overhaul.
 
-The function bbdb-mua-update-records provides the interface between
-MUAs and BBDB. Here MUAs currently include Message and Mail mode,
-Rmail, Gnus, MH-E and VM,  The actions of bbdb-mua-update-records are
-now controlled by only one arg UPDATE-P. It may take the following
-values (arranged here in order of increasingly aggressive behavior
-of bbdb-mua-update-records.)
+As compared with BBDB v2.xx, many variables, functions, and commands
+have changed in BBDB v3.  Most likely you will have to review your
+customizations carefully.  You may want to call bbdb-undocumented-variables
+to identify outdated (i.e., now usually undocumented) variables in
+your init file.  All user variables in BBDB 3 are listed at the beginning
+of bbdb.el.
 
- nil      Do nothing (return nil).
- search   Search for existing records matching ADDRESS.
- query    Search for existing records matching ADDRESS;
-          query for creation of a new record if the record does not exist.
+
+BBDB interface with mail user agents (MUAs)
+===========================================
+
+BBDB can interface with various mail user agents (MUAs).
+These include Rmail, Gnus, VM, MH-E, Message and Mail mode.
+This lets you 
+
+ - display the BBDB records for the sender and/or recipients of a
+   message you are viewing
+
+ - create or update the BBDB records for the sender and/or
+   recipients of a message
+
+ - add annotations to the BBDB records for the sender and/or
+   recipients of a message
+
+There are two ways for BBDB to interface with MUAs:
+
+Interactive commands
+--------------------
+
+Call bbdb-initialize (usually in your init file) to initialize
+the MUA interfaces based on interactive commands
+
+MUA commands include
+
+  bbdb-mua-display-records, bbdb-mua-display-sender, bbdb-mua-display-recipients
+  bbdb-annotate-record, bbdb-mua-annotate-sender, bbdb-mua-annotate-recipients
+  bbdb-mua-edit-field, bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients
+
+These MUA commands operate either on existing records only. Or they
+can create new records
+
+They are all controlled by bbdb-mua-update-interactive-p.
+This is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
+The car is used if the command is called without a prefix.
+The cdr is used if the command is called with a prefix.
+
+Allowed values are (here ADDRESS is an email address found in a message):
+ nil          Do nothing.
+ search       Search for existing records matching ADDRESS.
+ query        Search for existing records matching ADDRESS;
+                query for creation of a new record if the record does not exist.
  create or t  Search for existing records matching ADDRESS;
-          create a new record if it does not yet exist.
+                create a new record if it does not yet exist.
  a function   This functions will be called with no arguments.
-          It should return one of the above values.
+                It should return one of the above values (see below).
+ read         Read the value interactively.
 
-The value of UPDATE-P can be customized by means of the MUA-specific
-variables bbdb/MUA-update-records-p. If the value of these variables
-is a constant, it becomes the value of UPDATE-P. If its value is a
-function FUNC, its return value becomes the value of UPDATE-P.
-For example, FUNC may analyze the message headers via
-bbdb-select-message (and/or its friends bbdb-accept-message and
-bbdb-ignore-message) which is customized via bbdb-accept-message-alist,
-bbdb-ignore-message-alist and bbdb-update-records-p. The latter
-variable defines the non-nil return value of bbdb-select-message
-(e.g., search or t) which then becomes the argument UPDATE-P of
-bbdb-mua-update-records. So you might want to put more sophisticated
-code into bbdb/MUA-update-records-p according to your needs. See the
-default value of bbdb/vm-update-records-p as an example.
+BBDB v2 also used MUA-specific variables bbdb/MUA-update-records-p
+to control its interfaces with MUAs. In BBDB v3 these are only used
+as fallback if the generic (MUA-independent) variables
+bbdb-mua-update-interactive-p, bbdb-update-records-p or
+bbdb-mua-auto-update-p result in a value of nil for the arg UPDATE-P
+of bbdb-update-records.
 
-The default values of various customizable variables correspond to
-their least aggressive values. Change this if you like a more
-aggressive behavior of BBDB.
+Noninteractive functions
+------------------------
 
-BBDB can also check these actions automatically for each message.
-Use bbdb-mua-pop-up-init for this.
+Call bbdb-mua-auto-update-init (usually in your init file)
+to hook BBDB's hook function bbdb-mua-auto-update into the MUAs.
+
+bbdb-mua-auto-update automatically displays or updates the BBDB records
+for the sender and/or recipients of a message. Its behavior is controlled
+by bbdb-mua-auto-update-p. This may take the same values as
+bbdb-mua-update-interactive-p (except read).
+
+Binding this to a function is often most helpful for noninteractive use.
+For example, you may want to bind bbdb-mua-auto-update-p to the function
+bbdb-select-message,  see bbdb-accept-message-alist and
+bbdb-ignore-message-alist.  If a message is accepted by bbdb-select-message,
+the actual action performed by BBDB (i.e., the return value of
+bbdb-select-message) is given by bbdb-mua-update-records-p.
 
 ==================================================================
 
