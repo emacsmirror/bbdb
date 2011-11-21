@@ -113,8 +113,8 @@ MIME encoded headers are decoded.  Return nil if HEADER does not exist."
 
 ;;;###autoload
 (defun bbdb-accept-message (&optional invert)
-  "For use with MUA-specific variables `bbdb/MUA-update-records-p'.
-Return the value of `bbdb-update-records-p' for messages matching
+  "For use with variable `bbdb-mua-update-interactive-p' and friends.
+Return the value of variable `bbdb-update-records-p' for messages matching
 `bbdb-accept-message-alist'.  If INVERT is non-nil, accept messages
 not matching `bbdb-ignore-message-alist'."
   (let ((rest (if invert bbdb-ignore-message-alist
@@ -131,16 +131,16 @@ not matching `bbdb-ignore-message-alist'."
 
 ;;;###autoload
 (defun bbdb-ignore-message (&optional invert)
-  "For use with MUA-specific variables `bbdb/MUA-update-records-p'.
-Return the value of `bbdb-update-records-p' for messages not matching
+  "For use with variable `bbdb-mua-update-interactive-p' and friends.
+Return the value of variable `bbdb-update-records-p' for messages not matching
 `bbdb-ignore-message-alist'.  If INVERT is non-nil, accept messages
 matching `bbdb-accept-message-alist'."
   (bbdb-accept-message (not invert)))
 
 ;;;###autoload
 (defun bbdb-select-message ()
-  "For use with MUA-specific variables `bbdb/MUA-update-records-p'.
-Return the value of `bbdb-update-records-p' for messages both matching
+  "For use with variable `bbdb-mua-update-interactive-p' and friends.
+Return the value of variable `bbdb-update-records-p' for messages both matching
 `bbdb-accept-message-alist' and not matching `bbdb-ignore-message-alist'."
   (and (bbdb-accept-message)
        (bbdb-ignore-message)))
@@ -212,13 +212,17 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
   ;; UPDATE-P allows filtering of complete messages.
   ;; Filtering of individual addresses within an accepted message
   ;; is done by `bbdb-get-address-components' using `bbdb-user-mail-address-re'.
-  (unless update-p
-    (setq update-p (eval (intern-soft (format "bbdb/%s-update-records-p"
-                                              (bbdb-mua))))))
-  ;; Bad! `search' is a function in `cl-seq.el'.
+  ;; We resolve UPDATE-P up to two times.
   (if (and (functionp update-p)
+           ;; Bad! `search' is a function in `cl-seq.el'.
            (not (eq update-p 'search)))
       (setq update-p (funcall update-p)))
+  (unless update-p
+    (setq update-p (eval (intern-soft (format "bbdb/%s-update-records-p"
+                                              (bbdb-mua)))))
+    (if (and (functionp update-p)
+             (not (eq update-p 'search)))
+        (setq update-p (funcall update-p))))
   (if (eq t update-p)
       (setq update-p 'create))
   (let ((bbdb-records (bbdb-records)) ;; search all records
@@ -486,7 +490,6 @@ Return the record matching ADDRESS or nil."
                           (bbdb-remhash old-name record)))
                    (bbdb-debug (or fname lname
                                    (error "BBDB: should have a name by now")))
-                   (bbdb-record-unset-name record)
                    (bbdb-record-set-name record fname lname)
                    (setq change-p 'sort))
 
@@ -640,6 +643,11 @@ Called with a prefix, the value of UPDATE-P becomes the cdr of this variable."
 ;;;###autoload
 (defun bbdb-mua-display-records (&optional header-class update-p)
   "Display the BBDB record(s) for the addresses in this message.
+This looks into the headers of a message according to HEADER-CLASS.
+Then for the mail addresses found the corresponding BBDB records are displayed.
+UPDATE-P determines whether only existing BBDB records are displayed
+or whether also new records are created for these mail addresses.
+
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'.
 UPDATE-P may take the same values as `bbdb-update-records-p'.
@@ -676,14 +684,17 @@ If the records do not exist, they are generated."
   (let ((bbdb-message-all-addresses t))
     (bbdb-mua-display-records header-class 'create)))
 
-(defun bbdb-annotate-record (record annotation &optional label replace)
-  "In RECORD add an ANNOTATION to field LABEL.
-LABEL defaults to note field `notes'.
-If REPLACE is non-nil, ANNOTATION replaces the content of LABEL."
+(defun bbdb-annotate-record (record annotation &optional field replace)
+  "In RECORD add an ANNOTATION to FIELD.
+FIELD defaults to note field `notes'.
+If REPLACE is non-nil, ANNOTATION replaces the content of FIELD."
+  (if (memq field '(name firstname lastname phone address note))
+      (error "Field `%s' illegal" field))
   (unless (string= "" (setq annotation (bbdb-string-trim annotation)))
-    (unless label (setq label 'notes))
-    (bbdb-set-notes-labels label)
-    (bbdb-record-set-field record label annotation (not replace))
+    (cond ((memq field '(affix organization mail aka))
+           (setq annotation (list annotation)))
+          ((not field) (setq field 'notes)))
+    (bbdb-record-set-field record field annotation (not replace))
     (bbdb-change-record record)
     (bbdb-maybe-update-display record)))
 
@@ -707,41 +718,60 @@ If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
    (dolist (record (bbdb-mua-update-records 'recipients))
      (bbdb-annotate-record record string 'notes replace))))
 
-(defun bbdb-mua-edit-notes-sender (&optional field)
-  "Edit notes FIELD of record corresponding to sender of this message.
-FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
-  (interactive
-   (list (if current-prefix-arg
-             (intern (completing-read
-                      "Field: " (mapcar 'symbol-name bbdb-notes-label-list))))))
-  (unless field (setq field 'notes))
-  (bbdb-mua-wrapper
-   (let ((records (bbdb-mua-update-records 'sender)))
-     (bbdb-display-records records)
-     (dolist (record records)
-       (bbdb-record-edit-note record field t)))))
+(defun bbdb-mua-edit-field-interactive ()
+  "Interactive specification for `bbdb-mua-edit-field' and friends."
+  (list (if current-prefix-arg
+            (intern (completing-read
+                     "Field: "
+                     (mapcar 'symbol-name
+                             (append '(name affix organization aka mail)
+                                     bbdb-notes-label-list)))))))
 
-(defun bbdb-mua-edit-notes-recipients (&optional field)
-  "Edit notes FIELD of record corresponding to recipient of this message.
+;;;###autoload
+(defun bbdb-mua-edit-field (field &optional header-class)
+  "Edit FIELD of record.
 FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
-  (interactive
-   (list (if current-prefix-arg
-             (intern (completing-read
-                      "Field: " (mapcar 'symbol-name bbdb-notes-label-list))))))
-  (unless field (setq field 'notes))
+  (interactive (bbdb-mua-edit-field-interactive))
+  (cond ((memq field '(firstname lastname address phone note))
+         (error "Field `%s' not editable this way" field))
+        ((not field)
+         (setq field 'notes)))
   (bbdb-mua-wrapper
-   (let ((records (bbdb-mua-update-records 'recipients)))
+   (let ((records (bbdb-mua-update-records header-class)))
      (bbdb-display-records records)
      (dolist (record records)
-       (bbdb-record-edit-note record field t)))))
+       (bbdb-edit-field record field)
+       (bbdb-maybe-update-display record)))))
+
+;;;###autoload
+(defun bbdb-mua-edit-field-sender (&optional field)
+  "Edit FIELD of record corresponding to sender of this message.
+FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
+  (interactive (bbdb-mua-edit-field-interactive))
+  (bbdb-mua-edit-field field 'sender))
+
+;;;###autoload
+(defun bbdb-mua-edit-field-recipients (&optional field)
+  "Edit FIELD of record corresponding to recipient of this message.
+FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
+  (interactive (bbdb-mua-edit-field-interactive))
+  (bbdb-mua-edit-field field 'recipients))
 
 ;; Functions for noninteractive use in MUA hooks
 
 ;;;###autoload
 (defun bbdb-mua-auto-update (&optional header-class update-p)
   "Update BBDB automatically based on incoming and outgoing messages.
-See `bbdb/MUA-update-records-p' for configuration of how the messages
-are analyzed.  Return matching records.
+This looks into the headers of a message according to HEADER-CLASS.
+Then for the mail addresses found the corresponding BBDB records are updated.
+UPDATE-P determines whether only existing BBDB records are taken
+or whether also new records are created for these mail addresses.
+Return matching records.
+
+HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
+use all classes in `bbdb-message-headers'.
+UPDATE-P may take the same values as `bbdb-mua-auto-update-p'.
+If UPDATE-P is nil, use `bbdb-mua-auto-update-p'.
 
 If `bbdb-message-pop-up' is non-nil, the *BBDB* buffer is displayed
 along with the MUA window(s), showing the matching records.
@@ -751,7 +781,9 @@ Call `bbdb-mua-auto-update-init' in your init file to put this function
 into the respective MUA hooks.
 See `bbdb-mua-display-records' and friends for interactive commands."
   (let* ((bbdb-silent-internal t)
-         (records (bbdb-mua-update-records header-class update-p)))
+         (records (bbdb-mua-update-records header-class
+                                           (or update-p
+                                               bbdb-mua-auto-update-p))))
     (if bbdb-message-pop-up
         (let* ((mua (bbdb-mua))
                (mode (cond ((eq mua 'vm) 'vm-mode)

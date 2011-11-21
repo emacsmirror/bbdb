@@ -264,4 +264,29 @@ argument."
       (bbdb-split 'organization organization)
     organization))
 
+;;;###autoload
+(defun bbdb-undocumented-variables (&optional name-space message)
+  "Return list of undocumented variables in NAME-SPACE.
+NAME-SPACE defaults to \"bbdb-\".  Use a prefix arg to specify NAME-SPACE
+interactively.  If MESSAGE is non-nil (as in interactive calls) display
+the list in the message area.
+
+This command may come handy to identify BBDB variables in your init file
+that are not used anymore by the current version of BBDB.  Yet this fails
+for outdated BBDB variables that are set via your personal `custom-file'."
+  (interactive (list (if current-prefix-arg
+                         (read-string "Name space: ")) t))
+  (let ((re (concat "\\`" (or name-space "bbdb-"))) list)
+    (mapatoms (lambda (vv)
+                (if (and (boundp vv)
+                         (string-match re (symbol-name vv))
+                         (not (get vv 'variable-documentation)))
+                    (push vv list))))
+    (if message
+        (if list
+            (apply 'message (concat "Undocumented variables: "
+                                    (mapconcat (lambda (m) "%s") list " ")) list)
+          (message "No undocumented variables `%s...'" name-space)))
+    list))
+
 (provide 'bbdb-migrate)
