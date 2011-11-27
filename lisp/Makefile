@@ -36,7 +36,7 @@ emacs = LC_ALL=C $(EMACS) $(EMACSOPT)
 GNUSDIR = 
 # If you want to use BBDB with VM this should point to your vm/lisp directory.
 # See also the target all below.
-VMDIR = ~/emacs/site-lisp/vm/lisp
+VMDIR = 
 OTHERDIRS = 
 
 PACKAGEDIR = @PACKAGEDIR@
@@ -62,7 +62,7 @@ BINS=		bbdb.elc $(DEPBINS)
 
 # If you want to use BBDB with VM this should include vm as a dependency.
 # See also VMDIR defined above.
-all: Makefile bbdb autoloadsc vm
+all: Makefile bbdb autoloadsc 
 
 # Makefile: Makefile.in
 # 	@echo "Makefile.in has changed, rerun configure!"
