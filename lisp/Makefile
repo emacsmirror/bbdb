@@ -34,9 +34,8 @@ EMACSOPT = --batch --no-site-file --no-init-file
 emacs = LC_ALL=C $(EMACS) $(EMACSOPT)
 
 GNUSDIR = 
-# This should point to your vm/lisp directory.
-# If you do not use vm, set this to null and remove vm from the list
-# of dependencies of all.
+# If you want to use BBDB with VM this should point to your vm/lisp directory.
+# See also the target all below.
 VMDIR = ~/emacs/site-lisp/vm/lisp
 OTHERDIRS = 
 
@@ -61,6 +60,8 @@ DEPBINS=	${DEPSRCS:.el=.elc}
 SRCS=		bbdb.el  $(DEPSRCS)
 BINS=		bbdb.elc $(DEPBINS)
 
+# If you want to use BBDB with VM this should include vm as a dependency.
+# See also VMDIR defined above.
 all: Makefile bbdb autoloadsc vm
 
 # Makefile: Makefile.in

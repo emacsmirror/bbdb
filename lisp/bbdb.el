@@ -56,12 +56,6 @@
   (autoload 'bbdb-completing-read-records "bbdb-com")
   (autoload 'mail-position-on-field "sendmail")
   (autoload 'vm-select-folder-buffer "vm-folder")
-  ;; autoload the insinuations
-  (autoload 'bbdb-insinuate-gnus "bbdb-gnus")
-  (autoload 'bbdb-insinuate-message "bbdb-message")
-  (autoload 'bbdb-insinuate-mh "bbdb-mhe")
-  (autoload 'bbdb-insinuate-rmail "bbdb-rmail")
-  (autoload 'bbdb-insinuate-vm "bbdb-vm")
 
   ;; cannot use autoload for variables...
   (defvar message-mode-map) ;; message.el
@@ -69,7 +63,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2011/11/20 20:13:17 $"
+(defconst bbdb-version-date "$Date: 2011/11/27 09:09:43 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -574,10 +568,10 @@ See `locate-file'."
   :group 'bbdb-record-display
   :type '(repeat (directory)))
 
-(defcustom bbdb-image-suffixes '(".png" ".jpg" ".gif" ".xmp")
+(defcustom bbdb-image-suffixes '(".png" ".jpg" ".gif" ".xpm")
   "List of file name suffixes searched for `bbdb-image'."
   :group 'bbdb-record-display
-  :type '(repeat (string :tag "File suffixes")))
+  :type '(repeat (string :tag "File suffix")))
 
 
 ;;; Record editing

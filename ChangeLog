@@ -1,3 +1,15 @@
+2011-11-27  Roland Winkler  <winkler@gnu.org>
+	* README: Updated.
+
+	* lisp/bbdb.el: Revert change from 2011-10-11.  Loading
+	bbdb-autoloads.el is sufficient.
+
+	* lisp/Makefile: It no longer supports VM by default, but you need
+	to enable it.
+
+2011-11-27  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb.el (bbdb-image-suffixes): Fix typo.
+
 2011-11-20  Roland Winkler  <winkler@gnu.org>
 	* README: Updated.
 

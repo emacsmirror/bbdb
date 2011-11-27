@@ -12,18 +12,6 @@ http://savannah.nongnu.org/projects/bbdb/
 To check it out, use
 git clone git://git.savannah.nongnu.org/bbdb.git
 
-This revised version of BBDB has been tested only with GNU Emacs 23 and 24.
-Yet it might be not too difficult to adapt it to other recent
-dialects of emacs. It is unlikely, though, that you can get this
-code running with something like Emacs 18.
-
-This code is under development.  While it should work reliably,
-users of previous versions of BBDB are advised that the format of
-the BBDB data file has changed.  Migration to the new format should
-happen automatically.  Yet it is recommended to make a copy of the
-old data file, in case something unexpected happens or you might want
-to go back.
-
 Feedback welcome! --  There is a mailing list for discussion of BBDB:       
 
        bbdb-info@lists.sourceforge.net
@@ -32,6 +20,28 @@ To join, send mail to bbdb-info-request@lists.sourceforge.net
 
 ==================================================================
 Usage notes
+
+This revised version of BBDB requires GNU Emacs 23 or newer.
+Its code is still under development.  While it should work reliably,
+users of previous versions of BBDB are advised that the format of
+the BBDB database file has changed.  Migration to the new format should
+happen automatically.  Yet it is recommended to make a copy of the
+old file, in case something unexpected happens or you might want
+to go back.
+
+Installation (still awaiting a more complete overhaul):
+
+Use the included Makefile. It compiles the code and generates the
+file bbdb-autoloads.el. If these files are in a directory
+"/path/to/bbdb" you may use
+
+   (require 'bbdb-autoloads "/path/to/bbdb/bbdb-autoloads.elc")
+
+This adds "/path/to/bbdb" to the load-path.
+
+To use BBDB with VM, the variable VMDIR in the Makefile should point
+to your vm/lisp directory.  Also, the target all should include vm.
+
 
 The texinfo manual is still awaiting a more complete overhaul.
 
