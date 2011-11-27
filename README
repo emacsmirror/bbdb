@@ -37,10 +37,11 @@ file bbdb-autoloads.el. If these files are in a directory
 
    (require 'bbdb-autoloads "/path/to/bbdb/bbdb-autoloads.elc")
 
-This adds "/path/to/bbdb" to the load-path.
+This adds "/path/to/bbdb" to the load-path; so it is all you need to
+make BBDB known to your Emacs.
 
 To use BBDB with VM, the variable VMDIR in the Makefile should point
-to your vm/lisp directory.  Also, the target all should include vm.
+to your vm/lisp directory.  Also, the target `all' should include vm.
 
 
 The texinfo manual is still awaiting a more complete overhaul.
@@ -49,7 +50,7 @@ As compared with BBDB v2.xx, many variables, functions, and commands
 have changed in BBDB v3.  Most likely you will have to review your
 customizations carefully.  You may want to call bbdb-undocumented-variables
 to identify outdated (i.e., now usually undocumented) variables in
-your init file.  All user variables in BBDB 3 are listed at the beginning
+your init file.  All user variables in BBDB v3 are listed at the beginning
 of bbdb.el.
 
 
@@ -84,7 +85,7 @@ MUA commands include
   bbdb-mua-edit-field, bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients
 
 These MUA commands operate either on existing records only. Or they
-can create new records
+can create new records.
 
 They are all controlled by bbdb-mua-update-interactive-p.
 This is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
@@ -102,12 +103,12 @@ Allowed values are (here ADDRESS is an email address found in a message):
                 It should return one of the above values (see below).
  read         Read the value interactively.
 
-BBDB v2 also used MUA-specific variables bbdb/MUA-update-records-p
-to control its interfaces with MUAs. In BBDB v3 these are only used
-as fallback if the generic (MUA-independent) variables
-bbdb-mua-update-interactive-p, bbdb-update-records-p or
-bbdb-mua-auto-update-p result in a value of nil for the arg UPDATE-P
-of bbdb-update-records.
+BBDB v2 also used MUA-specific variables bbdb/MUA-update-records-mode
+to control its interfaces with MUAs. In BBDB v3 the variables
+bbdb/MUA-update-records-p are only used as fallback if the generic
+(MUA-independent) variables bbdb-mua-update-interactive-p,
+bbdb-update-records-p or bbdb-mua-auto-update-p result in a value of
+nil for the arg UPDATE-P of bbdb-update-records.
 
 Noninteractive functions
 ------------------------
