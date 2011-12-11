@@ -1,3 +1,6 @@
+2011-12-11  Ivan Kanis <ivan.kanis@googlemail.com>
+	* lisp/bbdb-ispell.el: New file
+
 2011-11-27  Roland Winkler  <winkler@gnu.org>
 	* README: Updated.
 
