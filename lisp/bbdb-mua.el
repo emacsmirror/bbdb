@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 ;;; This file provides various additional functionality for BBDB
-;;; See bbdb.texinfo for documentation.
+;;; See the BBDB info manual for documentation.
 
 ;;; This file lets you do stuff like
 ;;;

@@ -1,159 +1,130 @@
-;;; bbdb-spell.el --- export bbdb record to spell dictionary
+;;; bbdb-ispell.el --- export names from BBDB to personal ispell dictionaries
+
+;; Copyright (C) 2011 Ivan Kanis <ivan.kanis@googlemail.com>
+;;                    and Roland Winkler <winkler@gnu.org>
+
+;; Author: Ivan Kanis <ivan.kanis@googlemail.com>
+
+;; This file is part of the Insidious Big Brother Database (aka BBDB),
+
+;; BBDB is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; BBDB is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
-;; This is version 1.1
-
-;; This code will export your bbdb entries to your spell personnal
-;; dictionary. To run the export run the following command
 ;;
-;; M-x bbdb-spell-export
+;; Names are often not recognized by the standard ispell dictionaries.
+;; `bbdb-ispell-export' exports the names from your BBDB records to your
+;; personal ispell dictionaries.
+;; The personal dictionaries are in `bbdb-ispell-dictionary-list'
+;; The BBDB fields for this are in `bbdb-ispell-field-list'.
+;; Exclude words via `bbdb-ispell-min-word-length' and `bbdb-ispell-ignore-re'.
 ;;
-
-;;; THANKS:
-;;
-;; Roland Winkler for constructive criticism
-
-;;; BUGS:
-;;
-;; Save your personal directory before running this program. I had my
+;; Bugs:
+;; Save your personal directories before running this code. I had my
 ;; dictionary truncated while debugging. It shouldn't happen but
 ;; better be safe than sorry...
-
-;;; INSTALLATION:
-
-;; Of course you need to have bbdb installed.
-;; Put this file in your path an have the following in your .emacs:
 ;;
-;; (require 'bbdb-spell)
-;;
-;; Alternatively you can use autoload.
+;; See the BBDB info manual for documentation.
 
 ;;; Code:
 
 (require 'ispell)
-(require 'bbdb-com)
+(require 'bbdb)
 
-(defcustom bbdb-spell-dictionary '("american" "french")
-  "List of spell personal dictionaries."
-  :group 'bbdb-spell
-  :type '(list string))
+(defgroup bbdb-ispell nil
+  "Variables that affect the ispell interface for BBDB"
+  :group 'bbdb)
 
-(defcustom bbdb-spell-field '(name organization aka address)
-  "List of field that will be added to the dictionary.
-Other possible values are firstname lastname affix mail phone and
-note."
-  :group 'bbdb-spell
-  :type '(list))
+(defcustom bbdb-ispell-dictionary-list '("default")
+  "List of ispell personal dictionaries.
+Allowed elements are as in the return value of `ispell-valid-dictionary-list'."
+  :group 'bbdb-ispell
+  :type (cons 'set (mapcar (lambda (dict) `(string ,dict))
+                           (ispell-valid-dictionary-list))))
 
-(defcustom bbdb-spell-min-word-length 3
-  "Minimal word length to be inserted.
-Anything smaller than 3 is not a good idea."
-  :group 'bbdb-spell
+(defcustom bbdb-ispell-field-list '(name organization aka)
+  "List of fields of each BBDB record considered for the personal dictionary."
+  :group 'bbdb-ispell
+  :type (list 'repeat
+              (append '(choice) (mapcar (lambda (field) `(const ,field))
+                                        '(name organization affix aka address))
+                      '((symbol :tag "note")))))
+
+(defcustom bbdb-ispell-min-word-length 3
+  "Words with fewer characters are ignored."
+  :group 'bbdb-ispell
   :type 'number)
 
-(defcustom bbdb-spell-filter "[0-9]"
-  "Word matching this regexp will not be inserted"
-  :group 'bbdb-spell
+(defcustom bbdb-ispell-ignore-re "[^[:alpha:]]"
+  "Words matching this regexp are ignored."
+  :group 'bbdb-ispell
   :type 'regexp)
 
-;; global
-(defvar bbdb-spell-word-list nil)
+;; Internal variable
+(defvar bbdb-ispell-word-list nil
+  "List of words extracted from the BBDB records.")
 
 ;;;###autoload
-(defun bbdb-spell-export ()
-  "Go through all bbdb record and insert fields in spell personal
-dictionary."
+(defun bbdb-ispell-export ()
+  "Export BBDB records to ispell personal dictionaries."
   (interactive)
-  (setq bbdb-spell-word-list nil)
-  (save-window-excursion
-    (dolist (record (bbdb-record-list (bbdb-search (bbdb-records) "" nil nil nil nil nil)))
-      (dolist (field bbdb-spell-field)
-        (bbdb-spell-export-field (bbdb-record-get-field record field)))))
-  (mapc (lambda (lang)
-          (bbdb-spell-add-word lang))
-        bbdb-spell-dictionary)
-  (message "Export to personal dictionary done."))
+  (message "Exporting to personal dictionary...")
+  (let (bbdb-ispell-word-list)
+    ;; Collect words from BBDB records.
+    (dolist (record (bbdb-records))
+      (dolist (field bbdb-ispell-field-list)
+        (bbdb-ispell-collect-words (bbdb-record-get-field record field))))
 
-(defun bbdb-spell-export-field (field)
-  "Parse a bbdb field and extract words."
-  (if (stringp field)
-      (bbdb-spell-append-word field)
-    (let ((el (car field)))
-      (cond ((null el))
-            ;; turn vector into a list
-            ((vectorp el)
-             (bbdb-spell-export-field (append el nil)))
-            ;; handle nested list
-            ((listp el)
-             (bbdb-spell-export-field el)
-             (bbdb-spell-export-field (cdr field)))
-            ((stringp el)
-             (bbdb-spell-append-word el)
-             (bbdb-spell-export-field (cdr field)))
-            (t
-             (bbdb-spell-export-field (cdr field)))))))
+    ;; Update personal dictionaries
+    (dolist (dict (or bbdb-ispell-dictionary-list '("default")))
+      (ispell-change-dictionary dict)
+      ;; Initialize variables and dicts alists
+      (ispell-set-spellchecker-params)
+      (ispell-init-process)
+      ;; put in verbose mode
+      (ispell-send-string "%\n")
+      (let (new)
+        (dolist (word (delete-dups bbdb-ispell-word-list))
+          (ispell-send-string (concat "^" word "\n"))
+          (while (progn
+                   (ispell-accept-output)
+                   (not (string= "" (car ispell-filter)))))
+          ;; remove extra \n
+          (setq ispell-filter (cdr ispell-filter))
+          (when (and ispell-filter
+                     (listp ispell-filter)
+                     (not (eq (ispell-parse-output (car ispell-filter)) t)))
+            ;; ok the word doesn't exist, add it
+            (ispell-send-string (concat "*" word "\n"))
+            (setq new t)))
+        (when new
+          ;; Save dictionary:
+          ;; aspell doesn't tell us when it completed the saving.
+          ;; So we send it another word for spellchecking.
+          (ispell-send-string "#\n^hello\n")
+          (while (progn
+                   (ispell-accept-output)
+                   (not (string= "" (car ispell-filter)))))))))
+  (message "Exporting to personal dictionary...done"))
 
-(defun bbdb-spell-append-word (word)
-  "Add words in global `bbdb-spell-word-list'."
-  (mapc
-   (lambda (split)
-     (when (and (>= (length split) bbdb-spell-min-word-length)
-                (not (string-match bbdb-spell-filter split)))
-       (setq bbdb-spell-word-list
-             (cons split bbdb-spell-word-list))))
-       (split-string word)))
+(defun bbdb-ispell-collect-words (field)
+  "Parse BBDB FIELD and collect words in `bbdb-ispell-word-list'."
+  ;; Ignore everything in FIELD that is not a string or a sequence.
+  (cond ((stringp field)
+         (dolist (word (split-string field))
+           (if (and (>= (length word) bbdb-ispell-min-word-length)
+                    (not (string-match bbdb-ispell-ignore-re word)))
+               (push word bbdb-ispell-word-list))))
+        ((sequencep field) (mapc 'bbdb-ispell-collect-words field))))
 
-(defun bbdb-spell-add-word (language)
-  "Add words to the personal dictionary.
-Known words will just be ignored. List of words are in the global
-`bbdb-spell-word-list'."
-  (ispell-change-dictionary language)
-  ;; Initialize variables and dicts alists
-  (ispell-set-spellchecker-params)
-  ;; use the correct dictionary
-  (ispell-accept-buffer-local-defs)
-  (ispell-init-process)
-  ;; put in verbose mode
-  (ispell-send-string "%\n")
-  (dolist (word bbdb-spell-word-list)
-    (ispell-send-string (concat "^" word "\n"))
-    (while (progn
-             (ispell-accept-output)
-             (not (string= "" (car ispell-filter)))))
-    ;; remove extra \n
-    (setq ispell-filter (cdr ispell-filter))
-    (when (and ispell-filter
-               (listp ispell-filter)
-               (not (eq (ispell-parse-output (car ispell-filter)) t)))
-      ;; ok the word doesn't exist, add it
-      (ispell-send-string (concat "*" word "\n"))))
-  ;; save dictionary
-  (ispell-send-string "#\n")
-  ;; wait for process to flush, is there a better way?
-  (ispell-accept-output 1)
-  (ispell-kill-ispell))
-
-(provide 'bbdb-spell)
-
-;; Copyright (C) 2011 Ivan Kanis
-;; Author: Ivan Kanis
-;;
-;; This program is free software ; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation ; either version 2 of the License, or
-;; (at your option) any later version.
-;;
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY ; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
-;;
-;; You should have received a copy of the GNU General Public License
-;; along with this program ; if not, write to the Free Software
-;; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-;;
-;; vi:et:sw=4:ts=4:
-;; Local Variables:
-;; compile-command: "make"
-;; End:
+(provide 'bbdb-ispell)

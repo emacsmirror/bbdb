@@ -19,6 +19,11 @@ Feedback welcome! --  There is a mailing list for discussion of BBDB:
 To join, send mail to bbdb-info-request@lists.sourceforge.net
 
 ==================================================================
+Installation:
+
+See the file INSTALL.
+
+==================================================================
 Usage notes
 
 This revised version of BBDB requires GNU Emacs 23 or newer.
@@ -29,22 +34,7 @@ happen automatically.  Yet it is recommended to make a copy of the
 old file, in case something unexpected happens or you might want
 to go back.
 
-Installation (still awaiting a more complete overhaul):
-
-Use the included Makefile. It compiles the code and generates the
-file bbdb-autoloads.el. If these files are in a directory
-"/path/to/bbdb" you may use
-
-   (require 'bbdb-autoloads "/path/to/bbdb/bbdb-autoloads.elc")
-
-This adds "/path/to/bbdb" to the load-path; so it is all you need to
-make BBDB known to your Emacs.
-
-To use BBDB with VM, the variable VMDIR in the Makefile should point
-to your vm/lisp directory.  Also, the target `all' should include vm.
-
-
-The texinfo manual is still awaiting a more complete overhaul.
+The BBDB info manual is still awaiting a more complete overhaul.
 
 As compared with BBDB v2.xx, many variables, functions, and commands
 have changed in BBDB v3.  Most likely you will have to review your

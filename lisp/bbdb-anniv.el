@@ -33,7 +33,7 @@
 ;; To display BBDB anniversaries in the Emacs diary, use
 ;; (add-hook 'diary-list-entries-hook 'bbdb-anniv-diary-entries)
 ;;
-;; See bbdb.texinfo for documentation.
+;; See the BBDB info manual for documentation.
 
 (require 'bbdb)
 (require 'bbdb-com)

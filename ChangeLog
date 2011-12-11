@@ -1,3 +1,21 @@
+2011-12-11  Roland Winkler  <winkler@gnu.org>
+	* INSTALL, Makefile.in, aclocal.m4, configure.ac, install-sh:
+	* lisp/Makefile.in, doc/Makefil.in, doc/bbdb.texi:
+	* doc/doclicense.texi, doc/gpl.texi, tex/Makefile.in:
+	* tex/bbdb-cols.tex, tex/bbdb-print-brief.tex, tex/bbdb-print.tex:
+	New files.
+	* lisp/makefile-temp: Renamed from lisp/Makefile.
+	* README: Updated.
+
+	* lisp/bbdb-ispell.el: Header updated.  Prefix bbdb-spell replaced
+	by bbdb-ispell.
+	(bbdb-ispell): New custom group.
+	(bbdb-ispell-dictionary-list): Renamed from bbdb-spell-dictionary.
+	(bbdb-ispell-field-list): Renamed from bbdb-spell-field.
+	(bbdb-ispell-export): Merged with bbdb-spell-add-word.
+	(bbdb-ispell-collect-words): Renamed from
+	bbdb-spell-export-field. Merged with bbdb-spell-append-word.
+
 2011-12-11  Ivan Kanis <ivan.kanis@googlemail.com>
 	* lisp/bbdb-ispell.el: New file
 

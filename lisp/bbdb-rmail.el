@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 ;;; This file contains the BBDB interface to Rmail.
-;;; See bbdb.texinfo for documentation.
+;;; See the BBDB info manual for documentation.
 
 (require 'bbdb)
 (require 'bbdb-com)

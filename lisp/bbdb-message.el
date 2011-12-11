@@ -19,7 +19,7 @@
 
 ;;; Commentary:
 ;;; This file contains the BBDB interface to Mail Composition Packages.
-;;; See bbdb.texinfo for documentation.
+;;; See the BBDB info manual for documentation.
 
 (eval-and-compile
   (require 'bbdb)

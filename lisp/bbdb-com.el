@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 ;;; This file contains most of the user-level interactive commands for BBDB.
-;;; See bbdb.texinfo for documentation.
+;;; See the BBDB info manual for documentation.
 
 (require 'bbdb)
 (require 'mailabbrev)

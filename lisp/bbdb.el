@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 ;;; This file is the core of the Insidious Big Brother Database (aka BBDB),
-;;; See bbdb.texinfo for documentation.
+;;; See the BBDB info manual for documentation.
 ;;;
 ;;;  ------------------------------------------------------------------------
 ;;; |  There is a mailing list for discussion of BBDB:                       |
@@ -63,7 +63,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2011/11/27 09:09:43 $"
+(defconst bbdb-version-date "$Date: 2011/12/10 07:55:08 $"
   "Version date of BBDB.")
 
 ;; Custom groups

@@ -25,7 +25,7 @@
 ;;; Commentary:
 
 ;;; This file lets you print the BBDB using TeX.
-;;; See bbdb.texinfo for documentation.
+;;; See the BBDB info manual for documentation.
 ;;;
 ;;; In the *BBDB* buffer, type P to convert the listing to TeX
 ;;; format. It will prompt you for a filename.  Then run TeX on that
