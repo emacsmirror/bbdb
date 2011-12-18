@@ -44,6 +44,8 @@ See the end of the file for license conditions.
 
 ** Allow splitting of bbdb-file into multiple files
 
+** bbdb-narrow-display: Inverse of bbdb-append-display
+
 * Internals
 
 ** Remove bbdb-auto-notes-rules-expanded?

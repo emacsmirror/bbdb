@@ -26,7 +26,6 @@
 ;; In particular, `calendar-date-style' is obeyed via `diary-date-forms'.
 ;; If `bbdb-anniv-alist' has a non-nil FORM for this type of anniversary,
 ;; FORM is used to display the anniversary entry in the diary buffer.
-;; In this case TEXT is ignored.
 ;; If FORM is nil, TEXT is used instead to display the anniversary entry
 ;; in the diary buffer.
 ;;
@@ -50,6 +49,7 @@ FORM is a format string with the following substitutions:
   %n  name of the record
   %d  number of years
   %s  ordinal suffix (st, nd, rd, th) for the year.
+  %t  the optional text following the date string in an anniversary field.
 If FORM is nil, the format string is taken from the anniversary field
 of each record."
   :type '(repeat (cons :tag "Rule"
@@ -126,23 +126,32 @@ To enable this feature, put the following into your .emacs:
           (dolist (rule bbdb-anniv-alist)
             (dolist (anniv (bbdb-record-note-split record (car rule)))
               (let ((date-forms date-forms)
-                    (anniv-string (concat anniv " XX")) ; for backup forms
+                    (anniv-string (concat anniv " X")) ; for backup forms
                     (case-fold-search t)
                     form yy text)
                 (while (setq form (pop date-forms))
-                  (if (string-match (car form) anniv-string)
-                      (setq date-forms nil
-                            yy (match-string 1 anniv-string)
-                            yy (if (and yy (string-match-p "[0-9]+" yy))
-                                   (- current-year (string-to-number yy))
-                                 100) ; as in `diary-anniversary'
-                            text (or (cdr rule)
-                                     (substring anniv-string
-                                                (if (cdr form) (1- (match-end 0))
-                                                  (match-end 0))
-                                                -3)))))
+                  (when (string-match (car form) anniv-string)
+                    (setq date-forms nil
+                          yy (match-string 1 anniv-string)
+                          yy (if (and yy (string-match-p "[0-9]+" yy))
+                                 (- current-year (string-to-number yy))
+                               100) ; as in `diary-anniversary'
+                          ;; For backup forms we should search backward in
+                          ;; anniv-string from (match-end 0) for "\\<".
+                          ;; That gets too complicated here!
+                          ;; Yet for the default value of `diary-date-forms'
+                          ;; this would matter only if anniv-string started
+                          ;; with a time. That is rather rare for anniversaries.
+                          ;; Then we may simply step backward by one character.
+                          text (substring anniv-string (if (cdr form) ; backup
+                                                           (1- (match-end 0))
+                                                         (match-end 0)) -1))
+                    (if (cdr rule)
+                        (setq text (replace-regexp-in-string "%t" text (cdr rule))))
+                    (setq text (replace-regexp-in-string "\\`[ \t]+" "" text)
+                          text (replace-regexp-in-string "[ \t]+\\'" "" text))))
                 ;; Add the anniversaries to `diary-entries-list'.
-                (if (and yy (> yy 0))
+                (if (and yy (> yy 0) (< 0 (length text)))
                     (diary-add-to-list
                      date
                      (format
