@@ -85,6 +85,7 @@ bbdb-loaddefs.el: $(SRCS)
 #	$srcdir can be relative.
 	@HUSHMAKE@$(emacs) -l autoload					\
 		--eval '(setq generated-autoload-file "'`pwd`/$@'")'	\
+		--eval '(setq make-backup-files nil)'			\
 		-f batch-update-autoloads `pwd`
 
 .PHONY: no-bbdb-autoloads
