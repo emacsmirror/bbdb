@@ -1,4 +1,8 @@
 2011-12-18  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el (bbdb-anniv-diary-entries): Remove leading
+	and trailing whitespace in text properly.
+
+2011-12-18  Roland Winkler  <winkler@gnu.org>
 	* lisp/Makefile.in: Do not create backup file for
 	bbdb-loaddefs.el.
 
@@ -6,7 +10,7 @@
 	* lisp/bbdb-anniv.el (bbdb-anniv-alist): New format specification
 	`%t'.
 	(bbdb-anniv-diary-entries): Use it.  Handle diary's backup forms
-	in better a way.
+	in a better way.
 
 2011-12-11  Roland Winkler  <winkler@gnu.org>
 	* INSTALL, Makefile.in, aclocal.m4, configure.ac, install-sh:

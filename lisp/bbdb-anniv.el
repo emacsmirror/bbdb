@@ -145,11 +145,11 @@ To enable this feature, put the following into your .emacs:
                           ;; Then we may simply step backward by one character.
                           text (substring anniv-string (if (cdr form) ; backup
                                                            (1- (match-end 0))
-                                                         (match-end 0)) -1))
+                                                         (match-end 0)) -1)
+                          text (replace-regexp-in-string "\\`[ \t]+" "" text)
+                          text (replace-regexp-in-string "[ \t]+\\'" "" text))
                     (if (cdr rule)
-                        (setq text (replace-regexp-in-string "%t" text (cdr rule))))
-                    (setq text (replace-regexp-in-string "\\`[ \t]+" "" text)
-                          text (replace-regexp-in-string "[ \t]+\\'" "" text))))
+                        (setq text (replace-regexp-in-string "%t" text (cdr rule))))))
                 ;; Add the anniversaries to `diary-entries-list'.
                 (if (and yy (> yy 0) (< 0 (length text)))
                     (diary-add-to-list
