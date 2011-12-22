@@ -21,7 +21,32 @@ To join, send mail to bbdb-info-request@lists.sourceforge.net
 ==================================================================
 Installation:
 
-See the file INSTALL.
+See INSTALL for generic instructions.
+Here it is in a nutshell, with BBDB-specific information.
+
+ autoreconf --install
+ ./configure [OPTIONS]
+ make # or just "make -C lisp" for using a private copy
+ make install # not required to use a private copy
+
+The invocation of ./configure takes a few unusual options.
+(a) If you want the TeX support files installed, give a path:
+    ./configure texmfdir=/usr/local/lib/texmf
+(b) If you do not want VM support, but do have VM installed, say so:
+    ./configure --without-vm-dir
+(c) If you have VM but not on standard load-path and want it supported:
+    ./configure --with-vm-dir=PATH-TO-VM
+
+
+To use, add
+  (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
+to your emacs initialization file.
+
+
+Questions, comments, suggestions, and bug reports may be directed to
+the BBDB mailing list at bbdb-info@lists.sourceforge.net.
+To subscribe, send mail to bbdb-info-request@lists.sourceforge.net,
+with 'subscribe' as the subject.
 
 ==================================================================
 Usage notes

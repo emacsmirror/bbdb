@@ -63,7 +63,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/01/02 10:08:06 $"
+(defconst bbdb-version-date "$Date: 2011/12/10 07:55:08 $"
   "Version date of BBDB.")
 
 ;; Custom groups
