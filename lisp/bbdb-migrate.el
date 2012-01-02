@@ -20,14 +20,13 @@
 
 ;;; Commentary:
 ;;; This file contains the migration functions for BBDB.
-;;; See bbdb.texinfo for documentation.
+;;; See the BBDB info manual for documentation.
 
 (require 'bbdb)
 
 ;;; Migrating the BBDB
 
-;; Features that have changed in the various database revs.  Format:
-;;    ((VERSION . DIFFERENCES) ... )
+;; Unused
 (defconst bbdb-migration-features
   '((3 . "* Date format for `creation-date' and `timestamp' has changed,
   from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")
@@ -35,7 +34,9 @@
     (5 . "* More flexible street address.")
     (6 . "* postcodes are stored as plain strings.")
     (7 . "* Notes are always lists. Organizations are stored as list.
-  New field `affix'.")))
+  New field `affix'."))
+  "BBDB Features that have changed in various database revisions.
+Format ((VERSION . DIFFERENCES) ... ).")
 
 (defun bbdb-peel-the-onion (lis)
   "Remove outer layers of parens around singleton lists.

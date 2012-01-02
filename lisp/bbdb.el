@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 ;;; This file is the core of the Insidious Big Brother Database (aka BBDB),
-;;; See bbdb.texinfo for documentation.
+;;; See the BBDB info manual for documentation.
 ;;;
 ;;;  ------------------------------------------------------------------------
 ;;; |  There is a mailing list for discussion of BBDB:                       |
@@ -41,6 +41,7 @@
 ;;;  ------------------------------------------------------------------------
 
 (require 'timezone)
+(require 'bbdb-version)
 
 ;; When running BBDB, we have (require 'bbdb-autoloads)
 (eval-when-compile              ; pacify the compiler.
@@ -56,21 +57,11 @@
   (autoload 'bbdb-completing-read-records "bbdb-com")
   (autoload 'mail-position-on-field "sendmail")
   (autoload 'vm-select-folder-buffer "vm-folder")
-  ;; autoload the insinuations
-  (autoload 'bbdb-insinuate-gnus "bbdb-gnus")
-  (autoload 'bbdb-insinuate-message "bbdb-message")
-  (autoload 'bbdb-insinuate-mh "bbdb-mhe")
-  (autoload 'bbdb-insinuate-rmail "bbdb-rmail")
-  (autoload 'bbdb-insinuate-vm "bbdb-vm")
 
   ;; cannot use autoload for variables...
   (defvar message-mode-map) ;; message.el
   (defvar mail-mode-map) ;; sendmail.el
   (defvar gnus-article-buffer)) ;; gnus-art.el
-
-(defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2011/11/20 20:13:17 $"
-  "Version date of BBDB.")
 
 ;; Custom groups
 
@@ -78,8 +69,6 @@
   "The Insidious Big Brother Database."
   :group 'news
   :group 'mail)
-
-(put 'bbdb 'custom-loads '("bbdb-mua" "bbdb-com"))
 
 (defgroup bbdb-record-display nil
   "Variables that affect the display of BBDB records"
@@ -100,46 +89,50 @@
 (defgroup bbdb-mua-gnus nil
   "Gnus-specific BBDB customizations"
   :group 'bbdb-mua)
-(put 'bbdb-mua-gnus 'custom-loads '("bbdb-gnus"))
+(put 'bbdb-mua-gnus 'custom-loads '(bbdb-gnus))
 
 (defgroup bbdb-mua-gnus-scoring nil
   "Gnus-specific scoring BBDB customizations"
   :group 'bbdb-mua-gnus)
-(put 'bbdb-mua-gnus-scoring 'custom-loads '("bbdb-gnus"))
+(put 'bbdb-mua-gnus-scoring 'custom-loads '(bbdb-gnus))
 
 (defgroup bbdb-mua-gnus-splitting nil
   "Gnus-specific splitting BBDB customizations"
   :group 'bbdb-mua-gnus)
-(put 'bbdb-mua-gnus-splitting 'custom-loads '("bbdb-gnus"))
+(put 'bbdb-mua-gnus-splitting 'custom-loads '(bbdb-gnus))
 
 (defgroup bbdb-mua-vm nil
   "VM-specific BBDB customizations"
   :group 'bbdb-mua)
-(put 'bbdb-mua-vm 'custom-loads '("bbdb-vm"))
+(put 'bbdb-mua-vm 'custom-loads '(bbdb-vm))
 
 (defgroup bbdb-mua-message nil
   "Message-specific BBDB customizations"
   :group 'bbdb-mua)
-(put 'bbdb-mua-message 'custom-loads '("bbdb-message"))
-
-(defgroup bbdb-dialing nil
-  "BBDB Customizations for phone number dialing"
-  :group 'bbdb)
-(put 'bbdb-dialing 'custom-loads '("bbdb-com"))
-
-(defgroup bbdb-print nil
-  "Customizations for printing the BBDB."
-  :group 'bbdb)
-(put 'bbdb-print 'custom-loads '("bbdb-print"))
+(put 'bbdb-mua-message 'custom-loads '(bbdb-message))
 
 (defgroup bbdb-utilities nil
   "Customizations for BBDB Utilities"
   :group 'bbdb)
 
+(defgroup bbdb-utilities-dialing nil
+  "BBDB Customizations for phone number dialing"
+  :group 'bbdb)
+
+(defgroup bbdb-utilities-print nil
+  "Customizations for printing the BBDB."
+  :group 'bbdb)
+(put 'bbdb-utilities-print 'custom-loads '(bbdb-print))
+
 (defgroup bbdb-utilities-anniv nil
   "Customizations for BBDB Anniversaries"
   :group 'bbdb-utilities)
-(put 'bbdb-anniv 'custom-loads '("bbdb-anniv"))
+(put 'bbdb-utilities-anniv 'custom-loads '(bbdb-anniv))
+
+(defgroup bbdb-utilities-ispell nil
+  "Customizations for BBDB ispell interface"
+  :group 'bbdb-utilities)
+(put 'bbdb-utilities-ispell 'custom-loads '(bbdb-ispell))
 
 ;;; Customizable variables
 (defcustom bbdb-file "~/.bbdb"
@@ -574,10 +567,10 @@ See `locate-file'."
   :group 'bbdb-record-display
   :type '(repeat (directory)))
 
-(defcustom bbdb-image-suffixes '(".png" ".jpg" ".gif" ".xmp")
+(defcustom bbdb-image-suffixes '(".png" ".jpg" ".gif" ".xpm")
   "List of file name suffixes searched for `bbdb-image'."
   :group 'bbdb-record-display
-  :type '(repeat (string :tag "File suffixes")))
+  :type '(repeat (string :tag "File suffix")))
 
 
 ;;; Record editing
@@ -1020,6 +1013,9 @@ Hook is run with one argument, the record."
   (widget-group-match widget
                       (widget-apply widget :value-to-internal value)))
 
+(defvar bbdb-auto-notes-rules-expanded nil
+  "Expanded `bbdb-auto-notes-rules'.") ; Internal variable
+
 (defcustom bbdb-auto-notes-rules nil
   "List of rules for adding notes to records of mail addresses of messages.
 This automatically annotates the BBDB record of the sender or recipient
@@ -1088,10 +1084,13 @@ See also variables `bbdb-auto-notes-ignore-messages' and
 
 For speed-up, the function `bbdb-auto-notes' actually use expanded rules
 stored in the internal variable `bbdb-auto-notes-rules-expanded'.
-If you change the value of `bbdb-auto-notes-rules'
+If you change the value of `bbdb-auto-notes-rules' outside of customize,
 set `bbdb-auto-notes-rules-expanded' to nil, so that the expanded rules
 will be re-evaluated."
   :group 'bbdb-mua
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (setq bbdb-auto-notes-rules-expanded nil))
   :type '(repeat
           (bbdb-alist-with-header
            (repeat (choice
@@ -1323,7 +1322,7 @@ If this is non-nil, it should be an alist of
 \(PREFIX . REPLACEMENT) elements. The first part of a phone number
 matching the regexp returned by evaluating PREFIX will be replaced by
 the corresponding REPLACEMENT when dialing."
-  :group 'bbdb-dialing
+  :group 'bbdb-utilities-dialing
   :type 'sexp)
 
 (defcustom bbdb-dial-local-prefix nil
@@ -1333,7 +1332,7 @@ system requires before making local calls (for example, if your phone system
 requires you to dial 9 before making outside calls.) In BBDB's
 opinion, you're dialing a local number if it starts with a 0 after
 processing `bbdb-dial-local-prefix-alist'."
-  :group 'bbdb-dialing
+  :group 'bbdb-utilities-dialing
   :type '(choice (const :tag "No digits required" nil)
                  (string :tag "Dial this first" "9")))
 
@@ -1344,7 +1343,7 @@ system requires before making a long distance call (one not in your local
 area code).  For example, in some areas you must dial 1 before an area
 code. Note that this is used to replace the + sign in phone numbers
 when dialling (international dialing prefix.)"
-  :group 'bbdb-dialing
+  :group 'bbdb-utilities-dialing
   :type '(choice (const :tag "No digits required" nil)
                  (string :tag "Dial this first" "1")))
 
@@ -1354,14 +1353,14 @@ This function is used by `bbdb-dial-number'.  It requires one
 argument which is a string for the number that is dialed.
 If nil then `bbdb-dial-number' uses the tel URI syntax passed to `browse-url'
 to make the call."
-  :group 'bbdb-dialing
+  :group 'bbdb-utilities-dialing
   :type 'function)
 
 
 ;; Faces for font-lock
 (defgroup bbdb-faces nil
   "Faces used by BBDB."
-  :group 'proced
+  :group 'bbdb
   :group 'faces)
 
 (defface bbdb-name
@@ -1453,9 +1452,6 @@ See also `bbdb-silent'.")
 (defvar bbdb-notice-hook-pending nil
   "Bound to t if inside `bbdb-notice-mail-hook' or `bbdb-notice-record-hook'.
 Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
-
-(defvar bbdb-auto-notes-rules-expanded nil
-  "Expanded `bbdb-auto-notes-rules'.")
 
 (defvar bbdb-init-forms
   '((gnus                       ; gnus 3.15 or newer
@@ -3787,8 +3783,8 @@ With prefix N move backwards N (sub)fields."
   "Return string describing the version of BBDB.
 With prefix ARG, insert string at point."
   (interactive (list (or (and current-prefix-arg 1) t)))
-  (let ((version-string (format "BBDB version %s (%s)"
-                                bbdb-version bbdb-version-date)))
+  (let ((version-string (format "BBDB version %s"
+                                bbdb-version)))
     (cond ((numberp arg) (insert (message version-string)))
           ((eq t arg) (message version-string))
           (t version-string))))

@@ -1,3 +1,66 @@
+2012-01-02  Sam Steingold  <sds@gnu.org>
+	* lisp/bbdb.el (bbdb-auto-notes-rules): Use :set keyword to reset
+	`bbdb-auto-notes-rules-expanded' when `bbdb-auto-notes-rules' is set.
+
+2012-01-02  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el (bbdb-anniv-list): Clarify docstring.
+
+2012-01-02  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el: Do not use custom-loads for bbdb-mua.el and
+	bbdb-com.el.  Use symbols for custom-loads.
+	(bbdb-utilities-ispell): Group renamed and moved here from
+	bbdb-ispell.el.
+	(bbdb-utilities-print): Group renamed from bbdb-print.
+	(bbdb-utilities-dialing): Group renamed from bbdb-dialing.
+	* lisp/bbdb-ispell.el, lisp/bbdb-print.el: Updated accordingly.
+
+2011-12-18  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el (bbdb-anniv-diary-entries): Remove leading
+	and trailing whitespace in text properly.
+
+2011-12-18  Roland Winkler  <winkler@gnu.org>
+	* lisp/Makefile.in: Do not create backup file for
+	bbdb-loaddefs.el.
+
+2011-12-18  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el (bbdb-anniv-alist): New format specification
+	`%t'.
+	(bbdb-anniv-diary-entries): Use it.  Handle diary's backup forms
+	in a better way.
+
+2011-12-11  Roland Winkler  <winkler@gnu.org>
+	* INSTALL, Makefile.in, aclocal.m4, configure.ac, install-sh:
+	* lisp/Makefile.in, doc/Makefil.in, doc/bbdb.texi:
+	* doc/doclicense.texi, doc/gpl.texi, tex/Makefile.in:
+	* tex/bbdb-cols.tex, tex/bbdb-print-brief.tex, tex/bbdb-print.tex:
+	New files.
+	* lisp/makefile-temp: Renamed from lisp/Makefile.
+	* README: Updated.
+
+	* lisp/bbdb-ispell.el: Header updated.  Prefix bbdb-spell replaced
+	by bbdb-ispell.
+	(bbdb-ispell): New custom group.
+	(bbdb-ispell-dictionary-list): Renamed from bbdb-spell-dictionary.
+	(bbdb-ispell-field-list): Renamed from bbdb-spell-field.
+	(bbdb-ispell-export): Merged with bbdb-spell-add-word.
+	(bbdb-ispell-collect-words): Renamed from
+	bbdb-spell-export-field. Merged with bbdb-spell-append-word.
+
+2011-12-11  Ivan Kanis <ivan.kanis@googlemail.com>
+	* lisp/bbdb-ispell.el: New file
+
+2011-11-27  Roland Winkler  <winkler@gnu.org>
+	* README: Updated.
+
+	* lisp/bbdb.el: Revert change from 2011-10-11.  Loading
+	bbdb-autoloads.el is sufficient.
+
+	* lisp/Makefile: It no longer supports VM by default, but you need
+	to enable it.
+
+2011-11-27  Leo  <sdl.web@gmail.com>
+	* lisp/bbdb.el (bbdb-image-suffixes): Fix typo.
+
 2011-11-20  Roland Winkler  <winkler@gnu.org>
 	* README: Updated.
 

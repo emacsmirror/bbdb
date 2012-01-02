@@ -1,0 +1,2 @@
+(defconst bbdb-version "@PACKAGE_VERSION@" "Version of BBDB.")
+(provide 'bbdb-version)
