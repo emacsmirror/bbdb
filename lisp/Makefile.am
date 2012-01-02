@@ -10,11 +10,13 @@ el_files_std = bbdb.el bbdb-com.el bbdb-print.el bbdb-anniv.el		\
 	   bbdb-migrate.el bbdb-mua.el bbdb-message.el bbdb-rmail.el	\
 	   bbdb-gnus.el bbdb-mhe.el
 
+el_files_ver = bbdb-version.el
+
 el_files_vm = bbdb-vm.el
 
 EXTRA_DIST = $(el_files_std) $(el_files_vm)
 
-el_files = $(el_files_std)
+el_files = $(el_files_std) $(el_files_ver)
 if HAVE_VM
 el_files += $(el_files_vm)
 endif
@@ -40,9 +42,11 @@ bbdb-loaddefs.el: $(el_files)
 .el.elc:
 	$(emacs) $(PUSHPATH) $(EMACS_EXTRA_FLAGS) -f batch-byte-compile $<
 
+bbdb.elc: bbdb-version.elc
+
 bbdb-com.elc bbdb-migrate.elc bbdb-anniv.elc bbdb-ispell.elc		\
 bbdb-mua.elc bbdb-print.elc bbdb-rmail.elc bbdb-gnus.elc bbdb-mhe.elc:	\
-bbdb.elc
+bbdb.elc bbdb-version.elc
 
 bbdb-mua.elc bbdb-print.elc bbdb-rmail.elc bbdb-gnus.elc bbdb-mhe.elc:	\
 bbdb-com.elc
@@ -53,7 +57,7 @@ bbdb-rmail.elc bbdb-gnus.elc bbdb-mhe.elc: bbdb-mua.elc
 if HAVE_VM
 VM = -eval '(if (not (string-match "$(VMDIR)" "")) (setq load-path (cons "$(VMDIR)" load-path)))'
 bbdb-mua.elc: EMACS_EXTRA_FLAGS = -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))'
-bbdb-vm.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc
+bbdb-vm.elc: bbdb.elc bbdb-version.elc bbdb-com.elc bbdb-mua.elc
 bbdb-vm.elc: EMACS_EXTRA_FLAGS = $(VM)
 endif
 

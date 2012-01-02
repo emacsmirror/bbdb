@@ -2,8 +2,7 @@ dnl Process this file with autoconf to produce a new configure script
 
 AC_PREREQ([2.64])
 
-BBDB_PRE_INIT
-AC_INIT([BBDB],[BBDB_VERSION],[bbdb-info@lists.sourceforge.net])
+AC_INIT([bbdb],[3.02.2012.01.02],[bbdb-info@lists.sourceforge.net])
 
 AC_COPYRIGHT([Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>.
 Copyright (C) 2011 Roland Winkler <winkler@gnu.org>.])
@@ -34,6 +33,7 @@ AM_PATH_LISPDIR
 AC_CONFIG_FILES([Makefile
                  lisp/Makefile
                  doc/Makefile
-                 tex/Makefile])
+                 tex/Makefile
+		 lisp/bbdb-version.el])
 
 AC_OUTPUT
