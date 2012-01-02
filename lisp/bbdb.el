@@ -1016,6 +1016,9 @@ Hook is run with one argument, the record."
   (widget-group-match widget
                       (widget-apply widget :value-to-internal value)))
 
+(defvar bbdb-auto-notes-rules-expanded nil
+  "Expanded `bbdb-auto-notes-rules'.") ; Internal variable
+
 (defcustom bbdb-auto-notes-rules nil
   "List of rules for adding notes to records of mail addresses of messages.
 This automatically annotates the BBDB record of the sender or recipient
@@ -1084,10 +1087,13 @@ See also variables `bbdb-auto-notes-ignore-messages' and
 
 For speed-up, the function `bbdb-auto-notes' actually use expanded rules
 stored in the internal variable `bbdb-auto-notes-rules-expanded'.
-If you change the value of `bbdb-auto-notes-rules'
+If you change the value of `bbdb-auto-notes-rules' outside of customize,
 set `bbdb-auto-notes-rules-expanded' to nil, so that the expanded rules
 will be re-evaluated."
   :group 'bbdb-mua
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (setq bbdb-auto-notes-rules-expanded nil))
   :type '(repeat
           (bbdb-alist-with-header
            (repeat (choice
@@ -1449,9 +1455,6 @@ See also `bbdb-silent'.")
 (defvar bbdb-notice-hook-pending nil
   "Bound to t if inside `bbdb-notice-mail-hook' or `bbdb-notice-record-hook'.
 Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
-
-(defvar bbdb-auto-notes-rules-expanded nil
-  "Expanded `bbdb-auto-notes-rules'.")
 
 (defvar bbdb-init-forms
   '((gnus                       ; gnus 3.15 or newer

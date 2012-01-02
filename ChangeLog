@@ -1,3 +1,7 @@
+2012-01-02  Sam Steingold  <sds@gnu.org>
+	* lisp/bbdb.el (bbdb-auto-notes-rules): Use :set keyword to reset
+	`bbdb-auto-notes-rules-expanded' when `bbdb-auto-notes-rules' is set.
+
 2012-01-02  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-anniv.el (bbdb-anniv-list): Clarify docstring.
 
