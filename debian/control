@@ -2,7 +2,9 @@ Source: bbdb3
 Section: mail
 Priority: optional
 Maintainer: Barak A. Pearlmutter <bap@debian.org>
-Build-Depends: debhelper (>= 8), emacs23-nox | emacs23 | emacs
+Build-Depends: debhelper (>= 8),
+	       dh-autoreconf,
+	       emacs23-nox | emacs23 | emacs
 Standards-Version: 3.9.2
 Homepage: http://savannah.nongnu.org/projects/bbdb/
 Vcs-Git: git://git.debian.org/collab-maint/bbdb3.git

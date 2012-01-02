@@ -1,5 +1,7 @@
 /*.debhelper
 /*.log
 /*.substvars
+/autoreconf.after
+/autoreconf.before
 /bbdb3/
 /files

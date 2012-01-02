@@ -5,9 +5,24 @@
 dh_targets=binary binary-arch binary-indep build build-arch build-indep clean install
 
 $(dh_targets) %:
-	dh $@ --parallel
+	dh $@ --with autoreconf --parallel
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		texmfdir='$${datadir}/texmf' \
+		--docdir='$${datarootdir}/doc/bbdb3' \
+		--with-lispdir='$${datadir}/emacs/site-lisp/bbdb3'
 
 .PHONY: $(dh_targets)
 
-override_dh_auto_build:
-	dh_auto_build --sourcedirectory=lisp -- bbdb-autoloads.el
+override_dh_auto_install:
+	dh_auto_install -- texmfbbdbdir='$$(texmfdir)/bbdb3'
+	@echo Deleting compiled elisp files from installation tree,
+	@echo this is done at install time by the emacsen infrastructure.
+	find debian/bbdb3 -name '*.elc' -print -delete
+	@echo Info file not ready. # when it is, create debian/bbdb3.info
+	@rm --verbose debian/bbdb3/usr/share/info/bbdb.info
+	@rm --verbose debian/bbdb3/usr/share/info/dir
+	@rmdir --verbose debian/bbdb3/usr/share/info
+	@echo PDF manual is just reformatted info file, not ready.
+	@rm --verbose debian/bbdb3/usr/share/doc/bbdb3/bbdb.pdf

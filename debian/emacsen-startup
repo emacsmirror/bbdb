@@ -20,5 +20,5 @@
   ;; removed but not purged, and we should skip the setup.
   (when (file-directory-p package-dir)
     (setq load-path (cons package-dir load-path))
-    (require 'bbdb-autoloads)
+    (require 'bbdb-loaddefs)
     (add-to-list 'auto-mode-alist '("\\.bbdb$" . bbdb-mode))))
