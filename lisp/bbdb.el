@@ -63,7 +63,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2011/12/10 07:55:08 $"
+(defconst bbdb-version-date "$Date: 2012/01/02 10:08:06 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -72,8 +72,6 @@
   "The Insidious Big Brother Database."
   :group 'news
   :group 'mail)
-
-(put 'bbdb 'custom-loads '("bbdb-mua" "bbdb-com"))
 
 (defgroup bbdb-record-display nil
   "Variables that affect the display of BBDB records"
@@ -94,46 +92,50 @@
 (defgroup bbdb-mua-gnus nil
   "Gnus-specific BBDB customizations"
   :group 'bbdb-mua)
-(put 'bbdb-mua-gnus 'custom-loads '("bbdb-gnus"))
+(put 'bbdb-mua-gnus 'custom-loads '(bbdb-gnus))
 
 (defgroup bbdb-mua-gnus-scoring nil
   "Gnus-specific scoring BBDB customizations"
   :group 'bbdb-mua-gnus)
-(put 'bbdb-mua-gnus-scoring 'custom-loads '("bbdb-gnus"))
+(put 'bbdb-mua-gnus-scoring 'custom-loads '(bbdb-gnus))
 
 (defgroup bbdb-mua-gnus-splitting nil
   "Gnus-specific splitting BBDB customizations"
   :group 'bbdb-mua-gnus)
-(put 'bbdb-mua-gnus-splitting 'custom-loads '("bbdb-gnus"))
+(put 'bbdb-mua-gnus-splitting 'custom-loads '(bbdb-gnus))
 
 (defgroup bbdb-mua-vm nil
   "VM-specific BBDB customizations"
   :group 'bbdb-mua)
-(put 'bbdb-mua-vm 'custom-loads '("bbdb-vm"))
+(put 'bbdb-mua-vm 'custom-loads '(bbdb-vm))
 
 (defgroup bbdb-mua-message nil
   "Message-specific BBDB customizations"
   :group 'bbdb-mua)
-(put 'bbdb-mua-message 'custom-loads '("bbdb-message"))
-
-(defgroup bbdb-dialing nil
-  "BBDB Customizations for phone number dialing"
-  :group 'bbdb)
-(put 'bbdb-dialing 'custom-loads '("bbdb-com"))
-
-(defgroup bbdb-print nil
-  "Customizations for printing the BBDB."
-  :group 'bbdb)
-(put 'bbdb-print 'custom-loads '("bbdb-print"))
+(put 'bbdb-mua-message 'custom-loads '(bbdb-message))
 
 (defgroup bbdb-utilities nil
   "Customizations for BBDB Utilities"
   :group 'bbdb)
 
+(defgroup bbdb-utilities-dialing nil
+  "BBDB Customizations for phone number dialing"
+  :group 'bbdb)
+
+(defgroup bbdb-utilities-print nil
+  "Customizations for printing the BBDB."
+  :group 'bbdb)
+(put 'bbdb-utilities-print 'custom-loads '(bbdb-print))
+
 (defgroup bbdb-utilities-anniv nil
   "Customizations for BBDB Anniversaries"
   :group 'bbdb-utilities)
-(put 'bbdb-anniv 'custom-loads '("bbdb-anniv"))
+(put 'bbdb-utilities-anniv 'custom-loads '(bbdb-anniv))
+
+(defgroup bbdb-utilities-ispell nil
+  "Customizations for BBDB ispell interface"
+  :group 'bbdb-utilities)
+(put 'bbdb-utilities-ispell 'custom-loads '(bbdb-ispell))
 
 ;;; Customizable variables
 (defcustom bbdb-file "~/.bbdb"
@@ -1317,7 +1319,7 @@ If this is non-nil, it should be an alist of
 \(PREFIX . REPLACEMENT) elements. The first part of a phone number
 matching the regexp returned by evaluating PREFIX will be replaced by
 the corresponding REPLACEMENT when dialing."
-  :group 'bbdb-dialing
+  :group 'bbdb-utilities-dialing
   :type 'sexp)
 
 (defcustom bbdb-dial-local-prefix nil
@@ -1327,7 +1329,7 @@ system requires before making local calls (for example, if your phone system
 requires you to dial 9 before making outside calls.) In BBDB's
 opinion, you're dialing a local number if it starts with a 0 after
 processing `bbdb-dial-local-prefix-alist'."
-  :group 'bbdb-dialing
+  :group 'bbdb-utilities-dialing
   :type '(choice (const :tag "No digits required" nil)
                  (string :tag "Dial this first" "9")))
 
@@ -1338,7 +1340,7 @@ system requires before making a long distance call (one not in your local
 area code).  For example, in some areas you must dial 1 before an area
 code. Note that this is used to replace the + sign in phone numbers
 when dialling (international dialing prefix.)"
-  :group 'bbdb-dialing
+  :group 'bbdb-utilities-dialing
   :type '(choice (const :tag "No digits required" nil)
                  (string :tag "Dial this first" "1")))
 
@@ -1348,14 +1350,14 @@ This function is used by `bbdb-dial-number'.  It requires one
 argument which is a string for the number that is dialed.
 If nil then `bbdb-dial-number' uses the tel URI syntax passed to `browse-url'
 to make the call."
-  :group 'bbdb-dialing
+  :group 'bbdb-utilities-dialing
   :type 'function)
 
 
 ;; Faces for font-lock
 (defgroup bbdb-faces nil
   "Faces used by BBDB."
-  :group 'proced
+  :group 'bbdb
   :group 'faces)
 
 (defface bbdb-name

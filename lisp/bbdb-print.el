@@ -76,14 +76,14 @@
 
 (defcustom bbdb-print-file "~/bbdb.tex"
   "Default file name for printouts of BBDB database."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type 'file)
 
 (defcustom bbdb-print-omit-fields
   '(tex-name aka mail-alias creation-date timestamp vm-folder)
   "List of fields NOT to print in address list.
 See also `bbdb-print-require'."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type '(repeat (symbol :tag "Field to exclude")))
 
 (defcustom bbdb-print-require '(or address phone)
@@ -103,7 +103,7 @@ in the following examples:
     (setq bbdb-print-require '(and name organization))
   Print people whose names, and either addresses or phone numbers are known:
     (setq bbdb-print-require '(and name (or address phone)))."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type '(choice (const :tag "Print all records" t)
                  (symbol :tag "Print all records with this field" phone)
                  (sexp :tag "Print only when this evaluates to non-nil"
@@ -221,7 +221,7 @@ The possible options and legal values are:
  - quad-hsize, quad-vsize: for the quad format, horizontal and
      vertical size of the little pages.  These must be strings which
      are valid TeX dimensions, eg \"10cm\"."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type 'bbdb-print-alist-widget)
 
 (defcustom bbdb-print-full-alist
@@ -231,7 +231,7 @@ The possible options and legal values are:
   "Extra options for `bbdb-print' non-brief format.
 These supplement or override entries in `bbdb-print-alist'; see description
 of possible contents there."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type 'bbdb-print-alist-widget)
 
 (defcustom bbdb-print-brief-alist
@@ -243,26 +243,26 @@ of possible contents there."
   "Extra Options for `bbdb-print', brief format.
 These supplement or override entries in `bbdb-print-alist'; see description
 of possible contents there."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type 'bbdb-print-alist-widget)
 
 (defcustom bbdb-print-prolog
   (concat "%%%% ====== Phone/Address list in -*-TeX-*- Format =====\n"
           "%%%%        produced by bbdb-print, version 3.0\n\n")
   "TeX statements to include at the beginning of the `bbdb-print' file."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type '(text :format "%t:\n%v"))
 
 (defcustom bbdb-print-epilog "\\endaddresses\n\\bye\n"
   "TeX statements to include at the end of the `bbdb-print' file."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type '(text :format "%t:\n%v"))
 
 (defcustom bbdb-print-mail 'primary
   "Whether only the primary or all mail addresses are printed.
 Value `primary' means print the primary mail address only.
 Value `all' means print all mail addresses."
-  :group 'bbdb-print
+  :group 'bbdb-utilities-print
   :type '(choice (const primary)
          (const all)))
 
@@ -273,13 +273,13 @@ Value `all' means print all mail addresses."
     ("~" . "\\\\~{}"))
   "Replacement alist for quoting TeX's special characters.
 Each element is of the form (REGEXP . REPLACE)."
-  :group 'bbdb-print)
+  :group 'bbdb-utilities-print)
 
 (defcustom bbdb-print-address-format-list bbdb-address-format-list
   "List of address formatting rules for printing.
 Each element may take the same values as in `bbdb-address-format-list'.
 The EDIT elements of `bbdb-address-format-list' are ignored."
-  :group 'bbdb-print)
+  :group 'bbdb-utilities-print)
 
 ;;; Functions:
 

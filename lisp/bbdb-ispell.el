@@ -41,20 +41,16 @@
 (require 'ispell)
 (require 'bbdb)
 
-(defgroup bbdb-ispell nil
-  "Variables that affect the ispell interface for BBDB"
-  :group 'bbdb)
-
 (defcustom bbdb-ispell-dictionary-list '("default")
   "List of ispell personal dictionaries.
 Allowed elements are as in the return value of `ispell-valid-dictionary-list'."
-  :group 'bbdb-ispell
+  :group 'bbdb-utilities-ispell
   :type (cons 'set (mapcar (lambda (dict) `(string ,dict))
                            (ispell-valid-dictionary-list))))
 
 (defcustom bbdb-ispell-field-list '(name organization aka)
   "List of fields of each BBDB record considered for the personal dictionary."
-  :group 'bbdb-ispell
+  :group 'bbdb-utilities-ispell
   :type (list 'repeat
               (append '(choice) (mapcar (lambda (field) `(const ,field))
                                         '(name organization affix aka address))
@@ -62,12 +58,12 @@ Allowed elements are as in the return value of `ispell-valid-dictionary-list'."
 
 (defcustom bbdb-ispell-min-word-length 3
   "Words with fewer characters are ignored."
-  :group 'bbdb-ispell
+  :group 'bbdb-utilities-ispell
   :type 'number)
 
 (defcustom bbdb-ispell-ignore-re "[^[:alpha:]]"
   "Words matching this regexp are ignored."
-  :group 'bbdb-ispell
+  :group 'bbdb-utilities-ispell
   :type 'regexp)
 
 ;; Internal variable
