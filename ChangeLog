@@ -1,4 +1,7 @@
 2012-01-02  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el (bbdb-anniv-list): Clarify docstring.
+
+2012-01-02  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el: Do not use custom-loads for bbdb-mua.el and
 	bbdb-com.el.  Use symbols for custom-loads.
 	(bbdb-utilities-ispell): Group renamed and moved here from

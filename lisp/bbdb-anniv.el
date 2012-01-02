@@ -49,9 +49,9 @@ FORM is a format string with the following substitutions:
   %n  name of the record
   %d  number of years
   %s  ordinal suffix (st, nd, rd, th) for the year.
-  %t  the optional text following the date string in an anniversary field.
-If FORM is nil, the format string is taken from the anniversary field
-of each record."
+  %t  the optional text following the date string in field LABEL.
+If FORM is nil, use the text following the date string in field LABEL
+as format string."
   :type '(repeat (cons :tag "Rule"
                        (symbol :tag "Label")
                        (choice (regexp)
