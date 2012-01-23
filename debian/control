@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: debhelper (>= 8),
 	       dh-autoreconf,
+	       texinfo,
 	       emacs23-nox | emacs23 | emacs
 Standards-Version: 3.9.2
 Homepage: http://savannah.nongnu.org/projects/bbdb/
