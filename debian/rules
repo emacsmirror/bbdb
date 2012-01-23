@@ -9,6 +9,7 @@ $(dh_targets) %:
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
+		--without-vm-dir \
 		texmfdir='$${datadir}/texmf' \
 		--docdir='$${datarootdir}/doc/bbdb3' \
 		--with-lispdir='$${datadir}/emacs/site-lisp/bbdb3'
