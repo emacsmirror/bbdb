@@ -8,7 +8,7 @@ PUSHPATH = -eval '(push "./" load-path)'
 
 el_files_std = bbdb.el bbdb-com.el bbdb-print.el bbdb-anniv.el		\
 	   bbdb-migrate.el bbdb-mua.el bbdb-message.el bbdb-rmail.el	\
-	   bbdb-gnus.el bbdb-mhe.el
+	   bbdb-gnus.el bbdb-mhe.el bbdb-uuid.el
 
 el_files_ver = bbdb-version.el
 
