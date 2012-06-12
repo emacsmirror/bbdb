@@ -41,6 +41,7 @@
 ;;;  ------------------------------------------------------------------------
 
 (require 'timezone)
+(require 'bbdb-version)
 
 ;; When running BBDB, we have (require 'bbdb-autoloads)
 (eval-when-compile              ; pacify the compiler.
@@ -61,10 +62,6 @@
   (defvar message-mode-map) ;; message.el
   (defvar mail-mode-map) ;; sendmail.el
   (defvar gnus-article-buffer)) ;; gnus-art.el
-
-(defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/01/02 10:08:06 $"
-  "Version date of BBDB.")
 
 ;; Custom groups
 
@@ -232,6 +229,7 @@ If a record has been created by analyzing a mail message, hook functions
 can use the variable `bbdb-update-records-address' to determine the header
 and class of the mail address according to `bbdb-message-headers'.")
 (add-hook 'bbdb-create-hook 'bbdb-creation-date)
+(add-hook 'bbdb-create-hook 'bbdb-add-uuid)
 
 (defvar bbdb-change-hook nil
   "*Hook run each time a BBDB record is changed.
@@ -1188,7 +1186,8 @@ window width that BBDB will take over."
 ;;; Notes processing
 (defcustom bbdb-notes-sort-order
   '((notes . 0) (url . 1) (ftp . 2) (gopher . 3) (telnet . 4) (mail-alias . 5)
-    (mail-folder . 6) (lpr . 7) (creation-date . 1000) (timestamp . 1001))
+    (mail-folder . 6) (lpr . 7) (creation-date . 1000) (timestamp . 1001) 
+    (bbdb-id . 1002))
   "The order for sorting the notes.
 If a note is not in the alist, it is assigned weight 100, so all notes
 with weights less then 100 will be in the beginning, and all notes with
@@ -1397,7 +1396,7 @@ If none of these schemes succeeds, the face `bbdb-name' is used."
     "Enable debugging if non-nil during compile time.
 You really should not disable debugging.  But it will speed things up."))
 
-(defconst bbdb-file-format 7
+(defconst bbdb-file-format 8
   "BBDB file format.")
 
 (defconst bbdb-record-type
@@ -1791,6 +1790,12 @@ it is changed, otherwise it is added."
 Adds a notes-field `creation-date' which is the current time string."
   (bbdb-record-set-note record 'creation-date
                        (format-time-string bbdb-time-stamp-format nil t)))
+
+(defun bbdb-add-uuid (record)
+  "For use as a `bbdb-create-hook'.
+Adds a notes-field `bbdb-id' which will be a unique ID for the entry."
+  (bbdb-record-set-note record 'bbdb-id 
+                       (bbdb-genuuid)))
 
 (defun bbdb-multiple-buffers-default ()
   "Default function for guessing a name for new *BBDB* buffers.
@@ -3786,8 +3791,8 @@ With prefix N move backwards N (sub)fields."
   "Return string describing the version of BBDB.
 With prefix ARG, insert string at point."
   (interactive (list (or (and current-prefix-arg 1) t)))
-  (let ((version-string (format "BBDB version %s (%s)"
-                                bbdb-version bbdb-version-date)))
+  (let ((version-string (format "BBDB version %s"
+                                bbdb-version)))
     (cond ((numberp arg) (insert (message version-string)))
           ((eq t arg) (message version-string))
           (t version-string))))

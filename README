@@ -1,3 +1,5 @@
+-*- org -*-
+
 Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 See the end of the file for license conditions.
 
@@ -19,12 +21,37 @@ Feedback welcome! --  There is a mailing list for discussion of BBDB:
 To join, send mail to bbdb-info-request@lists.sourceforge.net
 
 ==================================================================
-Installation:
 
-See the file INSTALL.
+* Installation
+
+Here it is in a nutshell, with BBDB-specific information.
+
+ autoreconf --install
+ ./configure [OPTIONS]
+ make # or just "make -C lisp" for using a private copy
+ make install # not required to use a private copy
+
+The invocation of ./configure takes a few unusual options.
+(a) If you want the TeX support files installed, give a path:
+    ./configure texmfdir=/usr/local/lib/texmf
+(b) If you do not want VM support, but do have VM installed, say so:
+    ./configure --without-vm-dir
+(c) If you have VM but not on standard load-path and want it supported:
+    ./configure --with-vm-dir=PATH-TO-VM
+
+
+To use, add
+  (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
+to your emacs initialization file.
+
+
+Questions, comments, suggestions, and bug reports may be directed to
+the BBDB mailing list at bbdb-info@lists.sourceforge.net.
+To subscribe, send mail to bbdb-info-request@lists.sourceforge.net,
+with 'subscribe' as the subject.
 
 ==================================================================
-Usage notes
+* Usage notes
 
 This revised version of BBDB requires GNU Emacs 23 or newer.
 Its code is still under development.  While it should work reliably,
@@ -44,7 +71,7 @@ your init file.  All user variables in BBDB v3 are listed at the beginning
 of bbdb.el.
 
 
-BBDB interface with mail user agents (MUAs)
+** BBDB interface with mail user agents (MUAs)
 ===========================================
 
 BBDB can interface with various mail user agents (MUAs).
@@ -62,7 +89,7 @@ This lets you
 
 There are two ways for BBDB to interface with MUAs:
 
-Interactive commands
+** Interactive commands
 --------------------
 
 Call bbdb-initialize (usually in your init file) to initialize
@@ -100,7 +127,7 @@ bbdb/MUA-update-records-p are only used as fallback if the generic
 bbdb-update-records-p or bbdb-mua-auto-update-p result in a value of
 nil for the arg UPDATE-P of bbdb-update-records.
 
-Noninteractive functions
+** Noninteractive functions
 ------------------------
 
 Call bbdb-mua-auto-update-init (usually in your init file)
@@ -119,6 +146,61 @@ the actual action performed by BBDB (i.e., the return value of
 bbdb-select-message) is given by bbdb-mua-update-records-p.
 
 ==================================================================
+
+* FAQ
+
+** Building and Installation of BBDB V3
+
+*** I get an error "configure.ac:15: warning: macro `AM_SILENT_RULES' not found in library"
+
+   BBDB V3 requires fairly recent versions of the 'autotools' suite: autoconf,
+   autoreconf, automake, etc. Check the versions you have by looking at the
+   ouptut of the following commands:
+
+   $ autoconf --version # should be greater than 2.64
+   $ automake --version # should be greater than 1.11
+
+   If you do not have the minimum versions specified above, you should upgrade
+   to recent versions using your system package manager
+
+*** I get an error 'configure: error: cannot find install-sh, install.sh, or shtool in "." "./.." "./../.."
+
+   You have ignored errors in previous steps of the build process, which
+   originally stem from old version of autotools. Refer to the question
+   above.
+
+*** I am on MacOS X and how can I upgrde autoconf; homebrew does not cut it
+
+   The autotools formulae in homebrew are 'keg-only', meaning once you install
+   them using 'brew install automake', it is installed to the Cellar directory
+   (such as /usr/local/Cellar/automake/1.11.3/) but is not sym-linked to
+   /usr/local/ like a normal installation. This is to prevent unwanted
+   dependencies between the system version of these tools and the brew
+   versions.
+
+   The following has been known to work on MacOS X
+
+   Step 0: Install the brew versions of autoconf and automake (brew install
+   automake && brew install autoconf)
+
+   Step 1: $ mkdir -p /usr/local/upgraded/bin
+
+   Step 2: make sym links to all programs installed by brew in Step 1 in /usr/local/upgraded/bin/
+   
+   Step 3: edit /etc/paths and put /usr/local/upgraded/bin/ at the top of the file in
+           line 1.
+
+   Step 4: Now rebuild BBDB.
+
+*** I get an error: "bbdb-vm.el:25:1:Error: Cannot open load file: vm-autoload"
+
+   You are likely using GNU Emacs and the system cannot find the VM mail
+   reader. You should run configure like so: ./configure  --without-vm-dir
+
+   Equivalently if you have installed VM separately and know where to find it,
+   run configure like so: ./configure --with-vm-dir=$VM_DIR
+
+* Misc 
 
 Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
 

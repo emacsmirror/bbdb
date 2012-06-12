@@ -34,7 +34,8 @@
     (5 . "* More flexible street address.")
     (6 . "* postcodes are stored as plain strings.")
     (7 . "* Notes are always lists. Organizations are stored as list.
-  New field `affix'."))
+  New field `affix'.")
+    (8 . "* Assign unique ID (RFC4122 UUID) to each entry"))
   "BBDB Features that have changed in various database revisions.
 Format ((VERSION . DIFFERENCES) ... ).")
 
@@ -82,9 +83,18 @@ slightly munged old BBDB files."
     (6 (bbdb-record-notes bbdb-record-set-notes
         bbdb-migrate-notes-to-list)
        (bbdb-record-organization bbdb-record-set-organization
-        bbdb-migrate-organization-to-list)))
-  "The alist of (version . migration-spec-list).
+        bbdb-migrate-organization-to-list))
+    (7 (bbdb-record-notes bbdb-record-set-notes
+        bbdb-migrate-insert-uuid)))
+  "The alist of (version . migration-spec-li
+st).
 See `bbdb-migrate-record-lambda' for details.")
+
+(defun bbdb-migrate-insert-uuid (notes)
+  "Insert a UUID field in the notes section"""
+  (unless (stringp notes)
+    ;; First fix the timestamps
+    (cons (cons 'bbdb-id (bbdb-genuuid)) notes)))
 
 (defun bbdb-migrate-record-lambda (changes)
   "Return a function which will migrate a single record.
