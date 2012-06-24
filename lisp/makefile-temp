@@ -1,0 +1,185 @@
+# Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
+# 
+# This file is part of the Insidious Big Brother Database (aka BBDB),
+# 
+# BBDB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# BBDB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+srcdir = .
+top_srcdir = ..
+lisp = $(srcdir)
+
+INSTALL = /usr/bin/install -c
+INSTALL_DATA = ${INSTALL} -m 644
+
+prefix = /usr/local
+datarootdir= ${prefix}/share
+datadir= ${datarootdir}
+lispdir = $(DESTDIR)/usr/local/share/emacs/site-lisp/bbdb
+
+RM   = /bin/rm -f
+LN_S = ln -s
+
+EMACS = emacs
+
+# Command line flags for Emacs.
+EMACSOPT = --batch --no-site-file --no-init-file
+
+# The actual Emacs command run in the targets below.
+emacs = LC_ALL=C $(EMACS) $(EMACSOPT)
+
+# If you want to use BBDB with VM this should point to your vm/lisp directory.
+# See also the target all below.
+VMDIR =
+
+VM	= -eval '(if (not (string-match "$(VMDIR)" "")) (setq load-path (cons "$(VMDIR)" load-path)))'
+
+PUSHPATH = -eval '(push "./" load-path)'
+
+.SUFFIXES: .elc .el .tar .Z .gz .uu
+
+DEPSRCS=	bbdb-com.el bbdb-print.el bbdb-anniv.el \
+		bbdb-migrate.el \
+		bbdb-mua.el bbdb-message.el bbdb-rmail.el \
+		bbdb-gnus.el bbdb-mhe.el bbdb-vm.el
+
+DEPBINS=	${DEPSRCS:.el=.elc}
+SRCS=		bbdb.el  $(DEPSRCS)
+BINS=		bbdb.elc $(DEPBINS)
+
+all: Makefile bbdb autoloads
+
+Makefile: Makefile.in
+	@echo "Makefile.in has changed, rerun configure!"
+	exit 1
+
+bbdb-loaddefs.el: $(SRCS)
+#	2011-12-11: We switched from bbdb-autoloads.el to bbdb-loaddefs.el.
+#	If the user still has an old bbdb-autoloads.el in the BBDB
+#	lisp directory (and keeps loading it from the emacs init file),
+#	we might get strange mistakes that things fail. So we throw an error
+#	if these old files are found.
+	@if test -f bbdb-autoloads.el -o -f bbdb-autoloads.elc; then \
+	  (echo "*** ERROR: Old file(s) \`bbdb-autoloads.el(c)' found ***" ; \
+	  echo "*** Delete these files; do not load them from your init file ***") && \
+	  false ; \
+	fi
+	@-$(RM) $@;
+	@echo "(provide 'bbdb-loaddefs)" > $@;
+	@echo "(if (and load-file-name (file-name-directory load-file-name))" >> $@;
+	@echo "    (add-to-list 'load-path (file-name-directory load-file-name)))" >> $@;
+	@echo "" >> $@;
+#	generated-autoload-file must have an absolute path
+#	$srcdir can be relative.
+	@$(emacs) -l autoload					\
+		--eval '(setq generated-autoload-file "'`pwd`/$@'")'	\
+		--eval '(setq make-backup-files nil)'			\
+		-f batch-update-autoloads `pwd`
+
+.PHONY: no-bbdb-autoloads
+no-bbdb-autoloads:
+
+.el.elc:
+	@$(emacs) $(PUSHPATH) -f batch-byte-compile $<
+
+bbdb.elc:	bbdb.el
+	@$(emacs) -f batch-byte-compile $(@:.elc=.el)
+
+bbdb-com.elc:	bbdb.elc bbdb-com.el
+	@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-mua.elc:  bbdb.elc bbdb-com.elc bbdb-mua.el
+	@$(emacs) $(PUSHPATH) \
+	-eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
+	-f batch-byte-compile $(@:.elc=.el)
+bbdb-rmail.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-rmail.el
+	@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-gnus.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-gnus.el
+	@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-mhe.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-mhe.el
+	@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+# VM is not part of GNU Emacs
+bbdb-vm.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-vm.el
+	@$(emacs) $(PUSHPATH) $(VM) \
+		-f batch-byte-compile $(@:.elc=.el)
+
+bbdb-print.elc:	bbdb.elc bbdb-com.elc bbdb-print.el
+	@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-migrate.elc:	bbdb.elc bbdb-migrate.el
+	@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-anniv.elc:	bbdb.elc bbdb-anniv.el
+	@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+bbdb-ispell.elc:	bbdb.elc bbdb-ispell.el
+	@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
+
+autoloads: bbdb-loaddefs.el
+
+bbdb:	bbdb-loaddefs.el bbdb.elc bbdb-com.elc bbdb-print.elc \
+	bbdb-anniv.elc bbdb-migrate.elc bbdb-mua.elc \
+	bbdb-message.elc bbdb-rmail.elc bbdb-gnus.elc bbdb-mhe.elc \
+	bbdb-ispell.elc
+vm:	bbdb-vm.elc
+
+install-el: all
+	$(INSTALL) -d -m 0755 "$(lispdir)/"
+	for elc in *.elc; do                                        \
+	    el=`basename $$elc c`;                                  \
+	    if test -f "$(srcdir)/$$el"; then                       \
+	        echo "Install $$el in $(lispdir)/";                 \
+	        $(INSTALL_DATA) "${srcdir}/$$el" "$(lispdir)/";     \
+	    fi;                                                     \
+        done;
+	for el in bbdb-loaddefs.el; do             \
+	    echo "Install $$el in $(lispdir)/";    \
+	    $(INSTALL_DATA) $$el "$(lispdir)/";    \
+        done;
+
+install-elc: all
+	$(INSTALL) -d -m 0755 "$(lispdir)/"
+	for elc in bbdb-loaddefs.el *.elc; do      \
+	    echo "Install $$elc in $(lispdir)/";   \
+	    $(INSTALL_DATA) $$elc "$(lispdir)/";   \
+        done;
+
+uninstall:
+	for elc in *.elc; do        \
+	  $(RM) "$(lispdir)/$$elc"; \
+	done
+	for el in *.el; do          \
+	  $(RM) "$(lispdir)/$$el";  \
+	done
+
+# Assorted clean-up targets
+clean:
+	-$(RM) bbdb*.elc TAGS
+
+distclean: clean
+
+maintainer-clean: distclean
+	-$(RM) bbdb-loaddefs.el  # Generated file
+	-$(RM) Makefile
+
+extraclean: maintainer-clean
+	-$(RM) -f *~ \#*
+
+TAGS: $(SRCS)
+	etags $(SRCS)

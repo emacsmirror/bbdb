@@ -3,10 +3,10 @@ dnl aclocal.m4 --- autoconf macros for BBDB
 dnl Author:        Didier Verna <didier@xemacs.org>
 dnl Maintainer:    Roland Winkler <winkler@gnu.org>
 dnl Created:       Tue Nov 14 18:28:52 2000
-dnl Last Revision: $Date: 2011/12/11 09:51:31 $
+dnl Last Revision: $Date: 2012/06/24 08:13:14 $
 
 dnl Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
-dnl Copyright (C) 2011 Roland Winkler <winkler@gnu.org>
+dnl Copyright (C) 2011-2012 Roland Winkler <winkler@gnu.org>
 
 dnl This file is part of the Insidious Big Brother Database (aka BBDB),
 

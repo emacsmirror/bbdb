@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Roland Winkler <winkler@gnu.org>
+# Copyright (C) 2011-2012 Roland Winkler <winkler@gnu.org>
 # 
 # This file is part of the Insidious Big Brother Database (aka BBDB),
 # 
@@ -28,7 +28,7 @@ LN_S = @LN_S@
 
 install-tex:
 	if test "x$(texmf_dir)" != "x"; then		\
-	    $(INSTALL) -d -m 0755 "$(texmf_dir)/"	\
+	    $(INSTALL) -d -m 0755 "$(texmf_dir)/";	\
 	    for tex in *.tex; do			\
 	        echo "Install $$tex in $(texmf_dir)/";	\
 	        $(INSTALL_DATA) $$tex "$(texmf_dir)/";	\

@@ -1,7 +1,7 @@
 ;;; bbdb-migrate.el --- migration functions for BBDB
 
 ;; Copyright (C) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -71,7 +71,7 @@ slightly munged old BBDB files."
   records)
 
 (defconst bbdb-migration-spec
-  '((2 (bbdb-record-notes bbdb-record-set-notes
+  '((2 (bbdb-record-Notes bbdb-record-set-Notes
         bbdb-migrate-change-dates))
     (3 (bbdb-record-address bbdb-record-set-address
         bbdb-migrate-add-country-field))
@@ -79,7 +79,7 @@ slightly munged old BBDB files."
         bbdb-migrate-streets-to-list))
     (5 (bbdb-record-address bbdb-record-set-address
         bbdb-migrate-postcodes-to-strings))
-    (6 (bbdb-record-notes bbdb-record-set-notes
+    (6 (bbdb-record-Notes bbdb-record-set-Notes
         bbdb-migrate-notes-to-list)
        (bbdb-record-organization bbdb-record-set-organization
         bbdb-migrate-organization-to-list)))

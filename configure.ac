@@ -3,10 +3,10 @@ dnl configure.ac --- configuration setup for BBDB
 dnl Author:        Didier Verna <didier@xemacs.org>
 dnl Maintainer:    Roland Winkler <winkler@gnu.org>
 dnl Created:       Tue Nov 14 18:28:52 2000
-dnl Last Revision: $Date: 2011/12/10 23:06:34 $
+dnl Last Revision: $Date: 2012/06/24 08:13:19 $
 
 dnl Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
-dnl Copyright (C) 2011 Roland Winkler <winkler@gnu.org>
+dnl Copyright (C) 2011-2012 Roland Winkler <winkler@gnu.org>
 
 dnl BBDB is free software: you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ AC_INIT([BBDB],[BBDB_VERSION],[bbdb-info@lists.sourceforge.net])
 
 AC_COPYRIGHT([Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>.
 Copyright (C) 2011 Roland Winkler <winkler@gnu.org>.])
-AC_REVISION([$Revision: 1.12 $])
+AC_REVISION([$Revision: 1.13 $])
 
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_FILES([Makefile

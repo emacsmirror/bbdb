@@ -1,3 +1,103 @@
+2012-06-24  Sam Steingold  <sds@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-update-records): Use bbdb-message-search
+	instead of bbdb-search when `update-p' is `search' so that all
+	senders are displayed.
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Do not offer to
+	replace the name if it is already an AKA.
+
+	* lisp/bbdb.el (bbdb-label-completion-list): Use symbol-value
+	instead of eval for symbols.
+	* lisp/bbdb-mua.el (bbdb-update-records): Ditto.
+
+2012-06-24  Philip Hudson <phil.hudson@iname.com>
+	* lisp/bbdb.el (bbdb-read-only, bbdb-initialize-hook)
+	(bbdb-mode-hook, bbdb-layout-alist, bbdb-case-fold-search)
+	(bbdb-message-caching, bbdb-complete-mail-allow-cycling)
+	(bbdb-after-save-hook, bbdb-completion-display-record)
+	(bbdb-update-records-address, bbdb-warn, bbdb-split, bbdb-concat)
+	(bbdb-read-string, bbdb-current-record, bbdb-debug)
+	(bbdb-timestamp, bbdb-creation-date, bbdb-gethash)
+	(bbdb-hash-record, bbdb-record-name, bbdb-record-name-lf)
+	(bbdb-record-sortkey, bbdb-record-set-sortkey, bbdb-record-marker)
+	(bbdb-record-set-marker, bbdb-record-deleted-p)
+	(bbdb-record-set-deleted-p, bbdb-merge-concat)
+	(bbdb-merge-string-least, bbdb-merge-string-most)
+	(bbdb-phone-string, bbdb-error-retry, bbdb-display-list)
+	(bbdb-display-record-one-line, bbdb-display-record-multi-line)
+	(bbdb-display-records, bbdb-display-records-internal)
+	(bbdb-redisplay-record, bbdb-pop-up-window)
+	(bbdb-electric-display-records, bbdb-electric-throw)
+	(bbdb-electric-quit, bbdb-quit-window, bbdb-mouse-menu, bbdb-save)
+	(bbdb-offer-to-create bbdb-lastname-suffixes)
+	(bbdb-update-records-p, bbdb-new-mails-always-primary): Fix
+	docstring.
+	(bbdb-mail-user-agent): Untabify.
+
+2012-06-24  Roland Winkler  <winkler@gnu.org>
+	Update copyright notices.
+
+	* lisp/bbdb.el (bbdb-allow-duplicates): Rename from
+	bbdb-no-duplicates to match the unchanged docstring of this
+	variable.
+	(bbdb-record-Notes): Rename from bbdb-record-notes to avoid name
+	clashes.
+	(bbdb-puthash): Do not hash empty strings.
+	(bbdb-gethash): New arg predicate.
+	(bbdb-check-name): New function.
+	(bbdb-record-set-name): For args first and last allow new value t.
+	Use bbdb-check-name.
+	(bbdb-record-name, bbdb-record-name-lf): Use it.
+	(bbdb-record-set-field): Use it.  Simplify.
+	(bbdb-label-completion-default, bbdb-data-completion-list)
+	(bbdb-data-completion-default): Remove unused function.
+	(bbdb-buffer): Handle here that bbdb-file might have changed on
+	disk and auto-save file could be newer than bbdb-file instead of
+	bbdb-records doing this.
+	(bbdb-revert-buffer): Fix docstring.  Use prefix arg as in
+	revert-buffer.  Use variable bbdb-buffer instead of function
+	bbdb-buffer to avoid recursion.
+	(bbdb-parse-records): Rename from bbdb-parse-internal.  Add
+	docstring.  Do not polute buffer-undo-list when reading bbdb-file.
+	Use unwind-protect.  Merge with bbdb-parse-frobnicate.  Handle
+	bbdb-allow-duplicates properly.
+	(bbdb-with-db-buffer): Add docstring.
+	(bbdb-display-record-one-line, bbdb-display-record-multi-line):
+	Simplify.
+	(bbdb-pop-up-window): Fix docstring.
+	(bbdb-sendmail-menu): Add docstring.
+	(bbdb-electric-quit): Rename from bbdb-electric-done.
+	(bbdb-electric-display-records): Simplify.
+
+	* lisp/bbdb-com.el (bbdb-editable): Fix docstring.  Check more
+	carefully without reverting.
+	(bbdb-message-search): Use bbdb-buffer.
+	(bbdb-read-record): Use bbdb-buffer and bbdb-check-name.
+	(bbdb-create-internal): Fix docstring.  Use bbdb-check-name.
+	(bbdb-edit-field):  Merge with bbdb-record-edit-name.
+	(bbdb-record-edit-name): Remove.
+	(bbdb-completion-predicate): Bug fix.
+	(bbdb-complete-mail): Use bbdb-buffer and
+	bbdb-completion-predicate.
+	(bbdb-search-duplicates, bbdb-message-search)
+	(bbdb-create-internal): Use arg predicate of bbdb-gethash.
+
+	* lisp/bbdb.el (bbdb-gethash): New arg predicate.
+	(bbdb-check-name, bbdb-record-set-field, bbdb-parse-records) Use
+	it.
+	* lisp/bbdb-com.el (bbdb-search-duplicates, bbdb-message-search)
+	(bbdb-create-internal): Use it.
+
+	* lisp/bbdb-mua.el (bbdb-message-get-cache): Use bbdb-buffer.
+
+	* lisp/bbdb.el (bbdb-message-clean-name-function)
+	(bbdb-message-mail-as-name): New variables.
+	* lisp/bbdb-mua.el (bbdb-get-address-components)
+	(bbdb-annotate-message): Use them.
+	(bbdb-message-clean-name-default): Rename from
+	bbdb-message-clean-name.  Clean names properly, too.
+
+	* tex/Makefile.in (install-TeX): Bug fix (Bug#108041).
+
 2012-01-02  Sam Steingold  <sds@gnu.org>
 	* lisp/bbdb.el (bbdb-auto-notes-rules): Use :set keyword to reset
 	`bbdb-auto-notes-rules-expanded' when `bbdb-auto-notes-rules' is set.
@@ -733,7 +833,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
+  Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 

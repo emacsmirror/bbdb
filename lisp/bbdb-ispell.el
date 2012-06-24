@@ -1,7 +1,7 @@
 ;;; bbdb-ispell.el --- export names from BBDB to personal ispell dictionaries
 
-;; Copyright (C) 2011 Ivan Kanis <ivan.kanis@googlemail.com>
-;;                    and Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2011-2012 Ivan Kanis <ivan.kanis@googlemail.com>
+;;                         and Roland Winkler <winkler@gnu.org>
 
 ;; Author: Ivan Kanis <ivan.kanis@googlemail.com>
 
@@ -30,9 +30,9 @@
 ;; Exclude words via `bbdb-ispell-min-word-length' and `bbdb-ispell-ignore-re'.
 ;;
 ;; Bugs:
-;; Save your personal directories before running this code. I had my
-;; dictionary truncated while debugging. It shouldn't happen but
-;; better be safe than sorry...
+;; Save your personal directories before running this code.  I had my
+;; dictionary truncated while debugging.  It shouldn't happen
+;; but better be safe than sorry...
 ;;
 ;; See the BBDB info manual for documentation.
 

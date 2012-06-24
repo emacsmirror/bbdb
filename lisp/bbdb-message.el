@@ -1,6 +1,6 @@
 ;;; bbdb-message.el --- BBDB interface to Mail Composition Packages.
 
-;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 

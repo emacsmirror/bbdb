@@ -1,7 +1,7 @@
 ;;; bbdb-mua.el --- various MUA functionality for BBDB
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -168,8 +168,10 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
           ;; Always extract all addresses because we do not know yet which
           ;; address might match IGNORE-ADDRESS.
           (dolist (address (mail-extract-address-components content t))
-            (setq name (nth 0 address)
-                  mail (nth 1 address))
+            ;; We canonicalize name and mail as early as possible.
+            (setq name (funcall bbdb-message-clean-name-function
+                                (nth 0 address))
+                  mail (bbdb-canonicalize-mail (nth 1 address)))
             ;; ignore uninteresting addresses
             (unless (or (and (stringp ignore-address)
                              (or (and name (string-match ignore-address name))
@@ -218,15 +220,14 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
            (not (eq update-p 'search)))
       (setq update-p (funcall update-p)))
   (unless update-p
-    (setq update-p (eval (intern-soft (format "bbdb/%s-update-records-p"
-                                              (bbdb-mua)))))
+    (setq update-p (symbol-value (intern-soft (format "bbdb/%s-update-records-p"
+                                                      (bbdb-mua)))))
     (if (and (functionp update-p)
              (not (eq update-p 'search)))
         (setq update-p (funcall update-p))))
   (if (eq t update-p)
       (setq update-p 'create))
-  (let ((bbdb-records (bbdb-records)) ;; search all records
-        ;; `bbdb-update-records-p' and `bbdb-offer-to-create' are used here
+  (let (;; `bbdb-update-records-p' and `bbdb-offer-to-create' are used here
         ;; as internal variables for communication with
         ;; `bbdb-prompt-for-create'.  This does not affect the value of the
         ;; global user variable `bbdb-update-records-p'.
@@ -242,14 +243,11 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
     (when (and (not records) update-p)
       (while (setq address (pop address-list))
         (let* ((bbdb-update-records-address address)
-               (mail (nth 1 address))
                hits
                (task
                 (catch 'done
                   (setq hits
-                        (cond ((null mail)
-                               nil) ; ignore emtpy mails, e.g. (??? nil)
-                              ((eq bbdb-update-records-p 'create)
+                        (cond ((eq bbdb-update-records-p 'create)
                                (list (bbdb-annotate-message address t)))
                               ((eq bbdb-update-records-p 'query)
                                (list ; Search might return a list
@@ -258,9 +256,8 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
                               ((eq bbdb-update-records-p 'search)
                                ;; Search for records having this mail address
                                ;; but do not modify an existing record.
-                               (let ((mail (concat "^" (regexp-quote mail) "$")))
-                                 ;; MAIL must be atomic arg.
-                                 (bbdb-search bbdb-records nil nil mail)))))
+                               (bbdb-message-search (car address)
+                                                    (cadr address)))))
                   nil)))
           (cond ((eq task 'quit)
                  (setq address-list nil))
@@ -351,7 +348,7 @@ Type q  to quit updating records.  No more search or annotation is done.")
 (defun bbdb-message-get-cache (message-key)
   "Return cached BBDB records for MESSAGE-KEY.
 If not present or when the records have been modified return nil."
-  (bbdb-records)
+  (bbdb-buffer)  ; make sure database is loaded and up-to-date
   (if (and bbdb-message-caching message-key)
       (let ((records (cdr (assq message-key bbdb-message-cache)))
             (valid t) record)
@@ -397,8 +394,6 @@ Return the record matching ADDRESS or nil."
      (if (equal name "") (error "mail-extr returned \"\" as name"))
      (if (equal mail "") (error "mail-extr returned \"\" as mail")))
 
-    (setq mail (bbdb-canonicalize-mail mail))
-
     ;; FIXME: We drop all records but the first!!
     (let* ((record (car (bbdb-message-search name mail)))
            (old-name (and record (bbdb-record-name record)))
@@ -434,12 +429,12 @@ Return the record matching ADDRESS or nil."
                   (eq update-p 'search) ; for simple compatibility
                   (not (or name mail))
                   duplicate)
-        ;; otherwise, the db is writable, and we may create a record.
-        ;; first try to get a reasonable default name if not given
-        ;; often I get things like <firstname>.<surname>@ ...
-        (if (or (null name) (and (stringp name) (string= "" name)))
-            (if (string-match "^[^@]+" mail)
-                (setq name (bbdb-message-clean-name (match-string 0 mail)))))
+        ;; Otherwise, the db is writable, and we may create a record.
+        ;; If there is no name, try to use the mail address as name
+        (if (and bbdb-message-mail-as-name
+                 (or (null name)
+                     (and (stringp name) (string= "" name))))
+            (setq name (funcall bbdb-message-clean-name-function mail)))
         (setq record (if (or (eq update-p 'create)
                              (and (eq update-p 'query)
                                   (y-or-n-p (format "%s is not in the BBDB.  Add? "
@@ -458,7 +453,9 @@ Return the record matching ADDRESS or nil."
                    (setq fname (car fullname)
                          lname (cdr fullname))
                    (not (and (bbdb-string= fname (bbdb-record-firstname record))
-                             (bbdb-string= lname (bbdb-record-lastname record))))))
+                             (bbdb-string= lname (bbdb-record-lastname record)))))
+                 ;; Check if name equals an AKA of the record
+                 (not (member name (bbdb-record-aka record))))
 
             ;; name differs from the old name.
             (cond (bbdb-read-only nil);; skip if readonly
@@ -688,7 +685,7 @@ If the records do not exist, they are generated."
   "In RECORD add an ANNOTATION to FIELD.
 FIELD defaults to note field `notes'.
 If REPLACE is non-nil, ANNOTATION replaces the content of FIELD."
-  (if (memq field '(name firstname lastname phone address note))
+  (if (memq field '(name firstname lastname phone address Notes))
       (error "Field `%s' illegal" field))
   (unless (string= "" (setq annotation (bbdb-string-trim annotation)))
     (cond ((memq field '(affix organization mail aka))
@@ -732,7 +729,7 @@ If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
   "Edit FIELD of record.
 FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
   (interactive (bbdb-mua-edit-field-interactive))
-  (cond ((memq field '(firstname lastname address phone note))
+  (cond ((memq field '(firstname lastname address phone Notes))
          (error "Field `%s' not editable this way" field))
         ((not field)
          (setq field 'notes)))
@@ -795,6 +792,8 @@ See `bbdb-mua-display-records' and friends for interactive commands."
           (if records
               (bbdb-display-records-internal
                records nil nil nil
+               ;; We consider horizontal window splitting for windows
+               ;; that are used by the MUA.
                `(lambda (window)
                   (with-current-buffer (window-buffer window)
                     (eq major-mode ',mode))))
@@ -1034,29 +1033,35 @@ For use as a value of `bbdb-change-hook'.  See `bbdb-mail-redundant-p'."
                (bbdb-concat 'mail (nreverse redundant)))
       (bbdb-record-set-mail record (nreverse okay)))))
 
-(defun bbdb-message-clean-name (string)
-  "Strip garbage from the user full name string."
-  (if (string-match "[@%!]" string)  ; ain't no user name!  It's an address!
-      (bbdb-string-trim string)
-   (let ((case-fold-search t))
-     ;; Remove leading non-alpha chars
-     (if (string-match "\\`[^[:alpha:]]+" string)
-         (setq string (substring string (match-end 0))))
-     ;; Remove phone extensions (like "x1234" and "ext. 1234")
-     ;; This does not work all the time because some of our friends in
-     ;; northern europe have brackets in their names...
-     (setq string (replace-regexp-in-string
-                   "\\W+\\(x\\|ext\\.?\\)\\W*[-0-9]+" "" string))
-     ;; Remove trailing non-alpha chars
-     (if (string-match "[^[:alpha:]]+\\'" string)
-         (setq string (substring string 0 (match-beginning 0))))
-     ;; Replace tabs, spaces, and underscores with a single space.
-     (setq string (replace-regexp-in-string "[ \t\n_]+" " " string))
-     ;; Do not replace ". " with " " because that could be an initial.
-     (setq string (replace-regexp-in-string "\\.\\([^ ]\\)" " \\1" string))
-     ;; Remove trailing parenthesized comments
-     (when (string-match "[^ \t]\\([ \t]*\\((\\| -\\| #\\)\\)" string)
-       (setq string (substring string 0 (match-beginning 1))))
-     string)))
+(defun bbdb-message-clean-name-default (name)
+  "Default function for `bbdb-message-clean-name-function'.
+This strips garbage from the user full name string."
+  ;; Remove leading non-alpha chars
+  (if (string-match "\\`[^[:alpha:]]+" name)
+      (setq name (substring name (match-end 0))))
+  ;; Remove trailing non-alpha chars
+  (if (string-match "[^[:alpha:]]+\\'" name)
+      (setq name (substring name 0 (match-beginning 0))))
+
+  (if (string-match "^[^@]+" name)
+      ;; The name is really a mail address and we use the part preceeding "@".
+      ;; Replace "firstname.surname" by "firstname surname".
+      ;; Do not replace ". " with " " because that could be an initial.
+      (setq name (replace-regexp-in-string "[._]\\([^ ]\\)" " \\1"
+                                           (match-string 0 name)))
+
+    ;; Replace tabs, spaces, and underscores with a single space.
+    (setq name (replace-regexp-in-string "[ \t\n_]+" " " name))
+    ;; Remove phone extensions (like "x1234" and "ext. 1234")
+    ;; This does not work all the time because some of our friends in
+    ;; northern europe have brackets in their names...
+    (let ((case-fold-search t))
+      (setq name (replace-regexp-in-string
+                  "\\W+\\(x\\|ext\\.?\\)\\W*[-0-9]+" "" name)))
+    ;; Remove trailing parenthesized comments
+    (when (string-match "[^ \t]\\([ \t]*\\((\\| -\\| #\\)\\)" name)
+      (setq name (substring name 0 (match-beginning 1)))))
+
+  name)
 
 (provide 'bbdb-mua)
