@@ -169,9 +169,10 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
           ;; address might match IGNORE-ADDRESS.
           (dolist (address (mail-extract-address-components content t))
             ;; We canonicalize name and mail as early as possible.
-            (setq name (funcall bbdb-message-clean-name-function
-                                (nth 0 address))
+            (setq name (nth 0 address)
                   mail (bbdb-canonicalize-mail (nth 1 address)))
+            (if name ; may be nil
+                (setq name (funcall bbdb-message-clean-name-function name)))
             ;; ignore uninteresting addresses
             (unless (or (and (stringp ignore-address)
                              (or (and name (string-match ignore-address name))

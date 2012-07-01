@@ -1,4 +1,7 @@
 2012-07-01  Sam Steingold  <sds@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-get-address-components): name may be nil.
+
+2012-07-01  Sam Steingold  <sds@gnu.org>
 	* .gitignore: ignore Makefiles and configure files;
 	bbdb-autoloads.el -> bbdb-loaddefs.el.
 
