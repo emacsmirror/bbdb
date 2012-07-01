@@ -1,3 +1,7 @@
+2012-07-01  Sam Steingold  <sds@gnu.org>
+	* .gitignore: ignore Makefiles and configure files;
+	bbdb-autoloads.el -> bbdb-loaddefs.el.
+
 2012-06-24  Sam Steingold  <sds@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-update-records): Use bbdb-message-search
 	instead of bbdb-search when `update-p' is `search' so that all
