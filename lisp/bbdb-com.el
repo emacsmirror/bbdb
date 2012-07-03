@@ -188,6 +188,7 @@ With prefix ARG a negative number, do not invert next search."
 (defmacro bbdb-search (records &optional name-re org-re mail-re notes-re
                                phone-re address-re)
   "Search RECORDS for fields matching regexps.
+Regexp NAME-RE is matched against FIRST_LAST, LAST_FIRST, and AKA.
 Regexp NOTES-RE is matched against the notes field.
 NOTES-RE may also be a cons (LABEL . RE).  Then RE is matched against
 note LABEL.  If LABEL is '* then RE is matched against any note field.
@@ -195,7 +196,10 @@ note LABEL.  If LABEL is '* then RE is matched against any note field.
 This macro only generates code for those fields actually being searched for;
 literal nils at compile-time cause no code to be generated.
 
-To reverse the search, bind variable `bbdb-search-invert' to t."
+To reverse the search, bind variable `bbdb-search-invert' to t.
+
+See also `bbdb-message-search' for fast searches using `bbdb-hashtable'
+but not allowing for regexps."
   (let (clauses)
     ;; I did not protect these vars from multiple evaluation because that
     ;; actually generates *less efficient code* in elisp, because the extra
@@ -209,6 +213,7 @@ To reverse the search, bind variable `bbdb-search-invert' to t."
     (or (stringp address-re) (symbolp address-re) (error "address-re must be atomic"))
     (when name-re
       (push `(string-match ,name-re (or (bbdb-record-name record) "")) clauses)
+      (push `(string-match ,name-re (or (bbdb-record-name-lf record) "")) clauses)
       (push `(let ((akas (bbdb-record-aka record))
                    aka done)
                (while (and (setq aka (pop akas)) (not done))
@@ -578,7 +583,12 @@ Return a list containing four numbers or one string."
   "Return list of BBDB records matching NAME and/or MAIL.
 First try to find a record matching both NAME and MAIL.
 If this fails try to find a record matching MAIL.
-If this fails try to find a record matching NAME."
+If this fails try to find a record matching NAME.
+NAME may match FIRST_LAST, LAST_FIRST or AKA.
+
+This function performs a fast search using `bbdb-hashtable'.
+NAME and MAIL must be strings.  See `bbdb-search' for searching
+records with regexps."
   (bbdb-buffer)  ; make sure database is loaded and up-to-date
   (setq mail (downcase mail))
   ;; (1) records matching NAME and MAIL

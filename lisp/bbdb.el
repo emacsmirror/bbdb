@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/06/24 08:11:17 $"
+(defconst bbdb-version-date "$Date: 2012/07/03 21:39:26 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -1956,7 +1956,7 @@ may correspond to RECORD without raising an error."
           (error "%s is already in BBDB" name)))))
 
 (defun bbdb-record-name (record)
-  "Record cache function: Return the full name of RECORD.
+  "Record cache function: Return the full name FIRST_LAST of RECORD.
 If the name is not available in the name cache, the name cache value
 is generated and stored."
   (or (bbdb-cache-fl-name (bbdb-record-cache record))
@@ -1964,7 +1964,7 @@ is generated and stored."
       (bbdb-record-set-name record t t)))
 
 (defun bbdb-record-name-lf (record)
-  "Record cache function: Return the full name of RECORD.
+  "Record cache function: Return the full name LAST_FIRST of RECORD.
 If the name is not available in the name cache, the name cache value
 is generated and stored."
   (or (bbdb-cache-lf-name (bbdb-record-cache record))
