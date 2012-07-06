@@ -1,14 +1,17 @@
 2012-07-06  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Use window-live-p.
+
+2012-07-06  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-edit-field): Revert previous change.
 	Do not use hard-coded bindings for user variables.
 
-2012-06-28  Sam Steingold  <sds@gnu.org>
-	* lisp/bbdb-com.el (bbdb-complete-mail): Use `quit-window'
-	instead of `bury-buffer' to get rid of *Completions*.
+2012-07-06  Sam Steingold  <sds@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Use `quit-window' instead
+	of `bury-buffer' to get rid of *Completions*.
 
 2012-07-06  Sam Steingold  <sds@gnu.org>
-	* lisp/bbdb-mua.el (bbdb-mua-edit-field):
-	Edit THE record for THE sender, not all the relevant records.
+	* lisp/bbdb-mua.el (bbdb-mua-edit-field): Edit THE record for THE
+	sender, not all the relevant records.
 
 2012-07-03  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-record-name, bbdb-record-name-lf): Fix

@@ -1787,10 +1787,10 @@ as part of the MUA insinuation."
 
     ;; Clean up *Completions* buffer, if it exists
     (when bbdb-complete-mail-saved-window-config
-      (let ((w (get-buffer-window "*Completions*")))
-        (when w
+      (let ((window (get-buffer-window "*Completions*")))
+        (when (window-live-p window)
           (set-window-configuration bbdb-complete-mail-saved-window-config)
-          (quit-window nil w)))
+          (quit-window nil window)))
       (setq bbdb-complete-mail-saved-window-config nil))
 
     (cond
