@@ -735,9 +735,7 @@ FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
         ((not field)
          (setq field 'notes)))
   (bbdb-mua-wrapper
-   (let ((records ; edit THE record for THE sender, not all the relevant records
-          (let ((bbdb-message-all-addresses nil))
-            (bbdb-mua-update-records header-class))))
+   (let ((records (bbdb-mua-update-records header-class)))
      (bbdb-display-records records)
      (dolist (record records)
        (bbdb-edit-field record field)

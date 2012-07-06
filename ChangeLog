@@ -1,3 +1,7 @@
+2012-07-06  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-edit-field): Revert previous change.
+	Do not use hard-coded bindings for user variables.
+
 2012-06-28  Sam Steingold  <sds@gnu.org>
 	* lisp/bbdb-com.el (bbdb-complete-mail): Use `quit-window'
 	instead of `bury-buffer' to get rid of *Completions*.
