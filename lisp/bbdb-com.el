@@ -1781,15 +1781,16 @@ as part of the MUA insinuation."
     ;; Multiple completions may match the same record
     (let ((records (delete-dups
                     (apply 'append (mapcar 'symbol-value all-completions)))))
-          ;; Is there only one matching record?
+      ;; Is there only one matching record?
       (setq one-record (and (not (cdr records))
                             (car records))))
 
     ;; Clean up *Completions* buffer, if it exists
     (when bbdb-complete-mail-saved-window-config
-      (when (get-buffer-window "*Completions*")
-        (set-window-configuration bbdb-complete-mail-saved-window-config)
-        (bury-buffer "*Completions*"))
+      (let ((w (get-buffer-window "*Completions*")))
+        (when w
+          (set-window-configuration bbdb-complete-mail-saved-window-config)
+          (quit-window nil w)))
       (setq bbdb-complete-mail-saved-window-config nil))
 
     (cond

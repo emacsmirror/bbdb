@@ -1,3 +1,7 @@
+2012-06-28  Sam Steingold  <sds@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Use `quit-window'
+	instead of `bury-buffer' to get rid of *Completions*.
+
 2012-07-06  Sam Steingold  <sds@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-edit-field):
 	Edit THE record for THE sender, not all the relevant records.
