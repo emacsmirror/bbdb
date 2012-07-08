@@ -272,7 +272,9 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
       (if msg-key (bbdb-message-set-cache msg-key records)))
 
     (if (and records (not bbdb-message-all-addresses))
-        (setq records (list (car records))))
+        (setq records (list (car records)))
+      ;; Make RECORDS a list ordered like ADDRESS-LIST.
+      (setq records (nreverse records)))
 
     ;; only invoke `bbdb-notice-record-hook' if we actually noticed something
     (if records
