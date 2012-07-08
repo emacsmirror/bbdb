@@ -209,7 +209,7 @@ UPDATE-P may take the following values:
  nil          Take the MUA-specific variable `bbdb/MUA-update-records-p'
                 which may take one of the above values.
                 If this still gives nil, `bbdb-update-records' returns nil.
-If MSG-KEY is non-nil consult cache.
+If MSG-KEY is the key of a message consult message cache.
 
 Usually this function is called by the wrapper `bbdb-mua-update-records'."
   ;; UPDATE-P allows filtering of complete messages.
@@ -268,13 +268,14 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
                    (add-to-list 'records hit))))
           (if (and records (not bbdb-message-all-addresses))
               (setq address-list nil))))
+      ;; Make RECORDS a list ordered like ADDRESS-LIST.
+      (setq records (nreverse records))
       ;; update cache
       (if msg-key (bbdb-message-set-cache msg-key records)))
 
+    ;; `bbdb-message-search' or message cache might yield multiple records
     (if (and records (not bbdb-message-all-addresses))
-        (setq records (list (car records)))
-      ;; Make RECORDS a list ordered like ADDRESS-LIST.
-      (setq records (nreverse records)))
+        (setq records (list (car records))))
 
     ;; only invoke `bbdb-notice-record-hook' if we actually noticed something
     (if records
