@@ -1,3 +1,10 @@
+2012-07-09  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-annotate-sender)
+	(bbdb-mua-annotate-recipients, bbdb-mua-edit-field)
+	(bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients): New arg
+	update-p.
+	(bbdb-mua-edit-field-interactive): Handle arg update-p.
+
 2012-07-08  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-update-records): Fix previous patch.
 

@@ -699,24 +699,46 @@ If REPLACE is non-nil, ANNOTATION replaces the content of FIELD."
     (bbdb-change-record record)
     (bbdb-maybe-update-display record)))
 
+;; FIXME: For interactive calls of the following commands, the arg UPDATE-P
+;; should have the same meaning as for `bbdb-mua-display-records',
+;; that is, it should use `bbdb-mua-update-interactive-p'.
+;; But here the prefix arg is already used in a different way.
+;; We could possibly solve this problem if all `bbdb-mua-*' commands
+;; used another prefix arg that is consistently used only for
+;; `bbdb-mua-update-interactive-p'.
+;; Yet this prefix arg must be defined within the key space of the MUA(s).
+;; This results in lots of conflicts...
+;;
+;; Current workaround:
+;; These commands use merely the car of `bbdb-mua-update-interactive-p'.
+;; If one day someone proposes a smart solution to this problem (suggestions
+;; welcome!), this solution will hopefully include the current workaround
+;; as a subset of all its features.
+
 ;;;###autoload
-(defun bbdb-mua-annotate-sender (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record
+(defun bbdb-mua-annotate-sender (string &optional replace update-p)
+  "Add a line to the end of the notes field of the BBDB record(s)
 corresponding to the sender(s) of this message.
-If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
-  (interactive (list (read-string "Comments: ") current-prefix-arg))
+If prefix REPLACE is non-nil, replace the existing notes entry (if any).
+UPDATE-P may take the same values as `bbdb-update-records-p'.
+For interactive calls, use car of `bbdb-mua-update-interactive-p'."
+  (interactive (list (read-string "Comments: ") current-prefix-arg
+                     (car bbdb-mua-update-interactive-p)))
   (bbdb-mua-wrapper
-   (dolist (record (bbdb-mua-update-records 'sender))
+   (dolist (record (bbdb-mua-update-records 'sender update-p))
      (bbdb-annotate-record record string 'notes replace))))
 
 ;;;###autoload
-(defun bbdb-mua-annotate-recipients (string &optional replace)
-  "Add a line to the end of the Notes field of the BBDB record
+(defun bbdb-mua-annotate-recipients (string &optional replace update-p)
+  "Add a line to the end of the notes field of the BBDB record(s)
 corresponding to the recipient(s) of this message.
-If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
-  (interactive (list (read-string "Comments: ") current-prefix-arg))
+If prefix REPLACE is non-nil, replace the existing notes entry (if any).
+UPDATE-P may take the same values as `bbdb-update-records-p'.
+For interactive calls, use car of `bbdb-mua-update-interactive-p'."
+  (interactive (list (read-string "Comments: ") current-prefix-arg
+                     (car bbdb-mua-update-interactive-p)))
   (bbdb-mua-wrapper
-   (dolist (record (bbdb-mua-update-records 'recipients))
+   (dolist (record (bbdb-mua-update-records 'recipients update-p))
      (bbdb-annotate-record record string 'notes replace))))
 
 (defun bbdb-mua-edit-field-interactive ()
@@ -726,37 +748,44 @@ If prefix REPLACE is non-nil, replace the existing notes entry (if any)."
                      "Field: "
                      (mapcar 'symbol-name
                              (append '(name affix organization aka mail)
-                                     bbdb-notes-label-list)))))))
+                                     bbdb-notes-label-list)))))
+        (car bbdb-mua-update-interactive-p)))
 
 ;;;###autoload
-(defun bbdb-mua-edit-field (field &optional header-class)
+(defun bbdb-mua-edit-field (field &optional update-p header-class)
   "Edit FIELD of record.
-FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
+FIELD defaults to 'notes.  With prefix arg, ask for FIELD.
+UPDATE-P may take the same values as `bbdb-update-records-p'.
+For interactive calls, use car of `bbdb-mua-update-interactive-p'."
   (interactive (bbdb-mua-edit-field-interactive))
   (cond ((memq field '(firstname lastname address phone Notes))
          (error "Field `%s' not editable this way" field))
         ((not field)
          (setq field 'notes)))
   (bbdb-mua-wrapper
-   (let ((records (bbdb-mua-update-records header-class)))
+   (let ((records (bbdb-mua-update-records header-class update-p)))
      (bbdb-display-records records)
      (dolist (record records)
        (bbdb-edit-field record field)
        (bbdb-maybe-update-display record)))))
 
 ;;;###autoload
-(defun bbdb-mua-edit-field-sender (&optional field)
+(defun bbdb-mua-edit-field-sender (&optional field update-p)
   "Edit FIELD of record corresponding to sender of this message.
-FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
+FIELD defaults to 'notes.  With prefix arg, ask for FIELD.
+UPDATE-P may take the same values as `bbdb-update-records-p'.
+For interactive calls, use car of `bbdb-mua-update-interactive-p'."
   (interactive (bbdb-mua-edit-field-interactive))
-  (bbdb-mua-edit-field field 'sender))
+  (bbdb-mua-edit-field field update-p 'sender))
 
 ;;;###autoload
-(defun bbdb-mua-edit-field-recipients (&optional field)
+(defun bbdb-mua-edit-field-recipients (&optional field update-p)
   "Edit FIELD of record corresponding to recipient of this message.
-FIELD defaults to 'notes.  With prefix arg, ask for FIELD."
+FIELD defaults to 'notes.  With prefix arg, ask for FIELD.
+UPDATE-P may take the same values as `bbdb-update-records-p'.
+For interactive calls, use car of `bbdb-mua-update-interactive-p'."
   (interactive (bbdb-mua-edit-field-interactive))
-  (bbdb-mua-edit-field field 'recipients))
+  (bbdb-mua-edit-field field update-p 'recipients))
 
 ;; Functions for noninteractive use in MUA hooks
 
