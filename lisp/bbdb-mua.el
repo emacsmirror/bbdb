@@ -148,8 +148,8 @@ Return the value of variable `bbdb-update-records-p' for messages both matching
 (defun bbdb-get-address-components (&optional header-class ignore-address)
   "Extract mail addresses from a message.
 Return list with elements (NAME EMAIL HEADER HEADER-CLASS MUA).
-HEADER-CLASS is defined in `bbdb-message-headers'.  If arg HEADER-CLASS is
-nil, use all classes in `bbdb-message-headers'.
+HEADER-CLASS is defined in `bbdb-message-headers'.  If HEADER-CLASS is nil,
+use all classes in `bbdb-message-headers'.
 If regexp IGNORE-ADDRESS matches NAME or EMAIL of an address, this address
 is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
   ;; We do not use `bbdb-message-all-addresses' here because only when we
@@ -350,7 +350,7 @@ Type q  to quit updating records.  No more search or annotation is done.")
 ;; Note: For MESSAGE-KEY, we can always use (bbdb-message-header "Message-ID").
 
 (defun bbdb-message-get-cache (message-key)
-  "Return cached BBDB records for MESSAGE-KEY.
+  "Return cached BBDB records identified by MESSAGE-KEY.
 If not present or when the records have been modified return nil."
   (bbdb-buffer)  ; make sure database is loaded and up-to-date
   (if (and bbdb-message-caching message-key)
@@ -362,15 +362,14 @@ If not present or when the records have been modified return nil."
         (if valid records))))
 
 (defun bbdb-message-set-cache (message-key records)
-  "Cache the RECORDS for a message identified by MESSAGE-KEY and
-return them."
+  "Cache the RECORDS for a message identified by MESSAGE-KEY and return them."
   (and bbdb-message-caching records
        (add-to-list 'bbdb-message-cache (cons message-key records))
        records))
 
 ;; not used anywhere
 (defun bbdb-message-rem-cache (message-key)
-  "Remove an element from `bbdb-message-cache'."
+  "Remove an element identified by MESSAGE-KEY from `bbdb-message-cache'."
   (if bbdb-message-caching
       (setq bbdb-message-cache
             (delq (assq message-key bbdb-message-cache) bbdb-message-cache))))
@@ -717,8 +716,7 @@ If REPLACE is non-nil, ANNOTATION replaces the content of FIELD."
 
 ;;;###autoload
 (defun bbdb-mua-annotate-sender (string &optional replace update-p)
-  "Add a line to the end of the notes field of the BBDB record(s)
-corresponding to the sender(s) of this message.
+  "Add STRING to notes field of the BBDB record(s) of message sender(s).
 If prefix REPLACE is non-nil, replace the existing notes entry (if any).
 UPDATE-P may take the same values as `bbdb-update-records-p'.
 For interactive calls, use car of `bbdb-mua-update-interactive-p'."
@@ -730,8 +728,7 @@ For interactive calls, use car of `bbdb-mua-update-interactive-p'."
 
 ;;;###autoload
 (defun bbdb-mua-annotate-recipients (string &optional replace update-p)
-  "Add a line to the end of the notes field of the BBDB record(s)
-corresponding to the recipient(s) of this message.
+  "Add STRING to notes field of the BBDB records of message recipients.
 If prefix REPLACE is non-nil, replace the existing notes entry (if any).
 UPDATE-P may take the same values as `bbdb-update-records-p'.
 For interactive calls, use car of `bbdb-mua-update-interactive-p'."
@@ -753,10 +750,12 @@ For interactive calls, use car of `bbdb-mua-update-interactive-p'."
 
 ;;;###autoload
 (defun bbdb-mua-edit-field (field &optional update-p header-class)
-  "Edit FIELD of record.
+  "Edit FIELD of the BBDB record(s) of message sender(s) or recipients.
 FIELD defaults to 'notes.  With prefix arg, ask for FIELD.
 UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, use car of `bbdb-mua-update-interactive-p'."
+For interactive calls, use car of `bbdb-mua-update-interactive-p'.
+HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
+use all classes in `bbdb-message-headers'."
   (interactive (bbdb-mua-edit-field-interactive))
   (cond ((memq field '(firstname lastname address phone Notes))
          (error "Field `%s' not editable this way" field))
@@ -950,20 +949,25 @@ For use as an element of `bbdb-notice-mail-hook'."
           (funcall bbdb-canonicalize-mail-function mail)
         mail)))
 
-;;; I use `bbdb-canonicalize-mail-1' as the value of `bbdb-canonicalize-mail-function'.
-;;; It is provided as an example for you to customize.
-
 (defcustom bbdb-canonical-hosts
   ;; Example
   (mapconcat 'regexp-quote '("cs.cmu.edu" "ri.cmu.edu") "\\|")
-  "Certain sites have a single mail-host; for example, all mail originating
+  "Regexp matching the canonical part of the domain part of a mail address.
+If the domain part of a mail address matches this regexp, the domain
+is replaced by the substring that actually matched this address.
+
+Certain sites have a single mail-host; for example, all mail originating
 at hosts whose names end in \".cs.cmu.edu\" can (and probably should) be
-addressed to \"user@cs.cmu.edu\" instead."
+sent to \"user@cs.cmu.edu\" instead.  Customize `bbdb-canonical-hosts'
+for this.
+
+Used by  `bbdb-canonicalize-mail-1'"
   :group 'bbdb-mua
   :type '(regexp :tag "Regexp matching sites"))
 
 ;;;###autoload
 (defun bbdb-canonicalize-mail-1 (address)
+  "Example of `bbdb-canonicalize-mail-function'."
   (cond
    ;;
    ;; rewrite mail-drop hosts.
@@ -1020,11 +1024,20 @@ addressed to \"user@cs.cmu.edu\" instead."
    ;; passed in tells BBDB that we are done.
    (t address)))
 
+;;; Here is another approach not requiring the configuration of a user variable
+;;; such as `bbdb-canonical-hosts'.
+;;;
+;;; Sometimes one gets mail from foo@bar.baz.com, and then later gets mail
+;;; from foo@baz.com.  At this point, one would like to delete the bar.baz.com
+;;; address, since the baz.com address is obviously superior.
+
 (defun bbdb-mail-redundant-p (mail old-mails)
   "Return non-nil if MAIL is a sub-domain of one of the OLD-MAILS.
 The return value is the address which makes this one redundant.
 For example, \"foo@bar.baz.com\" is redundant w.r.t. \"foo@baz.com\",
-and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\"."
+and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\".
+
+See also `bbdb-canonicalize-redundant-mails'."
   (let (redundant-address)
     (while (and (not redundant-address) old-mails)
       ;; Calculate a host-regexp for each address in OLD-MAILS
@@ -1044,17 +1057,9 @@ and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\"."
       (setq old-mails (cdr old-mails)))
     redundant-address))
 
-;;; Here's another approach; sometimes one gets mail from foo@bar.baz.com,
-;;; and then later gets mail from foo@baz.com.  At this point, one would
-;;; like to delete the bar.baz.com address, since the baz.com address is
-;;; obviously superior.  See also var `bbdb-canonicalize-redundant-mails'.
-;;;
-;;; Turn this on with
-;;;   (add-hook 'bbdb-change-hook 'bbdb-delete-redundant-mails)
-
 (defun bbdb-delete-redundant-mails (record)
-  "Deletes redundant mail addresses.
-For use as a value of `bbdb-change-hook'.  See `bbdb-mail-redundant-p'."
+  "Delete redundant mail addresses of RECORD.
+For use as a value of `bbdb-change-hook'.  See also `bbdb-mail-redundant-p'."
   (let ((mails (bbdb-record-mail record))
          okay redundant)
     (dolist (mail mails)
@@ -1068,7 +1073,7 @@ For use as a value of `bbdb-change-hook'.  See `bbdb-mail-redundant-p'."
 
 (defun bbdb-message-clean-name-default (name)
   "Default function for `bbdb-message-clean-name-function'.
-This strips garbage from the user full name string."
+This strips garbage from the user full NAME string."
   ;; Remove leading non-alpha chars
   (if (string-match "\\`[^[:alpha:]]+" name)
       (setq name (substring name (match-end 0))))
