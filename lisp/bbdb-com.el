@@ -668,11 +668,11 @@ If it is t read name parts separately, obeying `bbdb-read-name-format' if possib
 Otherwise use `bbdb-read-name-format'.
 DFIRST and DLAST are default values for the first and last name.
 Return cons with first and last name."
-  (unless (member first-and-last '(first-last last-first fullname))
+  (unless (memq first-and-last '(first-last last-first fullname))
     ;; We do not yet know how to read the name
     (setq first-and-last
           (if (and first-and-last
-                   (not (member bbdb-read-name-format '(first-last last-first))))
+                   (not (memq bbdb-read-name-format '(first-last last-first))))
               'first-last
             bbdb-read-name-format)))
   (let ((name (cond ((eq first-and-last 'last-first)
@@ -784,7 +784,7 @@ value of \"\", the default) means do not alter the address."
      (setq list (mapcar 'symbol-name list))
      (while (string= field "")
        (setq field (downcase (completing-read "Insert Field: " list))))
-     (if (member (intern field) present)
+     (if (memq (intern field) present)
          (error "Field \"%s\" already exists" field))
      (setq init-f (intern-soft (concat "bbdb-init-" field))
            init   (if (and init-f (functionp init-f))
@@ -1220,10 +1220,7 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
               (y-or-n-p (format "Delete the BBDB record of %s? "
                                 (or (bbdb-record-name record)
                                     (car (bbdb-record-mail record))))))
-      (bbdb-debug (if (bbdb-record-deleted-p record)
-                      (error "Deleting deleted record")))
       (bbdb-redisplay-record record t)
-      (bbdb-record-set-deleted-p record t)
       (bbdb-delete-record-internal record)
       (setq bbdb-records (delq (assq record bbdb-records) bbdb-records))
       (setq bbdb-changed-records (delq record bbdb-changed-records)))))
@@ -1911,8 +1908,8 @@ as part of the MUA insinuation."
                          (mapcar (lambda (n) (bbdb-dwim-mail record n)) mails)
                          done 'choose))
                   (t ; use next mail
-                   (let ((mail (or (nth 1 (or (member (nth 1 address) mails)
-                                              (member orig mails)))
+                   (let ((mail (or (nth 1 (or (member-ignore-case (nth 1 address) mails)
+                                              (member-ignore-case orig mails)))
                                    (nth 0 mails))))
                      ;; replace with new mail address
                      (delete-region beg end)

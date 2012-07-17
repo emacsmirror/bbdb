@@ -390,9 +390,6 @@ from `bbdb-print-alist'.
 
 The return value is the new CURRENT-LETTER."
 
-  (bbdb-debug (if (bbdb-record-deleted-p record)
-                  (error "TeX formatting deleted record")))
-
   (let ((first-letter
          (substring (concat (bbdb-record-sortkey record) "?") 0 1))
         (name    (or (bbdb-record-note record 'tex-name)

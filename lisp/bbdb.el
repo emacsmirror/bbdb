@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/07/03 21:39:26 $"
+(defconst bbdb-version-date "$Date: 2012/07/17 21:49:13 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -695,11 +695,14 @@ Whether this is used at all depends on the variable `bbdb-check-postcode'."
   "How BBDB's interactive MUA commands update BBDB records.
 This is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
 The car is used if the command is called without a prefix.
-The cdr is used if the command is called with a prefix.
+The cdr is used if the command is called with a prefix (and if the prefix
+        is not used for another purpose).
 
 Allowed values are (here ADDRESS is an email address found in a message):
  nil          Do nothing.
  search       Search for existing records matching ADDRESS.
+ update       Search for existing records matching ADDRESS;
+                update name and mail field if necessary.
  query        Search for existing records matching ADDRESS;
                 query for creation of a new record if the record does not exist.
  create or t  Search for existing records matching ADDRESS;
@@ -711,12 +714,14 @@ Allowed values are (here ADDRESS is an email address found in a message):
   :group 'bbdb-mua
   :type '(cons (choice (const :tag "do nothing" nil)
                        (const :tag "search for existing records" search)
+                       (const :tag "update existing records" update)
                        (const :tag "query annotation of all messages" query)
                        (const :tag "annotate all messages" create)
                        (function :tag "User-defined function")
                        (const :tag "read arg interactively" read))
                (choice (const :tag "do nothing" nil)
                        (const :tag "search for existing records" search)
+                       (const :tag "update existing records" update)
                        (const :tag "query annotation of all messages" query)
                        (const :tag "annotate all messages" create)
                        (function :tag "User-defined function")
@@ -728,6 +733,8 @@ Allowed values are (here ADDRESS is an email address found in a message):
 Allowed values are (here ADDRESS is an email address found in a message):
  nil          Do nothing.
  search       Search for existing records matching ADDRESS.
+ update       Search for existing records matching ADDRESS;
+                update name and mail field if necessary.
  query        Search for existing records matching ADDRESS;
                 query for creation of a new record if the record does not exist.
  create or t  Search for existing records matching ADDRESS;
@@ -740,6 +747,7 @@ for the respective MUAs in your init file."
   :group 'bbdb-mua
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records" search)
+                 (const :tag "update existing records" update)
                  (const :tag "query annotation of all messages" query)
                  (const :tag "annotate all messages" create)
                  (function :tag "User-defined function")))
@@ -753,6 +761,8 @@ Allowed values are (here ADDRESS is an email address selected
 by `bbdb-select-message'):
  nil          Do nothing.
  search       Search for existing records matching ADDRESS.
+ update       Search for existing records matching ADDRESS;
+                update name and mail field if necessary.
  query        Search for existing records matching ADDRESS;
                 query for creation of a new record if the record does not exist.
  create or t  Search for existing records matching ADDRESS;
@@ -764,6 +774,7 @@ by `bbdb-select-message'):
   :group 'bbdb-mua
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records" search)
+                 (const :tag "update existing records" update)
                  (const :tag "query annotation of all messages" query)
                  (const :tag "annotate all messages" create)
                  (function :tag "User-defined function")))
@@ -916,8 +927,8 @@ this variable to a function like this:
                 (t address))))
 
 See `bbdb-canonicalize-mail-1' for a more complete example.
-You could also use this function to rewrite UUCP-style addresses into
-domain-style addresses, or any number of things."
+
+If this function returns nil, BBDB assumes that there is no mail address."
   :group 'bbdb-mua
   :type 'function)
 
@@ -948,7 +959,7 @@ It takes one argument, the name as extracted by
   :group 'bbdb-mua
   :type 'boolean)
 
-(defcustom bbdb-message-caching t
+(defcustom bbdb-message-caching nil
   "Whether to cache the message->record association for supporting interfaces.
 These are VM, MH, and RMAIL.  This can speed up BBDB a lot.
 One implication of this variable being t is that `bbdb-notice-mail-hook'
@@ -1867,9 +1878,8 @@ Return new value."
 ;; - lf-name (last and first name of the person referred to by the record),
 ;; - sortkey (the concatenation of the elements used for sorting the record),
 ;; - marker  (position of beginning of record in `bbdb-file')
-;; - deleted-p (a flag).
 (bbdb-defstruct cache
-  fl-name lf-name sortkey marker deleted-p)
+  fl-name lf-name sortkey marker)
 
 ;; `bbdb-hashtable' associates with each FIELD a list of matching records.
 (defun bbdb-puthash (field record)
@@ -2027,18 +2037,6 @@ Build and store it if necessary."
 (defsubst bbdb-record-set-marker (record marker)
   "Record cache function: Set and return RECORD's MARKER."
   (bbdb-cache-set-marker (bbdb-record-cache record) marker))
-
-(defsubst bbdb-record-deleted-p (record)
-  "Record cache function: Return the `deleted' flag for RECORD."
-  (bbdb-cache-deleted-p (bbdb-record-cache record)))
-
-;; `bbdb-record-set-deleted-p' is used exactly once by `bbdb-delete-records'
-;; so that this flag is set just before the record is deleted completely.
-;; Do we need this?? When would we want to set the deleted flag without
-;; actually performing the deletion?
-(defsubst bbdb-record-set-deleted-p (record val)
-  "Record cache function: Set and return the RECORD's `deleted' flag to VAL."
-  (bbdb-cache-set-deleted-p (bbdb-record-cache record) val))
 
 (defsubst bbdb-record-note (record label)
   "For RECORD return value of note LABEL.
@@ -2723,8 +2721,6 @@ NEED-TO-SORT is t when the name has changed.  You still need to worry
 about updating the name hash-table.  If NEW is t treat RECORD as new."
   (if bbdb-read-only
       (error "The Insidious Big Brother Database is read-only."))
-  (bbdb-debug (if (bbdb-record-deleted-p record)
-                  (error "BBDB: changing deleted record")))
   (unless bbdb-notice-hook-pending
     (run-hook-with-args 'bbdb-change-hook record))
   ;; Do the changing.
@@ -3048,7 +3044,7 @@ corresponding cdr is used.  If none of these schemes succeeds the face
   (if (and bbdb-image (display-images-p))
       (let ((image (cond ((functionp bbdb-image)
                           (funcall bbdb-image record))
-                         ((member bbdb-image '(name fl-name))
+                         ((memq bbdb-image '(name fl-name))
                           (bbdb-record-name record))
                          ((eq bbdb-image 'lf-name)
                           (bbdb-record-name-lf record))
@@ -3200,8 +3196,6 @@ LAYOUT can be a symbol describing a layout in `bbdb-layout-alist'.
 If it is nil, use `bbdb-layout'.
 NUMBER is the number of RECORD among the displayed records.
 Move point to the end of the inserted record."
-  (bbdb-debug (if (bbdb-record-deleted-p record)
-                  (error "Formatting deleted record")))
   (unless layout (setq layout bbdb-layout))
   (unless (assq layout bbdb-layout-alist)
     (error "Unknown layout `%s'" layout))

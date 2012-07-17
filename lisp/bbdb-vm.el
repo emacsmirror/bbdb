@@ -51,6 +51,7 @@ in a value of nil for the arg UPDATE-P of `bbdb-update-records'.
 Allowed values are:
  nil          Do nothing.
  search       Search for existing records.
+ update       Search for existing records, update if necessary.
  query        Update existing records or query for creating new ones.
  create or t  Update existing records or create new ones.
  a function   This functions will be called with no arguments.
@@ -60,6 +61,9 @@ Allowed values are:
                         nil)
                  (const :tag "search for existing records"
                         (lambda () (let ((bbdb-update-records-p 'search))
+                                     (bbdb-select-message))))
+                 (const :tag "update existing records"
+                        (lambda () (let ((bbdb-update-records-p 'update))
                                      (bbdb-select-message))))
                  (const :tag "query annotation of all messages"
                         (lambda () (let ((bbdb-update-records-p 'query))

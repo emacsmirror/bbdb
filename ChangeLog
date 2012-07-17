@@ -1,3 +1,40 @@
+2012-07-17  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mua-update-interactive-p)
+	(bbdb-mua-auto-update-p, bbdb-update-records-p): Update docstring.
+	(bbdb-canonicalize-mail-function): Update docstring.
+	(bbdb-message-caching): Use default nil till caching is fixed.
+	(bbdb-cache-deleted-p, bbdb-cache-set-deleted-p)
+	(bbdb-record-deleted-p, bbdb-record-set-deleted-p): Removed.
+	(bbdb-display-name-organization): Use memq.
+
+	* lisp/bbdb-mua.el (bbdb-mua, bbdb-message-header): Use memq.
+	(bbdb-get-address-components): Allow mail to be nil. Use
+	member-ignore-case.
+	(bbdb-update-records): New value update for arg update-p.  Use
+	memq.
+	(bbdb-message-get-cache): Simplify.
+	(bbdb-message-set-cache): Remove old value from cache.
+	(bbdb-annotate-message): New value update for arg update-p.
+	Operate on all records found by bbdb-message-search.  Return list
+	of records.  Use member-ignore-case.
+	(bbdb-mua-update-records): Use memq.
+	(bbdb-auto-notes): Use member-ignore-case and assoc-string.
+
+	* lisp/bbdb-com.el (bbdb-read-name, bbdb-insert-field): Use memq.
+	(bbdb-complete-mail): Use member-ignore-case.
+
+	* lisp/bbdb-message.el (bbdb/message-update-records-p)
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-records-p)
+	* lisp/bbdb-mhe.el (bbdb/mh-update-records-p)
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records-p)
+	* lisp/bbdb-vm.el (bbdb/vm-update-records-p): Update
+	docstring.
+
+	* lisp/bbdb-print.el (bbdb-print-record): Do not use
+	bbdb-record-deleted-p.
+
+	* README: Update usage of update-p.
+
 2012-07-12  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-get-address-components)
 	(bbdb-message-get-cache, bbdb-message-set-cache)

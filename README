@@ -80,11 +80,14 @@ can create new records.
 They are all controlled by bbdb-mua-update-interactive-p.
 This is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
 The car is used if the command is called without a prefix.
-The cdr is used if the command is called with a prefix.
+The cdr is used if the command is called with a prefix (and if the prefix
+        is not used for another purpose).
 
 Allowed values are (here ADDRESS is an email address found in a message):
  nil          Do nothing.
  search       Search for existing records matching ADDRESS.
+ update       Search for existing records matching ADDRESS;
+                update name and mail field if necessary.
  query        Search for existing records matching ADDRESS;
                 query for creation of a new record if the record does not exist.
  create or t  Search for existing records matching ADDRESS;
