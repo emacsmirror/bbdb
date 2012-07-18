@@ -58,7 +58,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/07/18 16:16:23 $"
+(defconst bbdb-version-date "$Date: 2012/07/18 16:49:41 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -3516,28 +3516,28 @@ then the window will be split horizontally rather than vertically."
       (with-current-buffer bbdb-buffer-name
         (Electric-pop-up-window bbdb-buffer-name)
         (bbdb-display-records-internal records layout append select horiz-p)
-        (setq key (lookup-key bbdb-mode-map " "))
-        (define-key bbdb-mode-map " " 'bbdb-electric-quit)
         (unless bbdb-silent-internal
           (message "Press SPC to quit BBDB buffer")
           (sit-for 1))
-        (catch 'electric-quit
-          (while t
-            (catch 'electric-error
-              (setq bbdb-electric-quit nil)
-              (unwind-protect
-                  (progn
-                    (catch 'electric-tag
-                      (Electric-command-loop 'electric-tag
-                                             "-> " t))
-                    (setq bbdb-electric-quit t))
-                ;; protected
-                (define-key bbdb-mode-map " " key)
-                (if bbdb-electric-quit
-                    (throw 'electric-quit t)
-                  (ding)
-                  (message "BBDB-Quit")
-                  (throw 'electric-error t))))))))
+        (setq key (lookup-key bbdb-mode-map " "))
+        (define-key bbdb-mode-map " " 'bbdb-electric-quit)
+        (unwind-protect
+            (catch 'electric-quit
+              (while t
+                (setq bbdb-electric-quit nil)
+                (catch 'electric-error
+                  (unwind-protect
+                      (progn
+                        (catch 'electric-tag
+                          (Electric-command-loop 'electric-tag "-> " t))
+                        (setq bbdb-electric-quit t))
+                    ;; protected
+                    (if bbdb-electric-quit
+                        (throw 'electric-quit t)
+                      (ding)
+                      (message "BBDB-Quit")
+                      (throw 'electric-error t))))))
+          (define-key bbdb-mode-map " " key))))
     ;; quit the electric command loop
     (setq bbdb-inside-electric-display nil)
     (message " ")
