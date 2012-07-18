@@ -47,6 +47,8 @@
   (autoload 'bbdb-dwim-mail "bbdb-com")
   (autoload 'bbdb-layout-prefix "bbdb-com")
   (autoload 'bbdb-completing-read-records "bbdb-com")
+  (autoload 'bbdb-search "bbdb-com")
+  (autoload 'bbdb-search-prompt "bbdb-com")
   (autoload 'mail-position-on-field "sendmail")
   (autoload 'vm-select-folder-buffer "vm-folder")
 
@@ -56,7 +58,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/07/17 21:49:13 $"
+(defconst bbdb-version-date "$Date: 2012/07/18 16:16:23 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -3243,8 +3245,8 @@ Move point to the end of the inserted record."
         (bbdb-display-record-multi-line record layout field-list))
       (put-text-property beg (point) 'bbdb-record-number number))))
 
-(defun bbdb-display-records (&optional records layout append
-                                       select horiz-p electric-p)
+(defun bbdb-display-records (records &optional layout append
+                                     select horiz-p electric-p)
   "Display RECORDS using LAYOUT.
 If APPEND is non-nil append RECORDS to the already displayed records.
 Otherwise RECORDS overwrite the displayed records.
@@ -3256,14 +3258,8 @@ If ELECTRIC-P is non-nil BBDB is `electric' like `electric-buffer-list'."
     ;; Never be electric if the buffer is already on screen.
     (if (and (not bbdb-window)
              (or bbdb-electric electric-p))
-        (progn
-          (define-key bbdb-mode-map " " 'bbdb-electric-quit)
-          (bbdb-electric-display-records records))
-      (bbdb-display-records-internal records layout append select horiz-p)
-      ;; do not smash keybinding if they invoked `bbdb-display'
-      ;; from inside an electric loop.
-      (unless bbdb-inside-electric-display
-        (define-key bbdb-mode-map " " 'undefined)))))
+        (bbdb-electric-display-records records layout append select horiz-p)
+      (bbdb-display-records-internal records layout append select horiz-p))))
 
 (defun bbdb-display-records-internal (records &optional layout append
                                               select horiz-p)
@@ -3507,18 +3503,23 @@ then the window will be split horizontally rather than vertically."
 
 ;;; Electric display stuff
 
-(defun bbdb-electric-display-records (records)
+(defun bbdb-electric-display-records (records &optional layout append select horiz-p)
   "Display RECORDS electrically."
+  (interactive
+   (list (let ((regexp (bbdb-search-prompt)))
+           (bbdb-search (bbdb-records) regexp regexp regexp
+                        (cons '* regexp) regexp regexp))))
   (require 'electric)
   (let ((bbdb-inside-electric-display t)
-        bbdb-electric-execute bbdb-electric-quit buffer)
-    (save-excursion
-      (save-window-excursion
-        (save-window-excursion (bbdb-display-records-internal records))
-        (setq buffer (window-buffer (Electric-pop-up-window bbdb-buffer-name)))
-        (set-buffer buffer)
+        bbdb-electric-execute bbdb-electric-quit key)
+    (save-window-excursion
+      (with-current-buffer bbdb-buffer-name
+        (Electric-pop-up-window bbdb-buffer-name)
+        (bbdb-display-records-internal records layout append select horiz-p)
+        (setq key (lookup-key bbdb-mode-map " "))
+        (define-key bbdb-mode-map " " 'bbdb-electric-quit)
         (unless bbdb-silent-internal
-          (message "Press space to bury BBDB buffer")
+          (message "Press SPC to quit BBDB buffer")
           (sit-for 1))
         (catch 'electric-quit
           (while t
@@ -3531,18 +3532,16 @@ then the window will be split horizontally rather than vertically."
                                              "-> " t))
                     (setq bbdb-electric-quit t))
                 ;; protected
+                (define-key bbdb-mode-map " " key)
                 (if bbdb-electric-quit
                     (throw 'electric-quit t)
                   (ding)
                   (message "BBDB-Quit")
-                  (throw 'electric-error t))))))
-        (bury-buffer buffer)))
+                  (throw 'electric-error t))))))))
     ;; quit the electric command loop
     (setq bbdb-inside-electric-display nil)
     (message " ")
-    (if bbdb-electric-execute
-        (eval bbdb-electric-execute)))
-  nil)
+    (eval bbdb-electric-execute)))
 
 (defun bbdb-electric-throw (form)
   "Exit the `Electric-command-loop' and evaluate FORM."

@@ -1,3 +1,12 @@
+2012-07-18  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el: Autoload bbdb-search and bbdb-search-prompt.
+	(bbdb-display-records): Make records a required arg.  Do not
+	redefine keys.  Pass optional args to
+	bbdb-electric-display-records.
+	(bbdb-electric-display-records): New optional args layout append
+	select horiz-p.  Make it a command.  Redefine SPC key temporarily.
+	Simplify.
+
 2012-07-17  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mua-update-interactive-p)
 	(bbdb-mua-auto-update-p, bbdb-update-records-p): Update docstring.
