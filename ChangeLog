@@ -1,3 +1,12 @@
+2012-07-19  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el: Simplify previous patch.
+	(bbdb-electric-execute, bbdb-electric-quit, bbdb-electric-quit):
+	Remove.
+	(bbdb-display-records): Simplify.
+	(bbdb-electric-display-records): Fix docstring.  Simplify.  Remove
+	optional args select and horiz-p that interfere with
+	Electric-pop-up-window.
+
 2012-07-18  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-electric-display-records): Fix previous
 	patch.
