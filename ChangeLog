@@ -1,4 +1,8 @@
 2012-07-20  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Simplify. Create new
+	record if update-p has not value update.
+
+2012-07-20  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-gethash): Allow value of t for arg predicate.
 
 2012-07-20  Sam Steingold  <sds@gnu.org>
