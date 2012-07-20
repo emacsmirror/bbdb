@@ -587,12 +587,12 @@ If this fails try to find a record matching NAME.
 NAME may match FIRST_LAST, LAST_FIRST or AKA.
 
 This function performs a fast search using `bbdb-hashtable'.
-NAME and MAIL must be strings.  See `bbdb-search' for searching
-records with regexps."
+NAME and MAIL must be strings or nil.
+See `bbdb-search' for searching records with regexps."
   (bbdb-buffer)  ; make sure database is loaded and up-to-date
-  (setq mail (downcase mail))
+  (if mail (setq mail (downcase mail)))
   ;; (1) records matching NAME and MAIL
-  (or (and name
+  (or (and name mail
            (let (records)
              (dolist (record (bbdb-gethash name '(fl-name lf-name aka)))
                (dolist (m (bbdb-record-mail record))
