@@ -58,7 +58,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/07/19 07:03:14 $"
+(defconst bbdb-version-date "$Date: 2012/07/20 05:57:41 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -1896,7 +1896,7 @@ PREDICATE may take the same values as `bbdb-completion-list'."
     (let* ((field (downcase field))
            (all-records (symbol-value (intern-soft field bbdb-hashtable)))
            records)
-      (if (not predicate)
+      (if (or (not predicate) (eq t predicate))
           all-records
         (dolist (record all-records)
           (if (and (memq 'fl-name predicate)

@@ -1,3 +1,6 @@
+2012-07-20  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-gethash): Allow value of t for arg predicate.
+
 2012-07-20  Sam Steingold  <sds@gnu.org>
 	* lisp/bbdb-com.el (bbdb-message-search): Allow args name or mail
 	to be nil.
