@@ -1384,7 +1384,10 @@ The first record is the record under the point; the second is prompted for."
     (bbdb-record-set-name new-record (car name) (cdr name))
 
     (if extra-name (push extra-name old-aka))
-    (bbdb-record-set-field new-record 'aka old-aka t))
+    ;; It is better to delete OLD-RECORD at the end.
+    ;; So we must temporarily allow duplicates in NEW-RECORD.
+    (let ((bbdb-allow-duplicates t))
+      (bbdb-record-set-field new-record 'aka old-aka t)))
 
   ;; Merge other stuff
   (bbdb-record-set-field new-record 'organization
@@ -1393,8 +1396,9 @@ The first record is the record under the point; the second is prompted for."
                          (bbdb-record-phone old-record) t)
   (bbdb-record-set-field new-record 'address
                          (bbdb-record-address old-record) t)
-  (bbdb-record-set-field new-record 'mail
-                         (bbdb-record-mail old-record) t)
+  (let ((bbdb-allow-duplicates t))
+    (bbdb-record-set-field new-record 'mail
+                           (bbdb-record-mail old-record) t))
   (bbdb-record-set-field new-record 'Notes
                          (bbdb-record-Notes old-record) t)
 

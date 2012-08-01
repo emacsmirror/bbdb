@@ -58,7 +58,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/07/20 05:57:41 $"
+(defconst bbdb-version-date "$Date: 2012/08/01 17:47:55 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -634,7 +634,7 @@ This variable also affects dialing."
            (error "%s must contain digits only." symb))))
 
 (defcustom bbdb-allow-duplicates nil
-  "When non-nil BBDB allows records with duplicate names.
+  "When non-nil BBDB allows records with duplicate names and email addresses.
 This may lead to confusion when doing completion."
   :group 'bbdb-record-edit
   :type 'boolean)
@@ -1944,7 +1944,8 @@ PREDICATE may take the same values as `bbdb-completion-list'."
     (bbdb-puthash mail record)))
 
 (defun bbdb-hash-update (record old new)
-  "Update hash for RECORD.  Remove OLD, insert NEW."
+  "Update hash for RECORD.  Remove OLD, insert NEW.
+Both OLD and NEW are lists of values."
   (dolist (elt old)
     (bbdb-remhash elt record))
   (dolist (elt new)
@@ -2166,7 +2167,7 @@ TYPE is a pseudo-code as in `bbdb-record-type'."
 (defun bbdb-record-set-field (record field value &optional merge check)
   "For RECORD set FIELD to VALUE.  Return VALUE.
 If MERGE is non-nil, merge VALUE with the current value of FIELD.
-If CHECK is non-nil, check whether FIELD may take VALUE.
+If CHECK is non-nil, check syntactically whether FIELD may take VALUE.
 This function also updates the hash table.  However, it does not update
 RECORD in the database."
   (let ((record-type (cdr bbdb-record-type)))
