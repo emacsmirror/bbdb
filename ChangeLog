@@ -1,8 +1,12 @@
 2012-08-01  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-merge-records): Improve interactive call
+	and docstring.
+
+2012-08-01  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-allow-duplicates, bbdb-hash-update)
 	(bbdb-record-set-field): Fix docstring.
 	* lisp/bbdb-com.el (bbdb-merge-records): Do not through an error
-	when merging the old and new record result in duplicate AKAs and
+	when merging the old and new record results in duplicate AKAs and
 	email addresses.
 
 2012-07-31  Roland Winkler  <winkler@gnu.org>

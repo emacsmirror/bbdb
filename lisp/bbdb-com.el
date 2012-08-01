@@ -1326,27 +1326,31 @@ With prefix N, omit the next N records.  If negative, omit backwards."
 
 ;;;###autoload
 (defun bbdb-merge-records (old-record new-record)
-  "Merge the current record into some other record; that is, delete the
-record under point after copying all of the data within it into some other
-record.  This is useful if you realize that somehow a redundant record has
-gotten into the database, and you want to merge it with another.
-
-If both records have names and/or organizations, you are asked which to use.
+  "Merge OLD-RECORD into NEW-RECORD.
+This copies all the data in OLD-RECORD into NEW-RECORD.  Then OLD-RECORD
+is deleted.  If both records have names and/or organizations, ask which to use.
 Phone numbers, addresses, and mail addresses are simply concatenated.
-The first record is the record under the point; the second is prompted for."
+
+Interactively, OLD-RECORD is the current record.  NEW-RECORD is prompted for.
+With prefix arg NEW-RECORD defaults to the first record with the same name."
   (interactive
    (let* ((old-record (bbdb-current-record))
-          (name (bbdb-record-name old-record)))
+          (name (bbdb-record-name old-record))
+          (new-record (and current-prefix-arg
+                           ;; take the first record with the same name
+                           (car (delq old-record
+                                      (bbdb-search (bbdb-records) name))))))
+     (when new-record
+       (message "Merge current record with duplicate record `%s'" name)
+       (sit-for 1))
      (list old-record
-           (if current-prefix-arg
-               ;; take the first record with the same name
-               (car (delq old-record (bbdb-search (bbdb-records) name)))
-             (bbdb-completing-read-record
-              (format "merge record \"%s\" into: "
-                      (or (bbdb-record-name old-record)
-                          (car (bbdb-record-mail old-record))
-                          "???"))
-              (list old-record))))))
+           (or new-record
+               (bbdb-completing-read-record
+                (format "merge record \"%s\" into: "
+                        (or (bbdb-record-name old-record)
+                            (car (bbdb-record-mail old-record))
+                            "???"))
+                (list old-record))))))
 
   (cond ((eq old-record new-record) (error "Records are equal"))
         ((null new-record) (error "No record to merge with")))
