@@ -1467,6 +1467,14 @@ in `bbdb-change-hook')."
 
 ;;; Send-Mail interface
 
+;; FIXME: `bbdb-dwim-mail' allows the possiblity that MAIL is not
+;; just a canonical address foo@bar.com. But a complete RFC 822
+;; address "John Smith <foo@bar.com>" is allowed, too.  Should we
+;; allow this throughout BBDB?  Then `bbdb-hashtable' should always
+;; contain the canonical address foo@bar.com.  This requires that
+;; we call `mail-extract-address-components' many times upon startup
+;; and elsewhere, too.
+
 ;;;###autoload
 (defun bbdb-dwim-mail (record &optional mail)
   ;; Do What I Mean!
@@ -1793,30 +1801,36 @@ as part of the MUA insinuation."
     (cond
      ;; Match for a single record
      (one-record
-      (let (mail lst elt matched)
-        (unless (bbdb-record-mail one-record)
-          (error "Matching record has no mail field"))
-        ;; Do we have a preferential order for these tests?
-        ;; (1) Try to match name, AKA, or organization
-        (setq matched
-              (try-completion pattern
-                              (append
-                               (list (or (bbdb-record-name one-record) "")
-                                     (or (bbdb-cache-lf-name
-                                          (bbdb-record-cache one-record)) ""))
-                               (bbdb-record-aka one-record)
-                               (bbdb-record-organization one-record))))
-        ;; (2) Try to match mail addresses
-        (unless matched
-          (setq lst (bbdb-record-mail one-record))
-          (while (setq elt (pop lst))
+      ;; Determine the mail address of ONE-RECORD to use for ADDRESS.
+      ;; Do we have a preferential order for the following tests?
+      (let ((completion-list (if (eq t bbdb-completion-list)
+                                 '(fl-name lf-name mail aka organization)
+                               bbdb-completion-list))
+            (mails (bbdb-record-mail one-record))
+            mail elt)
+        (unless mails (error "Matching record has no mail field"))
+        ;; (1) If PATTERN matches name, AKA, or organization of ONE-RECORD,
+        ;;     then ADDRESS will be the first mail address of ONE-RECORD.
+        (if (try-completion pattern
+                            (append
+                             (if (memq 'fl-name completion-list)
+                                 (list (or (bbdb-record-name one-record) "")))
+                             (if (memq 'lf-name completion-list)
+                                 (list (or (bbdb-record-name-lf one-record) "")))
+                             (if (memq 'aka completion-list)
+                                 (bbdb-record-aka one-record))
+                             (if (memq 'organization completion-list)
+                                 (bbdb-record-organization one-record))))
+            (setq mail (car mails)))
+        ;; (2) If PATTERN matches one or multiple mail addresses of ONE-RECORD,
+        ;;     then we take the first one matching PATTERN.
+        (unless mail
+          (while (setq elt (pop mails))
             (if (try-completion pattern (list elt))
                 (setq mail elt
-                      lst  nil
-                      matched t))))
+                      mails nil))))
         ;; This error message indicates a bug!
-        (unless matched
-          (error "No match for %s" pattern))
+        (unless mail (error "No match for %s" pattern))
 
         (let ((address (bbdb-dwim-mail one-record mail)))
           (if (string= address (buffer-substring-no-properties beg end))
@@ -1896,12 +1910,19 @@ as part of the MUA insinuation."
              (record (and (listp address)
                           (car (or (bbdb-message-search (nth 0 address)
                                                         (nth 1 address))
-                                   ;; If the mail address of a record contains
-                                   ;; a name explicitly, we need to search for orig.
-                                   (bbdb-message-search orig (nth 1 address))))))
+                                   ;; If the mail address of a record is an
+                                   ;; RFC 822 address containing a full name,
+                                   ;; we need to search for orig.
+                                   (bbdb-message-search nil orig)))))
              (mails (and record (bbdb-record-mail record))))
         (if mails
-            (cond ((= 1 (length mails))
+            ;; Cycle even if MAILS contains only one address, yet
+            ;; `bbdb-dwim-mail' gives something different from what we have.
+            ;; For example, a message header "JOHN SMITH <FOO@BAR.COM>"
+            ;; may be replaced by "John Smith <foo@bar.com>".
+            (cond ((and (= 1 (length mails))
+                        (string= (bbdb-dwim-mail record (car mails))
+                                 (buffer-substring-no-properties beg end)))
                    (setq done 'unchanged))
                   (cycle-completion-buffer ; use completion buffer
                    (setq dwim-completions

@@ -1,3 +1,10 @@
+2012-07-31  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): When a single record
+	matches, analyze more carefully which mail address to use.  Cycle
+	even if the record contains only one mail address, yet
+	bbdb-dwim-mail gives us something different from what we have.
+	Search correctly for RFC 822 addresses containing a full name.
+
 2012-07-20  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-annotate-message): Simplify. Create new
 	record if update-p has not value update.
