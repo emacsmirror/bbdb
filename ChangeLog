@@ -1,4 +1,19 @@
 2012-08-05  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-suppress-changed-records-recording): Remove.
+	(bbdb-puthash, bbdb-gethash, bbdb-remhash): Ignore keys that are
+	empty strings or nil.
+	(bbdb-hash-record): Explicitly hash name.
+	(bbdb-change-record, bbdb-delete-record-internal)
+	(bbdb-insert-record-internal, bbdb-overwrite-record-internal):
+	Operate on hash table and bbdb-changed-records list only when
+	necessary.
+
+	* lisp/bbdb-com.el (bbdb-delete-records): Remove record from hash
+	table.
+	(bbdb-merge-records): Do not add new-record to the list of changed
+	records, which is done already by bbdb-change-record.
+
+2012-08-05  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-complete-mail): Do not call quit-window.
 	Instead, rely on set-window-configuration that it does what we
 	want.

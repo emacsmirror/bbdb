@@ -1221,8 +1221,9 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
                                 (or (bbdb-record-name record)
                                     (car (bbdb-record-mail record))))))
       (bbdb-redisplay-record record t)
-      (bbdb-delete-record-internal record)
+      (bbdb-delete-record-internal record t)
       (setq bbdb-records (delq (assq record bbdb-records) bbdb-records))
+      ;; Possibly we changed RECORD before deleting it.
       (setq bbdb-changed-records (delq record bbdb-changed-records)))))
 
 ;;;###autoload
@@ -1411,8 +1412,6 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
   (let ((bbdb-layout 'multi-line))
     (if (assq new-record bbdb-records)
         (bbdb-redisplay-record new-record))
-    (unless (memq new-record bbdb-changed-records)
-      (push new-record bbdb-changed-records))
     (unless bbdb-records             ; nothing displayed, display something.
       (bbdb-display-records (list new-record))))
   (message "Records merged."))

@@ -1438,18 +1438,6 @@ You really should not disable debugging.  But it will speed things up."))
 (defvar bbdb-need-to-sort nil
   "Non-nil if records require sorting after editing.")
 
-(defvar bbdb-suppress-changed-records-recording nil
-  "Whether to record changed records in variable `bbdb-changed-records'.
-
-If this is nil, BBDB will cease to remember which records are changed
-as the change happens.  It will still remember that records have been changed,
-so the file will still be saved, but the changed records list, and the `!!'
-in the *BBDB* buffer modeline that it depends on, will no longer be updated.
-
-You should bind this variable, not set it. The `!!' is a useful user interface
-feature, and should only be suppressed when changes need to be automatically
-made to BBDB records which the user will not care directly about.")
-
 (defvar bbdb-buffer nil "Buffer visiting `bbdb-file'.")
 
 (defvar bbdb-buffer-name "*BBDB*" "Name of the BBDB buffer.")
@@ -1879,63 +1867,80 @@ Return new value."
 (bbdb-defstruct cache
   fl-name lf-name sortkey marker)
 
-;; `bbdb-hashtable' associates with each FIELD a list of matching records.
-(defun bbdb-puthash (field record)
-  "Associate RECORD with FIELD in `bbdb-hashtable'."
-  (unless (string= "" field) ; do not hash empty strings
-    (let ((sym (intern (downcase field) bbdb-hashtable)))
-      (if (boundp sym)
-          (unless (memq record (symbol-value sym))
-            (set sym (cons record (symbol-value sym))))
-        (set sym (list record))))))
+;; `bbdb-hashtable' associates with each KEY a list of matching records.
+;; KEY includes fl-name, lf-name, organizations, AKAs and email addresses.
+;; When loading the database the hash table is initialized by calling
+;; `bbdb-hash-record' for each record.  This function is also called
+;; when new records are added to the database.
+;; `bbdb-delete-record-internal' with arg REMHASH non-nil removes a record
+;; from the hash table (besides deleting the record from the database).
+;; When an existing record is modified, the code that modifies the record
+;; needs to update the hash table, too.  This includes removing the outdated
+;; associations between KEYs and record as well as adding the new associations.
+;; The hash table can be accessed via `bbdb-gethash'
+;; and via functions like `completing-read'.
 
-(defun bbdb-gethash (field &optional predicate)
-  "Return list of records associated with FIELD in `bbdb-hashtable'.
+(defun bbdb-puthash (key record)
+  "Associate RECORD with KEY in `bbdb-hashtable'.
+KEY must be a string or nil.  Empty strings and nil are ignored."
+  (if (and key (not (string= "" key))) ; do not hash empty strings
+      (let ((sym (intern (downcase key) bbdb-hashtable)))
+        (if (boundp sym)
+            (unless (memq record (symbol-value sym))
+              (set sym (cons record (symbol-value sym))))
+          (set sym (list record))))))
+
+(defun bbdb-gethash (key &optional predicate)
+  "Return list of records associated with KEY in `bbdb-hashtable'.
+KEY must be a string or nil.  Empty strings and nil are ignored.
 PREDICATE may take the same values as `bbdb-completion-list'."
-  (when field
-    (let* ((field (downcase field))
-           (all-records (symbol-value (intern-soft field bbdb-hashtable)))
+  (when (and key (not (string= "" key)))
+    (let* ((key (downcase key))
+           (all-records (symbol-value (intern-soft key bbdb-hashtable)))
            records)
       (if (or (not predicate) (eq t predicate))
           all-records
         (dolist (record all-records)
           (if (and (memq 'fl-name predicate)
-                   (string= field (or (downcase (bbdb-record-name record))
-                                      "")))
+                   (string= key (or (downcase (bbdb-record-name record))
+                                    "")))
               (push record records))
           (if (and (memq 'lf-name predicate)
-                   (string= field (or (downcase (bbdb-record-name-lf record))
-                                      "")))
+                   (string= key (or (downcase (bbdb-record-name-lf record))
+                                    "")))
               (push record records))
           (if (memq 'aka predicate)
               (dolist (aka (bbdb-record-aka record))
-                (if (string= field (downcase aka))
+                (if (string= key (downcase aka))
                     (push record records))))
           (if (memq 'organization predicate)
               (dolist (organization (bbdb-record-organization record))
-                (if (string= field (downcase organization))
+                (if (string= key (downcase organization))
                     (push record records))))
           (if (memq 'primary predicate)
-              (if (string= field (downcase (car (bbdb-record-mail record))))
+              (if (string= key (downcase (car (bbdb-record-mail record))))
                   (push record records)))
           (if (memq 'mail predicate)
               (dolist (mail (bbdb-record-mail record))
-                (if (string= field (downcase mail))
+                (if (string= key (downcase mail))
                     (push record records)))))
         (delete-dups records)))))
 
-(defsubst bbdb-remhash (field record)
-  "Remove RECORD from list of records associated with FIELD."
-  (let ((sym (intern-soft (downcase field) bbdb-hashtable)))
-    (if sym
-        (let ((val (delq record (symbol-value sym))))
-          (if val
-              (set sym val)
-            (unintern sym bbdb-hashtable))))))
+(defun bbdb-remhash (key record)
+  "Remove RECORD from list of records associated with KEY.
+KEY must be a string or nil.  Empty strings and nil are ignored."
+  (if (and key (not (string= "" key)))
+      (let ((sym (intern-soft (downcase key) bbdb-hashtable)))
+        (if sym
+            (let ((val (delq record (symbol-value sym))))
+              (if val
+                  (set sym val)
+                (unintern sym bbdb-hashtable)))))))
 
 (defun bbdb-hash-record (record)
   "Insert RECORD in `bbdb-hashtable'."
-  (bbdb-record-name record)
+  (bbdb-puthash (bbdb-record-name record) record)
+  (bbdb-puthash (bbdb-record-name-lf record) record)
   (dolist (organization (bbdb-record-organization record))
     (bbdb-puthash organization record))
   (dolist (aka (bbdb-record-aka record))
@@ -2731,25 +2736,28 @@ about updating the name hash-table.  If NEW is t treat RECORD as new."
   ;; To avoid this problem we would have to call `bbdb-editable'
   ;; at an earlier stage.  Is this relevant?  Where?
   (cond ((memq record (bbdb-records))
-         (if (not need-to-sort) ;; If we do not need to sort, overwrite it.
+         (if (not need-to-sort) ;; If we do not need to sort, overwrite RECORD.
              (bbdb-overwrite-record-internal record)
-           ;; Since we need to sort, delete then insert
+           ;; Since we need to sort, delete then insert RECORD.
+           ;; Do not mess with the hash table here.
+           ;; We assume it got updated by the caller.
            (bbdb-delete-record-internal record)
            (bbdb-insert-record-internal record)))
         ((not new)
          (error "Changes are lost."))
-        (t ;; Record is not in database so add it.
-         (bbdb-insert-record-internal record)))
+        (t ;; Record is not yet in database, so add it.
+         (bbdb-insert-record-internal record)
+         (bbdb-hash-record record))) ; to be safe
+  (unless (memq record bbdb-changed-records)
+    (push record bbdb-changed-records))
   (run-hook-with-args 'bbdb-after-change-hook record)
   record)
 
-(defun bbdb-delete-record-internal (record)
-  "Delete RECORD in the database file."
+(defun bbdb-delete-record-internal (record &optional remhash)
+  "Delete RECORD in the database file.
+With REMHASH non-nil, also remove RECORD from the hash table."
   (unless (bbdb-record-marker record) (error "BBDB: marker absent"))
   (bbdb-with-db-buffer
-    (unless (or bbdb-suppress-changed-records-recording
-                (memq record bbdb-changed-records))
-      (push record bbdb-changed-records))
     (let ((tail (memq record bbdb-records)))
       (unless tail (error "BBDB record absent: %s" record))
       (delete-region (bbdb-record-marker record)
@@ -2757,14 +2765,15 @@ about updating the name hash-table.  If NEW is t treat RECORD as new."
                          (bbdb-record-marker (car (cdr tail)))
                        bbdb-end-marker)))
     (setq bbdb-records (delq record bbdb-records))
-    (let ((name (bbdb-record-name record)))
-      (if name (bbdb-remhash name record)))
-    (dolist (organization (bbdb-record-organization record))
-      (bbdb-remhash organization record))
-    (dolist (mail (bbdb-record-mail record))
-      (bbdb-remhash mail record))
-    (dolist (aka (bbdb-record-aka record))
-      (bbdb-remhash aka record))
+    (when remhash
+      (bbdb-remhash (bbdb-record-name record) record)
+      (bbdb-remhash (bbdb-record-name-lf record) record)
+      (dolist (organization (bbdb-record-organization record))
+        (bbdb-remhash organization record))
+      (dolist (mail (bbdb-record-mail record))
+        (bbdb-remhash mail record))
+      (dolist (aka (bbdb-record-aka record))
+        (bbdb-remhash aka record)))
     (bbdb-record-set-sortkey record nil)
     (setq bbdb-modified t)))
 
@@ -2775,9 +2784,6 @@ that calls the hooks, too."
   (unless (bbdb-record-marker record)
     (bbdb-record-set-marker record (make-marker)))
   (bbdb-with-db-buffer
-    (unless (or bbdb-suppress-changed-records-recording
-                (memq record bbdb-changed-records))
-      (push record bbdb-changed-records))
     ;; Set the sortkey to nil so that it will automatically be recalculated
     ;; up-to-date for sorting
     (bbdb-record-set-sortkey record nil)
@@ -2812,8 +2818,7 @@ that calls the hooks, too."
       (bbdb-record-set-cache record nil)
       (insert-before-markers (prin1-to-string record) "\n")
       (set-marker (bbdb-cache-marker cache) point)
-      (bbdb-record-set-cache record cache)
-      (bbdb-hash-record record))
+      (bbdb-record-set-cache record cache))
     (setq bbdb-modified t)
     record))
 
@@ -2822,9 +2827,6 @@ that calls the hooks, too."
 Do not call this function directly, call instead `bbdb-change-record'
 that calls the hooks, too."
   (bbdb-with-db-buffer
-    (unless (or bbdb-suppress-changed-records-recording
-                (memq record bbdb-changed-records))
-      (push record bbdb-changed-records))
     (let* ((print-escape-newlines t)
            (tail (memq record bbdb-records))
            (_ (unless tail (error "BBDB record absent: %s" record)))
