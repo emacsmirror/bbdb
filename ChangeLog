@@ -1,3 +1,8 @@
+2012-08-05  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Do not call quit-window.
+	Instead, rely on set-window-configuration that it does what we
+	want.
+
 2012-08-01  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-merge-records): Improve interactive call
 	and docstring.

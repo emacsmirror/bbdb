@@ -1798,12 +1798,10 @@ as part of the MUA insinuation."
       (setq one-record (and (not (cdr records))
                             (car records))))
 
-    ;; Clean up *Completions* buffer, if it exists
+    ;; Clean up *Completions* buffer window, if it exists
     (when bbdb-complete-mail-saved-window-config
-      (let ((window (get-buffer-window "*Completions*")))
-        (when (window-live-p window)
-          (set-window-configuration bbdb-complete-mail-saved-window-config)
-          (quit-window nil window)))
+      (if (window-live-p (get-buffer-window "*Completions*"))
+          (set-window-configuration bbdb-complete-mail-saved-window-config))
       (setq bbdb-complete-mail-saved-window-config nil))
 
     (cond
