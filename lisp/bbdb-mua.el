@@ -426,56 +426,56 @@ Return the records matching ADDRESS or nil."
              change-p)
 
         ;; Analyze the name part of the record.
-        (unless (or bbdb-read-only (not name)
-                    ;; Check if name equals the name of the record
-                    (bbdb-string= name old-name) ; redundant...
-                    (and (equal fname (bbdb-record-firstname record)) ; possibly
-                         (equal lname (bbdb-record-lastname record))) ; nil
-                    ;; Check if name equals an AKA of the record
-                    (member-ignore-case name (bbdb-record-aka record)))
+        (cond ((or bbdb-read-only (not name)
+                   ;; Name equals the name of the record
+                   (bbdb-string= name old-name) ; redundant...
+                   (and (equal fname (bbdb-record-firstname record)) ; possibly
+                        (equal lname (bbdb-record-lastname record))) ; nil
+                   ;; Name equals an AKA of the record
+                   (member-ignore-case name (bbdb-record-aka record)))) ; do nothing
 
-            (cond (created-p ; new record
-                   (bbdb-record-set-name record fname lname)
-                   (setq change-p 'sort))
+              (created-p ; new record
+               (bbdb-record-set-name record fname lname)
+               (setq change-p 'sort))
 
-                  ((and bbdb-accept-name-mismatch old-name)
-                   (when (and (not bbdb-silent)
-                              (numberp bbdb-accept-name-mismatch))
-                     (message "name mismatch: \"%s\" changed to \"%s\""
-                              old-name name)
-                     (sit-for bbdb-accept-name-mismatch)))
+              ((and bbdb-accept-name-mismatch old-name)
+               (when (and (not bbdb-silent)
+                          (numberp bbdb-accept-name-mismatch))
+                 (message "name mismatch: \"%s\" changed to \"%s\""
+                          old-name name)
+                 (sit-for bbdb-accept-name-mismatch)))
 
-                  ((or bbdb-silent
-                       (not (or old-name (bbdb-record-mail record))) ; new record
-                       (y-or-n-p
-                        (if old-name
-                            (format "Change name \"%s\" to \"%s\"? "
-                                    old-name name)
-                          (format "Assign name \"%s\" to address \"%s\"? "
-                                  name (car (bbdb-record-mail record))))))
-                   ;; Keep old-name?
-                   (and old-name bbdb-use-alternate-names
-                        (not (member-ignore-case old-name (bbdb-record-aka record)))
-                        (if (or bbdb-silent
-                                (y-or-n-p
-                                 (format "Keep name \"%s\" as an AKA? " old-name)))
-                            (bbdb-record-set-aka
-                             record (cons old-name (bbdb-record-aka record)))
-                          (bbdb-remhash old-name record)))
-                   (bbdb-record-set-name record fname lname)
-                   (setq change-p 'sort))
-
-                  ;; make new name an alias?
-                  ((and old-name bbdb-use-alternate-names
-                        (not (member-ignore-case name (bbdb-record-aka record)))
-                        (or bbdb-silent
+              ((or bbdb-silent
+                   (not (or old-name (bbdb-record-mail record))) ; new record
+                   (y-or-n-p
+                    (if old-name
+                        (format "Change name \"%s\" to \"%s\"? "
+                                old-name name)
+                      (format "Assign name \"%s\" to address \"%s\"? "
+                              name (car (bbdb-record-mail record))))))
+               ;; Keep old-name?
+               (and old-name bbdb-use-alternate-names
+                    (not (member-ignore-case old-name (bbdb-record-aka record)))
+                    (if (or bbdb-silent
                             (y-or-n-p
-                             (format "Make \"%s\" an alternate for \"%s\"? "
-                                     name old-name))))
-                   (bbdb-record-set-aka
-                    record (cons name (bbdb-record-aka record)))
-                   (bbdb-puthash name record)
-                   (setq change-p 'sort))))
+                             (format "Keep name \"%s\" as an AKA? " old-name)))
+                        (bbdb-record-set-aka
+                         record (cons old-name (bbdb-record-aka record)))
+                      (bbdb-remhash old-name record)))
+               (bbdb-record-set-name record fname lname)
+               (setq change-p 'sort))
+
+              ;; make new name an alias?
+              ((and old-name bbdb-use-alternate-names
+                    (not (member-ignore-case name (bbdb-record-aka record)))
+                    (or bbdb-silent
+                        (y-or-n-p
+                         (format "Make \"%s\" an alternate for \"%s\"? "
+                                 name old-name))))
+               (bbdb-record-set-aka
+                record (cons name (bbdb-record-aka record)))
+               (bbdb-puthash name record)
+               (setq change-p 'sort)))
 
         ;; It's kind of a kludge that the "redundancy" concept is built in.
         ;; Maybe I should just add a new hook here...  The problem is that
@@ -487,39 +487,41 @@ Return the records matching ADDRESS or nil."
                            mail)))
 
         ;; Analyze the mail part of the new records
-        (unless (or bbdb-read-only (not mail) (equal mail "???"))
-          (cond ((null (bbdb-record-mail record))
-                 ;; Record has not yet a mail field.  Names are usually
-                 ;; a sure match, so do not bother prompting here.
-                 (bbdb-record-set-mail record (list mail))
-                 (bbdb-puthash mail record)
-                 (or change-p (setq change-p t)))
-                ((not (member-ignore-case mail (bbdb-record-mail record)))
-                 ;; new mail address; ask before adding.
-                 (let ((add-mails (if (functionp bbdb-add-mails)
-                                      (funcall bbdb-add-mails)
-                                    bbdb-add-mails)))
-                   (when (or (eq add-mails t) ; add it automatically
-                             (and (eq add-mails 'query)
-                                  (or (y-or-n-p (format "Add address \"%s\" to %s? " mail
-                                                        (bbdb-record-name record)))
-                                      (and (or (eq update-p 'create)
-                                               (and (eq update-p 'query)
-                                                    (y-or-n-p
-                                                     (format "Create a new record for %s? "
-                                                             (bbdb-record-name record)))))
-                                           (setq record (bbdb-create-internal name)
-                                                 created-p t)))))
-                     ;; then modify an existing record
-                     (if (or (eq t bbdb-new-mails-always-primary)
-                             (and bbdb-new-mails-always-primary
-                                  (y-or-n-p
-                                   (format "Make \"%s\" the primary address? " mail))))
-                         (bbdb-record-set-mail record (cons mail (bbdb-record-mail record)))
-                       (bbdb-record-set-mail record (nconc (bbdb-record-mail record)
-                                                           (list mail))))
-                     (bbdb-puthash mail record)
-                     (unless change-p (setq change-p t)))))))
+        (cond ((or bbdb-read-only (not mail) (equal mail "???"))) ; do nothing
+
+              ((null (bbdb-record-mail record))
+               ;; Record has not yet a mail field.  Names are usually
+               ;; a sure match, so do not bother prompting here.
+               (bbdb-record-set-mail record (list mail))
+               (bbdb-puthash mail record)
+               (or change-p (setq change-p t)))
+
+              ((not (member-ignore-case mail (bbdb-record-mail record)))
+               ;; new mail address; ask before adding.
+               (let ((add-mails (if (functionp bbdb-add-mails)
+                                    (funcall bbdb-add-mails)
+                                  bbdb-add-mails)))
+                 (when (or (eq add-mails t) ; add it automatically
+                           (and (eq add-mails 'query)
+                                (or (y-or-n-p (format "Add address \"%s\" to %s? " mail
+                                                      (bbdb-record-name record)))
+                                    (and (or (eq update-p 'create)
+                                             (and (eq update-p 'query)
+                                                  (y-or-n-p
+                                                   (format "Create a new record for %s? "
+                                                           (bbdb-record-name record)))))
+                                         (setq record (bbdb-create-internal name)
+                                               created-p t)))))
+                   ;; then modify an existing record
+                   (if (or (eq t bbdb-new-mails-always-primary)
+                           (and bbdb-new-mails-always-primary
+                                (y-or-n-p
+                                 (format "Make \"%s\" the primary address? " mail))))
+                       (bbdb-record-set-mail record (cons mail (bbdb-record-mail record)))
+                     (bbdb-record-set-mail record (nconc (bbdb-record-mail record)
+                                                         (list mail))))
+                   (bbdb-puthash mail record)
+                   (unless change-p (setq change-p t))))))
 
         (if (and change-p (not bbdb-silent))
             (if (eq change-p 'sort)

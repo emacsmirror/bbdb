@@ -1,4 +1,7 @@
 2012-08-05  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Simplify.
+
+2012-08-05  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-suppress-changed-records-recording): Remove.
 	(bbdb-puthash, bbdb-gethash, bbdb-remhash): Ignore keys that are
 	empty strings or nil.
