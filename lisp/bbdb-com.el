@@ -1799,8 +1799,9 @@ as part of the MUA insinuation."
 
     ;; Clean up *Completions* buffer window, if it exists
     (when bbdb-complete-mail-saved-window-config
-      (if (window-live-p (get-buffer-window "*Completions*"))
-          (set-window-configuration bbdb-complete-mail-saved-window-config))
+      (when (get-buffer-window "*Completions*")
+        (set-window-configuration bbdb-complete-mail-saved-window-config)
+        (bury-buffer "*Completions*"))
       (setq bbdb-complete-mail-saved-window-config nil))
 
     (cond

@@ -1,3 +1,6 @@
+2012-08-06  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Revert 2012-07-06 change.
+
 2012-08-05  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-annotate-message): Simplify.
 
