@@ -58,7 +58,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/08/01 17:47:55 $"
+(defconst bbdb-version-date "$Date: 2012/08/07 12:59:42 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -1477,9 +1477,6 @@ Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
 
 (defvar bbdb-append-display nil
   "Controls the behavior of the command `bbdb-append-display'.")
-
-(defvar bbdb-complete-mail-saved-window-config nil
-  "Store the window configuration before we pop up the completion buffer.")
 
 (defvar bbdb-offer-to-create nil
   "For communication between `bbdb-update-records' and `bbdb-prompt-for-create'.")

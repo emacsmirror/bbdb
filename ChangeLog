@@ -1,3 +1,8 @@
+2012-08-07  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Use quit-window instead
+	of current-window-configuration and set-window-configuration.
+	* lisp/bbdb.el (bbdb-complete-mail-saved-window-config): Remove.
+
 2012-08-06  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-complete-mail): Revert 2012-07-06 change.
 

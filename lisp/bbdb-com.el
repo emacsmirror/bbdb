@@ -1798,11 +1798,9 @@ as part of the MUA insinuation."
                             (car records))))
 
     ;; Clean up *Completions* buffer window, if it exists
-    (when bbdb-complete-mail-saved-window-config
-      (when (get-buffer-window "*Completions*")
-        (set-window-configuration bbdb-complete-mail-saved-window-config)
-        (bury-buffer "*Completions*"))
-      (setq bbdb-complete-mail-saved-window-config nil))
+    (let ((window (get-buffer-window "*Completions*")))
+      (if (window-live-p window)
+          (quit-window nil window)))
 
     (cond
      ;; Match for a single record
@@ -1969,9 +1967,6 @@ as part of the MUA insinuation."
           ((eq done 'choose)
            (unless (eq (selected-window) (minibuffer-window))
              (message "Making completion list..."))
-           (unless (get-buffer-window "*Completions*")
-             (setq bbdb-complete-mail-saved-window-config
-                   (current-window-configuration)))
            (let ((completion-base-position (list beg end)))
              (with-output-to-temp-buffer "*Completions*"
                (display-completion-list dwim-completions)))
