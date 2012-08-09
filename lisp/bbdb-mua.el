@@ -46,7 +46,6 @@
   (autoload 'vm-select-folder-buffer "vm-macro")
   (autoload 'vm-check-for-killed-summary "vm-misc")
   (autoload 'vm-error-if-folder-empty "vm-misc")
-  (defvar vm-message-pointer)
 
   (autoload 'bbdb/rmail-header "bbdb-rmail")
   (defvar rmail-buffer)
@@ -194,7 +193,7 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
                (bbdb-get-address-components nil ignore-address))))))
 
 ;;;###autoload
-(defun bbdb-update-records (address-list &optional update-p msg-key)
+(defun bbdb-update-records (address-list &optional update-p)
   "Return the list of BBDB records matching ADDRESS-LIST.
 ADDRESS-LIST is a list of mail addresses.  (It can be extracted from
 a mail message using `bbdb-get-address-components'.)
@@ -211,7 +210,6 @@ UPDATE-P may take the following values:
  nil          Take the MUA-specific variable `bbdb/MUA-update-records-p'
                 which may take one of the above values.
                 If this still gives nil, `bbdb-update-records' returns nil.
-If MSG-KEY is the key of a message consult message cache.
 
 Usually this function is called by the wrapper `bbdb-mua-update-records'."
   ;; UPDATE-P allows filtering of complete messages.
@@ -236,15 +234,9 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
         ;; global user variable `bbdb-update-records-p'.
         (bbdb-offer-to-create 'start)
         (bbdb-update-records-p update-p)
-        address records cached)
-    ;; Ignore cache if we may be creating a record, since the cache
-    ;; may otherwise tell us that the user did not want a record for
-    ;; this person.
-    (if (and msg-key (not (memq update-p '(query create))))
-        (setq records (bbdb-message-get-cache msg-key)
-              cached (not (null records))))
+        address records)
 
-    (when (and (not records) update-p)
+    (when update-p
       (while (setq address (pop address-list))
         (let* ((bbdb-update-records-address address)
                hits
@@ -274,18 +266,15 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
           (if (and records (not bbdb-message-all-addresses))
               (setq address-list nil))))
       ;; Make RECORDS a list ordered like ADDRESS-LIST.
-      (setq records (nreverse records))
-      ;; update cache
-      (if msg-key (bbdb-message-set-cache msg-key records)))
+      (setq records (nreverse records)))
 
-    ;; `bbdb-message-search' or message cache might yield multiple records
+    ;; `bbdb-message-search' might yield multiple records
     (if (and records (not bbdb-message-all-addresses))
         (setq records (list (car records))))
 
-    (unless cached
-      (let ((bbdb-notice-hook-pending t))
-        (dolist (record records)
-          (run-hook-with-args 'bbdb-notice-record-hook record))))
+    (let ((bbdb-notice-hook-pending t))
+      (dolist (record records)
+        (run-hook-with-args 'bbdb-notice-record-hook record)))
 
     records))
 
@@ -346,33 +335,6 @@ Type q  to quit updating records.  No more search or annotation is done.")
                  (fit-window-to-buffer window)))
              ;; Try again!
              (bbdb-prompt-for-create))))))
-
-
-;;; Message caching, to speed up the the mail interfaces.
-;; `bbdb-message-cache' is a buffer-local alist for each MUA or MUA folder.
-;; Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.
-;; If the cache is read out via `assq', this requires that MESSAGE-KEY
-;; is a unique symbol.  If we use instead (bbdb-message-header "Message-ID"),
-;; MESSAGE-KEY is a string.  Searching strings is slower.
-
-(defun bbdb-message-get-cache (message-key)
-  "Return cached BBDB records identified by MESSAGE-KEY."
-  (when bbdb-message-caching
-    (bbdb-buffer)  ; make sure database is loaded and up-to-date
-    (cdr (assq message-key bbdb-message-cache))))
-
-(defun bbdb-message-set-cache (message-key records)
-  "Cache the RECORDS for a message identified by MESSAGE-KEY and return them."
-  (when bbdb-message-caching
-    (bbdb-message-rem-cache message-key)
-    (push (cons message-key records) bbdb-message-cache)
-    records))
-
-(defun bbdb-message-rem-cache (message-key)
-  "Remove an element identified by MESSAGE-KEY from `bbdb-message-cache'."
-  (if bbdb-message-caching
-      (setq bbdb-message-cache
-            (delq (assq message-key bbdb-message-cache) bbdb-message-cache))))
 
 
 
@@ -553,22 +515,22 @@ UPDATE-P is defined in `bbdb-update-records'."
         (vm-error-if-folder-empty)
         (let ((enable-local-variables t))  ; ...or vm bind this to nil.
           (bbdb-update-records (bbdb-get-address-components header-class)
-                               update-p (car vm-message-pointer))))
+                               update-p)))
        ;; Gnus
        ((eq mua 'gnus)
         (set-buffer gnus-article-buffer)
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p (bbdb-message-header "Message-ID")))
+                             update-p))
        ;; MH-E
        ((eq mua 'mh)
         (if mh-show-buffer (set-buffer mh-show-buffer))
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p (bbdb-message-header "Message-ID")))
+                             update-p))
        ;; Rmail
        ((eq mua 'rmail)
         (set-buffer rmail-buffer)
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p (bbdb-message-header "Message-ID")))
+                             update-p))
        ;; Message and Mail
        ((memq mua '(message mail))
         (bbdb-update-records (bbdb-get-address-components header-class)

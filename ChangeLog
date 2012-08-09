@@ -1,3 +1,24 @@
+2012-08-09  Roland Winkler  <winkler@gnu.org>
+	Remove message cache that was broken.  There were two problems
+	with it.  The cache did not distinguish between records associated
+	with the senders and recipients.  So if a call of
+	bbdb-mua-display-sender was followed by, say, a call of
+	bbdb-mua-display-recipients the second call also returned the
+	senders.  Second, the cache used assq to identify message keys to
+	operate fast.  Yet most MUAs only provide strings as message keys.
+
+	* lisp/bbdb.el (bbdb-message-all-addresses)
+	(bbdb-notice-mail-hook, bbdb-notice-record-hook): Fix docstring.
+	(bbdb-message-caching, bbdb-message-cache): Remove.
+	(bbdb-buffer): Remove cache flushing.
+
+	* lisp/bbdb-mua.el (bbdb-update-records): Remove arg msg-key.
+	Remove caching of records.
+	(bbdb-message-get-cache, bbdb-message-set-cache)
+	(bbdb-message-rem-cache): Remove.
+	(bbdb-mua-update-records): Remove arg msg-key from calls of
+	bbdb-update-records.
+
 2012-08-07  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-complete-mail): Use quit-window instead
 	of current-window-configuration and set-window-configuration.

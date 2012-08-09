@@ -796,9 +796,7 @@ The strings HEADER belong to CLASS."
 
 (defcustom bbdb-message-all-addresses nil
   "If t `bbdb-update-records' returns all mail addresses of a message.
-Otherwise this function returns only the first mail address of each message.
-Changing this variable will show its effect only after clearing the
-`bbdb-message-cache' of a folder (e.g., by closing and re-visiting the folder)."
+Otherwise this function returns only the first mail address of each message."
   :group 'bbdb-mua
   :type 'boolean)
 
@@ -961,19 +959,6 @@ It takes one argument, the name as extracted by
   :group 'bbdb-mua
   :type 'boolean)
 
-(defcustom bbdb-message-caching nil
-  "Whether to cache the message->record association for supporting interfaces.
-These are VM, MH, and RMAIL.  This can speed up BBDB a lot.
-One implication of this variable being t is that `bbdb-notice-mail-hook'
-and `bbdb-notice-record-hook' will not be called each time a message
-is selected, but only the first time.
-Likewise, if selecting a message would generate a question
-\(whether to add an address, change the name, etc) you will only be asked
-that question the first time the message is selected."
-  :group 'bbdb-mua
-  :type '(choice (const :tag "Enable caching" t)
-                 (const :tag "Disable caching" nil)))
-
 (defcustom bbdb-notice-mail-hook nil
   "Hook run each time a mail address of a record is \"noticed\" in a message.
 This means that the mail address in a message belongs to an existing BBDB record
@@ -992,11 +977,7 @@ as a result of modifications you may make to the record inside this hook.
 
 If a message contains multiple mail addresses belonging to one BBDB record,
 this hook is run for each mail address.  Use `bbdb-notice-record-hook'
-if you want to notice each record only once per message.
-
-If the variable `bbdb-message-caching' is t this hook will be called
-only the first time that message is selected.  Thus when debugging
-the value of this hook, it can help to set `bbdb-message-caching' to nil."
+if you want to notice each record only once per message."
   :group 'bbdb-mua
   :type 'hook)
 
@@ -1011,10 +992,6 @@ a hook function for each mail address in a message.
 The record need not have been modified for this hook to be called;
 use `bbdb-change-hook' for that.  `bbdb-change-hook' will NOT be called
 as a result of modifications you may make to the record inside this hook.
-
-If the variable `bbdb-message-caching' is t this hook will be called
-only the first time that message is selected.  Thus when debugging
-the value of this hook, it can help to set `bbdb-message-caching' to nil.
 
 Hook is run with one argument, the record."
   :group 'bbdb-mua
@@ -1512,12 +1489,6 @@ and mail.")
 (defvar bbdb-modified nil
   "Non-nil if the database has been modified.")
 
-(defvar bbdb-message-cache nil
-  "Message cache for speeding up the the mail interfaces.
-The cache is a buffer-local alist for each MUA or MUA folder.
-Its elements are (MESSAGE-KEY RECORDS). MESSAGE-KEY is specific to the MUA.")
-(make-variable-buffer-local 'bbdb-message-cache)
-
 (defvar bbdb-modeline-info (make-vector 4 nil)
   "Precalculated mode line info for BBDB commands.
 This is a vector [APPEND-M INVERT-M APPEND INVERT].
@@ -1849,12 +1820,6 @@ Return new value."
 ;; Define ADDRESS:
 (bbdb-defstruct address
   label streets city state postcode country)
-
-;; When reading this code, beware that "cache" refers to two things.
-;; It refers to the cache slot of record structures, which is
-;; used for computed properties of the records; and it also refers
-;; to a message-id --> record association list which speeds up
-;; the RMAIL, VM, and MH interfaces.
 
 ;; Define record CACHE:
 ;; - fl-name (first and last name of the person referred to by the record),
@@ -2488,11 +2453,6 @@ copy it to `bbdb-file'."
             bbdb-changed-records nil
             bbdb-modified nil)
 
-      ;; Flush all caches
-      (dolist (buffer (buffer-list))
-        (with-current-buffer buffer
-          (if bbdb-message-cache
-              (setq bbdb-message-cache nil))))
       (fillarray bbdb-hashtable 0)
       (setq bbdb-mail-aliases-need-rebuilt 'parse)
 
@@ -2562,7 +2522,7 @@ Return nil otherwise."
                         (yes-or-no-p "Flush your changes and revert BBDB? "))))
            (unless (file-exists-p bbdb-file)
              (error "BBDB: file %s no longer exists" bbdb-file))
-           (kill-all-local-variables)  ; clear database and caches.
+           (kill-all-local-variables)  ; clear database
            ;; `revert-buffer-function' has the permanent-local property
            ;; So to avoid looping, we need to bind it to nil explicitly.
            (let (revert-buffer-function)
