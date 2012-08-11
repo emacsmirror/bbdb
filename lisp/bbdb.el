@@ -38,8 +38,6 @@
 ;; When running BBDB, we have (require 'bbdb-autoloads)
 (eval-when-compile              ; pacify the compiler.
   (autoload 'widget-group-match "wid-edit")
-  (autoload 'Electric-pop-up-window "electric")
-  (autoload 'Electric-command-loop "electric")
   (autoload 'bbdb-migrate "bbdb-migrate")
   (autoload 'bbdb-do-records "bbdb-com")
   (autoload 'bbdb-append-display-p "bbdb-com")
@@ -58,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/08/07 12:59:42 $"
+(defconst bbdb-version-date "$Date: 2012/08/10 12:54:19 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -523,11 +521,6 @@ and it should either return nil or a list of menu entries.
 Used by `bbdb-mouse-menu'."
   :group 'bbdb-record-display
   :type 'sexp)
-
-(defcustom bbdb-electric nil
-  "Whether bbdb mode should be `electric' like `electric-buffer-list'."
-  :group 'bbdb-record-display
-  :type 'boolean)
 
 (defcustom bbdb-display-hook nil
   "Hook run after the *BBDB* is filled in."
@@ -1423,10 +1416,6 @@ You really should not disable debugging.  But it will speed things up."))
   "Bind this to t to quiet things down - do not set it.
 See also `bbdb-silent'.")
 
-;; hack hack: a couple of specials that the electric stuff uses for state.
-(defvar bbdb-inside-electric-display nil
-  "Non-nil if BBDB is inside an electric display.")
-
 (defvar bbdb-notice-hook-pending nil
   "Bound to t if inside `bbdb-notice-mail-hook' or `bbdb-notice-record-hook'.
 Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
@@ -1525,11 +1514,11 @@ APPEND and INVERT appear in the message area.")
     (define-key km "\M-d"       'bbdb-dial)
     (define-key km "h"          'bbdb-info)
     (define-key km "?"          'bbdb-help)
-    (define-key km "q"          'bbdb-quit-window)
+    ;; (define-key km "q"       'quit-window) ; part of `special-mode' bindings
     (define-key km "\C-x\C-t"   'bbdb-transpose-fields)
     (define-key km "C"          'bbdb-copy-records-as-kill)
     (define-key km "u"          'bbdb-browse-url)
-    ;; (define-key km "P"          'bbdb-print)
+    ;; (define-key km "P"       'bbdb-print)
     (define-key km "="          'delete-other-windows)
 
     ;; Search keys
@@ -1546,8 +1535,8 @@ APPEND and INVERT appear in the message area.")
     (define-key km "\C-xnw"     'bbdb-display-all-records)
     (define-key km "\C-xnd"     'bbdb-display-current-record)
 
-    (define-key km [delete]     'scroll-down)
-    (define-key km " "          'scroll-up)
+    (define-key km [delete]     'scroll-down) ; 24.1: part of `special-mode'
+    (define-key km " "          'scroll-up)   ; 24.1: part of `special-mode'
 
     (define-key km [mouse-3]    'bbdb-mouse-menu)
     (define-key km [mouse-2]    (lambda (event)
@@ -1633,7 +1622,7 @@ This is a child of `special-mode-map'.")
      ["Brief help" bbdb-help t]
      ["BBDB Manual" bbdb-info t])
     "--"
-    ["Quit" bbdb-quit-window t]))
+    ["Quit" quit-window t]))
 
 (defvar bbdb-completing-read-mails-map
   (let ((map (copy-keymap minibuffer-local-completion-map)))
@@ -3202,30 +3191,14 @@ Move point to the end of the inserted record."
       (put-text-property beg (point) 'bbdb-record-number number))))
 
 (defun bbdb-display-records (records &optional layout append
-                                     select horiz-p electric)
+                                     select horiz-p)
   "Display RECORDS using LAYOUT.
 If APPEND is non-nil append RECORDS to the already displayed records.
 Otherwise RECORDS overwrite the displayed records.
-SELECT and HORIZ-P have the same meaning as in `bbdb-pop-up-window'.
-If ELECTRIC is non-nil BBDB is `electric' like `electric-buffer-list'."
+SELECT and HORIZ-P have the same meaning as in `bbdb-pop-up-window'."
   (interactive (list (bbdb-completing-read-records "Display records: ")
                      (bbdb-layout-prefix)))
-  (if (and (or bbdb-electric electric)
-           ;; Never be electric if the buffer is already displayed in a window.
-           (not (get-buffer-window bbdb-buffer-name)))
-      (bbdb-electric-display-records records layout append)
-    (bbdb-display-records-internal records layout append select horiz-p)))
-
-(defun bbdb-display-records-internal (records &optional layout append
-                                              select horiz-p)
-  "Low-level function overlooking the display of RECORDS using LAYOUT.
-If LAYOUT is nil use `bbdb-layout'.
-If APPEND is non-nil append RECORDS to the already displayed records.
-Otherwise RECORDS overwrite the displayed records.
-SELECT and HORIZ-P have the same meaning as in `bbdb-pop-up-window'."
-  (if (bbdb-append-display-p) (setq append t))
-
-  ;; `bbdb-redisplay-records' calls `bbdb-display-records-internal'
+  ;; `bbdb-redisplay-records' calls `bbdb-display-records'
   ;; with display information already amended to RECORDS.
   (unless (or (null records)
               (consp (car records)))
@@ -3363,7 +3336,7 @@ The *BBDB* buffer must be current when this is called."
         (mark (mark t)))
     (goto-char (window-start))
     (let ((p2 (point)))
-      (bbdb-display-records-internal bbdb-records)
+      (bbdb-display-records bbdb-records)
       (goto-char p2)
       (if mark (set-mark mark)))
     (recenter 0)
@@ -3456,57 +3429,6 @@ then the window will be split horizontally rather than vertically."
                (select-window selected-window) ; original window we were in
                (set-buffer cbuffer)))))))
 
-;;; Electric display stuff
-
-(defun bbdb-electric-display-records (records &optional layout append)
-  "Display RECORDS electrically using LAYOUT.
-If LAYOUT is nil use `bbdb-layout'.
-If APPEND is non-nil append RECORDS to the already displayed records.
-Otherwise RECORDS overwrite the displayed records."
-  (interactive
-   (list (let ((regexp (bbdb-search-prompt)))
-           (bbdb-search (bbdb-records) regexp regexp regexp
-                        (cons '* regexp) regexp regexp))))
-  (require 'electric)
-  (let ((bbdb-inside-electric-display t)
-        form key)
-    (save-window-excursion
-      (with-current-buffer bbdb-buffer-name
-        ;; `Electric-pop-up-window' comes with its own rules to pop-up
-        ;; a window. These more aggressive rules are more appropriate
-        ;; for electric display.  Therefore, we do not use here BBDB's
-        ;; pop-up algorithm.
-        (Electric-pop-up-window bbdb-buffer-name)
-        (bbdb-display-records-internal records layout append)
-        (unless bbdb-silent-internal
-          (message "Press SPC to quit BBDB buffer")
-          (sit-for 1))
-        (setq key (lookup-key bbdb-mode-map " "))
-        (define-key bbdb-mode-map " " 'bbdb-quit-window)
-        (unwind-protect
-            (setq form (catch 'electric-tag
-                         (progn
-                           (Electric-command-loop 'electric-tag "-> " t)
-                           ;; Always return nil.  Do we ever get a non-nil
-                           ;; return value from `Electric-command-loop'??
-                           nil)))
-          (define-key bbdb-mode-map " " key))))
-    ;; quit the electric command loop
-    (setq bbdb-inside-electric-display nil)
-    (message " ")
-    (eval form)))
-
-(defun bbdb-electric-throw (form)
-  "Exit the `Electric-command-loop' and evaluate FORM."
-  (throw 'electric-tag form))
-
-(defun bbdb-quit-window ()
-  "Quit *BBDB* window."
-  (interactive)
-  (if bbdb-inside-electric-display
-      (throw 'electric-tag nil)
-    (quit-window)))
-
 
 ;;; BBDB mode
 
@@ -3573,7 +3495,6 @@ Important variables:
 \t `bbdb-completion-list'
 \t `bbdb-default-area-code'
 \t `bbdb-default-domain'
-\t `bbdb-electric'
 \t `bbdb-layout'
 \t `bbdb-file'
 \t `bbdb-message-caching'

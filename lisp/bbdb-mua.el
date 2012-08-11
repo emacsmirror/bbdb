@@ -583,7 +583,7 @@ For interactive calls, see function `bbdb-mua-update-interactive-p'."
   (let (records)
     (bbdb-mua-wrapper
      (setq records (bbdb-mua-update-records header-class update-p)))
-    (if records (bbdb-display-records-internal records))
+    (if records (bbdb-display-records records))
     records))
 
 ;;;###autoload
@@ -749,7 +749,7 @@ See `bbdb-mua-display-records' and friends for interactive commands."
                            ((eq mua 'message) 'message-mode)
                            ((eq mua 'mail) 'mail-mode))))
           (if records
-              (bbdb-display-records-internal
+              (bbdb-display-records
                records nil nil nil
                ;; We consider horizontal window splitting for windows
                ;; that are used by the MUA.

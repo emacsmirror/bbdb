@@ -1562,9 +1562,6 @@ If VERBOSE is non-nil (as in interactive calls) be verbose."
   (setq records (bbdb-record-list records))
   (if (not records)
       (if verbose (message "No records"))
-    (if bbdb-inside-electric-display
-        (bbdb-electric-throw
-         `(bbdb-mail ',records ',subject ',n ',verbose)))
     (let ((to (bbdb-mail-address records n nil verbose)))
       (unless (string= "" to)
         (bbdb-compose-mail to subject)))))
@@ -1585,9 +1582,6 @@ to kill ring.  If VERBOSE is non-nil (as in interactive calls) be verbose."
   (setq records (bbdb-record-list records))
   (if (not records)
       (progn (if verbose (message "No records")) "")
-    (if bbdb-inside-electric-display
-        (bbdb-electric-throw
-         `(bbdb-mail-address ',records ',n ',kill-ring-save ',verbose)))
     (let ((good "") bad)
       (dolist (record records)
         (let ((mails (bbdb-record-mail record)))
@@ -2114,7 +2108,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
   (mail-abbrev-expand-hook)
   (when bbdb-completion-display-record
     (let ((bbdb-silent-internal t))
-      (bbdb-display-records-internal
+      (bbdb-display-records
        (apply 'append
               (mapcar (lambda (mail) (bbdb-message-search nil mail)) mails))
        nil t))))
@@ -2276,10 +2270,7 @@ Interactively, use BBDB prefix \
 ;;;###autoload
 (defun bbdb-info ()
   (interactive)
-  (require 'info)
-  (if bbdb-inside-electric-display
-      (bbdb-electric-throw '(bbdb-info))
-    (info (format "(%s)Top" (or bbdb-info-file "bbdb")))))
+  (info (format "(%s)Top" (or bbdb-info-file "bbdb"))))
 
 ;;;###autoload
 (defun bbdb-help ()

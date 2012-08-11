@@ -1,3 +1,22 @@
+2012-08-11  Roland Winkler  <winkler@gnu.org>
+	Remove electric mode that was not providing any new functionality
+	to BBDB.  Also see GNU Emacs Bug#11983.
+
+	* lisp/bbdb.el (bbdb-electric, bbdb-inside-electric-display)
+	(bbdb-quit-window, bbdb-electric-display-records)
+	(bbdb-electric-throw, bbdb-quit-window)
+	(bbdb-display-records-internal): Remove.
+	(bbdb-display-records): Remove arg electric.  Merge with
+	bbdb-display-records-internal.
+	(bbdb-redisplay-records): Use bbdb-display-records.
+
+	* lisp/bbdb-com.el (bbdb-mail, bbdb-mail-address, bbdb-info):
+	Remove electricity.
+	(bbdb-mail-abbrev-expand-hook): Use bbdb-display-records.
+
+	* lisp/bbdb-mua.el (bbdb-mua-display-records)
+	(bbdb-mua-auto-update): Use bbdb-display-records.
+
 2012-08-09  Roland Winkler  <winkler@gnu.org>
 	Remove message cache that was broken.  There were two problems
 	with it.  The cache did not distinguish between records associated
