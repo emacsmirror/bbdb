@@ -1838,6 +1838,7 @@ as part of the MUA insinuation."
             ;; now replace the text with the expansion
             (delete-region beg end)
             (insert address)
+            (bbdb-complete-mail-cleanup address)
             (setq done 'unique)))))
 
      ;; Partial completion
@@ -1886,22 +1887,32 @@ as part of the MUA insinuation."
                              (if (bbdb-string= sname mail)
                                  (push mail accept))))))
                   (when accept
-                    ;; If in the end dwim-completions contains only one element,
-                    ;; we got here only once.
+                    ;; If in the end DWIM-COMPLETIONS contains only one element,
+                    ;; we set DONE to `unique' (see below) and we want to know
+                    ;; ONE-RECORD.
                     (setq one-record record)
                     (dolist (mail (delete-dups accept))
                       (push (bbdb-dwim-mail record mail) dwim-completions))))))))
 
         (cond ((not dwim-completions)
                (error "No mail address for \"%s\"" orig))
-              ;; This can happen if multiple completions match the same record
+              ;; It may happen that DWIM-COMPLETIONS contains only one element,
+              ;; if multiple completions match the same record.  Then we may
+              ;; proceed with DONE set to `unique'.
               ((eq 1 (length dwim-completions))
                (delete-region beg end)
                (insert (car dwim-completions))
+               (bbdb-complete-mail-cleanup (car dwim-completions))
                (setq done 'unique))
               (t (setq done 'choose))))))
 
-    ;; Consider cycling
+    ;; By now, we have considered all possiblities to perform a completion.
+    ;; If nonetheless we haven't done anything so far, consider cycling.
+    ;;
+    ;; Completion and cycling are really two very separate things.
+    ;; Completion is controlled by the user variable `bbdb-completion-list'.
+    ;; Cycling assumes that ORIG already holds a valid RFC 822 mail address.
+    ;; Therefore cycling may consider different records than completion.
     (when (and (not done) bbdb-complete-mail-allow-cycling)
       ;; find the record we are working on.
       (let* ((address (mail-extract-address-components orig))
@@ -1935,41 +1946,45 @@ as part of the MUA insinuation."
                      (insert (bbdb-dwim-mail record mail))
                      (setq done 'cycle)))))))
 
-    ;; Clean up
-    (cond ((eq done 'unique)
-           ;; If we are past `fill-column', wrap at the previous comma.
-           (if (and (not (auto-fill-function))
-                    (>= (current-column) fill-column))
-               (save-excursion
-                 (when (search-backward "," (line-beginning-position) t)
-                   (forward-char 1)
-                   (insert "\n   "))))
-
-           ;; Update the *BBDB* buffer if desired.
-           (if bbdb-completion-display-record
-               (let ((bbdb-silent-internal t))
-                 (bbdb-pop-up-window)
-                 (bbdb-display-records-internal (list one-record) nil t)))
-
-           ;; call the unique-completion hook
-           (run-hooks 'bbdb-complete-mail-hook))
-
-          ;; Pop up a completions window.
-          ;; `completion-in-region' does not work here as `dwim-completions'
-          ;; is not a collection for completion in the usual sense, but it
-          ;; is really a list of replacements.
-          ((eq done 'choose)
-           (unless (eq (selected-window) (minibuffer-window))
-             (message "Making completion list..."))
-           (let ((completion-base-position (list beg end)))
-             (with-output-to-temp-buffer "*Completions*"
-               (display-completion-list dwim-completions)))
-           (unless (eq (selected-window) (minibuffer-window))
-             (message "Making completion list...done"))))
+    (when (eq done 'choose)
+      ;; Pop up a completions window.
+      ;; `completion-in-region' does not work here as `dwim-completions'
+      ;; is not a collection for completion in the usual sense, but it
+      ;; is really a list of replacements.
+      (let ((status (not (eq (selected-window) (minibuffer-window))))
+            (completion-base-position (list beg end))
+            (completion-list-insert-choice-function
+             (lambda (beg end text)
+               (completion--replace beg end text)
+               (bbdb-complete-mail-cleanup text))))
+        (if status (message "Making completion list..."))
+        (with-output-to-temp-buffer "*Completions*"
+          (display-completion-list dwim-completions))
+        (if status (message "Making completion list...done"))))
     done))
 
 ;;;###autoload
 (define-obsolete-function-alias 'bbdb-complete-name 'bbdb-complete-mail)
+
+(defun bbdb-complete-mail-cleanup (address)
+  "Clean up after inserting a mail ADDRESS.
+If we are past `fill-column', wrap at the previous comma."
+  (if (and (not (auto-fill-function))
+           (>= (current-column) fill-column))
+      (save-excursion
+        (when (search-backward "," (line-beginning-position) t)
+          (forward-char 1)
+          (insert "\n   "))))
+  (let* ((address (mail-extract-address-components address))
+         (record (car (bbdb-message-search (car address) (nth 1 address)))))
+    ;; Update the *BBDB* buffer if desired.
+    (if bbdb-completion-display-record
+        (let ((bbdb-silent-internal t))
+          ;; FIXME: This pops up *BBDB* before removing *Completions*
+          (bbdb-pop-up-window)
+          (bbdb-display-records (list record) nil t)))
+    ;; Call the unique-completion hook. This may access RECORD.
+    (run-hooks 'bbdb-complete-mail-hook)))
 
 ;;; interface to mail-abbrevs.el.
 

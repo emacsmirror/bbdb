@@ -1,4 +1,9 @@
 2012-08-11  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail-cleanup): New function.
+	(bbdb-complete-mail): Use it.  In particular, clean up also when
+	using *Completions* buffer.
+
+2012-08-11  Roland Winkler  <winkler@gnu.org>
 	Remove electric mode that was not providing any new functionality
 	to BBDB.  Also see GNU Emacs Bug#11983.
 
