@@ -2723,6 +2723,21 @@ With REMHASH non-nil, also remove RECORD from the hash table."
     (bbdb-record-set-sortkey record nil)
     (setq bbdb-modified t)))
 
+;; inspired by `gnus-bind-print-variables'
+(defmacro bbdb-with-print-loadably (&rest body)
+  "Bind print-* variables for BBDB and evaluate BODY.
+This macro is used with `prin1', `prin1-to-string', etc. in order to ensure
+printed Lisp objects are loadable by BBDB."
+  (declare (indent 0))
+  `(let ((print-escape-newlines t) ;; BBDB needs this!
+         print-escape-nonascii print-escape-multibyte
+         print-quoted print-length print-level)
+         ;; print-circle print-gensym
+         ;; print-continuous-numbering
+         ;; print-number-table
+         ;; float-output-format
+     ,@body))
+
 (defun bbdb-insert-record-internal (record)
   "Insert RECORD into the database file.
 Do not call this function directly, call instead `bbdb-change-record'
@@ -2753,7 +2768,6 @@ that calls the hooks, too."
     ;; written to the file.)  After writing, put the cache back and update
     ;; the cache's marker.
     (let ((cache (bbdb-record-cache record))
-          (print-escape-newlines t)
           (point (point)))
       (bbdb-debug
         (if (= point (point-min))
@@ -2762,7 +2776,8 @@ that calls the hooks, too."
                  (not (looking-at "^\\[")))
             (error "Not inserting before a record (%s)" point)))
       (bbdb-record-set-cache record nil)
-      (insert-before-markers (prin1-to-string record) "\n")
+      (insert-before-markers
+       (bbdb-with-print-loadably (prin1-to-string record)) "\n")
       (set-marker (bbdb-cache-marker cache) point)
       (bbdb-record-set-cache record cache))
     (setq bbdb-modified t)
@@ -2773,8 +2788,7 @@ that calls the hooks, too."
 Do not call this function directly, call instead `bbdb-change-record'
 that calls the hooks, too."
   (bbdb-with-db-buffer
-    (let* ((print-escape-newlines t)
-           (tail (memq record bbdb-records))
+    (let* ((tail (memq record bbdb-records))
            (_ (unless tail (error "BBDB record absent: %s" record)))
            (cache (bbdb-record-cache record)))
       (bbdb-debug
@@ -2787,7 +2801,7 @@ that calls the hooks, too."
             (error "Not inserting before a record (%s)" (point))))
 
       (bbdb-record-set-cache record nil)
-      (insert (prin1-to-string record) "\n")
+      (insert (bbdb-with-print-loadably (prin1-to-string record)) "\n")
       (delete-region (point)
                      (if (cdr tail)
                          (bbdb-record-marker (car (cdr tail)))
@@ -3738,8 +3752,7 @@ however, after having used other programs to add records to the BBDB."
         (message "BBDB was mis-sorted; fixing...")
         (bbdb-goto-first-record)
         (delete-region (point) bbdb-end-marker)
-        (let ((print-escape-newlines t)
-              (standard-output (current-buffer))
+        (let ((buf (current-buffer))
               (inhibit-quit t) ; really, don't mess with this
               cache)
           (dolist (record bbdb-records)
@@ -3749,7 +3762,7 @@ however, after having used other programs to add records to the BBDB."
             (setq cache (bbdb-record-cache record))
             (set-marker (bbdb-cache-marker cache) (point))
             (bbdb-record-set-cache record nil)
-            (prin1 record)
+            (bbdb-with-print-loadably (prin1 record buf))
             (bbdb-record-set-cache record cache)
             (insert ?\n)))
         (setq bbdb-modified t)
