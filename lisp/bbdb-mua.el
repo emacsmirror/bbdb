@@ -690,10 +690,11 @@ use all classes in `bbdb-message-headers'."
          (setq field 'notes)))
   (bbdb-mua-wrapper
    (let ((records (bbdb-mua-update-records header-class update-p)))
-     (bbdb-display-records records)
-     (dolist (record records)
-       (bbdb-edit-field record field)
-       (bbdb-maybe-update-display record)))))
+     (when records
+       (bbdb-display-records records)
+       (dolist (record records)
+         (bbdb-edit-field record field)
+         (bbdb-maybe-update-display record))))))
 
 ;;;###autoload
 (defun bbdb-mua-edit-field-sender (&optional field update-p)

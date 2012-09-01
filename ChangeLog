@@ -1,4 +1,7 @@
 2012-09-01  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-edit-field): Bug fix.
+
+2012-09-01  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-record-set-field): Bug fix.
 
 2012-09-01  Roland Winkler  <winkler@gnu.org>
