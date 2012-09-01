@@ -2217,7 +2217,7 @@ RECORD in the database."
                ;; Ignore junk
                (if (and (cdr note) (not (string= "" (cdr note))))
                    (push note new-notes)))
-             (if check (bbdb-check-type new-notes (bbdb-record-note record-type) t))
+             (if check (bbdb-check-type new-notes (bbdb-record-Notes record-type) t))
              (bbdb-record-set-Notes record new-notes)))
 
           ;; Single note field

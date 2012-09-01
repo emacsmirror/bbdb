@@ -1,4 +1,7 @@
 2012-09-01  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-record-set-field): Bug fix.
+
+2012-09-01  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-with-print-loadably): New macro.
 	(bbdb-insert-record-internal, bbdb-overwrite-record-internal)
 	(bbdb-sort-records): Use it.
