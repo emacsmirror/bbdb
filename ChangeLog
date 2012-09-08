@@ -1,3 +1,8 @@
+2012-09-08  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-message-header): Use
+	gnus-fetch-original-field so that bbdb-select-message does not get
+	fooled by an apparent absence of some headers.
+
 2012-09-07  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-accept-name-mismatch): Allow value being a
 	regexp or function.

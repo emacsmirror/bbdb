@@ -37,7 +37,7 @@
 (require 'bbdb-com)
 
 (eval-and-compile
-  (autoload 'gnus-fetch-field "gnus-utils")
+  (autoload 'gnus-fetch-original-field "gnus-utils")
   (autoload 'gnus-summary-select-article "gnus-sum")
   (defvar gnus-article-buffer)
 
@@ -94,7 +94,15 @@ MIME encoded headers are decoded.  Return nil if HEADER does not exist."
   ;; of a header if we request the value of the same header multiple times.
   ;; (We would reset the remember table each time we move on to a new message.)
   (let* ((mua (bbdb-mua))
-         (val (cond ((eq mua 'gnus) (gnus-fetch-field header))
+         (val (cond (;; It seems that `gnus-fetch-field' fetches decoded content of
+                     ;; `gnus-visible-headers', ignoring `gnus-ignored-headers'.
+                     ;; Here we use instead `gnus-fetch-original-field' that fetches
+                     ;; the encoded content of `gnus-original-article-buffer'.
+                     ;; Decoding makes this possibly a bit slower, but something like
+                     ;; `bbdb-select-message' does not get fooled by an apparent
+                     ;; absence of some headers.
+                     ;; See http://permalink.gmane.org/gmane.emacs.gnus.general/78741
+                     (eq mua 'gnus) (gnus-fetch-original-field header))
                     ((eq mua 'vm) (bbdb/vm-header header))
                     ((eq mua 'rmail) (bbdb/rmail-header header))
                     ((eq mua 'mh) (bbdb/mh-header header))
