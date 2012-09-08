@@ -385,6 +385,7 @@ Return the records matching ADDRESS or nil."
              (lname (cdr fullname))
              (mail mail) ;; possibly changed below
              (created-p created-p)
+             (accept-mismatch bbdb-accept-name-mismatch)
              change-p)
 
         ;; Analyze the name part of the record.
@@ -400,12 +401,18 @@ Return the records matching ADDRESS or nil."
                (bbdb-record-set-name record fname lname)
                (setq change-p 'sort))
 
-              ((and bbdb-accept-name-mismatch old-name)
+              ((and old-name
+                    (or (and (functionp bbdb-accept-name-mismatch)
+                             (setq accept-mismatch (funcall bbdb-accept-name-mismatch
+                                                            record name)))
+                        (and (stringp bbdb-accept-name-mismatch)
+                             (string-match bbdb-accept-name-mismatch name))
+                        bbdb-accept-name-mismatch))
                (when (and (not bbdb-silent)
-                          (numberp bbdb-accept-name-mismatch))
+                          (numberp accept-mismatch))
                  (message "name mismatch: \"%s\" changed to \"%s\""
                           old-name name)
-                 (sit-for bbdb-accept-name-mismatch)))
+                 (sit-for accept-mismatch)))
 
               ((or bbdb-silent
                    (not (or old-name (bbdb-record-mail record))) ; new record

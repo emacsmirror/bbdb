@@ -843,13 +843,22 @@ See also `bbdb-accept-message-alist', which has the opposite effect."
 Thus BBDB ignores when the real name in a message differs from the name
 in a BBDB record with the same mail address as in \"John Smith <jqs@frob.com>\"
 versus \"John Q. Smith <jqs@frob.com>\".
-If a number it is the number of seconds BBDB displays the name mismatch.
-If nil BBDB asks if you want to change the name.
+Allowed values are:
+ non-nil constant  Accept any name mismatches.
+ a number          Number of seconds BBDB displays the name mismatch.
+ a regexp          If the new name matches this regexp accept the name mismatch.
+ a function        This is called with two args, the record and the new name.
+                     If it returns non-nil accept the name mismatch.
+                     If it returns a number, it is the number of seconds
+                     BBDB displays the name mismatch.
+ nil               BBDB asks if you want to change the name.
 See also `bbdb-use-alternate-names'."
   :group 'bbdb-mua
-  :type '(choice (const :tag "Prompt for name changes" nil)
-                 (const :tag "Do not prompt for name changes" t)
-         (integer :tag "Instead of prompting, warn for this many seconds")))
+  :type '(choice (const :tag "Accept name mismatch" t)
+                 (const :tag "Query for name changes" nil)
+                 (integer :tag "Accept name mismatch, but warn for this many seconds")
+                 (regexp :tag "Accept name mismatch if new name matches this regexp")
+                 (function :tag "Function for analyzing name mismatch")))
 
 (defcustom bbdb-use-alternate-names t
   "If non-nil collect alternate names for a record as AKA.
