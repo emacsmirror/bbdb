@@ -1380,10 +1380,10 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
                          (setq extra-name old-name)
                          (cons (bbdb-record-firstname new-record)
                                (bbdb-record-lastname new-record)))
-                     (unless (and bbdb-use-alternate-names
-                                  (y-or-n-p
-                                   (format "Keep \"%s\" as an alternate name? "
-                                           extra-name)))
+                     (unless (bbdb-eval-spec
+                              (bbdb-add-job bbdb-add-aka new-record extra-name)
+                              (format "Keep \"%s\" as an alternate name? "
+                                      extra-name))
                        (setq extra-name nil)))))))
 
     (bbdb-record-set-name new-record (car name) (cdr name))

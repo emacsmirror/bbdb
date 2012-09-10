@@ -838,36 +838,6 @@ See also `bbdb-accept-message-alist', which has the opposite effect."
           (string :tag "Header name")
           (regexp :tag "Regexp to match on header value"))))
 
-(defcustom bbdb-accept-name-mismatch nil
-  "If non-nil accept name mismatches between messages and BBDB records.
-Thus BBDB ignores when the real name in a message differs from the name
-in a BBDB record with the same mail address as in \"John Smith <jqs@frob.com>\"
-versus \"John Q. Smith <jqs@frob.com>\".
-Allowed values are:
- non-nil constant  Accept any name mismatches.
- a number          Number of seconds BBDB displays the name mismatch.
- a regexp          If the new name matches this regexp accept the name mismatch.
- a function        This is called with two args, the record and the new name.
-                     If it returns non-nil accept the name mismatch.
-                     If it returns a number, it is the number of seconds
-                     BBDB displays the name mismatch.
- nil               BBDB asks if you want to change the name.
-See also `bbdb-use-alternate-names'."
-  :group 'bbdb-mua
-  :type '(choice (const :tag "Accept name mismatch" t)
-                 (const :tag "Query for name changes" nil)
-                 (integer :tag "Accept name mismatch, but warn for this many seconds")
-                 (regexp :tag "Accept name mismatch if new name matches this regexp")
-                 (function :tag "Function for analyzing name mismatch")))
-
-(defcustom bbdb-use-alternate-names t
-  "If non-nil collect alternate names for a record as AKA.
-Thus if BBDB changes the name in a record to the new name found in a message
-\(see `bbdb-accept-name-mismatch'), the old name is kept as AKA."
-  :group 'bbdb-mua
-  :type '(choice (const :tag "Ask to use alternate names field" t)
-                 (const :tag "Use alternate names field without asking" nil)))
-
 (defcustom bbdb-user-mail-address-re
   (and (stringp user-mail-address)
        (string-match "\\`\\([^@]*\\)\\(@\\|\\'\\)" user-mail-address)
@@ -881,33 +851,92 @@ See also `bbdb-message-try-all-headers'."
   :group 'bbdb-mua
   :type '(regexp :tag "Regexp matching your mail addresses"))
 
+(defcustom bbdb-add-name 'query
+  "How to handle new names for existing BBDB records.
+This handles messages where the real name differs from the name
+in a BBDB record with the same mail address, as in \"John Smith <jqs@frob.com>\"
+versus \"John Q. Smith <jqs@frob.com>\".
+Allowed values are:
+ t           Automatically change the name to the new value.
+ query       Query whether to use the new name.
+ nil         Ignore the new name.
+ a number    Number of seconds BBDB displays the name mismatch.
+               (without further action).
+ a function  This is called with two args, the record and the new name.
+               It should return one of the above values.
+ a regexp    If the new name matches this regexp ignore it.
+               Otherwise query to add it.
+See also `bbdb-add-aka'."
+  :group 'bbdb-mua
+  :type '(choice (const :tag "Automatically use the new name" t)
+                 (const :tag "Query for name changes" query)
+                 (const :tag "Ignore the new name" nil)
+                 (integer :tag "Number of seconds to display name mismatch")
+                 (function :tag "Function for analyzing name handling")
+                 (regexp :tag "If the new name matches this regexp ignore it.")))
+
+(defcustom bbdb-add-aka 'query
+  "How to handle alternate names for existing BBDB records.
+Allowed values are:
+ t           Automatically store alternate names as AKA.
+ query       Query whether to store alternate names as an AKA.
+ nil         Ignore alternate names.
+ a function  This is called with two args, the record and the new name.
+               It should return one of the above values.
+ a regexp    If the alternate name matches this regexp ignore it.
+               Otherwise query to add it.
+See also `bbdb-add-name'."
+  :group 'bbdb-mua
+  :type '(choice (const :tag "Automatically store alternate names as AKA" t)
+                 (const :tag "Query for alternate names" query)
+                 (const :tag "Ignore alternate names" nil)
+                 (function :tag "Function for alternate name handling")
+                 (regexp :tag "If the alternate name matches this regexp ignore it.")))
+
 (defcustom bbdb-add-mails 'query
   "How to handle new mail addresses for existing BBDB records.
+This handles messages where the mail address differs from the mail addresses
+in a BBDB record with the same name as in \"John Q. Smith <jqs@foo.com>\"
+versus \"John Q. Smith <jqs@bar.com>\".
 Allowed values are:
- t           When BBDB notices a new mail address for a record,
-               it will automatically add it to the list of mail addresses.
+ t           Automatically add new mail addresses to the list of mail addresses.
  query       Query whether to add it.
- nil         New mail addresses will never be automatically added
-               nor the user will be asked.
- a function  The function should return one of these values.
-
-See also the variable `bbdb-new-mails-always-primary' for control of whether
-the addresses go at the front of the list or the back."
+ nil         Ignore new mail addresses.
+ a number    Number of seconds BBDB displays the new address
+               (without further action).
+ a function  This is called with two args, the record and the new mail address.
+               It should return one of the above values.
+ a regexp    If the new mail address matches this regexp ignore the new address.
+               Otherwise query to add it.
+See also `bbdb-new-mails-primary'."
   :group 'bbdb-mua
   :type '(choice (const :tag "Automatically add new mail addresses" t)
-                 (const :tag "Ask before adding new mail addresses" query)
-                 (const :tag "Never add new mail addresses" nil)))
+                 (const :tag "Query before adding new mail addresses" query)
+                 (const :tag "Never add new mail addresses" nil)
+                 (number :tag "Number of seconds to display new addresses")
+                 (function :tag "Function for analyzing name handling")
+                 (regexp :tag "If the new address matches this regexp ignore it.")))
 
-(defcustom bbdb-new-mails-always-primary nil
-  "Controls where to put a new mail address in the list of known addresses.
-If this is t, then when BBDB adds a new mail address to a record, it will put it
-at the front of the list of addresses, making it the primary address.
-If it is any other non-nil value, you will be asked.
-If nil then new mail addresses will always be added at the end of the list."
+(defcustom bbdb-new-mails-primary nil
+  "Where to put new mail addresses for existing BBDB records.
+A new mail address may either become the new primary mail address,
+when it is put at the beginning of the list of mail addresses.
+Or the new mail address is added at the end of the list of mail addresses.
+Allowed values are:
+ t           Make a new address automatically the primary address.
+ query       Query whether to make it the primary address.
+ nil         Add the new address to the end of the list.
+ a function  This is called with two args, the record and the new mail address.
+               It should return one of the above values.
+ a regexp    If the new mail address matches this regexp put it at the end.
+               Otherwise query to make it the primary address.
+See also `bbdb-add-mails'."
   :group 'bbdb-mua
   :type '(choice (const :tag "New address automatically made primary" t)
-                (const :tag "Ask before making new address primary" nil)
-                (const :tag "Never make new address primary" never)))
+                 (const :tag "Query before making a new address primary" query)
+                 (const :tag "Do not make new address primary" nil)
+                 (function :tag "Function for analyzing primary handling")
+                 (regexp :tag "If the new mail address matches this regexp put it at the end.")))
 
 (defcustom bbdb-canonicalize-mail-function nil
   "If non-nil, it should be a function of one arg: a mail address string.
@@ -1772,6 +1801,27 @@ May be used as value of variable `bbdb-multiple-buffers'."
           ((memq major-mode '(mail-mode vm-mail-mode message-mode))
            "message composition"))))
 
+(defsubst bbdb-add-job (spec record string)
+  "Internal function: Evaluate SPEC for RECORD and STRING.
+If SPEC is a function call it with args RECORD and STRING.  Return value.
+If SPEC is a regexp, return 'query unless SPEC matches STRING.
+Otherwise return SPEC.
+Used with variable `bbdb-add-name' and friends."
+  (cond ((functionp spec)
+         (funcall spec record string))
+        ((stringp spec)
+         (unless (string-match spec string) 'query)) ; be least aggressive
+        (spec)))
+
+(defsubst bbdb-eval-spec (spec prompt)
+  "Internal function: Evaluate SPEC using PROMPT.
+Return t if either SPEC equals t, or SPEC equals 'query and `bbdb-silent'
+is non-nil or `y-or-no-p' returns t using PROMPT.
+Used with return values of `bbdb-add-job'."
+  (or (eq spec t)
+      (and (eq spec 'query)
+           (or bbdb-silent (y-or-n-p prompt)))))
+
 ;; BBDB data structure
 (defmacro bbdb-defstruct (name &rest elts)
   "Define two functions to operate on vector NAME for each ELT in ELTS.
@@ -2307,6 +2357,7 @@ Case is ignored.  Return name as (FIRST . LAST).
 LAST is always a string (possibly empty).  FIRST may be nil."
   (let ((case-fold-search t)
         first last suffix)
+    ;; FIXME: This could be smarter with names of the form "Last, First"
     (if (string-match (concat "[-,. \t/\\]+\\("
                               (regexp-opt bbdb-lastname-suffixes)
                               ;; suffices are complemented by optional `.'.
@@ -3511,7 +3562,6 @@ For address completion using the names and mail addresses in the database:
 \t in Message mode, type \\<message-mode-map>\\[bbdb-complete-mail].
 
 Important variables:
-\t `bbdb-add-mails'
 \t `bbdb-auto-revert'
 \t `bbdb-canonicalize-redundant-mails'
 \t `bbdb-case-fold-search'
@@ -3521,14 +3571,15 @@ Important variables:
 \t `bbdb-layout'
 \t `bbdb-file'
 \t `bbdb-message-caching'
-\t `bbdb-new-mails-always-primary'
 \t `bbdb-phone-style'
 \t `bbdb-check-auto-save-file'
 \t `bbdb-pop-up-layout'
 \t `bbdb-pop-up-window-size'
-\t `bbdb-accept-name-mismatch'
+\t `bbdb-add-name'
+\t `bbdb-add-aka'
+\t `bbdb-add-mails'
+\t `bbdb-new-mails-primary'
 \t `bbdb-read-only'
-\t `bbdb-use-alternate-names'
 \t `bbdb-message-pop-up'
 \t `bbdb-user-mail-address-re'
 

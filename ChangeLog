@@ -1,3 +1,21 @@
+2012-09-09  Roland Winkler  <winkler@gnu.org>
+	Provide unified scheme for customizing how BBDB analyzes messages.
+
+	* lisp/bbdb.el (bbdb-add-name): Renamed from
+	bbdb-accept-name-mismatch.
+	(bbdb-add-aka): Renamed from bbdb-use-alternate-names.
+	(bbdb-new-mails-primary): Renamed from
+	bbdb-new-mails-always-primary.
+	(bbdb-add-name, bbdb-add-aka, bbdb-add-mails)
+	(bbdb-new-mails-primary): Unify set of allowed values.
+	(bbdb-add-job, bbdb-eval-spec): New functions.
+	(bbdb-mode): Update docstring.
+
+	* lisp/bbdb-com.el (bbdb-merge-records): Use bbdb-add-aka.
+
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Use bbdb-add-name,
+	bbdb-add-aka, bbdb-add-mails, and bbdb-new-mails-primary.
+
 2012-09-08  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-message-header): Use
 	gnus-fetch-original-field so that bbdb-select-message does not get
