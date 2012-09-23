@@ -732,7 +732,7 @@ Return matching records.
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'.
 UPDATE-P may take the same values as `bbdb-mua-auto-update-p'.
-If UPDATE-P is nil, use `bbdb-mua-auto-update-p'.
+If UPDATE-P is nil, use `bbdb-mua-auto-update-p' (which see).
 
 If `bbdb-message-pop-up' is non-nil, the *BBDB* buffer is displayed
 along with the MUA window(s), showing the matching records.

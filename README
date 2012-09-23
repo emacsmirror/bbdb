@@ -109,11 +109,12 @@ Noninteractive functions
 Call bbdb-mua-auto-update-init (usually in your init file)
 to hook BBDB's hook function bbdb-mua-auto-update into the MUAs.
 
-bbdb-mua-auto-update automatically displays or updates the BBDB records
-for the sender and/or recipients of a message. Its behavior is controlled
-by bbdb-mua-auto-update-p. This may take the same values as
-bbdb-mua-update-interactive-p (except read).
+bbdb-mua-auto-update automatically updates the BBDB records for the
+sender and/or recipients of a message.  If bbdb-message-pop-up is non-nil,
+the matching records are also displayed in a continuously updated BBDB window, 
 
+The behavior of bbdb-mua-auto-update is controlled by bbdb-mua-auto-update-p.
+This may take the same values as bbdb-mua-update-interactive-p (except read). 
 Binding this to a function is often most helpful for noninteractive use.
 For example, you may want to bind bbdb-mua-auto-update-p to the function
 bbdb-select-message,  see bbdb-accept-message-alist and
@@ -123,7 +124,7 @@ bbdb-select-message) is given by bbdb-mua-update-records-p.
 
 ==================================================================
 
-Copyright (C) 2010, 2011 Roland Winkler <winkler@gnu.org>
+Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
 
 This file is part of the Insidious Big Brother Database (aka BBDB),
 

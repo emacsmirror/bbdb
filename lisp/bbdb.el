@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/08/10 12:54:19 $"
+(defconst bbdb-version-date "$Date: 2012/09/15 14:41:47 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -736,6 +736,9 @@ Allowed values are (here ADDRESS is an email address found in a message):
                 create a new record if it does not yet exist.
  a function   This functions will be called with no arguments.
                 It should return one of the above values.
+                For an example, see `bbdb-select-message' with
+                `bbdb-mua-update-records-p', `bbdb-accept-message-alist'
+                and `bbdb-ignore-message-alist'.
 
 To initiate auto-updating of BBDB records, call `bbdb-mua-auto-update-init'
 for the respective MUAs in your init file."
@@ -1181,7 +1184,7 @@ See also `bbdb-auto-notes-ignore-messages'."
           (string :tag "Header name")
           (regexp :tag "Regexp to match on header value"))))
 
-(defcustom bbdb-message-pop-up nil
+(defcustom bbdb-message-pop-up t
   "If non-nil, display a continuously updated BBDB window while using a MUA.
 If 'horiz, stack the window horizontally if there is room."
   :group 'bbdb-mua
