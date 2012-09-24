@@ -124,6 +124,28 @@ bbdb-select-message) is given by bbdb-mua-update-records-p.
 
 ==================================================================
 
+Notes for BBDB lisp hackers:
+----------------------------
+
+If you write your own functions and commands to modify BBDB records,
+do not call the low-level functions bbdb-record-set-* such as
+bbdb-record-set-aka, bbdb-record-set-mail etc. The recommended
+sequence of calls is
+
+- one or multiple calls of bbdb-record-set-field for the respective
+  fields to be changed. This not only sets the fields, but it also
+  ensures the integrity of the database. Also, this makes your code
+  more robust with respect to possible future changes of BBDB's
+  innermost internals.
+
+- a call of bbdb-change-record which updates the database after a
+  change of RECORD.
+
+- If the changed record is displayed in the *BBDB* buffer, call
+  bbdb-redisplay-record.
+
+==================================================================
+
 Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
 
 This file is part of the Insidious Big Brother Database (aka BBDB),

@@ -79,7 +79,7 @@ Allowed elements are as in the return value of `ispell-valid-dictionary-list'."
     ;; Collect words from BBDB records.
     (dolist (record (bbdb-records))
       (dolist (field bbdb-ispell-field-list)
-        (bbdb-ispell-collect-words (bbdb-record-get-field record field))))
+        (bbdb-ispell-collect-words (bbdb-record-field record field))))
 
     ;; Update personal dictionaries
     (dolist (dict (or bbdb-ispell-dictionary-list '("default")))

@@ -1,3 +1,52 @@
+2012-09-23  Roland Winkler  <winkler@gnu.org>
+	Add more complete support for mail entries containing RFC-822
+	addresses such as "John Smith <smith@foo.com>" in the record of
+	Johnathan Smith.
+
+	* lisp/bbdb.el (bbdb-defstruct): Doc fix.  Improve doc string of
+	functions defined via this macro.
+	(bbdb-cache-mail-aka, bbdb-cache-mail-canon): New elements of
+	bbdb-record-cache.
+	(bbdb-record-mail-aka, bbdb-record-mail-canon): New functions.
+	(bbdb-hash-p): New function.
+	(bbdb-gethash): Use it.
+	(bbdb-puthash-mail): New function.
+	(bbdb-hash-record): Use it.
+	(bbdb-record-field): Renamed from bbdb-record-get-field.
+	New field values mail-canon, mail-aka and aka-all.  Doc fix.
+	(bbdb-record-get-field): Obsolete function alias.
+	(bbdb-record-set-field): Doc fix. Update hash for mail entries
+	such as "John Smith <smith@foo.com>".
+	(bbdb-delete-record-internal): Use canonical mail addresses and
+	all AKAs when cleaning up the hash.
+
+	* lisp/bbdb-com.el (bbdb-search): Use bbdb-record-field.
+	(bbdb-search-duplicates): Use bbdb-record-mail-canon.
+	(bbdb-message-search): Simplify.
+	(bbdb-edit-field): Doc fix.
+	(bbdb-ident-point, bbdb-transpose-fields)
+	(bbdb-delete-field-or-record): Use bbdb-record-field.
+	(bbdb-completion-predicate): Use bbdb-hash-p.
+	(bbdb-complete-mail): Compare with all AKAs.  A plain message
+	search should be sufficient.
+
+	* lisp/bbdb-mual.el (bbdb-annotate-message): Compare with
+	canonical mail addresses.
+
+	* lisp/bbdb-ispell.el (bbdb-ispell-export): Use bbdb-record-field.
+
+	* README: Notes for BBDB lisp hackers added.
+
+2012-09-23  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mua-auto-update-p): Doc fix.
+	(bbdb-message-pop-up): Change default to t.
+
+	* lisp/bbdb-mua.el (bbdb-mua-auto-update)
+	(bbdb-mua-auto-update-init): Doc fix.
+	(bbdb-mua-auto-update): Simplify.
+
+	* README: Clarify usage of bbdb-mua-auto-update.
+
 2012-09-09  Roland Winkler  <winkler@gnu.org>
 	Provide unified scheme for customizing how BBDB analyzes messages.
 

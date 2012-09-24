@@ -453,7 +453,7 @@ Return the records matching ADDRESS or nil."
 
         ;; Analyze the mail part of the new records
         (cond ((or bbdb-read-only (not mail) (equal mail "???")
-                   (member-ignore-case mail (bbdb-record-mail record)))) ; do nothing
+                   (member-ignore-case mail (bbdb-record-mail-canon record)))) ; do nothing
 
               (created-p ; new record
                (bbdb-record-set-field record 'mail (list mail)))
@@ -746,23 +746,23 @@ See `bbdb-mua-display-records' and friends for interactive commands."
                                            (or update-p
                                                bbdb-mua-auto-update-p))))
     (if bbdb-message-pop-up
-        (let* ((mua (bbdb-mua))
-               (mode (cond ((eq mua 'vm) 'vm-mode)
-                           ((eq mua 'gnus) 'gnus-article-mode)
-                           ((eq mua 'rmail) 'rmail-mode)
-                           ((eq mua 'mh) 'mh-folder-mode)
-                           ((eq mua 'message) 'message-mode)
-                           ((eq mua 'mail) 'mail-mode))))
-          (if records
+        (if records
+            (let* ((mua (bbdb-mua))
+                   (mode (cond ((eq mua 'vm) 'vm-mode)
+                               ((eq mua 'gnus) 'gnus-article-mode)
+                               ((eq mua 'rmail) 'rmail-mode)
+                               ((eq mua 'mh) 'mh-folder-mode)
+                               ((eq mua 'message) 'message-mode)
+                               ((eq mua 'mail) 'mail-mode))))
               (bbdb-display-records
                records nil nil nil
                ;; We consider horizontal window splitting for windows
                ;; that are used by the MUA.
                `(lambda (window)
                   (with-current-buffer (window-buffer window)
-                    (eq major-mode ',mode))))
-            ;; If there are no records, empty the BBDB window.
-            (bbdb-undisplay-records))))
+                    (eq major-mode ',mode)))))
+          ;; If there are no records, empty the BBDB window.
+          (bbdb-undisplay-records)))
     records))
 
 ;; Should the following be replaced by a minor mode??
@@ -777,7 +777,9 @@ from the respective presentation hook.
 Call this function in your init file to use the auto update feature with MUAS.
 This function is separate from the general function `bbdb-initialize'
 as this allows one to initialize the auto update feature for some MUAs only,
-for example only for outgoing messages."
+for example only for outgoing messages.
+
+See `bbdb-mua-auto-update' for details about the auto update feature."
   (dolist (mua '((message . message-send-hook)
                  (mail . mail-send-hook)
                  (rmail . rmail-show-message-hook)
