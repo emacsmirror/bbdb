@@ -114,7 +114,7 @@ Respects `vm-summary-uninteresting-senders'."
       (let ((record (car (bbdb-message-search
                           nil (bbdb-canonicalize-mail address)))))
         (if record
-            (or (bbdb-record-note record 'mail-name)
+            (or (bbdb-record-xfield record 'mail-name)
                 (bbdb-record-name record))))))
 
 
@@ -161,7 +161,7 @@ Add this function to `bbdb-before-save-hook' and your .vm."
   (let ((records ; Collect BBDB records with a vm-folder attribute.
           (delq nil
                 (mapcar (lambda (r)
-                          (if (bbdb-record-note r bbdb/vm-auto-folder-field)
+                          (if (bbdb-record-xfield r bbdb/vm-auto-folder-field)
                               r))
                         (bbdb-records))))
          folder-list folder-name mail-regexp)
@@ -173,11 +173,11 @@ Add this function to `bbdb-before-save-hook' and your .vm."
         (setq folder-list (assoc header vm-auto-folder-alist)))
       (dolist (record records)
         ;; Ignore everything past a comma
-        (setq folder-name (car (bbdb-record-note-split
+        (setq folder-name (car (bbdb-record-xfield-split
                                 record bbdb/vm-auto-folder-field))
               ;; quote all the mail addresses for the record and join them
               mail-regexp (regexp-opt (bbdb-record-mail record)))
-        ;; In general, the values of note fields are strings (required for editing).
+        ;; In general, the values of xfields are strings (required for editing).
         ;; If we could set the value of `bbdb/vm-auto-folder-field' to a symbol,
         ;; it could be a function that is called with arg record to calculate
         ;; the value of folder-name.
@@ -213,7 +213,7 @@ Add this function to `bbdb-before-save-hook' and your .vm."
   (interactive)
   (let (real-folders mail-regexp folder val selector)
     (dolist (record (bbdb-records))
-      (when (setq val (bbdb-record-note-split record bbdb/vm-virtual-folder-field))
+      (when (setq val (bbdb-record-xfield-split record bbdb/vm-virtual-folder-field))
         (setq mail-regexp (regexp-opt (bbdb-record-mail record)))
         (unless (string= "" mail-regexp)
           (setq folder (car val)
@@ -273,7 +273,7 @@ mail that you send to people (and copy yourself on) is labeled as well."
   (let (aliases)
     (and (eq major-mode 'vm-mode)
          (mapcar (lambda (x)
-                   (setq aliases (append aliases (bbdb-record-note-split record x))))
+                   (setq aliases (append aliases (bbdb-record-xfield-split record x))))
                  (cond ((listp bbdb/vm-auto-add-label-field)
                         bbdb/vm-auto-add-label-field)
                        ((symbolp bbdb/vm-auto-add-label-field)

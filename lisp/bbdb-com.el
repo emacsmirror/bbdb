@@ -185,13 +185,13 @@ With prefix ARG a negative number, do not invert next search."
   (message "%s" (bbdb-concat " " (elt bbdb-modeline-info 2)
                              (elt bbdb-modeline-info 3))))
 
-(defmacro bbdb-search (records &optional name-re org-re mail-re notes-re
+(defmacro bbdb-search (records &optional name-re org-re mail-re xfield-re
                                phone-re address-re)
   "Search RECORDS for fields matching regexps.
 Regexp NAME-RE is matched against FIRST_LAST, LAST_FIRST, and AKA.
-Regexp NOTES-RE is matched against the notes field.
-NOTES-RE may also be a cons (LABEL . RE).  Then RE is matched against
-note LABEL.  If LABEL is '* then RE is matched against any note field.
+Regexp XFIELD-RE is matched against xfield notes.
+XFIELD-RE may also be a cons (LABEL . RE).  Then RE is matched against
+xfield LABEL.  If LABEL is '* then RE is matched against any xfield.
 
 This macro only generates code for those fields actually being searched for;
 literal nils at compile-time cause no code to be generated.
@@ -207,8 +207,8 @@ but not allowing for regexps."
     (or (stringp name-re) (symbolp name-re) (error "name-re must be atomic"))
     (or (stringp org-re) (symbolp org-re) (error "org-re must be atomic"))
     (or (stringp mail-re) (symbolp mail-re) (error "mail-re must be atomic"))
-    (or (stringp notes-re) (symbolp notes-re) (consp notes-re)
-        (error "notes-re must be atomic or cons"))
+    (or (stringp xfield-re) (symbolp xfield-re) (consp xfield-re)
+        (error "xfield-re must be atomic or cons"))
     (or (stringp phone-re) (symbolp phone-re) (error "phone-re must be atomic"))
     (or (stringp address-re) (symbolp address-re) (error "address-re must be atomic"))
     (when name-re
@@ -268,28 +268,28 @@ but not allowing for regexps."
                    (setq done (string-match ,mail-re "")))
                  done)
               clauses))
-    (if notes-re
-        (push `(cond ((stringp ,notes-re)
-                      ;; check notes field `notes'
-                      (string-match ,notes-re
-                                    (or (bbdb-record-note record 'notes) "")))
-                     ((eq (car ,notes-re) '*)
-                      ;; check all notes fields
-                      (let ((labels bbdb-notes-label-list) done tmp)
-                        (if (bbdb-record-Notes record)
+    (if xfield-re
+        (push `(cond ((stringp ,xfield-re)
+                      ;; check xfield `notes'
+                      (string-match ,xfield-re
+                                    (or (bbdb-record-xfield record 'notes) "")))
+                     ((eq (car ,xfield-re) '*)
+                      ;; check all xfields
+                      (let ((labels bbdb-xfield-label-list) done tmp)
+                        (if (bbdb-record-xfields record)
                             (while (and (not done) labels)
-                              (setq tmp (bbdb-record-note record (car labels))
-                                    done (and tmp (string-match (cdr ,notes-re)
+                              (setq tmp (bbdb-record-xfield record (car labels))
+                                    done (and tmp (string-match (cdr ,xfield-re)
                                                                 tmp))
                                     labels (cdr labels)))
                           ;; so that "^$" can be used to find records that
                           ;; have no notes
-                          (setq done (string-match (cdr ,notes-re) "")))
+                          (setq done (string-match (cdr ,xfield-re) "")))
                         done))
                      (t ; check one field
-                      (string-match (cdr ,notes-re)
-                                    (or (bbdb-record-note
-                                         record (car ,notes-re)) ""))))
+                      (string-match (cdr ,xfield-re)
+                                    (or (bbdb-record-xfield
+                                         record (car ,xfield-re)) ""))))
               clauses))
     `(let ((case-fold-search bbdb-case-fold-search)
            (invert (bbdb-search-invert-p))
@@ -308,7 +308,7 @@ but not allowing for regexps."
 ;;;###autoload
 (defun bbdb (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP
-in either the name(s), organization, address, phone, mail, or notes."
+in either the name(s), organization, address, phone, mail, or xfields."
   (interactive (list (bbdb-search-prompt) (bbdb-layout-prefix)))
   (let ((records (bbdb-search (bbdb-records) regexp regexp regexp
                               (cons '* regexp) regexp regexp)))
@@ -350,20 +350,20 @@ in either the name(s), organization, address, phone, mail, or notes."
    (bbdb-search (bbdb-records) nil nil nil nil regexp) layout))
 
 ;;;###autoload
-(defun bbdb-search-notes (field regexp &optional layout)
-  "Display all records in the BBDB matching REGEXP in the notes FIELD."
+(defun bbdb-search-xfields (field regexp &optional layout)
+  "Display all BBDB records for which xfield FIELD matches REGEXP."
   (interactive
-   (let ((field (completing-read "Notes field to search (RET for all): "
-                                 (mapcar 'list bbdb-notes-label-list) nil t)))
-     (list field (bbdb-search-prompt (if (string= field "")
-                                         "one field"
-                                       field))
+   (let ((field (completing-read "Xfield to search (RET for all): "
+                                 (mapcar 'list bbdb-xfield-label-list) nil t)))
+     (list (if (string= field "") '* (intern field))
+           (bbdb-search-prompt (if (string= field "")
+                                   "any xfield"
+                                 field))
            (bbdb-layout-prefix))))
-  (let ((notes (if (string= field "")
-                   (cons '* regexp)
-                 (cons (intern field) regexp))))
-    (bbdb-display-records (bbdb-search (bbdb-records) nil nil nil notes)
-                          layout)))
+  (bbdb-display-records (bbdb-search (bbdb-records) nil nil nil
+                                     (cons field regexp))
+                        layout))
+(define-obsolete-function-alias 'bbdb-search-notes 'bbdb-search-xfields)
 
 ;;;###autoload
 (defun bbdb-search-changed (&optional layout)
@@ -457,9 +457,9 @@ The search results are displayed in the bbdb buffer."
 (defmacro bbdb-compare-records (cmpval label compare)
   "Builds a lambda comparison function that takes one argument, RECORD.
 RECORD is returned if (COMPARE VALUE CMPVAL) is t, where VALUE
-is the value of note LABEL of RECORD."
+is the value of xfield LABEL of RECORD."
   `(lambda (record)
-     (let ((val (bbdb-record-note record ,label)))
+     (let ((val (bbdb-record-xfield record ,label)))
        (if (and val (,compare val ,cmpval))
            record))))
 
@@ -505,7 +505,7 @@ DATE must be in yyyy-mm-dd format."
   (interactive (list (bbdb-layout-prefix)))
   (bbdb-search-prog
    ;; RECORD is bound in `bbdb-search-prog'.
-   (bbdb-compare-records (bbdb-record-note record 'timestamp)
+   (bbdb-compare-records (bbdb-record-xfield record 'timestamp)
                          'creation-date string=) layout))
 
 ;;; Parsing phone numbers
@@ -590,19 +590,21 @@ This function performs a fast search using `bbdb-hashtable'.
 NAME and MAIL must be strings or nil.
 See `bbdb-search' for searching records with regexps."
   (bbdb-buffer)  ; make sure database is loaded and up-to-date
-  ;; (1) records matching NAME and MAIL
-  (or (and name mail
-           (let ((mrecords (bbdb-gethash mail '(mail)))
-                 records)
-             (dolist (record (bbdb-gethash name '(fl-name lf-name aka)))
-               (mapc (lambda (mr) (if (and (eq record mr)
-                                           (not (memq record records)))
-                                      (push record records))) mrecords))
-             records))
-      ;; (2) records matching MAIL
-      (bbdb-gethash mail '(mail))
-      ;; (3) records matching NAME
-      (bbdb-gethash name '(fl-name lf-name aka))))
+  (let ((mrecords (if mail (bbdb-gethash mail '(mail))))
+        (nrecords (if name (bbdb-gethash name '(fl-name lf-name aka)))))
+    ;; (1) records matching NAME and MAIL
+    (or (and mrecords nrecords
+             (let (records)
+               (dolist (record nrecords)
+                 (mapc (lambda (mr) (if (and (eq record mr)
+                                             (not (memq record records)))
+                                        (push record records)))
+                       mrecords))
+               records))
+        ;; (2) records matching MAIL
+        mrecords
+        ;; (3) records matching NAME
+        nrecords)))
 
 (defun bbdb-read-record (&optional first-and-last)
   "Prompt for and return a new BBDB record.
@@ -703,7 +705,7 @@ Call `bbdb-create-internal' instead."
   (bbdb-display-records (list record)))
 
 (defun bbdb-create-internal (name &optional affix aka organization mail
-                                  phone address notes)
+                                  phone address xfields)
   "Adds a record to the database; this function does a fair amount of
 error-checking on the passed in values, so it is safe to call this from
 other programs.
@@ -718,7 +720,7 @@ ADDRESS is a list of address objects.  An address is a vector of the form
 PHONE is a list of phone-number objects.  A phone-number is a vector of
 the form [\"label\" areacode prefix suffix extension-or-nil]
 or [\"label\" \"phone-number\"]
-NOTES is an alist associating symbols with strings."
+XFIELDS is an alist associating symbols with strings."
   ;; name
   (if (stringp name)
       (setq name (bbdb-divide-name name))
@@ -741,10 +743,10 @@ NOTES is an alist associating symbols with strings."
     (bbdb-check-type organization (bbdb-record-organization record-type) t)
     (bbdb-check-type phone (bbdb-record-phone record-type) t)
     (bbdb-check-type address (bbdb-record-address record-type) t)
-    (bbdb-check-type notes (bbdb-record-Notes record-type) t)
+    (bbdb-check-type xfields (bbdb-record-xfields record-type) t)
     (let ((record
            (vector firstname lastname affix aka organization phone
-                   address mail notes
+                   address mail xfields
                    (make-vector bbdb-cache-length nil))))
       (run-hook-with-args 'bbdb-create-hook record)
       (bbdb-change-record record t t)
@@ -769,11 +771,11 @@ value of \"\", the default) means do not alter the address."
    (let* ((_ (bbdb-editable))
           (record (or (bbdb-current-record)
                       (error "Point not on a record")))
-          (list (append bbdb-notes-label-list
+          (list (append bbdb-xfield-label-list
                         '(affix organization aka phone address mail)))
           (field "")
           (completion-ignore-case t)
-          (present (mapcar 'car (bbdb-record-Notes record)))
+          (present (mapcar 'car (bbdb-record-xfields record)))
           init init-f)
      (if (bbdb-record-affix record) (push 'affix present))
      (if (bbdb-record-organization record) (push 'organization present))
@@ -831,11 +833,11 @@ value of \"\", the default) means do not alter the address."
          (if (stringp value)
              (setq value (bbdb-split 'aka value)))
          (bbdb-record-set-field record 'aka value))
-        ;; notes
+        ;; xfields
         (t
-         (if (assq field (bbdb-record-Notes record))
-             (error "Note field \"%s\" already exists" field))
-         (bbdb-record-set-note record field value)))
+         (if (assq field (bbdb-record-xfields record))
+             (error "xfield \"%s\" already exists" field))
+         (bbdb-record-set-xfield record field value)))
   (bbdb-change-record record)
   (let (bbdb-layout)
     (bbdb-redisplay-record record)))
@@ -877,14 +879,14 @@ value of \"\", the default) means do not alter the address."
          (let ((address (make-vector bbdb-address-length nil)))
            (bbdb-record-edit-address address nil flag)
            address))
-        ;; Notes
-        ((memq field bbdb-notes-label-list)
+        ;; xfield
+        ((memq field bbdb-xfield-label-list)
          (bbdb-read-string (format "%s: " field) init))
-        ;; New note fields
+        ;; New xfield
         (t
          (if (y-or-n-p
               (format "\"%s\" is an unknown field name.  Define it? " field))
-             (bbdb-set-notes-labels field)
+             (bbdb-set-xfield-labels field)
            (error "Aborted"))
          (bbdb-read-string (format "%s: " field) init))))
 
@@ -908,12 +910,12 @@ a phone number or address with VALUE being nil."
        (unless field (error "Point not in a field"))
        (list (bbdb-current-record)
              (if (memq field '(name affix organization aka mail phone address))
-                 field ; not a note field
-               (elt value 0)) ; note field
+                 field ; not an xfield
+               (elt value 0)) ; xfield
              value current-prefix-arg))))
   ;; Some editing commands require re-sorting records
   (let (bbdb-need-to-sort edit-str)
-    (cond ((memq field '(firstname lastname Notes))
+    (cond ((memq field '(firstname lastname xfields))
            ;; FIXME: We could also edit first and last names.
            (error "Field `%s' not editable this way." field))
           ((eq field 'name)
@@ -926,7 +928,7 @@ a phone number or address with VALUE being nil."
                   ;; editing the name field.  Is this useful?  Or is this
                   ;; irritating overkill and we better obey consistently
                   ;; `bbdb-read-name-format'?
-                  (or (bbdb-record-note-intern record 'name-format)
+                  (or (bbdb-record-xfield-intern record 'name-format)
                       flag))
               (bbdb-record-firstname record)
               (bbdb-record-lastname record)))))
@@ -946,11 +948,11 @@ a phone number or address with VALUE being nil."
                                (format "%s: " (cdr edit-str))
                                (bbdb-concat field (funcall (intern (format "bbdb-record-%s" field))
                                                            record))))))
-          (t ; Note field
-           (bbdb-record-set-note
+          (t ; xfield
+           (bbdb-record-set-xfield
             record field
             (bbdb-read-string (format "%s: " field)
-                              (bbdb-record-note record field)))))
+                              (bbdb-record-xfield record field)))))
     (bbdb-change-record record bbdb-need-to-sort)
     (bbdb-redisplay-record record)))
 
@@ -1102,9 +1104,9 @@ If any of these terms is not defined at POINT, the respective value is nil."
                   (fields (bbdb-record-field record (car field)))
                   (val (nth 1 field))
                   (num 0) done elt)
-             ;; For note fields we only check the label because the rest of VAL
-             ;; can be anything.  (Note fields are unique within a record.)
-             (if (eq 'Notes (car field))
+             ;; For xfields we only check the label because the rest of VAL
+             ;; can be anything.  (xfields are unique within a record.)
+             (if (eq 'xfields (car field))
                  (setq val (car val)
                        fields (mapcar 'car fields)))
              (while (and (not done) (setq elt (pop fields)))
@@ -1205,8 +1207,8 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
                       (bbdb-record-field record type))))
               ((memq type '(affix organization mail aka))
                (bbdb-record-set-field record type nil))
-              ((eq type 'Notes)
-               (bbdb-record-set-note record (car (nth 1 field)) nil))
+              ((eq type 'xfields)
+               (bbdb-record-set-xfield record (car (nth 1 field)) nil))
               (t (error "Unknown field %s" type)))
         (bbdb-change-record record)
         (bbdb-redisplay-record record)))))
@@ -1408,8 +1410,8 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
   (let ((bbdb-allow-duplicates t))
     (bbdb-record-set-field new-record 'mail
                            (bbdb-record-mail old-record) t))
-  (bbdb-record-set-field new-record 'Notes
-                         (bbdb-record-Notes old-record) t)
+  (bbdb-record-set-field new-record 'xfields
+                         (bbdb-record-xfields old-record) t)
 
   (bbdb-delete-records (list old-record) 'noprompt)
   (bbdb-change-record new-record t t)
@@ -1458,8 +1460,8 @@ in `bbdb-change-hook')."
       (bbdb-redisplay-record record))))
 
 ;;;###autoload
-(defun bbdb-sort-notes (records &optional update)
-  "Sort the notes in RECORDS according to `bbdb-notes-sort-order'.
+(defun bbdb-sort-xfields (records &optional update)
+  "Sort the xfields in RECORDS according to `bbdb-xfields-sort-order'.
 Interactively, use BBDB prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
 If UPDATE is non-nil (as in interactive calls) update the database.
@@ -1467,14 +1469,15 @@ Otherwise, this is the caller's responsiblity (for example, when used
 in `bbdb-change-hook')."
   (interactive (list (bbdb-do-records) t))
   (dolist (record (bbdb-record-list records))
-    (bbdb-record-set-Notes
-     record (sort (bbdb-record-Notes record)
+    (bbdb-record-set-xfields
+     record (sort (bbdb-record-xfields record)
                   (lambda (a b)
-                    (< (or (cdr (assq (car a) bbdb-notes-sort-order)) 100)
-                       (or (cdr (assq (car b) bbdb-notes-sort-order)) 100)))))
+                    (< (or (cdr (assq (car a) bbdb-xfields-sort-order)) 100)
+                       (or (cdr (assq (car b) bbdb-xfields-sort-order)) 100)))))
     (when update
       (bbdb-change-record record)
       (bbdb-redisplay-record record))))
+(define-obsolete-function-alias 'bbdb-sort-notes 'bbdb-sort-xfields)
 
 ;;; Send-Mail interface
 
@@ -1503,7 +1506,7 @@ If Mail is nil use the first mail address of RECORD."
       (setq mail (or (and (integerp mail) (nth mail mails))
                      (car mails)))))
   (unless mail (error "Record has no mail addresses"))
-  (let* ((mail-name (bbdb-record-note record 'mail-name))
+  (let* ((mail-name (bbdb-record-xfield record 'mail-name))
          (name (or mail-name (bbdb-record-name record)))
          (i 0) fn ln)
     (if mail-name
@@ -2006,7 +2009,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
       ;; collect an alist of (alias rec1 [rec2 ...])
       (dolist (record records)
         (if (bbdb-record-mail record)
-            (dolist (alias (bbdb-record-note-split record bbdb-mail-alias-field))
+            (dolist (alias (bbdb-record-xfield-split record bbdb-mail-alias-field))
               (if (setq match (assoc alias results))
                   ;; If an alias appears more than once, we collect all records
                   ;; that refer to it.
@@ -2015,7 +2018,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
           (unless bbdb-silent
             (bbdb-warn "record %S has no mail address, but the aliases: %s"
                        (bbdb-record-name record)
-                       (bbdb-record-note record bbdb-mail-alias-field))
+                       (bbdb-record-xfield record bbdb-mail-alias-field))
             (sit-for 1))))
 
       ;; Iterate over the results and create the aliases
@@ -2115,7 +2118,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
                               (cons bbdb-mail-alias-field ".")))
         result)
     (dolist (record records result)
-      (dolist (alias (bbdb-record-note-split record bbdb-mail-alias-field))
+      (dolist (alias (bbdb-record-xfield-split record bbdb-mail-alias-field))
         (add-to-list 'result alias)))))
 
 ;;;###autoload
@@ -2134,19 +2137,19 @@ If pefix DELETE is non-nil, remove ALIAS from RECORD."
             (format "%s mail alias: "
                     (if current-prefix-arg "Remove" "Add"))
             (if current-prefix-arg
-                (or (bbdb-record-note-split record bbdb-mail-alias-field)
+                (or (bbdb-record-xfield-split record bbdb-mail-alias-field)
                     (error "Record has no alias"))
               (bbdb-get-mail-aliases))
             nil nil init) current-prefix-arg)))
   (setq alias (bbdb-string-trim alias))
   (unless (string= "" alias)
-    (let ((aliases (bbdb-record-note-split record bbdb-mail-alias-field)))
+    (let ((aliases (bbdb-record-xfield-split record bbdb-mail-alias-field)))
       (if delete
           (setq aliases (delete alias aliases))
         ;; Add alias only if it is not there yet
         (add-to-list 'aliases alias))
       (setq aliases (bbdb-concat bbdb-mail-alias-field aliases))
-      (bbdb-record-set-note record bbdb-mail-alias-field aliases)
+      (bbdb-record-set-xfield record bbdb-mail-alias-field aliases)
       (bbdb-change-record record))
     (bbdb-redisplay-record record)
     ;; Rebuilt mail aliases
@@ -2228,7 +2231,7 @@ Default is the first URL."
                           (prefix-numeric-value current-prefix-arg))))
   (unless which (setq which 0))
   (dolist (record (bbdb-record-list records))
-    (let ((url (bbdb-record-note-split record 'url)))
+    (let ((url (bbdb-record-xfield-split record 'url)))
       (when url
         (setq url (read-string "fetch: " (nth which url)))
         (unless (string= "" url)

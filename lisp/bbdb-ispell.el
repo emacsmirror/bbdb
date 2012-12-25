@@ -54,7 +54,7 @@ Allowed elements are as in the return value of `ispell-valid-dictionary-list'."
   :type (list 'repeat
               (append '(choice) (mapcar (lambda (field) `(const ,field))
                                         '(name organization affix aka address))
-                      '((symbol :tag "note")))))
+                      '((symbol :tag "xfield")))))
 
 (defcustom bbdb-ispell-min-word-length 3
   "Words with fewer characters are ignored."

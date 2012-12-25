@@ -18,7 +18,7 @@
 ;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Anniversaries are stored in note fields as defined via `bbdb-anniv-alist'.
+;; Anniversaries are stored in xfields as defined via `bbdb-anniv-alist'.
 ;; Each such field may contain multiple anniversaries entries with separators
 ;; defined via `bbdb-separator-alist' (newlines by default).
 ;; Each anniversary entry is a string DATE followed by optional TEXT.
@@ -44,7 +44,7 @@
     (anniversary))
   "Alist of rules for formatting anniversaries in the diary buffer.
 Each element is of the form (LABEL . FORM).
-LABEL is the note field where this type of anniversaries is stored.
+LABEL is the xfield where this type of anniversaries is stored.
 FORM is a format string with the following substitutions:
   %n  name of the record
   %d  number of years
@@ -124,7 +124,7 @@ To enable this feature, put the following into your .emacs:
 
         (dolist (record (bbdb-records))
           (dolist (rule bbdb-anniv-alist)
-            (dolist (anniv (bbdb-record-note-split record (car rule)))
+            (dolist (anniv (bbdb-record-xfield-split record (car rule)))
               (let ((date-forms date-forms)
                     (anniv-string (concat anniv " X")) ; for backup forms
                     (case-fold-search t)

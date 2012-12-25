@@ -192,7 +192,7 @@ This function is meant to be used with the user function defined in
               mail from "**UNKNOWN**"))
     (format "%s%s"
             (or (and record bbdb/gnus-summary-mark-known-posters
-                     (or (bbdb-record-note
+                     (or (bbdb-record-xfield
                           record bbdb/gnus-message-marker-field)
                          bbdb/gnus-summary-known-poster-mark))
                 " ")
@@ -210,7 +210,7 @@ is in the poster's record, and `bbdb/gnus-summary-known-poster-mark' otherwise."
              (setq record
                    (car (bbdb-message-search
                          (car data) (bbdb-canonicalize-mail (cadr data))))))
-        (or (bbdb-record-note record bbdb/gnus-message-marker-field)
+        (or (bbdb-record-xfield record bbdb/gnus-message-marker-field)
             bbdb/gnus-summary-known-poster-mark)
       " ")))
 
@@ -269,7 +269,7 @@ record which contains a gnus-score field.")
   "This function is called through `bbdb-after-change-hook',
 and sets `bbdb/gnus-score-rebuild-alist' to t if the changed
 record contains a gnus-score field."
-  (if (bbdb-record-note record bbdb/gnus-score-field)
+  (if (bbdb-record-xfield record bbdb/gnus-score-field)
       (setq bbdb/gnus-score-rebuild-alist t)))
 
 ;;;###autoload
@@ -301,7 +301,7 @@ addresses better than the traditionally static global scorefile."
                (concat "((touched nil) (\"from\"\n"
                        (mapconcat
                         (lambda (record)
-                          (let ((score (or (bbdb-record-note record bbdb/gnus-score-field)
+                          (let ((score (or (bbdb-record-xfield record bbdb/gnus-score-field)
                                            bbdb/gnus-score-default))
                                 (mail (bbdb-record-mail record)))
                             (when (and score mail)
@@ -493,8 +493,8 @@ determine the group and spooling priority for a single address."
                (record (car (bbdb-message-search nam mail)))
                pub prv rgx)
           (if (not record) nil
-            (setq prv (bbdb-record-note record bbdb/gnus-split-private-field)
-                  pub (bbdb-record-note record bbdb/gnus-split-public-field))
+            (setq prv (bbdb-record-xfield record bbdb/gnus-split-private-field)
+                  pub (bbdb-record-xfield record bbdb/gnus-split-public-field))
             (if (and pub (not source) (string-match "^\\([^ ]+\\) \\(.*\\)$" pub))
                 (setq rgx (substring pub (match-beginning 2) (match-end 2))
                       pub (substring pub (match-beginning 1) (match-end 1)))
@@ -554,7 +554,7 @@ Note that `\( is the backquote, NOT the quote '\(."
     ;; the record, generate a regexp matching all the mail addresses
     ;; and add a tuple (folder mail-regexp) to the new-elmnt-list
     (dolist (record (bbdb-records))
-      (when (setq folder-attr (bbdb-record-note record 'imap))
+      (when (setq folder-attr (bbdb-record-xfield record 'imap))
         (setq mail-regexp (regexp-opt (mapcar 'downcase
                                               (bbdb-record-mail record))))
         (unless (string= "" mail-regexp)

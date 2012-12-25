@@ -33,7 +33,7 @@
     (4 . "* Country field added.")
     (5 . "* More flexible street address.")
     (6 . "* postcodes are stored as plain strings.")
-    (7 . "* Notes are always lists. Organizations are stored as list.
+    (7 . "* Xfields is always a list.  Organizations are stored as list.
   New field `affix'."))
   "BBDB Features that have changed in various database revisions.
 Format ((VERSION . DIFFERENCES) ... ).")
@@ -71,7 +71,7 @@ slightly munged old BBDB files."
   records)
 
 (defconst bbdb-migration-spec
-  '((2 (bbdb-record-Notes bbdb-record-set-Notes
+  '((2 (bbdb-record-xfields bbdb-record-set-xfields
         bbdb-migrate-change-dates))
     (3 (bbdb-record-address bbdb-record-set-address
         bbdb-migrate-add-country-field))
@@ -79,8 +79,8 @@ slightly munged old BBDB files."
         bbdb-migrate-streets-to-list))
     (5 (bbdb-record-address bbdb-record-set-address
         bbdb-migrate-postcodes-to-strings))
-    (6 (bbdb-record-Notes bbdb-record-set-Notes
-        bbdb-migrate-notes-to-list)
+    (6 (bbdb-record-xfields bbdb-record-set-xfields
+        bbdb-migrate-xfields-to-list)
        (bbdb-record-organization bbdb-record-set-organization
         bbdb-migrate-organization-to-list)))
   "The alist of (version . migration-spec-list).
@@ -168,8 +168,7 @@ This uses the code that used to be in `bbdb-address-postcode'."
 (defun bbdb-migrate-change-dates (record)
   "Change date formats.
 Formats are changed in timestamp and creation-date fields from
-\"dd mmm yy\" to \"yyyy-mm-dd\".  Assumes the notes are passed in as an
-argument."
+\"dd mmm yy\" to \"yyyy-mm-dd\"."
   (unless (stringp record)
     (mapc (lambda (rr)
                  (when (memq (car rr) '(creation-date timestamp))
@@ -253,14 +252,14 @@ argument."
                     (aref address 7))) ; country
           addrl))
 
-(defun bbdb-migrate-notes-to-list (notes)
-  "Migrate NOTES to list."
-  (if (stringp notes)
-      (list (cons 'notes notes))
-    notes))
+(defun bbdb-migrate-xfields-to-list (xfields)
+  "Migrate XFIELDS to list."
+  (if (stringp xfields)
+      (list (cons 'notes xfields))
+    xfields))
 
 (defun bbdb-migrate-organization-to-list (organization)
-  "Migrate NOTES to list."
+  "Migrate ORGANIZATION to list."
   (if (stringp organization)
       (bbdb-split 'organization organization)
     organization))

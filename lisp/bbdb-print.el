@@ -392,7 +392,7 @@ The return value is the new CURRENT-LETTER."
 
   (let ((first-letter
          (substring (concat (bbdb-record-sortkey record) "?") 0 1))
-        (name    (or (bbdb-record-note record 'tex-name)
+        (name    (or (bbdb-record-xfield record 'tex-name)
                      (bbdb-print-tex-quote
                       (bbdb-record-name record))))
         (organization (bbdb-record-organization record))
@@ -400,7 +400,7 @@ The return value is the new CURRENT-LETTER."
         (mail    (bbdb-record-mail record))
         (phone   (bbdb-record-phone record))
         (address (bbdb-record-address record))
-        (notes   (bbdb-record-Notes record))
+        (xfields (bbdb-record-xfields record))
         (bbdb-address-format-list bbdb-print-address-format-list))
 
     (when (eval bbdb-print-require)
@@ -479,15 +479,15 @@ The return value is the new CURRENT-LETTER."
              "}\n"))
         (insert "\\address{}\n")) ;; needed for brief format
 
-      ;; Notes
-      (dolist (note notes)
-        (when (bbdb-print-field-p (car note))
-          (if (eq 'notes (car note))
+      ;; xfields
+      (dolist (xfield xfields)
+        (when (bbdb-print-field-p (car xfield))
+          (if (eq 'notes (car xfield))
               (insert (format "\\notes{%s}\n"
-                              (bbdb-print-tex-quote (cdr note))))
+                              (bbdb-print-tex-quote (cdr xfield))))
             (insert (format "\\note{%s}{%s}\n"
-                            (bbdb-print-tex-quote (symbol-name (car note)))
-                            (bbdb-print-tex-quote (cdr note)))))))
+                            (bbdb-print-tex-quote (symbol-name (car xfield)))
+                            (bbdb-print-tex-quote (cdr xfield)))))))
 
       ;; Mark end of the record.
       (insert "\\endrecord\n%\n")

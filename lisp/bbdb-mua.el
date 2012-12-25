@@ -24,7 +24,7 @@
 
 ;;; This file lets you do stuff like
 ;;;
-;;; o  automatically add some string to the notes field(s) based on the
+;;; o  automatically add some string to some field(s) based on the
 ;;;    contents of header fields of the current message
 ;;; o  only automatically create records when certain header fields
 ;;;    are matched
@@ -251,6 +251,9 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
                (task
                 (catch 'done
                   (setq hits
+                        ;; We put the call of `bbdb-notice-mail-hook'
+                        ;; into `bbdb-annotate-message' so that this hook
+                        ;; runs only if the user agreed to change a record.
                         (cond ((eq bbdb-update-records-p 'create)
                                (bbdb-annotate-message address 'create))
                               ((eq bbdb-update-records-p 'query)
@@ -617,9 +620,9 @@ If the records do not exist, they are generated."
 
 (defun bbdb-annotate-record (record annotation &optional field replace)
   "In RECORD add an ANNOTATION to FIELD.
-FIELD defaults to note field `notes'.
+FIELD defaults to xfield `notes'.
 If REPLACE is non-nil, ANNOTATION replaces the content of FIELD."
-  (if (memq field '(name firstname lastname phone address Notes))
+  (if (memq field '(name firstname lastname phone address xfields))
       (error "Field `%s' illegal" field))
   (unless (string= "" (setq annotation (bbdb-string-trim annotation)))
     (cond ((memq field '(affix organization mail aka))
@@ -676,7 +679,7 @@ For interactive calls, use car of `bbdb-mua-update-interactive-p'."
                      "Field: "
                      (mapcar 'symbol-name
                              (append '(name affix organization aka mail)
-                                     bbdb-notes-label-list)))))
+                                     bbdb-xfield-label-list)))))
         (car bbdb-mua-update-interactive-p)))
 
 ;;;###autoload
@@ -688,7 +691,7 @@ For interactive calls, use car of `bbdb-mua-update-interactive-p'.
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'."
   (interactive (bbdb-mua-edit-field-interactive))
-  (cond ((memq field '(firstname lastname address phone Notes))
+  (cond ((memq field '(firstname lastname address phone xfields))
          (error "Field `%s' not editable this way" field))
         ((not field)
          (setq field 'notes)))

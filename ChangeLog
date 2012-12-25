@@ -1,4 +1,35 @@
 2012-12-25  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el, lisp/bbdb-com.el, lisp/bbdb-mua.el:
+	* lisp/bbdb-print.el, lisp/bbdb-anniv.el, lisp/bbdb-ispell.el:
+	* lisp/bbdb-migrate.el, lisp/bbdb-vm.el, lisp/bbdb-gnus.el: For
+	the user-defined fields of a record replace the generic internal
+	name `notes' by `xfield'.
+
+	* lisp/bbdb.el (bbdb-layout-alist, bbdb-name-format, bbdb-image)
+	(bbdb-default-domain, bbdb-auto-notes-rules)
+	(bbdb-mail-alias-field, bbdb-name-face-alist, bbdb-record-type)
+	(bbdb-timestamp, bbdb-creation-date)
+	(bbdb-display-name-organization): Doc fix.
+	(bbdb-xfields-sort-order): Renamed from bbdb-notes-sort-order
+	(bbdb-merge-xfield-function-alist): Renamed from
+	bbdb-merge-notes-function-alist
+	(bbdb-xfield-label-list): Renamed from bbdb-notes-label-list.
+	(bbdb-record-xfields): Renamed from bbdb-record-Notes.
+	(bbdb-record-set-xfields): Renamed from bbdb-record-set-Notes.
+	(bbdb-record-xfield): Renamed from bbdb-record-note.
+	(bbdb-record-set-xfield): Renamed from bbdb-record-set-note.
+	(bbdb-record-xfield-intern): Renamed from bbdb-record-note-intern.
+	(bbdb-record-xfield-split): Renamed from bbdb-record-note-split
+	(bbdb-set-xfield-labels): Renamed from bbdb-set-notes-labels
+	(bbdb-merge-xfield): Renamed from bbdb-merge-note.
+
+	* lisp/bbdb-com.el (bbdb-search, bbdb, bbdb-compare-records)
+	(bbdb-create-internal, bbdb-edit-field): Doc fix.
+	(bbdb-search-xfields): Renamed from bbdb-search-notes.
+	(bbdb-message-search): Make search more robust.
+	(bbdb-sort-xfields): Renamed from bbdb-sort-notes.
+
+2012-12-25  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-parse-records): If multiple records have the
 	same name, hash all these records.
 	(bbdb-allow-duplicates): Doc fix.
