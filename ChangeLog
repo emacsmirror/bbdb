@@ -1,4 +1,9 @@
 2012-12-25  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-vm.el: (bbdb/vm-auto-add-label-list)
+	(bbdb/vm-auto-add-label-field): Doc fix.
+	(bbdb/vm-auto-add-label): Doc fix and cleanup.
+
+2012-12-25  Roland Winkler  <winkler@gnu.org>
 	* README: Minor docfix.
 
 2012-12-25  Roland Winkler  <winkler@gnu.org>

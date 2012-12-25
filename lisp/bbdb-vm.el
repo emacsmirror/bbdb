@@ -240,58 +240,79 @@ Add this function to `bbdb-before-save-hook' and your .vm."
             (nconc selector (list mail-regexp))))))))
 
 
+;; RW: Adding custom labels to VM messages allows one to create,
+;; for example, virtual folders.  The following code creates
+;; the required labels in a rather simplistic way, checking merely
+;; whether the sender's BBDB record uses a certain mail alias.
+;; (Note that `bbdb/vm-virtual-folder' can achieve the same goal,
+;; yet this requires a second xfield that must be kept up-to-date, too.)
+;; To make auto labels yet more useful, the code could allow more
+;; sophisticated schemes, too.  Are there real-world applications
+;; for this?
+
 ;;; Howard Melman, contributed Jun 16 2000
 (defcustom bbdb/vm-auto-add-label-list nil
-  "List used by `bbdb/vm-auto-add-label' to automatically label messages.
-Each element in the list is either a string or a list of two strings.
-If a single string then it is used as both the field value to check for
-and the label to apply to the message.  If a list of two strings, the first
-is the field value to search for and the second is the label to apply."
+  "List used by `bbdb/vm-auto-add-label' to automatically label VM messages.
+Its elements may be strings used both as the field value to check for
+and as the label to apply to the message.
+If an element is a cons pair (VALUE . LABEL), VALUE is the field value
+to search for and LABEL is the label to apply."
   :group 'bbdb-mua-vm
   :type 'list)
 
 (defcustom bbdb/vm-auto-add-label-field bbdb-mail-alias-field
   "Fields used by `bbdb/vm-auto-add-label' to automatically label messages.
-Value is either a single symbol or a list of symbols of bbdb fields that
-`bbdb/vm-auto-add-label' uses to check for labels to apply to messages.
+This is either a single BBDB field or a list of fields that
+`bbdb/vm-auto-add-label' uses to check for labels to apply to a message.
 Defaults to `bbdb-mail-alias-field' which defaults to `mail-alias'."
   :group 'bbdb-mua-vm
   :type '(choice symbol list))
 
 (defun bbdb/vm-auto-add-label (record)
-  "Automatically add labels to messages based on the mail-alias field.
-Add this to `bbdb-notice-mail-hook' and if using VM each message that bbdb
-notices will be checked.  If the sender has a value in the
-`bbdb/vm-auto-add-label-field' in their BBDB record that matches a value
-in `bbdb/vm-auto-add-label-list' then a VM label will be added
-to the message.  VM labels can be used, e.g., to mark messages or define
-virtual folders.
+  "Automatically add labels to VM messages.
+Add this to `bbdb-notice-record-hook' to check the messages noticed by BBDB.
+If the value of `bbdb/vm-auto-add-label-field' in the sender's BBDB record
+matches a value in `bbdb/vm-auto-add-label-list' then a VM label will be added
+to the message.  Such VM labels can be used, e.g., to mark messages via
+`vm-mark-matching-messages' or to define virtual folders via
+`vm-create-virtual-folder'
 
-This works great when `bbdb-user-mail-address-re' is set.  As a result
-mail that you send to people (and copy yourself on) is labeled as well."
-  ;; This should go into `vm-arrived-message-hook'!
-  (let (aliases)
-    (and (eq major-mode 'vm-mode)
-         (mapcar (lambda (x)
-                   (setq aliases (append aliases (bbdb-record-xfield-split record x))))
-                 (cond ((listp bbdb/vm-auto-add-label-field)
-                        bbdb/vm-auto-add-label-field)
-                       ((symbolp bbdb/vm-auto-add-label-field)
-                        (list bbdb/vm-auto-add-label-field))
-                       (t (error "Bad value for bbdb/vm-auto-add-label-field"))))
-         (vm-add-message-labels
-          (mapconcat (lambda (l)
-                       (cond ((stringp l)
-                              (if (member l aliases)
-                                  l))
-                             ((and (consp l)
-                                   (stringp (car l))
-                                   (stringp (cdr l)))
-                              (if (member (car l) aliases)
-                                  (cdr l)))
-                             (t
-                              (error "Malformed bbdb/vm-auto-add-label-list"))))
-                     bbdb/vm-auto-add-label-list " ")))))
+Typically `bbdb/vm-auto-add-label-field' and `bbdb/vm-auto-add-label-list'
+refer to mail aliases FOO used with multiple records.  This adds a label FOO
+to all incoming messages matching FOO.  Then VM can create a virtual folder
+for these messages.  The concept of combining multiple recipients of an
+outgoing message in one mail alias thus gets extended to incoming messages
+from different senders."
+  ;; This could go into `vm-arrived-message-hook' to check messages only once.
+  (if (eq major-mode 'vm-mode)
+      (let* ((xvalues
+              ;; Inspect the relevant fields of RECORD
+              (append
+               (mapcar (lambda (field)
+                         (bbdb-record-xfield-split record field))
+                       (cond ((listp bbdb/vm-auto-add-label-field)
+                              bbdb/vm-auto-add-label-field)
+                             ((symbolp bbdb/vm-auto-add-label-field)
+                              (list bbdb/vm-auto-add-label-field))
+                             (t (error "Bad value for bbdb/vm-auto-add-label-field"))))))
+             ;; Collect the relevant labels from `bbdb/vm-auto-add-label-list'
+             (labels
+              (delq nil
+                    (mapcar (lambda (l)
+                              (cond ((stringp l)
+                                     (if (member l xvalues)
+                                         l))
+                                    ((and (consp l)
+                                          (stringp (car l))
+                                          (stringp (cdr l)))
+                                     (if (member (car l) xvalues)
+                                         (cdr l)))
+                                    (t
+                                     (error "Malformed bbdb/vm-auto-add-label-list"))))
+                            bbdb/vm-auto-add-label-list))))
+        (if labels
+            (vm-add-message-labels
+             (mapconcat 'identity labels " ") 1)))))
 
 
 
