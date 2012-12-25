@@ -1,4 +1,7 @@
 2012-12-25  Roland Winkler  <winkler@gnu.org>
+	* README: Minor docfix.
+
+2012-12-25  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el, lisp/bbdb-com.el, lisp/bbdb-mua.el:
 	* lisp/bbdb-print.el, lisp/bbdb-anniv.el, lisp/bbdb-ispell.el:
 	* lisp/bbdb-migrate.el, lisp/bbdb-vm.el, lisp/bbdb-gnus.el: For

@@ -139,7 +139,7 @@ sequence of calls is
   innermost internals.
 
 - a call of bbdb-change-record which updates the database after a
-  change of RECORD.
+  change of record.
 
 - If the changed record is displayed in the *BBDB* buffer, call
   bbdb-redisplay-record.
