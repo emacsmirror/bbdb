@@ -628,7 +628,7 @@ This variable also affects dialing."
 
 (defcustom bbdb-allow-duplicates nil
   "When non-nil BBDB allows records with duplicate names and email addresses.
-This may lead to confusion when doing completion."
+In rare cases, this may lead to confusion with BBDB's MUA interface."
   :group 'bbdb-record-edit
   :type 'boolean)
 
@@ -2754,23 +2754,25 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
             (let ((name (bbdb-concat 'name-first-last
                                      (bbdb-record-firstname record)
                                      (bbdb-record-lastname record))))
-              (if (or bbdb-allow-duplicates
-                      (not (bbdb-gethash name '(fl-name aka))))
+              (when (and (not bbdb-allow-duplicates)
+                         (bbdb-gethash name '(fl-name aka)))
                   ;; This does not check for duplicate mail fields.
                   ;; Yet under normal circumstances, this should really
                   ;; not be necessary each time BBDB is loaded as BBDB checks
                   ;; whether creating a new record or modifying an existing one
                   ;; results in duplicates.
                   ;; Alternatively, you can use `bbdb-search-duplicates'.
-                  (bbdb-hash-record record)
-                ;; Warn the user that there is a duplicate.
-                ;; The duplicate record is kept in the database,
-                ;; but it is not hashed.
                 (message "Duplicate BBDB record encountered: %s" name)
-                (sit-for 1)
-                ;; This hashes the name of RECORD.  So we do it after checking
-                ;; for duplicates.
-                (bbdb-record-name record)))))
+                (sit-for 1)))
+
+            ;; We hash every record even if it is a duplicate and
+            ;; `bbdb-allow-duplicates' is nil.  Otherwise, an unhashed
+            ;; record would not be available for things like completion
+            ;; (and we would not know which record to keeep and which one
+            ;; to hide).  We trust the user she knows what she wants
+            ;; if she keeps duplicate records in the database though
+            ;; `bbdb-allow-duplicates' is nil.
+            (bbdb-hash-record record)))
 
         ;; We should hide only those fields that are handled automatically.
         ;; (dolist (label (bbdb-layout-get-option 'multi-line 'omit))
