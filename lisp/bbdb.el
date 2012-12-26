@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/11/21 19:45:37 $"
+(defconst bbdb-version-date "$Date: 2012/12/25 17:59:40 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -280,6 +280,27 @@ Lisp Hackers: See also `bbdb-silent-internal'."
 
 
 ;;; Record display
+
+(defcustom bbdb-pop-up-window-size 0.5
+  "Vertical size of BBDB window (vertical split).
+If it is an integer number, it is the number of lines used by BBDB.
+If it is a fraction between 0.0 and 1.0 (inclusive), it is the fraction
+of the tallest existing window that BBDB will take over.
+If it is t use `pop-to-buffer' to create the BBDB window.
+See also `bbdb-mua-pop-up-window-size'."
+  :group 'bbdb-record-display
+  :type '(choice (number :tag "BBDB window size")
+                 (const :tag "Use `pop-to-buffer'" t)))
+
+(defcustom bbdb-dedicated-window nil
+  "Make *BBDB* window a dedicated window.
+Allowed values include nil (not dedicated) 'bbdb (weakly dedicated)
+and t (strongly dedicated)."
+  :group 'bbdb-record-display
+  :type '(choice (const :tag "BBDB window not dedicated" nil)
+                 (const :tag "BBDB window weakly dedicated" 'bbdb)
+                 (const :tag "BBDB window strongly dedicated" t)))
+
 (defcustom bbdb-layout-alist
   '((one-line           (order     . (phone mail-alias mail notes))
                         (name-end  . 24)
@@ -1184,21 +1205,28 @@ See also `bbdb-auto-notes-ignore-messages'."
           (string :tag "Header name")
           (regexp :tag "Regexp to match on header value"))))
 
-(defcustom bbdb-message-pop-up t
-  "If non-nil, display a continuously updated BBDB window while using a MUA.
-If 'horiz, stack the window horizontally if there is room."
-  :group 'bbdb-mua
-  :type '(choice (const :tag "Automatic BBDB window, stacked vertically" t)
-                 (const :tag "Automatic BBDB window, stacked horizontally" 'horiz)
-                 (const :tag "No Automatic BBDB window" nil)))
+(defcustom bbdb-mua-pop-up t
+  "If non-nil, display an auto-updated BBDB window while using a MUA.
+If 'horiz, stack the window horizontally if there is room.
+If this is nil, BBDB is updated silently.
 
-(defcustom bbdb-pop-up-window-size 0.5
-  "Vertical size of a MUA pop-up BBDB window (vertical split).
-If it is an integer number, it is the number of lines used by BBDB.
-If it is a fraction between 0 and 1.0 (inclusive), it is the fraction
-of the tallest existing window that BBDB will take over."
+See also `bbdb-mua-pop-up-window-size' and `bbdb-horiz-pop-up-window-size'."
   :group 'bbdb-mua
-  :type 'number)
+  :type '(choice (const :tag "MUA BBDB window stacked vertically" t)
+                 (const :tag "MUA BBDB window stacked horizontally" 'horiz)
+                 (const :tag "No MUA BBDB window" nil)))
+(define-obsolete-variable-alias 'bbdb-message-pop-up 'bbdb-mua-pop-up)
+
+(defcustom bbdb-mua-pop-up-window-size bbdb-pop-up-window-size
+  "Vertical size of MUA pop-up BBDB window (vertical split).
+If it is an integer number, it is the number of lines used by BBDB.
+If it is a fraction between 0.0 and 1.0 (inclusive), it is the fraction
+of the tallest existing window that BBDB will take over.
+If it is t use `pop-to-buffer' to create the BBDB window.
+See also `bbdb-pop-up-window-size'."
+  :group 'bbdb-mua
+  :type '(choice (number :tag "BBDB window size")
+                 (const :tag "Use `pop-to-buffer'" t)))
 
 (defcustom bbdb-horiz-pop-up-window-size '(112 . 0.3)
   "Horizontal size of a MUA pop-up BBDB window (horizontal split).
@@ -3377,72 +3405,66 @@ SELECT and HORIZ-P have the same meaning as in `bbdb-pop-up-window'."
                             (list record layout (make-marker)))
                           records)))
 
-  (let ((buffer (current-buffer))
-        (first-new (caar records))) ; first new record
+  (let ((first-new (caar records)) ; first new record
+        new-name)
 
     ;; If `bbdb-multiple-buffers' is non-nil we create a new BBDB buffer
     ;; when not already within one.  The new buffer name starts with a space,
     ;; i.e. it does not clutter the buffer list.
     (when (and bbdb-multiple-buffers
                (not (assq 'bbdb-buffer-name (buffer-local-variables))))
-      (let ((new-name (concat " *BBDB " (if (functionp bbdb-multiple-buffers)
-                                            (funcall bbdb-multiple-buffers)
-                                          (buffer-name))
-                              "*")))
-        ;; `bbdb-buffer-name' becomes buffer-local in the current buffer
-        ;; as well as in the buffer `bbdb-buffer-name'
-        (dolist (buffer (list (current-buffer) (get-buffer-create new-name)))
-          (with-current-buffer buffer
-            (set (make-local-variable 'bbdb-buffer-name) new-name)))))
+      (setq new-name (concat " *BBDB " (if (functionp bbdb-multiple-buffers)
+                                           (funcall bbdb-multiple-buffers)
+                                         (buffer-name))
+                              "*"))
+      ;; `bbdb-buffer-name' becomes buffer-local in the current buffer
+      ;; as well as in the buffer `bbdb-buffer-name'
+      (set (make-local-variable 'bbdb-buffer-name) new-name))
 
-    (unless (get-buffer-window bbdb-buffer-name)
-      (bbdb-pop-up-window select horiz-p))
-    (set-buffer bbdb-buffer-name) ;; *BBDB*
+    (with-current-buffer (get-buffer-create bbdb-buffer-name) ; *BBDB*
+      ;; If we are appending RECORDS to the ones already displayed,
+      ;; then first remove any duplicates, and then sort them.
+      (if append
+          (let ((old-rec (mapcar 'car bbdb-records)))
+            (dolist (record records)
+              (unless (memq (car record) old-rec)
+                (push record bbdb-records)))
+            (setq records
+                  (sort bbdb-records
+                        (lambda (x y) (bbdb-record-lessp (car x) (car y)))))))
 
-    ;; If we're appending RECORDS to the ones already displayed,
-    ;; then first remove any duplicates, and then sort them.
-    (if append
-        (let ((old-rec (mapcar 'car bbdb-records)))
-          (dolist (record records)
-            (unless (memq (car record) old-rec)
-              (push record bbdb-records)))
-          (setq records
-                (sort bbdb-records
-                      (lambda (x y) (bbdb-record-lessp (car x) (car y)))))))
+      (bbdb-mode)
+      ;; Normally `bbdb-records' is the only BBDB-specific buffer-local variable
+      ;; in the *BBDB* buffer.  It is intentionally not permanent-local.
+      ;; A value of nil indicates that we need to (re)process the records.
+      (setq bbdb-records records)
+      (if new-name
+          (set (make-local-variable 'bbdb-buffer-name) new-name))
 
-    (bbdb-mode)
-    ;; `bbdb-records' is the only BBDB-specific buffer-local variable
-    ;; in the *BBDB* buffer.
-    (setq bbdb-records records)
+      (unless (or bbdb-silent-internal bbdb-silent)
+        (message "Formatting BBDB..."))
+      (let ((record-number 0)
+            buffer-read-only all-records start)
+        (erase-buffer)
+        (bbdb-debug (setq all-records (bbdb-records)))
+        (dolist (record records)
+          (bbdb-debug (unless (memq (car record) all-records)
+                        (error "Record %s does not exist" (car record))))
+          (setq start (set-marker (nth 2 record) (point)))
+          (bbdb-display-record (nth 0 record) (nth 1 record) record-number)
+          (setq record-number (1+ record-number)))
 
-    ;; Formatting happens in the *BBDB* buffer, not the .bbdb buffer.
-    (unless (or bbdb-silent-internal bbdb-silent)
-      (message "Formatting BBDB..."))
-    (let ((record-number 0)
-          buffer-read-only all-records start)
-      (erase-buffer)
-      (bbdb-debug (setq all-records (bbdb-records)))
-      (dolist (record records)
-        (bbdb-debug (unless (memq (car record) all-records)
-                      (error "Record %s does not exist" (car record))))
-        (setq start (set-marker (nth 2 record) (point)))
-        (bbdb-display-record (nth 0 record) (nth 1 record) record-number)
-        (setq record-number (1+ record-number)))
+        (run-hooks 'bbdb-display-hook))
 
-      (run-hooks 'bbdb-display-hook))
+      (unless (or bbdb-silent-internal bbdb-silent)
+        (message "Formatting BBDB...done."))
+      (set-buffer-modified-p nil)
 
-    (unless (or bbdb-silent-internal bbdb-silent)
-      (message "Formatting BBDB...done."))
-
-    ;; Put point on first new record in *BBDB* buffer.
-    (let ((point (nth 2 (assq first-new bbdb-records)))
-          (window (get-buffer-window (current-buffer))))
-      (when point ; nil for empty buffer
-        (goto-char point)
-        (if window (set-window-start window point))))
-
-    (set-buffer-modified-p nil)
-    (set-buffer buffer)))
+      (bbdb-pop-up-window select horiz-p)
+      ;; Put point on first new record in *BBDB* buffer.
+      (when first-new
+        (goto-char (nth 2 (assq first-new bbdb-records)))
+        (set-window-start (get-buffer-window (current-buffer)) (point))))))
 
 (defun bbdb-undisplay-records ()
   "Undisplay records in `bbdb-buffer-name'."
@@ -3538,69 +3560,80 @@ Finds the largest window on the screen, splits it, displaying the
 the *BBDB* buffer is already visible, in which case do nothing.)
 Select this window if SELECT is non-nil.
 
-If `bbdb-message-pop-up' is 'horiz, and the first window matching
+If `bbdb-mua-pop-up' is 'horiz, and the first window matching
 the predicate HORIZ-P is wider than the car of `bbdb-horiz-pop-up-window-size'
 then the window will be split horizontally rather than vertically."
-  (cond (;; We already have a BBDB window so that nothing needs to be done
-         (get-buffer-window bbdb-buffer-name))
+  (cond ((let ((window (get-buffer-window bbdb-buffer-name t)))
+           ;; We already have a BBDB window so that at most we select it
+           (and window
+                (or (not select) (select-window window)))))
 
         ;; try horizontal split
-        ((and (eq bbdb-message-pop-up 'horiz)
+        ((and (eq bbdb-mua-pop-up 'horiz)
               horiz-p
               (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
-              (let ((cbuffer (current-buffer))
-                    (window-list (window-list))
-                    (selected-window (selected-window))
+              (let ((window-list (window-list))
                     (b-width (cdr bbdb-horiz-pop-up-window-size))
-                    (search t) window)
-                (while (and (setq window (pop window-list))
-                            (setq search (funcall horiz-p window))))
-                (unless (or search (<= (window-width window)
+                    (search t) s-window)
+                (while (and (setq s-window (pop window-list))
+                            (setq search (not (funcall horiz-p s-window)))))
+                (unless (or search (<= (window-width s-window)
                                        (car bbdb-horiz-pop-up-window-size)))
-                  (select-window window)
-                  (condition-case nil ; `split-window-horizontally' might fail
-                      (progn
-                        (split-window-horizontally
-                         (if (integerp b-width)
-                             (- (window-width window) b-width)
-                           (round (* (- 1 b-width) (window-width window)))))
-                        (select-window (next-window window))
-                        (let (pop-up-windows)
-                          (switch-to-buffer (get-buffer-create bbdb-buffer-name)))
-                        (unless select
-                          (select-window selected-window)
-                          (set-buffer cbuffer))
+                  (condition-case nil ; `split-window' might fail
+                      (let ((window (split-window
+                                     s-window
+                                     (if (integerp b-width)
+                                         (- (window-width s-window) b-width)
+                                       (round (* (- 1 b-width) (window-width s-window))))
+                                     t)) ; horizontal split
+                            (buffer (get-buffer bbdb-buffer-name)))
+                        (set-window-buffer window buffer)
+                        (cond (bbdb-dedicated-window
+                               (set-window-dedicated-p window bbdb-dedicated-window))
+                              ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                               (set-window-prev-buffers window nil)
+                               (display-buffer-record-window 'window window buffer)))
+                        (if select (select-window window))
                         t)
                     (error nil))))))
 
+        ((eq t bbdb-pop-up-window-size)
+         ;; Don't do anything fancy.  Then `quit-window' deletes
+         ;; the *BBDB* window even with GNU Emacs 23 without the possibly
+         ;; irritating side effects of `set-window-dedicated-p'.
+         (pop-to-buffer (get-buffer bbdb-buffer-name)))
+
+        ((eql bbdb-pop-up-window-size 1.0)
+         ;; Ignore arg SELECT
+         (condition-case nil ; `split-window' might fail
+             (switch-to-buffer (get-buffer bbdb-buffer-name))
+           (error (pop-to-buffer (get-buffer bbdb-buffer-name)))))
+
         (t ;; vertical split
-         (let* ((cbuffer (current-buffer))
-                (selected-window (selected-window))
-                (tallest-window selected-window))
+         (let* ((tallest-window (selected-window))
+                (tw-height (window-height tallest-window))
+                w-height)
            ;; find the tallest window...
-           (dolist (window (window-list))
-             (if (> (window-height window) (window-height tallest-window))
-                 (setq tallest-window window)))
-           (select-window tallest-window)   ; select it and split it...
-           (if (eql bbdb-pop-up-window-size 1.0)
-               ;; select `bbdb-buffer-name'
-               (switch-to-buffer (get-buffer-create bbdb-buffer-name))
-             (condition-case nil ; `split-window' might fail
-                 (progn
-                   (split-window
-                    tallest-window
-                    (if (integerp bbdb-pop-up-window-size)
-                        (- (window-height tallest-window) 1 ; for mode line
-                           (max window-min-height bbdb-pop-up-window-size))
-                      (round (* bbdb-pop-up-window-size
-                                (window-height tallest-window)))))
-                   (select-window (next-window)) ; goto the bottom of the two...
-                   (let (pop-up-windows)         ; make it display *BBDB*...
-                     (switch-to-buffer (get-buffer-create bbdb-buffer-name))))
-               (error (pop-to-buffer (get-buffer-create bbdb-buffer-name))))
-             (unless select
-               (select-window selected-window) ; original window we were in
-               (set-buffer cbuffer)))))))
+           (mapc (lambda (window)
+                   (if (> (setq w-height (window-height window)) tw-height)
+                       (setq tallest-window window tw-height w-height)))
+                 (window-list))
+           (condition-case nil ; `split-window' might fail
+               (let ((window (split-window
+                              tallest-window
+                              (if (integerp bbdb-pop-up-window-size)
+                                  (- tw-height 1 ; for mode line
+                                     (max window-min-height bbdb-pop-up-window-size))
+                                (round (* (- 1 bbdb-pop-up-window-size) tw-height)))))
+                     (buffer (get-buffer bbdb-buffer-name)))
+                 (set-window-buffer window buffer)
+                 (cond (bbdb-dedicated-window
+                        (set-window-dedicated-p window bbdb-dedicated-window))
+                       ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                        (set-window-prev-buffers window nil)
+                        (display-buffer-record-window 'window window buffer)))
+                 (if select (select-window window)))
+             (error (pop-to-buffer (get-buffer bbdb-buffer-name))))))))
 
 
 ;;; BBDB mode
@@ -3669,7 +3702,6 @@ Important variables:
 \t `bbdb-default-domain'
 \t `bbdb-layout'
 \t `bbdb-file'
-\t `bbdb-message-caching'
 \t `bbdb-phone-style'
 \t `bbdb-check-auto-save-file'
 \t `bbdb-pop-up-layout'
@@ -3679,7 +3711,7 @@ Important variables:
 \t `bbdb-add-mails'
 \t `bbdb-new-mails-primary'
 \t `bbdb-read-only'
-\t `bbdb-message-pop-up'
+\t `bbdb-mua-pop-up'
 \t `bbdb-user-mail-address-re'
 
 There are numerous hooks.  M-x apropos ^bbdb.*hook RET

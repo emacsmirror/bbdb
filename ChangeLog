@@ -1,3 +1,20 @@
+2012-12-26  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-dedicated-window): New user variable.
+	(bbdb-mua-pop-up): Renamed from bbdb-message-pop-up.  Doc fix.
+	(bbdb-mua-pop-up-window-size): New variable.
+	(bbdb-pop-up-window-size): Doc fix.  Allow value t.
+	(bbdb-pop-up-window): Use it.  Simplify.  Use
+	display-buffer-record-window / set-window-dedicated-p so that the
+	BBDB window is popped up such that quit-window can delete it.
+	Suggested by Martin Rudalics.
+	(bbdb-display-records): Clean up.
+
+	* lisp/bbdb-mua.el (bbdb-mua-mode-alist): New variable.
+	(bbdb-mua): Use it.
+	(bbdb-mua-window-p): New function.
+	(bbdb-mua-display-records, bbdb-mua-edit-field)
+	(bbdb-mua-auto-update): Use it.
+
 2012-12-25  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-vm.el: (bbdb/vm-auto-add-label-list)
 	(bbdb/vm-auto-add-label-field): Doc fix.
