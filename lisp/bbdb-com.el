@@ -2240,8 +2240,11 @@ Default is the first URL."
 ;;;###autoload
 (defun bbdb-grab-url (record url)
   "Grab URL and store it in RECORD."
-  (interactive (list (bbdb-completing-read-record "Add URL for: ")
-                     (browse-url-url-at-point)))
+  (interactive (let ((url (browse-url-url-at-point)))
+                 (unless url (error "No URL at point"))
+                 (list (bbdb-completing-read-record
+                        (format "Add `%s' for: " url))
+                       url)))
   (bbdb-record-set-field record 'url url t)
   (bbdb-change-record record)
   (bbdb-display-records (list record)))

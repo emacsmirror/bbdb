@@ -574,9 +574,11 @@ Do not call this in your init file.  Use `bbdb-initialize'."
   ;; `gnus-article-read-summary-keys' provides an additional wrapper
   ;; that restores the window configuration.
   (define-key gnus-summary-mode-map ":" 'bbdb-mua-display-sender)
+  (define-key gnus-article-mode-map ":" 'bbdb-mua-display-sender)
   ;; For `bbdb-mua-edit-field-sender' it is probably OK if
   ;;`gnus-article-read-summary-keys' restores the window configuration.
   (define-key gnus-summary-mode-map ";" 'bbdb-mua-edit-field-sender)
+  (define-key gnus-article-mode-map ";" 'bbdb-mua-edit-field-sender)
   ;; Do we need keybindings for more commands?  Suggestions welcome.
   ;; (define-key gnus-summary-mode-map ":" 'bbdb-mua-display-records)
   ;; (define-key gnus-summary-mode-map "'" 'bbdb-mua-display-recipients)

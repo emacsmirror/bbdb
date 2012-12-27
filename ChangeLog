@@ -1,3 +1,13 @@
+2012-12-27  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-wrapper): Add edebug support.
+	Suggested by Leo <sdl.web@gmail.com>.
+
+	* lisp/bbdb-gnus (bbdb-insinuate-gnus): Fix keybindings for
+	gnus-article-mode.  Suggested by Leo <sdl.web@gmail.com>.
+
+	* lisp/bbdb-com.el (bbdb-grab-url): Fail early if no URL at point.
+	Suggested by Leo <sdl.web@gmail.com>.
+
 2012-12-26  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-complete-mail): Check every record from
 	the completion list for each possible completion.

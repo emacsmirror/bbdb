@@ -547,6 +547,7 @@ UPDATE-P is defined in `bbdb-update-records'."
 
 (defmacro bbdb-mua-wrapper (&rest body)
   "Perform BODY in a MUA buffer."
+  (declare (debug t))
   `(let ((mua (bbdb-mua)))
      ;; Here we replicate BODY multiple times which gets clumsy
      ;; for a larger BODY!
