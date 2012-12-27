@@ -1841,45 +1841,45 @@ as part of the MUA insinuation."
       (let ((completion-list (if (eq t bbdb-completion-list)
                                  '(fl-name lf-name mail aka organization)
                                bbdb-completion-list))
-            sname records)
-        ;; Now collect all the dwim-addresses for each completion, but only
-        ;; once for each record!  Add it if the mail is part of the completions
+            sname)
+        ;; Now collect all the dwim-addresses for each completion.
+        ;; Add it if the mail is part of the completions
         (dolist (sym all-completions)
           (setq sname (symbol-name sym))
           (dolist (record (symbol-value sym))
-            (unless (memq record records)
-              (push record records)
-              (let ((mails (bbdb-record-mail record))
-                    accept)
-                (when mails
-                  (dolist (field completion-list)
-                    (cond ((eq field 'fl-name)
-                           (if (bbdb-string= sname (bbdb-record-name record))
-                               (push (car mails) accept)))
-                          ((eq field 'lf-name)
-                           (if (bbdb-string= sname (bbdb-cache-lf-name (bbdb-record-cache record)))
-                               (push (car mails) accept)))
-                          ((eq field 'aka)
-                           (if (member-ignore-case sname (bbdb-record-field record 'aka-all))
-                               (push (car mails) accept)))
-                          ((eq field 'organization)
-                           (if (member-ignore-case sname (bbdb-record-organization record))
-                               (push (car mails) accept)))
-                          ((eq field 'primary)
-                           (if (bbdb-string= sname (car mails))
-                               (push (car mails) accept)))
-                          ((eq field 'mail)
-                           (dolist (mail mails)
-                             (if (bbdb-string= sname mail)
-                                 (push mail accept))))))
-                  (when accept
-                    ;; If in the end DWIM-COMPLETIONS contains only one element,
-                    ;; we set DONE to `unique' (see below) and we want to know
-                    ;; ONE-RECORD.
-                    (setq one-record record)
-                    (dolist (mail (delete-dups accept))
-                      (push (bbdb-dwim-mail record mail) dwim-completions))))))))
+            (let ((mails (bbdb-record-mail record))
+                  accept)
+              (when mails
+                (dolist (field completion-list)
+                  (cond ((eq field 'fl-name)
+                         (if (bbdb-string= sname (bbdb-record-name record))
+                             (push (car mails) accept)))
+                        ((eq field 'lf-name)
+                         (if (bbdb-string= sname (bbdb-cache-lf-name (bbdb-record-cache record)))
+                             (push (car mails) accept)))
+                        ((eq field 'aka)
+                         (if (member-ignore-case sname (bbdb-record-field record 'aka-all))
+                             (push (car mails) accept)))
+                        ((eq field 'organization)
+                         (if (member-ignore-case sname (bbdb-record-organization record))
+                             (push (car mails) accept)))
+                        ((eq field 'primary)
+                         (if (bbdb-string= sname (car mails))
+                             (push (car mails) accept)))
+                        ((eq field 'mail)
+                         (dolist (mail mails)
+                           (if (bbdb-string= sname mail)
+                               (push mail accept))))))
+                (when accept
+                  ;; If in the end DWIM-COMPLETIONS contains only one element,
+                  ;; we set DONE to `unique' (see below) and we want to know
+                  ;; ONE-RECORD.
+                  (setq one-record record)
+                  (dolist (mail (delete-dups accept))
+                    (push (bbdb-dwim-mail record mail) dwim-completions)))))))
 
+        (setq dwim-completions (sort (delete-dups dwim-completions)
+                                     'string-lessp))
         (cond ((not dwim-completions)
                (error "No mail address for \"%s\"" orig))
               ;; It may happen that DWIM-COMPLETIONS contains only one element,

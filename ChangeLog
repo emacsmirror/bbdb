@@ -1,4 +1,8 @@
 2012-12-26  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Check every record from
+	the completion list for each possible completion.
+
+2012-12-26  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-dedicated-window): New user variable.
 	(bbdb-mua-pop-up): Renamed from bbdb-message-pop-up.  Doc fix.
 	(bbdb-mua-pop-up-window-size): New variable.

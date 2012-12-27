@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/12/25 17:59:40 $"
+(defconst bbdb-version-date "$Date: 2012/12/26 18:37:09 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -2016,6 +2016,10 @@ KEY must be a string or nil.  Empty strings and nil are ignored."
   (let (mail-aka mail-canon address)
     (dolist (mail (bbdb-record-mail record))
       (setq address (mail-extract-address-components mail))
+      ;; For an address <Joe_Smith@foo.com> this returns
+      ;; the name "Joe Smith".  Thus if <Joe_Smith@foo.com>
+      ;; is a mail address in the record of "John Smith"
+      ;; we get the mail-aka "Joe Smith".  Bother?
       (when (car address)
         (push (car address) mail-aka)
         (bbdb-puthash (car address) record))
