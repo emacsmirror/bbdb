@@ -22,19 +22,18 @@
 ;;; This file contains the BBDB interface to VM.
 ;;; See the BBDB info manual for documentation.
 
-(eval-and-compile
-  (require 'bbdb)
-  (require 'bbdb-com)
-  (require 'bbdb-mua)
-  (require 'vm-autoload)
-  (require 'vm)
-  (require 'vm-motion)
-  (require 'vm-summary)
-  (require 'vm-mime)
-  (require 'vm-vars)
-  (require 'vm-macro)
-  (require 'vm-message)
-  (require 'vm-misc))
+(require 'bbdb)
+(require 'bbdb-com)
+(require 'bbdb-mua)
+(require 'vm-autoload)
+(require 'vm)
+(require 'vm-motion)
+(require 'vm-summary)
+(require 'vm-mime)
+(require 'vm-vars)
+(require 'vm-macro)
+(require 'vm-message)
+(require 'vm-misc)
 
 (defcustom bbdb/vm-update-records-p
   (lambda ()

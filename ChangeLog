@@ -1,4 +1,14 @@
-2012-12-26  Roland Winkler  <winkler@gnu.org>
+2012-12-30  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-gnus.el: Do not use eval-and-compile.
+	(bbdb/gnus-split-myaddr-regexp): Do not use obsolete variable
+	gnus-local-domain.
+	(bbdb/gnus-split-private-field, bbdb/gnus-split-public-field): Fix
+	docstring.
+
+	* lisp/bbdb-vm.el, lisp/bbdb-message.el, lisp/bbdb-mhe.el: Do not
+	use eval-and-compile.
+
+2012-12-30  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mua-summary-unification-list)
 	(bbdb-mua-summary-mark-field, bbdb-mua-summary-mark)
 	(bbdb-mua-summary-unify-format-letter)

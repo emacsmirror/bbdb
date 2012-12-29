@@ -24,14 +24,13 @@
 ;;; This file contains the BBDB interface to mh-e.
 ;;; See the BBDB info manual for documentation.
 
-(eval-and-compile
-  (require 'bbdb)
-  (require 'bbdb-com)
-  (require 'bbdb-mua)
-  (require 'mh-e)
-  (if (fboundp 'mh-version)
-      (require 'mh-comp))              ; For mh-e 4.x
-  (require 'advice))
+(require 'bbdb)
+(require 'bbdb-com)
+(require 'bbdb-mua)
+(require 'mh-e)
+(if (fboundp 'mh-version)
+    (require 'mh-comp))              ; For mh-e 4.x
+(require 'advice)
 
 (defcustom bbdb/mh-update-records-p
   (lambda () (let ((bbdb-update-records-p 'query))

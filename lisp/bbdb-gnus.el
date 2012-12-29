@@ -22,15 +22,10 @@
 ;;; This file contains the BBDB interface to Gnus.
 ;;; See the BBDB info manual for documentation.
 
-(eval-and-compile
-  (require 'bbdb)
-  (require 'bbdb-com)
-  (require 'bbdb-mua)
-  ;;  (require 'bbdb-snarf)
-  (require 'gnus)
-  (require 'gnus-win)
-  (require 'gnus-sum)
-  (require 'gnus-art))
+(require 'bbdb)
+(require 'bbdb-com)
+(require 'bbdb-mua)
+(require 'gnus)
 
 (defcustom bbdb/gnus-update-records-p
   (lambda () (let ((bbdb-update-records-p 'query))
@@ -152,13 +147,9 @@ addresses better than the traditionally static global scorefile."
                        "))"))))
   bbdb/gnus-score-alist)
 
-;;; FIXME: Is this code still useful?
-;;; It references various variables / functions from Gnus that are
-;;; not defined anymore in recent versions of Gnus.
-
 ;;; from Brian Edmonds' gnus-bbdb.el
 ;;;
-;;; Filing with gnus-folder               REQUIRES (ding) 0.50 OR HIGHER
+;;; Splitting / filing with gnus-folder
 ;;;
 ;;; To use this feature, you need to put this file somewhere in your
 ;;; load-path and add the following lines of code to your .gnus file:
@@ -198,7 +189,6 @@ addresses better than the traditionally static global scorefile."
 ;;; separate file, but it's late, and *I* know what I'm trying to
 ;;; say. :)
 
-;;; custom bits
 (defcustom bbdb/gnus-split-default-group "mail.misc"
   "If the BBDB does not indicate any group to spool a message to, it will
 be spooled to this group.  If `bbdb/gnus-split-crosspost-default' is not
@@ -216,18 +206,12 @@ excellent choice."
   :group 'bbdb-mua-gnus-splitting
   :type  'function)
 
-;; FIXME: `gnus-local-domain' is obsolote since Emacs 24.1.
-;; FIXME: `gnus-use-generic-from' not known in recent versions of GNU Emacs
 (defcustom bbdb/gnus-split-myaddr-regexp
   (concat "^" (user-login-name) "$\\|^"
           (user-login-name) "@\\([-a-z0-9]+\\.\\)*"
-          (or gnus-local-domain (message-make-domain)
-              (system-name) "") "$")
+          (or (message-make-domain) (system-name) "") "$")
   "This regular expression should match your address as found in the
-From header of your mail.  You should make sure `gnus-local-domain' or
-`gnus-use-generic-from' are set before loading this module, if they differ
-from (system-name).  If you send mail/news from multiple addresses, then
-you'll likely have to set this yourself anyways."
+From header of your mail."
   :group 'bbdb-mua-gnus-splitting
   :type  'string)
 
@@ -239,19 +223,17 @@ identified."
   :group 'bbdb-mua-gnus-splitting
   :type  'boolean)
 
-;; FIXME: `gnus-private' not known in recent versions of GNU Emacs
 (defcustom bbdb/gnus-split-private-field 'gnus-private
-  "This variable is used to determine the field to reference to find the
+  "This variable is used to determine the xfield to reference to find the
 associated group when saving private mail for a mail address known to
-the BBDB.  The value of the field should be the name of a mail group."
+the BBDB.  The value of the xfield should be the name of a mail group."
   :group 'bbdb-mua-gnus-splitting
   :type  'string)
 
-;; FIXME: `gnus-public' not known in recent versions of GNU Emacs
 (defcustom bbdb/gnus-split-public-field 'gnus-public
-  "This variable is used to determine the field to reference to find the
+  "This variable is used to determine the xfield to reference to find the
 associated group when saving non-private mail (received from a mailing
-list) for a mail address known to the BBDB.  The value of the field
+list) for a mail address known to the BBDB.  The value of the xfield
 should be the name of a mail group, followed by a space, and a regular
 expression to match on the envelope sender to verify that this mail came
 from the list in question."
@@ -283,7 +265,7 @@ from the list in question."
 ;; associated with the addresses which share the highest calculated
 ;; priority.
 
-;;;#autoload
+;;;###autoload
 (defun bbdb/gnus-split-method ()
   "This function expects to be called in a buffer which contains a mail
 message to be spooled, and the buffer should be narrowed to the message
@@ -307,7 +289,7 @@ spooled, using the addresses in the headers and information from BBDB."
       (dolist (address (mail-extract-address-components hdr t))
         (let* ((rv (bbdb/gnus-split-to-group address))
                (pr (nth (cdr rv) prq)))
-          (unless (member (car rv) pr)
+          (unless (member-ignore-case (car rv) pr)
             (setcdr pr (cons (car rv) (cdr pr)))))))
     ;; find the highest non-empty queue
     (setq prq (reverse prq))
@@ -355,7 +337,9 @@ determine the group and spooling priority for a single address."
                     (if source 2 (if bbdb/gnus-split-crosspost-default 1 0))))))))
     (error (cons bbdb/gnus-split-default-group 0))))
 
-;; Uwe Brauer
+;;
+;; Imap support (Uwe Brauer)
+;;
 (defun bbdb/gnus-nnimap-folder-list-from-bbdb ()
   "Return a list of \( \"From\" mail-regexp imap-folder-name\) tuples
 based on the contents of the bbdb.
