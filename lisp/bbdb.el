@@ -1265,6 +1265,61 @@ For merging xfield LABEL, this will use MERGE-FUN."
 (define-obsolete-variable-alias 'bbdb-merge-notes-function-alist
   'bbdb-merge-xfield-function-alist)
 
+(defcustom bbdb-mua-summary-unification-list
+  '(name mail message-name message-mail message-address)
+  "List of FIELDs considered by `bbdb-mua-summary-unify'.
+For the RECORD matching the address of a message, `bbdb-mua-summary-unify'
+returns the first non-empty field value matching an element FIELD from this list.
+Each element FIELD may be a valid argument of `bbdb-record-field' for RECORD.
+In addition, this list may also include the following elements:
+  message-name     The name in the address of the message
+  message-mail     The mail in the address of the message
+  message-address  The complete address of the message
+These provide a fallback if a message does not have a matching RECORD
+or if some FIELD of RECORD is empty."
+  :group 'bbdb-mua
+  :type 'list)
+
+(defcustom bbdb-mua-summary-mark-field 'mark-char
+  "BBDB xfield whose value is used to mark message addresses known to BBDB.
+See `bbdb-mua-summary-mark' and `bbdb-mua-summary-unify'.
+See also `bbdb-mua-summary-mark'."
+  :group 'bbdb-mua-gnus
+  :type 'symbol)
+
+(defcustom bbdb-mua-summary-mark "+"
+  "Default mark for message addresses known to BBDB.
+If nil do not mark message addresses known to BBDB.
+See `bbdb-mua-summary-mark' and `bbdb-mua-summary-unify'.
+See also `bbdb-mua-summary-mark-field'."
+  :group 'bbdb-mua
+  :type '(choice (string :tag "Mark used")
+                 (const :tag "Do not mark known posters" nil)))
+
+(defcustom bbdb-mua-summary-unify-format-letter "B"
+  "Letter required for `bbdb-mua-summary-unify' in the MUA Summary format string.
+For Gnus, combine it with the %u specifier in `gnus-summary-line-format'
+\(see there), for example use \"%U%R%z%I%(%[%4L: %-23,23uB%]%) %s\\n\".
+For VM, combine it with the %U specifier in `vm-summary-format' (see there),
+for example, use \"%n %*%a %-17.17UB %-3.3m %2d %4l/%-5c %I\\\"%s\\\"\\n\".
+This customization of `gnus-summary-line-format' / `vm-summary-format'
+is required to use `bbdb-mua-summary-unify'.
+Currently no other MUAs support this BBDB feature."
+  :group 'bbdb-mua
+  :type 'string)
+
+(defcustom bbdb-mua-summary-mark-format-letter "b"
+  "Letter required for `bbdb-mua-summary-mark' in the MUA Summary format string.
+For Gnus, combine it with the %u specifier in `gnus-summary-line-format'
+\(see there), for example, use \"%U%R%z%I%(%[%4L: %ub%-23,23f%]%) %s\\n\".
+For VM, combine it with the %U specifier in `vm-summary-format' (see there),
+for example, use \"%n %*%a %Ub%-17.17F %-3.3m %2d %4l/%-5c %I\\\"%s\\\"\\n\".
+This customization of `gnus-summary-line-format' / `vm-summary-format'
+is required to use `bbdb-mua-summary-mark'.
+Currently no other MUAs support this BBDB feature."
+  :group 'bbdb-mua
+  :type 'string)
+
 
 ;;; Sending mail
 (defcustom bbdb-mail-user-agent nil

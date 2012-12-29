@@ -1048,4 +1048,65 @@ This strips garbage from the user full NAME string."
 
   name)
 
+;;; Mark BBDB records in the MUA summary buffer
+
+(defun bbdb-mua-summary-unify (address)
+  "Unify mail ADDRESS displayed for a message in the MUA Summary buffer.
+Typically ADDRESS refers to the value of the From header of a message.
+If ADDRESS matches a record in BBDB display a unified name instead of ADDRESS
+in the MUA Summary buffer.
+
+Unification uses `bbdb-mua-summary-unification-list' (see there).
+The first match in this list becomes the text string displayed
+for a message in the MUA Summary buffer instead of ADDRESS.
+If variable `bbdb-mua-summary-mark' is non-nil use it to precede known addresses.
+Return the unified mail address.
+
+Currently this works with Gnus and VM.  It requires the BBDB insinuation
+of these MUAs.  Also, the MUA Summary format string must use
+`bbdb-mua-summary-unify-format-letter' (see there)."
+  ;; ADDRESS is analyzed as in `bbdb-get-address-components'.
+  (let* ((data (mail-extract-address-components address))
+         (name (and (car data)
+                    (funcall bbdb-message-clean-name-function (car data))))
+         (mail (bbdb-canonicalize-mail (cadr data))) ; may be nil
+         (record (and (or name mail)
+                      (car (bbdb-message-search name mail))))
+         (u-list bbdb-mua-summary-unification-list)
+         elt val)
+    (while (setq elt (pop u-list))
+      (setq val (cond ((eq elt 'message-name) name)
+                      ((eq elt 'message-mail) mail)
+                      ((eq elt 'message-address) address)
+                      (record (let ((result (bbdb-record-field record elt)))
+                                (if (stringp result) result
+                                  (car result)))))) ; RESULT is list.
+      (if val (setq u-list nil)))
+    (format "%s%s"
+            (cond ((not bbdb-mua-summary-mark) "")
+                  ((not record) " ")
+                  ((bbdb-record-xfield record bbdb-mua-summary-mark-field))
+                  (t bbdb-mua-summary-mark))
+            (or val name mail address "**UNKNOWN**"))))
+
+(defun bbdb-mua-summary-mark (address)
+  "In the MUA Summary buffer mark messages matching a BBDB record.
+ADDRESS typically refers to the value of the From header of a message.
+If ADDRESS matches a record in BBDB return a mark, \" \" otherwise.
+The mark itself is the value of the xfield `bbdb-mua-summary-mark-field'
+if this xfield is in the poster's record, and `bbdb-mua-summary-mark' otherwise."
+  (if (not bbdb-mua-summary-mark)
+      "" ; for consistency
+    ;; ADDRESS is analyzed as in `bbdb-get-address-components'.
+    (let* ((data (mail-extract-address-components address))
+           (name (and (car data)
+                      (funcall bbdb-message-clean-name-function (car data))))
+           (mail (bbdb-canonicalize-mail (cadr data))) ; may be nil
+           (record (and (or name mail)
+                        (car (bbdb-message-search name mail)))))
+      (if record
+          (or (bbdb-record-xfield record bbdb-mua-summary-mark-field)
+              bbdb-mua-summary-mark)
+        " "))))
+
 (provide 'bbdb-mua)

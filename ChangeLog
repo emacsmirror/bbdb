@@ -1,3 +1,27 @@
+2012-12-26  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mua-summary-unification-list)
+	(bbdb-mua-summary-mark-field, bbdb-mua-summary-mark)
+	(bbdb-mua-summary-unify-format-letter)
+	(bbdb-mua-summary-mark-format-letter): New user variables.
+
+	* lisp/bbdb-mua.el (bbdb-mua-summary-unify)
+	(bbdb-mua-summary-mark): New functions.
+
+	* lisp/bbdb-gnus.el (bbdb/gnus-summary-mark-known-posters)
+	(bbdb/gnus-mark-known-posters)
+	(bbdb/gnus-summary-known-poster-mark)
+	(bbdb/gnus-summary-show-bbdb-names)
+	(bbdb/gnus-header-show-bbdb-names)
+	(bbdb/gnus-summary-prefer-bbdb-data)
+	(bbdb/gnus-summary-prefer-real-names)
+	(bbdb/gnus-header-prefer-real-names)
+	(bbdb/gnus-summary-user-format-letter)
+	(bbdb/gnus-summary-in-bbdb-format-letter)
+	(bbdb/gnus-message-marker-field, bbdb/gnus-summary-get-sender)
+	(bbdb/gnus-summary-sender-in-bbdb): Removed.
+	(bbdb-insinuate-gnus): Use bbdb-mua-summary-unify and
+	bbdb-mua-summary-mark.
+
 2012-12-27  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-wrapper): Add edebug support.
 	Suggested by Leo <sdl.web@gmail.com>.
