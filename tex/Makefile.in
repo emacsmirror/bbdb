@@ -21,23 +21,23 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_DATA = @INSTALL_DATA@
-texmf_dir = @texmf_dir@
+tex_dir = @tex_dir@
 
 RM   = @RM@
 LN_S = @LN_S@
 
 install-tex:
-	if test "x$(texmf_dir)" != "x"; then		\
-	    $(INSTALL) -d -m 0755 "$(texmf_dir)/";	\
+	if test "x$(tex_dir)" != "x"; then		\
+	    $(INSTALL) -d -m 0755 "$(tex_dir)/";	\
 	    for tex in *.tex; do			\
-	        echo "Install $$tex in $(texmf_dir)/";	\
-	        $(INSTALL_DATA) $$tex "$(texmf_dir)/";	\
+	        echo "Install $$tex in $(tex_dir)/";	\
+	        $(INSTALL_DATA) $$tex "$(tex_dir)/";	\
             done;					\
 	fi
 
 uninstall:
 	for tex in *.tex; do		\
-	    $(RM) "$(texmf_dir)/$$tex";	\
+	    $(RM) "$(tex_dir)/$$tex";	\
 	done;
 
 clean:

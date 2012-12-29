@@ -26,6 +26,10 @@ To compile and install BBDB with `make':
    `--with-vm-dir=DIR' specifies the path where VM can be found.
      Without this option the resulting BBDB build does not support VM.
 
+   `--with-lispdir=DIR' specifies where to install the lisp files.
+
+   `--with-tex-dir=DIR' specifies where to install the TeX files.
+
    Use `configure --help' to see all available options.
 
 2) Build BBDB:
@@ -71,7 +75,7 @@ with 'subscribe' as the subject.
 
 ==================================================================
 
-Copyright (C) 2011 Roland Winkler <winkler@gnu.org>
+Copyright (C) 2011-2012 Roland Winkler <winkler@gnu.org>
 
 This file is part of the Insidious Big Brother Database (aka BBDB),
 

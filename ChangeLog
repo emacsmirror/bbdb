@@ -1,4 +1,9 @@
 2012-12-30  Roland Winkler  <winkler@gnu.org>
+	* INSTALL: List all BBDB configure options.
+	* aclocal.m4, tex/Makefile.in: Option --with-tex-dir renamed from
+	--with-texmf-dir.
+
+2012-12-30  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-gnus.el: Do not use eval-and-compile.
 	(bbdb/gnus-split-myaddr-regexp): Do not use obsolete variable
 	gnus-local-domain.

@@ -129,30 +129,30 @@ AC_DEFUN(BBDB_PATH_LISPDIR,
      AC_SUBST(lispdir, "$with_lispdir")
    ])
 
-AC_DEFUN(BBDB_PATH_TEXMFDIR,
-   [ AC_ARG_WITH(texmf-dir,
-                 AS_HELP_STRING([--with-texmf-dir=DIR],
+AC_DEFUN(BBDB_PATH_TEXDIR,
+   [ AC_ARG_WITH(tex-dir,
+                 AS_HELP_STRING([--with-tex-dir=DIR],
                                 [where to install tex files]))
      dnl If the user does not help us, finding the right location
-     dnl for texmf-dir can be tricky. So we try to use kpsexpand,
+     dnl for tex-dir can be tricky. So we try to use kpsexpand,
      dnl then we give up.
-     if test "x${with_texmf_dir}" = "x" ; then
+     if test "x${with_tex_dir}" = "x" ; then
        AC_CHECK_PROG(KPSEXPAND, kpsexpand, kpsexpand)
        if test "x${KPSEXPAND}" != "x" ; then
-        with_texmf_dir="`kpsexpand \\$TEXMFLOCAL`"
+        with_tex_dir="`kpsexpand \\$TEXMFLOCAL`"
        fi
      fi
-     if test "x${with_texmf_dir}" = "x"; then
-      AC_MSG_WARN([no directory for installing .tex files])
+     if test "x${with_tex_dir}" = "x"; then
+      AC_MSG_WARN([no directory for installing .tex files; use --with-tex-dir=DIR])
      else
       AC_MSG_CHECKING([where .tex files should go])
-      if test ! -d "${with_texmf_dir}" ; then
-        AC_MSG_ERROR(["${with_texmf_dir}": Directory does not exist])
+      if test ! -d "${with_tex_dir}" ; then
+        AC_MSG_ERROR(["${with_tex_dir}": Directory does not exist])
       fi
-      with_texmf_dir="${with_texmf_dir}/bbdb"
+      with_tex_dir="${with_tex_dir}/bbdb"
      fi
-     AC_MSG_RESULT($with_texmf_dir)
-     AC_SUBST(texmf_dir, "$with_texmf_dir")
+     AC_MSG_RESULT($with_tex_dir)
+     AC_SUBST(tex_dir, "$with_tex_dir")
    ])
 
 dnl aclocal.m4 ends here
