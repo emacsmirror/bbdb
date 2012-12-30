@@ -1564,7 +1564,9 @@ Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
      (progn (message "BBDB: sendmail insinuation deprecated. Use mail.")
             (add-hook 'mail-setup-hook 'bbdb-insinuate-mail)))
     (message                    ; the gnus mail user agent
-     (add-hook 'message-setup-hook 'bbdb-insinuate-message)))
+     (add-hook 'message-setup-hook 'bbdb-insinuate-message))
+    (sc                         ; supercite
+     (add-hook 'sc-load-hook 'bbdb-insinuate-sc)))
   "Alist mapping features to insinuation forms.")
 
 (defvar bbdb-search-invert nil
@@ -4031,6 +4033,10 @@ to initialize the respective mail/news readers and composers:
   vm         VM mail reader.
   mail       Mail (M-x mail).
   message    Message mode.
+
+Initialization of miscellaneous packages:
+  sc         Supercite.
+
 See also `bbdb-mua-auto-update-init'.  The latter is a separate function
 as this allows one to initialize the auto update feature for some MUAs only,
 for example only for outgoing messages."
