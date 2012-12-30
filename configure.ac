@@ -63,7 +63,7 @@ BBDB_PROG_EMACS
 BBDB_WITH_VM
 
 BBDB_PATH_LISPDIR
-BBDB_PATH_TEXMFDIR
+BBDB_PATH_TEXDIR
 
 dnl For now this only allows you to see the compile commands
 AC_ARG_ENABLE(developer,

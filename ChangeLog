@@ -1,4 +1,8 @@
 2012-12-30  Roland Winkler  <winkler@gnu.org>
+	* configure.ac: Option --with-tex-dir renamed from
+	--with-texmf-dir.
+
+2012-12-30  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-sc.el: New file
 	* lisp/Makefile.in, lisp/makefile-temp, lisp/bbdb.el
 	(bbdb-init-forms, bbdb-initialize): Use it.
