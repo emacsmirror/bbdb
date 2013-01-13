@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2012/12/26 18:37:09 $"
+(defconst bbdb-version-date "$Date: 2013/01/13 17:38:53 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -1606,6 +1606,9 @@ and mail.")
 (defvar bbdb-xfield-label-list nil
   "List of labels for xfields.")
 
+(defvar bbdb-organization-list nil
+  "List of organizations known to BBDB.")
+
 (defvar bbdb-modified nil
   "Non-nil if the database has been modified.")
 
@@ -2208,7 +2211,8 @@ If VALUE is nil, remove xfield LABEL from RECORD.  Return VALUE."
   (if (memq label '(name firstname lastname affix organization
                          mail aka phone address xfields))
       (error "xfield label `%s' illegal" label))
-  (bbdb-set-xfield-labels label)
+  (unless (memq label bbdb-xfield-label-list)
+    (push label bbdb-xfield-label-list))
   (if (eq label 'mail-alias)
       (setq bbdb-mail-aliases-need-rebuilt 'edit))
   (if (and value (string= "" value)) (setq value nil))
@@ -2398,6 +2402,9 @@ See also `bbdb-record-field'."
                                                    value 'bbdb-string=)))
            (if check (bbdb-check-type value (bbdb-record-organization record-type) t))
            (bbdb-hash-update record (bbdb-record-organization record) value)
+           (dolist (organization value)
+             (unless (member organization bbdb-organization-list)
+               (push organization bbdb-organization-list)))
            (bbdb-record-set-organization record value))
 
           ;; AKA
@@ -2435,6 +2442,10 @@ See also `bbdb-record-field'."
            (if merge (setq value (bbdb-merge-lists (bbdb-record-phone record)
                                                    value 'equal)))
            (if check (bbdb-check-type value (bbdb-record-phone record-type) t))
+           (dolist (phone value)
+             (let ((label (bbdb-phone-label phone)))
+               (unless (member label bbdb-phone-label-list)
+                 (push label bbdb-phone-label-list))))
            (bbdb-record-set-phone record value))
 
           ;; Address
@@ -2442,6 +2453,10 @@ See also `bbdb-record-field'."
            (if merge (setq value (bbdb-merge-lists (bbdb-record-address record)
                                                    value 'equal)))
            (if check (bbdb-check-type value (bbdb-record-address record-type) t))
+           (dolist (address value)
+             (let ((label (bbdb-address-label address)))
+               (unless (member label bbdb-address-label-list)
+                 (push label bbdb-address-label-list))))
            (bbdb-record-set-address record value))
 
           ;; all xfields
@@ -2452,11 +2467,13 @@ See also `bbdb-record-field'."
                    (if (setq xfield (assq (car ov) value))
                        (setcdr xfield (bbdb-merge-xfield (car ov) (cdr xfield) (cdr ov)))
                      (setq value (append value (list ov))))))
+             (if check (bbdb-check-type new-xfields (bbdb-record-xfields record-type) t))
              (dolist (xfield (nreverse value))
                ;; Ignore junk
-               (if (and (cdr xfield) (not (string= "" (cdr xfield))))
-                   (push xfield new-xfields)))
-             (if check (bbdb-check-type new-xfields (bbdb-record-xfields record-type) t))
+               (when (and (cdr xfield) (not (string= "" (cdr xfield))))
+                 (push xfield new-xfields)
+                 (unless (memq (car xfield) bbdb-xfield-label-list)
+                   (push (car xfield) bbdb-xfield-label-list))))
              (bbdb-record-set-xfields record new-xfields)))
 
           ;; Single xfield
@@ -2606,17 +2623,6 @@ Do this only if `bbdb-check-postcode' is non-nil."
          (error (ding)
                 (message "Error: %s" (nth 1 --c--))
                 (sit-for 2))))))
-
-;;; Completion on labels data
-
-(defun bbdb-label-completion-list (field)
-  "Figure out a completion list for the specified FIELD label.
-This evaluates the variable bbdb-FIELD-label-list, such
-as `bbdb-phone-label-list'."
-  (let ((sym (intern-soft (format "bbdb-%s-label-list" field))))
-    (if (boundp sym)
-        (symbol-value sym)
-      bbdb-default-label-list)))
 
 
 ;;; Reading and Writing the BBDB
@@ -2815,10 +2821,7 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
         ;; Migrate if `bbdb-file' is outdated.
         (if migrate (setq records (bbdb-migrate records file-format)))
 
-        (setq bbdb-records records
-              bbdb-phone-label-list (bbdb-label-completion-list 'phone)
-              bbdb-address-label-list (bbdb-label-completion-list 'address)
-              bbdb-xfield-label-list nil)
+        (setq bbdb-records records)
 
         (bbdb-goto-first-record)
         (let (label)
@@ -2834,7 +2837,9 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
              (point-marker))
             (forward-line 1)
 
-            ;; Set the label completion lists
+            ;; Set the completion lists
+            ;; We could first set `bbdb-phone-label-list' and
+            ;; `bbdb-address-label-list' to their customized values.  Bother?
             (dolist (phone (bbdb-record-phone record))
               (unless (member (setq label (bbdb-phone-label phone))
                               bbdb-phone-label-list)
@@ -2843,9 +2848,14 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
               (unless (member (setq label (bbdb-address-label address))
                               bbdb-address-label-list)
                 (push label bbdb-address-label-list)))
+            (setq bbdb-xfield-label-list nil)
             (dolist (xfield (bbdb-record-xfields record))
               (unless (memq (setq label (car xfield)) bbdb-xfield-label-list)
                 (push label bbdb-xfield-label-list)))
+            (setq bbdb-organization-list nil)
+            (dolist (organization (bbdb-record-organization record))
+              (unless (member organization bbdb-organization-list)
+                (push organization bbdb-organization-list)))
 
             (let ((name (bbdb-concat 'name-first-last
                                      (bbdb-record-firstname record)
@@ -2870,7 +2880,11 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
             ;; `bbdb-allow-duplicates' is nil.
             (bbdb-hash-record record)))
 
-        ;; We should hide only those fields that are handled automatically.
+        ;; We should remove those xfields from `bbdb-xfield-label-list'
+        ;; that are handled automatically.  Yet those xfields that are
+        ;; omitted in multiline layout are generally a superset of the
+        ;; fields that are handled automatically.  So the following is
+        ;; not a satisfactory solution.
         ;; (dolist (label (bbdb-layout-get-option 'multi-line 'omit))
         ;;   (setq bbdb-xfield-label-list (delq label bbdb-xfield-label-list)))
 
@@ -3060,17 +3074,6 @@ that calls the hooks, too."
 
       (setq bbdb-modified t)
       record)))
-
-(defun bbdb-set-xfield-labels (newval)
-  "Set `bbdb-xfield-label-list'.
-If NEWVAL is a symbol, add it to `bbdb-xfield-label-list' if not yet present.
-If NEWVAL is a list, it replaces the current value of `bbdb-xfield-label-list'."
-  (cond ((listp newval)
-         (setq bbdb-xfield-label-list newval))
-        ((and (symbolp newval)
-              (not (memq newval bbdb-xfield-label-list)))
-         (push newval bbdb-xfield-label-list)))
-  bbdb-xfield-label-list)
 
 ;; Record formatting:
 ;; This does not insert anything into the *BBDB* buffer,

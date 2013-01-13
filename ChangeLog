@@ -1,3 +1,25 @@
+2013-01-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-organization-list): New variable.
+	(bbdb-record-set-field): Use it.  Update bbdb-phone-label-list,
+	bbdb-address-label-list, and bbdb-xfield-label-list.
+	((bbdb-set-xfield-labels): Removed
+	(bbdb-record-set-xfield): Set bbdb-xfield-labels-list explicitly.
+	(bbdb-label-completion-list): Removed.
+	(bbdb-parse-records): Do not set bbdb-phone-label-list and
+	bbdb-address-label-list in a circular way.  Set
+	bbdb-organization-list.
+
+	* lisp/bbdb-com.el: Require crm.
+	(bbdb-crm-local-completion-map): New variable.
+	(bbdb-read-organization): New function.
+	(bbdb-read-record, bbdb-prompt-for-new-field): Use it. Directly
+	use bbdb-phone-label-list and bbdb-address-label-list.
+	Do not call bbdb-set-xfield-labels, which was redundant.
+	(bbdb-edit-field): Use bbdb-read-organization and
+	bbdb-record-field.
+	(bbdb-record-edit-address): Use bbdb-address-label-list directly.
+	(bbdb-record-edit-phone): Use bbdb-phone-label-list directly.
+
 2012-12-30  Roland Winkler  <winkler@gnu.org>
 	* configure.ac: Option --with-tex-dir renamed from
 	--with-texmf-dir.

@@ -29,6 +29,14 @@
   (autoload 'build-mail-aliases "mailalias")
   (autoload 'browse-url-url-at-point "browse-url"))
 
+(require 'crm)
+(defvar bbdb-crm-local-completion-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map crm-local-completion-map)
+    (define-key map " " 'self-insert-command)
+    map)
+  "Keymap used for BBDB crm completions.")
+
 (defun bbdb-get-records (prompt)
   "If inside the *BBDB* buffer get the current records.
 In other buffers ask the user."
@@ -617,8 +625,7 @@ but does ensure that there will not be name collisions."
     (bbdb-error-retry
      (setq name (bbdb-read-name first-and-last))
      (bbdb-check-name (car name) (cdr name)))
-    (let ((organizations (bbdb-split 'organization
-                                     (bbdb-read-string "Organizations: ")))
+    (let ((organizations (bbdb-read-organization))
           ;; mail
           (mail (bbdb-split 'mail (bbdb-read-string "E-Mail Addresses: ")))
           ;; address
@@ -629,8 +636,7 @@ but does ensure that there will not be name collisions."
                                         (bbdb-read-string
                                          "Snail Mail Address Label [RET when done]: "
                                          nil
-                                         (bbdb-label-completion-list
-                                          'address)))))
+                                         bbdb-address-label-list))))
                (setq address (make-vector bbdb-address-length nil))
                (bbdb-record-edit-address address label t)
                (push address addresses))
@@ -642,8 +648,7 @@ but does ensure that there will not be name collisions."
                                   (setq label
                                         (bbdb-read-string
                                          "Phone Label [RET when done]: " nil
-                                         (bbdb-label-completion-list
-                                          'phone)))))
+                                         bbdb-phone-label-list))))
                (setq phone-list
                      (bbdb-error-retry
                       (bbdb-parse-phone
@@ -847,7 +852,7 @@ value of \"\", the default) means do not alter the address."
   (cond (;; affix
          (eq field 'affix) (bbdb-read-string "Affix: " init))
         ;; organization
-        ((eq field 'organization) (bbdb-read-string "Organization: " init))
+        ((eq field 'organization) (bbdb-read-organization init))
         ;; mail
         ((eq field 'mail)
          (let ((mail (bbdb-read-string "Mail: " init)))
@@ -866,8 +871,7 @@ value of \"\", the default) means do not alter the address."
                     (if (eq bbdb-phone-style 'nanp) nil 'nanp)
                   bbdb-phone-style)))
            (apply 'vector
-                  (bbdb-read-string "Label: " nil
-                                    (bbdb-label-completion-list 'phone))
+                  (bbdb-read-string "Label: " nil bbdb-phone-label-list)
                   (bbdb-error-retry
                    (bbdb-parse-phone
                     (read-string "Phone: "
@@ -884,9 +888,8 @@ value of \"\", the default) means do not alter the address."
          (bbdb-read-string (format "%s: " field) init))
         ;; New xfield
         (t
-         (if (y-or-n-p
-              (format "\"%s\" is an unknown field name.  Define it? " field))
-             (bbdb-set-xfield-labels field)
+         (unless (y-or-n-p
+                  (format "\"%s\" is an unknown field name.  Define it? " field))
            (error "Aborted"))
          (bbdb-read-string (format "%s: " field) init))))
 
@@ -939,15 +942,19 @@ a phone number or address with VALUE being nil."
           ((eq field 'address)
            (unless value (error "No address specified"))
            (bbdb-record-edit-address value nil flag))
+          ((eq field 'organization)
+           (bbdb-record-set-field
+            record field
+            (bbdb-read-organization
+             (bbdb-concat field (bbdb-record-organization record)))))
           ((setq edit-str (assq field '((affix . "Affix")
-                                        (organization . "Organization")
                                         (mail . "Mail") (aka . "AKA"))))
            (bbdb-record-set-field
             record field
             (bbdb-split field (bbdb-read-string
                                (format "%s: " (cdr edit-str))
-                               (bbdb-concat field (funcall (intern (format "bbdb-record-%s" field))
-                                                           record))))))
+                               (bbdb-concat field
+                                            (bbdb-record-field record field))))))
           (t ; xfield
            (bbdb-record-set-xfield
             record field
@@ -955,6 +962,18 @@ a phone number or address with VALUE being nil."
                               (bbdb-record-xfield record field)))))
     (bbdb-change-record record bbdb-need-to-sort)
     (bbdb-redisplay-record record)))
+
+(defun bbdb-read-organization (&optional default)
+  "Read organization."
+  (if (string< "24.2" emacs-version)
+      (let ((crm-separator
+             (concat "[ \t\n]*"
+                     (cadr (assq 'organization bbdb-separator-alist))
+                     "[ \t\n]*"))
+            (crm-local-completion-map bbdb-crm-local-completion-map))
+        (completing-read-multiple "Organizations: " bbdb-organization-list
+                                  nil nil default))
+    (bbdb-split 'organization (bbdb-read-string "Organizations: " default))))
 
 (defun bbdb-record-edit-address (address &optional label default)
   "Edit ADDRESS.
@@ -965,8 +984,7 @@ to `bbdb-address-format-list'."
   (unless label
     (setq label (bbdb-read-string "Label: "
                                   (bbdb-address-label address)
-                                  (bbdb-label-completion-list
-                                   'address))))
+                                  bbdb-address-label-list)))
   (let ((country (or (bbdb-address-country address) ""))
         new-addr edit)
     (unless (or default (string= "" country))
@@ -1061,7 +1079,7 @@ Country:         country"
           (apply 'vector
                  (bbdb-read-string "Label: "
                                    (bbdb-phone-label phone)
-                                   (bbdb-label-completion-list 'phone))
+                                   bbdb-phone-label-list)
                  (bbdb-error-retry
                   (bbdb-parse-phone
                    (read-string "Phone: " (bbdb-phone-string phone)))))))
@@ -1480,14 +1498,6 @@ in `bbdb-change-hook')."
 (define-obsolete-function-alias 'bbdb-sort-notes 'bbdb-sort-xfields)
 
 ;;; Send-Mail interface
-
-;; FIXME: `bbdb-dwim-mail' allows the possiblity that MAIL is not
-;; just a canonical address foo@bar.com. But a complete RFC 822
-;; address "John Smith <foo@bar.com>" is allowed, too.  Should we
-;; allow this throughout BBDB?  Then `bbdb-hashtable' should always
-;; contain the canonical address foo@bar.com.  This requires that
-;; we call `mail-extract-address-components' many times upon startup
-;; and elsewhere, too.
 
 ;;;###autoload
 (defun bbdb-dwim-mail (record &optional mail)
