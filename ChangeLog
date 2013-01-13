@@ -1,4 +1,7 @@
 2013-01-13  Roland Winkler  <winkler@gnu.org>
+	Update copyright year in all files.
+
+2013-01-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-organization-list): New variable.
 	(bbdb-record-set-field): Use it.  Update bbdb-phone-label-list,
 	bbdb-address-label-list, and bbdb-xfield-label-list.
@@ -1282,7 +1285,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
+  Copyright (C) 2010-2013 Roland Winkler <winkler@gnu.org>
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 

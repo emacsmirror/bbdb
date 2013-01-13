@@ -1,6 +1,6 @@
 ;;; bbdb-ispell.el --- export names from BBDB to personal ispell dictionaries
 
-;; Copyright (C) 2011-2012 Ivan Kanis <ivan.kanis@googlemail.com>
+;; Copyright (C) 2011-2013 Ivan Kanis <ivan.kanis@googlemail.com>
 ;;                         and Roland Winkler <winkler@gnu.org>
 
 ;; Author: Ivan Kanis <ivan.kanis@googlemail.com>

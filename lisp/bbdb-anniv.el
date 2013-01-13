@@ -1,6 +1,6 @@
 ;;; bbdb-anniv.el --- get anniversaries from BBDB
 
-;; Copyright (C) 2011-2012 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2011-2013 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 

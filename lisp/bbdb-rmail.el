@@ -1,7 +1,7 @@
 ;;; bbdb-rmail.el --- BBDB interface to Rmail
 
 ;; Copyright (C) 1991, 1992 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2013 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 

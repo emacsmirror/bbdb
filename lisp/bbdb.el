@@ -1,7 +1,7 @@
 ;;; bbdb.el --- core of BBDB
 
 ;; Copyright (C) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2012 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2013 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/01/13 17:38:53 $"
+(defconst bbdb-version-date "$Date: 2013/01/13 18:44:08 $"
   "Version date of BBDB.")
 
 ;; Custom groups
