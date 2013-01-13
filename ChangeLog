@@ -1,4 +1,8 @@
 2013-01-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-parse-records): Set bbdb-xfield-labels-list
+	and bbdb-organization-list to nil only once.
+
+2013-01-13  Roland Winkler  <winkler@gnu.org>
 	Update copyright year in all files.
 
 2013-01-13  Roland Winkler  <winkler@gnu.org>

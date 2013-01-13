@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/01/13 18:44:08 $"
+(defconst bbdb-version-date "$Date: 2013/01/13 22:41:36 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -2821,7 +2821,11 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
         ;; Migrate if `bbdb-file' is outdated.
         (if migrate (setq records (bbdb-migrate records file-format)))
 
-        (setq bbdb-records records)
+        ;; We could first set `bbdb-phone-label-list' and
+        ;; `bbdb-address-label-list' to their customized values.  Bother?
+        (setq bbdb-records records
+              bbdb-xfield-label-list nil
+              bbdb-organization-list nil)
 
         (bbdb-goto-first-record)
         (let (label)
@@ -2838,8 +2842,6 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
             (forward-line 1)
 
             ;; Set the completion lists
-            ;; We could first set `bbdb-phone-label-list' and
-            ;; `bbdb-address-label-list' to their customized values.  Bother?
             (dolist (phone (bbdb-record-phone record))
               (unless (member (setq label (bbdb-phone-label phone))
                               bbdb-phone-label-list)
@@ -2848,11 +2850,9 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
               (unless (member (setq label (bbdb-address-label address))
                               bbdb-address-label-list)
                 (push label bbdb-address-label-list)))
-            (setq bbdb-xfield-label-list nil)
             (dolist (xfield (bbdb-record-xfields record))
               (unless (memq (setq label (car xfield)) bbdb-xfield-label-list)
                 (push label bbdb-xfield-label-list)))
-            (setq bbdb-organization-list nil)
             (dolist (organization (bbdb-record-organization record))
               (unless (member organization bbdb-organization-list)
                 (push organization bbdb-organization-list)))
