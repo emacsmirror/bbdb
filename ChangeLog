@@ -1,3 +1,7 @@
+2013-01-20  Roland Winkler  <winkler@gnu.org>
+	* doc/Makefile.in, tex/Makefile.in: Provide the DESTDIR variable.
+	(Bug#38124)
+
 2013-01-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-parse-records): Set bbdb-xfield-labels-list
 	and bbdb-organization-list to nil only once.

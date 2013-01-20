@@ -19,7 +19,7 @@
 
 prefix = @prefix@
 datarootdir = @datarootdir@
-infodir = @infodir@
+infodir = $(DESTDIR)@infodir@
 srcdir = @srcdir@
 subdir = doc
 top_srcdir = @top_srcdir@
