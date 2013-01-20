@@ -146,9 +146,6 @@ AC_DEFUN(BBDB_PATH_TEXDIR,
       AC_MSG_WARN([no directory for installing .tex files; use --with-tex-dir=DIR])
      else
       AC_MSG_CHECKING([where .tex files should go])
-      if test ! -d "${with_tex_dir}" ; then
-        AC_MSG_ERROR(["${with_tex_dir}": Directory does not exist])
-      fi
       with_tex_dir="${with_tex_dir}/bbdb"
      fi
      AC_MSG_RESULT($with_tex_dir)

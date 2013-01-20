@@ -1,4 +1,7 @@
 2013-01-20  Roland Winkler  <winkler@gnu.org>
+	* aclocal.m4: Do not throw an error if tex_dir does not exist.
+
+2013-01-20  Roland Winkler  <winkler@gnu.org>
 	* doc/Makefile.in, tex/Makefile.in: Provide the DESTDIR variable.
 	(Bug#38124)
 
