@@ -1,3 +1,19 @@
+2013-02-02  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mail-user-agent): Use non-nil default taken
+	from mail-user-agent.
+	(bbdb-lastname-re, bbdb-lastname-suffix-re): New
+	user variables.
+	(bbdb-divide-name): Use them.  Pass first and last name through
+	bbdb-string-trim.
+
+	* lisp/bbdb-mua.el (bbdb-canonicalize-mail): Always pass mail
+	through bbdb-string-trim.
+	(bbdb-canonicalize-mail-1): Always pass mail through
+	bbdb-string-trim.
+	(bbdb-canonical-hosts): Use regxp-opt instead of regexp-quote.
+	(bbdb-message-clean-name-default): Re-arrange clean-up steps.  Use
+	substring-no-properties.
+
 2013-01-20  Roland Winkler  <winkler@gnu.org>
 	* aclocal.m4: Do not throw an error if tex_dir does not exist.
 

@@ -893,11 +893,12 @@ For use as an element of `bbdb-notice-mail-hook'."
   (if mail
       (if (functionp bbdb-canonicalize-mail-function)
           (funcall bbdb-canonicalize-mail-function mail)
-        mail)))
+        ;; Minimalistic clean-up
+        (bbdb-string-trim mail))))
 
 (defcustom bbdb-canonical-hosts
   ;; Example
-  (mapconcat 'regexp-quote '("cs.cmu.edu" "ri.cmu.edu") "\\|")
+  (regexp-opt '("cs.cmu.edu" "ri.cmu.edu"))
   "Regexp matching the canonical part of the domain part of a mail address.
 If the domain part of a mail address matches this regexp, the domain
 is replaced by the substring that actually matched this address.
@@ -914,6 +915,7 @@ Used by  `bbdb-canonicalize-mail-1'"
 ;;;###autoload
 (defun bbdb-canonicalize-mail-1 (address)
   "Example of `bbdb-canonicalize-mail-function'."
+  (setq address (bbdb-string-trim address))
   (cond
    ;;
    ;; rewrite mail-drop hosts.
@@ -1023,30 +1025,36 @@ This strips garbage from the user full NAME string."
   ;; Remove leading non-alpha chars
   (if (string-match "\\`[^[:alpha:]]+" name)
       (setq name (substring name (match-end 0))))
+
+  (if (string-match "^\\([^@]+\\)@" name)
+      ;; The name is really a mail address and we use the part preceeding "@".
+      ;; Everything following "@" is ignored.
+      (setq name (match-string 1 name)))
+
+  ;; Replace "firstname.surname" by "firstname surname".
+  ;; Do not replace ". " with " " because that could be an initial.
+  (setq name (replace-regexp-in-string "\\.\\([^ ]\\)" " \\1" name))
+
+  ;; Replace tabs, spaces, and underscores with a single space.
+  (setq name (replace-regexp-in-string "[ \t\n_]+" " " name))
+
+  ;; Remove trailing comments separated by "(" or " [-#]"
+  ;; This does not work all the time because some of our friends in
+  ;; northern europe have brackets in their names...
+  (if (string-match "[^ \t]\\([ \t]*\\((\\| [-#]\\)\\)" name)
+      (setq name (substring name 0 (match-beginning 1))))
+
+  ;; Remove phone extensions (like "x1234" and "ext. 1234")
+  (let ((case-fold-search t))
+    (setq name (replace-regexp-in-string
+                "\\W+\\(x\\|ext\\.?\\)\\W*[-0-9]+" "" name)))
+
   ;; Remove trailing non-alpha chars
   (if (string-match "[^[:alpha:]]+\\'" name)
       (setq name (substring name 0 (match-beginning 0))))
 
-  (if (string-match "^[^@]+" name)
-      ;; The name is really a mail address and we use the part preceeding "@".
-      ;; Replace "firstname.surname" by "firstname surname".
-      ;; Do not replace ". " with " " because that could be an initial.
-      (setq name (replace-regexp-in-string "[._]\\([^ ]\\)" " \\1"
-                                           (match-string 0 name)))
-
-    ;; Replace tabs, spaces, and underscores with a single space.
-    (setq name (replace-regexp-in-string "[ \t\n_]+" " " name))
-    ;; Remove phone extensions (like "x1234" and "ext. 1234")
-    ;; This does not work all the time because some of our friends in
-    ;; northern europe have brackets in their names...
-    (let ((case-fold-search t))
-      (setq name (replace-regexp-in-string
-                  "\\W+\\(x\\|ext\\.?\\)\\W*[-0-9]+" "" name)))
-    ;; Remove trailing parenthesized comments
-    (when (string-match "[^ \t]\\([ \t]*\\((\\| -\\| #\\)\\)" name)
-      (setq name (substring name 0 (match-beginning 1)))))
-
-  name)
+  ;; Remove text properties
+  (substring-no-properties name))
 
 ;;; Mark BBDB records in the MUA summary buffer
 

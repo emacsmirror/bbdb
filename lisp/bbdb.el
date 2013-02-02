@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/01/13 22:41:36 $"
+(defconst bbdb-version-date "$Date: 2013/02/02 05:25:13 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -604,6 +604,16 @@ Case is ignored."
   :group 'bbdb-record-edit
   :type '(repeat string))
 
+(defcustom bbdb-lastname-re
+  (concat "[- \t]*\\(\\(?:\\<"
+          (regexp-opt bbdb-lastname-prefixes)
+          ;; multiple last names concatenated by `-'
+          "\\>[- \t]+\\)?\\(?:\\w+[ \t]*-[ \t]*\\)*\\w+\\)\\'")
+  "Regexp matching the last name of a full name.
+Its first parenthetical subexpression becomes the last name."
+  :group 'bbdb-record-edit
+  :type 'regexp)
+
 (defcustom bbdb-lastname-suffixes
  '("Jr" "Sr" "II" "III")
   "List of lastname suffixes recognized in name fields.
@@ -611,6 +621,16 @@ Used to dividing name strings into firstname and lastname parts.
 All suffixes are complemented by optional `.'.  Case is ignored."
   :group 'bbdb-record-edit
   :type '(repeat string))
+
+(defcustom bbdb-lastname-suffix-re
+  (concat "[-,. \t/\\]+\\("
+          (regexp-opt bbdb-lastname-suffixes)
+          ;; suffices are complemented by optional `.'.
+          "\\.?\\)\\W*\\'")
+  "Regexp matching the suffix of a last name.
+Its first parenthetical subexpression becomes the suffix."
+  :group 'bbdb-record-edit
+  :type 'regexp)
 
 (defcustom bbdb-default-domain nil
   "Default domain to append when prompting for a new mail address.
@@ -1322,7 +1342,7 @@ Currently no other MUAs support this BBDB feature."
 
 
 ;;; Sending mail
-(defcustom bbdb-mail-user-agent nil
+(defcustom bbdb-mail-user-agent mail-user-agent
   "Mail user agent used by BBDB.
 Allowed values are those allowed for `mail-user-agent'."
   :group 'bbdb-sendmail
@@ -1484,6 +1504,9 @@ to make the call."
   "Face used for BBDB names."
   :group 'bbdb-faces)
 
+;; KEY needs to match the value of the xfield name-face, which is a string.
+;; To avoid confusion, we make KEY a string, too, though symbols might be
+;; faster.
 (defcustom bbdb-name-face-alist nil
   "Alist used for font-locking the name of a record.
 Each element should be a cons cell (KEY . FACE) with string KEY and face FACE.
@@ -2554,26 +2577,22 @@ Otherwise use `bbdb-concat'.  Return nil if we have nothing to merge."
 Case is ignored.  Return name as (FIRST . LAST).
 LAST is always a string (possibly empty).  FIRST may be nil."
   (let ((case-fold-search t)
-        first last suffix)
-    ;; FIXME: This could be smarter with names of the form "Last, First"
-    (if (string-match (concat "[-,. \t/\\]+\\("
-                              (regexp-opt bbdb-lastname-suffixes)
-                              ;; suffices are complemented by optional `.'.
-                              "\\.?\\)\\W*\\'")
-                      string)
+        first suffix)
+    ;; Separate a suffix.
+    (if (string-match bbdb-lastname-suffix-re string)
         (setq suffix (concat " " (match-string 1 string))
               string (substring string 0 (match-beginning 0))))
-    (if (string-match (concat "[- \t]*\\(\\(?:\\<"
-                              (regexp-opt bbdb-lastname-prefixes)
-                              ;; multiple last names concatenated by `-'
-                              "[- \t]+\\)?\\(?:\\w+[ \t]*-[ \t]*\\)*\\w+\\)\\'")
-                      string)
-        (progn
-          (setq last (match-string 1 string))
-          (unless (zerop (match-beginning 0))
-            (setq first (substring string 0 (match-beginning 0)))))
-      (setq last (bbdb-string-trim string))) ; strange case
-    (cons first (concat last suffix))))
+    (cond ((string-match "\\`\\(.+\\),[ \t\n]*\\(.+\\)\\'" string)
+           ;; If STRING contains a comma, this probably means that STRING
+           ;; is of the form "Last, First".
+           (setq first (match-string 2 string)
+                 string (match-string 1 string)))
+          ((string-match bbdb-lastname-re string)
+           (setq first (and (not (zerop (match-beginning 0)))
+                            (substring string 0 (match-beginning 0)))
+                 string (match-string 1 string))))
+    (cons (and first (bbdb-string-trim first))
+          (bbdb-string-trim (concat string suffix)))))
 
 (defun bbdb-parse-postcode (string)
   "Check whether STRING is a legal postcode.
