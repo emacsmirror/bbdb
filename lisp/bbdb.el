@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/02/02 05:25:13 $"
+(defconst bbdb-version-date "$Date: 2013/02/05 15:20:56 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -1614,7 +1614,8 @@ and its elements are (RECORD DISPLAY-FORMAT MARKER-POS).")
 (make-variable-buffer-local 'bbdb-records)
 
 (defvar bbdb-changed-records nil
-  "List of records that has been changed since BBDB was last saved.")
+  "List of records that has been changed since BBDB was last saved.
+Use `bbdb-search-changed' to display these records.")
 
 (defvar bbdb-end-marker nil
   "Marker holding the buffer position of the end of the last record.")
@@ -1624,7 +1625,7 @@ and its elements are (RECORD DISPLAY-FORMAT MARKER-POS).")
 (defvar bbdb-hashtable (make-vector 127 0)
   "Hash table for BBDB records.
 Hashes the fields first-last-name, last-first-name, organization, aka,
-and mail.")
+and mail.  In elisp lingo, this is really an obarray.")
 
 (defvar bbdb-xfield-label-list nil
   "List of labels for xfields.")
