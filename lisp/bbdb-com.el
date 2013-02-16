@@ -1639,7 +1639,8 @@ The primary mail of each of the records currently listed in the
                            (mapcar (lambda (x)
                                      (if (bbdb-record-mail (car x))
                                          (bbdb-dwim-mail (car x))))
-                                   bbdb-records)))))
+                                   bbdb-records))))
+        (case-fold-search t))
     (goto-char (point-min))
     (if (re-search-forward "^CC:[ \t]*" nil t)
         ;; We have a CC field. Move to the end of it, inserting a comma

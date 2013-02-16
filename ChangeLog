@@ -1,3 +1,6 @@
+2013-02-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-mail-yank): Bind case-fold-search to t.
+
 2013-02-15  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-delete-field-or-record): Handle multiple
 	records.
