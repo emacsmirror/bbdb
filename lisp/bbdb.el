@@ -2976,22 +2976,23 @@ about updating the name hash-table.  If NEW is t treat RECORD as new."
 With REMHASH non-nil, also remove RECORD from the hash table."
   (unless (bbdb-record-marker record) (error "BBDB: marker absent"))
   (bbdb-with-db-buffer
-    (let ((tail (memq record bbdb-records)))
+    (let ((tail (memq record bbdb-records))
+          (inhibit-quit t))
       (unless tail (error "BBDB record absent: %s" record))
       (delete-region (bbdb-record-marker record)
                      (if (cdr tail)
                          (bbdb-record-marker (car (cdr tail)))
-                       bbdb-end-marker)))
-    (setq bbdb-records (delq record bbdb-records))
-    (when remhash
-      (bbdb-remhash (bbdb-record-name record) record)
-      (bbdb-remhash (bbdb-record-name-lf record) record)
-      (dolist (organization (bbdb-record-organization record))
-        (bbdb-remhash organization record))
-      (dolist (mail (bbdb-record-mail-canon record))
-        (bbdb-remhash mail record))
-      (dolist (aka (bbdb-record-field record 'aka-all))
-        (bbdb-remhash aka record)))
+                       bbdb-end-marker))
+      (setq bbdb-records (delq record bbdb-records))
+      (when remhash
+        (bbdb-remhash (bbdb-record-name record) record)
+        (bbdb-remhash (bbdb-record-name-lf record) record)
+        (dolist (organization (bbdb-record-organization record))
+          (bbdb-remhash organization record))
+        (dolist (mail (bbdb-record-mail-canon record))
+          (bbdb-remhash mail record))
+        (dolist (aka (bbdb-record-field record 'aka-all))
+          (bbdb-remhash aka record))))
     (bbdb-record-set-sortkey record nil)))
 
 ;; inspired by `gnus-bind-print-variables'
@@ -3039,7 +3040,8 @@ that calls the hooks, too."
     ;; written to the file.)  After writing, put the cache back and update
     ;; the cache's marker.
     (let ((cache (bbdb-record-cache record))
-          (point (point)))
+          (point (point))
+          (inhibit-quit t))
       (bbdb-debug
         (if (= point (point-min))
             (error "Inserting at point-min (%s)" point))
@@ -3060,7 +3062,8 @@ that calls the hooks, too."
   (bbdb-with-db-buffer
     (let* ((tail (memq record bbdb-records))
            (_ (unless tail (error "BBDB record absent: %s" record)))
-           (cache (bbdb-record-cache record)))
+           (cache (bbdb-record-cache record))
+           (inhibit-quit t))
       (bbdb-debug
         (if (<= (bbdb-cache-marker cache) (point-min))
             (error "Cache marker is %s" (bbdb-cache-marker cache))))

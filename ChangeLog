@@ -1,4 +1,9 @@
 2013-02-15  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-delete-record-internal)
+	(bbdb-insert-record-internal, bbdb-overwrite-record-internal): Use
+	inhibit-quit.
+
+2013-02-15  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-changed-records, bbdb-hashtable): Doc fix.
 
 2013-02-15  Roland Winkler  <winkler@gnu.org>
