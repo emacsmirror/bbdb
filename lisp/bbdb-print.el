@@ -281,6 +281,27 @@ Each element may take the same values as in `bbdb-address-format-list'.
 The EDIT elements of `bbdb-address-format-list' are ignored."
   :group 'bbdb-utilities-print)
 
+(defcustom bbdb-print-name-format 'first-last
+  "Format for names when printing BBDB.
+If first-last format names as \"Firstname Lastname\".
+If last-first format names as \"Lastname, Firstname\".
+If `bbdb-print-name' returns the full name as a single, preformatted string,
+this takes precedence over `bbdb-print-name-format'."
+  :group 'bbdb-utilities-print
+  :type '(choice (const :tag "Firstname Lastname" first-last)
+                 (const :tag "Lastname, Firstname" last-first)))
+
+(defcustom bbdb-print-name 'tex-name
+  "Xfield holding the full print name for a record.
+This may also be a function taking one argument, a record.
+If it returns the full print name as a single string, this is used \"as is\".
+If it returns a cons pair (FIRST . LAST) with the first and last name
+for this record, these are formatted obeying `bbdb-print-name-format'.
+In any case, this function should call `bbdb-print-tex-quote' as needed."
+  :group 'bbdb-utilities-print
+  :type '(choice (symbol :tag "xfield")
+                 (function :tag "print name function")))
+
 ;;; Functions:
 
 (defsubst bbdb-print-field-p (field)
@@ -392,9 +413,20 @@ The return value is the new CURRENT-LETTER."
 
   (let ((first-letter
          (substring (concat (bbdb-record-sortkey record) "?") 0 1))
-        (name    (or (bbdb-record-xfield record 'tex-name)
-                     (bbdb-print-tex-quote
-                      (bbdb-record-name record))))
+        (name (cond ((functionp bbdb-print-name)
+                     (let ((value (funcall bbdb-print-name record)))
+                       (cond ((stringp value) value)
+                             ((eq bbdb-print-name-format 'first-last)
+                              (bbdb-concat 'name-first-last
+                                           (car value) (cdr value)))
+                             (t
+                              (bbdb-concat 'name-last-first
+                                           (cdr value) (car value))))))
+                    ((bbdb-record-xfield record bbdb-print-name))
+                    ((eq bbdb-print-name-format 'first-last)
+                     (bbdb-print-tex-quote (bbdb-record-name record)))
+                    (t
+                     (bbdb-print-tex-quote (bbdb-record-name-lf record)))))
         (organization (bbdb-record-organization record))
         (affix   (bbdb-record-affix record))
         (mail    (bbdb-record-mail record))

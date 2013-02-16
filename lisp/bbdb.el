@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/02/05 15:20:56 $"
+(defconst bbdb-version-date "$Date: 2013/02/16 14:37:17 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -1363,6 +1363,27 @@ Allowed values are those allowed for `mail-user-agent'."
                                vm-user-agent)
                 (function :tag "Other")
                 (const :tag "Default" nil)))
+
+(defcustom bbdb-mail-name-format 'first-last
+  "Format for names when sending mail.
+If first-last format names as \"Firstname Lastname\".
+If last-first format names as \"Lastname, Firstname\".
+If `bbdb-mail-name' returns the full name as a single string, this takes
+precedence over `bbdb-mail-name-format'.  Likewise, if the mail address itself
+includes a name, this is not reformatted."
+  :group 'bbdb-sendmail
+  :type '(choice (const :tag "Firstname Lastname" first-last)
+                 (const :tag "Lastname, Firstname" last-first)))
+
+(defcustom bbdb-mail-name 'mail-name
+  "Xfield holding the full name for a record when sending mail.
+This may also be a function taking one argument, a record.
+If it returns the full mail name as a single string, this is used \"as is\".
+If it returns a cons pair (FIRST . LAST) with the first and last name
+for this record, these are formatted obeying `bbdb-mail-name-format'."
+  :group 'bbdb-sendmail
+  :type '(choice (symbol :tag "xfield")
+                 (function :tag "mail name function")))
 
 (defcustom bbdb-mail-alias-field 'mail-alias
   "Xfield holding the mail alias for a record.

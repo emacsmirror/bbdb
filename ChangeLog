@@ -1,4 +1,24 @@
 2013-02-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-mail-name-format, bbdb-mail-name): New
+	user variables.
+	* lisp/bbdb-com.el (bbdb-dwim-mail): Use them.  Always quote the
+	name part of a mail address if necessary.
+	(bbdb-quoted-string-syntax-table): New internal variable.
+	(bbdb-complete-mail): Use it to find starting point for
+	completion.  Before proper cycling, reformat the original mail
+	address to match an element of dwim-completions.  Use
+	completion-ignore-case instead of downcase.  Do not use trimmed
+	pattern.  Issue warning message if attempting to create a
+	*Completions* buffer with GNU Emacs older than 23.2.  Use the
+	default value of completion-list-insert-choice-function to locally
+	bind this variable.
+	(bbdb-complete-mail-cleanup): New arg beg.  Use indent-relative.
+
+	* lisp/bbdb-print.el (bbdb-print-name-format, bbdb-print-name):
+	New user variables.
+	(bbdb-print-record): Use them,
+
+2013-02-16  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-mail-yank): Bind case-fold-search to t.
 
 2013-02-15  Roland Winkler  <winkler@gnu.org>
