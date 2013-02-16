@@ -1,4 +1,8 @@
 2013-02-15  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-delete-field-or-record): Handle multiple
+	records.
+
+2013-02-15  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-delete-record-internal)
 	(bbdb-insert-record-internal, bbdb-overwrite-record-internal): Use
 	inhibit-quit.

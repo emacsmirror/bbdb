@@ -1193,7 +1193,6 @@ irrespective of the value of ARG."
 (defun bbdb-delete-field-or-record (records field &optional noprompt)
   "For RECORDS delete FIELD.
 If FIELD is the `name' field, delete RECORDS from datanbase.
-Only then RECORDS may be more than one record.
 Interactively, use BBDB prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records',
 and FIELD is the field point is on.
@@ -1206,30 +1205,30 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
   (bbdb-editable)
   (unless field (error "Not a field"))
   (setq records (bbdb-record-list records))
-  (let ((type (car field)) (record (car records)))
-    ;; Multiple elements in RECORDS are only meaningful if we delete these
-    ;; records completely (so that the cdr of FIELD is irrelevant).
+  (let* ((type (car field))
+         (type-x (if (eq type 'xfields)
+                     (car (nth 1 field))
+                   type)))
     (if (eq type 'name)
         (bbdb-delete-records records noprompt)
-      (if (cdr records)
-          (error "Cannot delete same field from multiple records"))
       (if (memq type '(firstname lastname))
           (error "Cannot delete field `%s'" type))
-      (when (or noprompt
-                (y-or-n-p (format "delete this %s field (of %s)? "
-                                  type (bbdb-record-name record))))
-        (cond ((memq type '(phone address))
-               (bbdb-record-set-field
-                record type
-                (delq (nth 1 field)
-                      (bbdb-record-field record type))))
-              ((memq type '(affix organization mail aka))
-               (bbdb-record-set-field record type nil))
-              ((eq type 'xfields)
-               (bbdb-record-set-xfield record (car (nth 1 field)) nil))
-              (t (error "Unknown field %s" type)))
-        (bbdb-change-record record)
-        (bbdb-redisplay-record record)))))
+      (dolist (record records)
+        (when (or noprompt
+                  (y-or-n-p (format "delete this `%s' field (of %s)? "
+                                    type-x (bbdb-record-name record))))
+          (cond ((memq type '(phone address))
+                 (bbdb-record-set-field
+                  record type
+                  (delq (nth 1 field)
+                        (bbdb-record-field record type))))
+                ((memq type '(affix organization mail aka))
+                 (bbdb-record-set-field record type nil))
+                ((eq type 'xfields)
+                 (bbdb-record-set-xfield record type-x nil))
+                (t (error "Unknown field %s" type)))
+          (bbdb-change-record record)
+          (bbdb-redisplay-record record))))))
 
 ;;;###autoload
 (defun bbdb-delete-records (records &optional noprompt)
