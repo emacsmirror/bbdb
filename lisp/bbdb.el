@@ -1632,9 +1632,6 @@ and mail.")
 (defvar bbdb-organization-list nil
   "List of organizations known to BBDB.")
 
-(defvar bbdb-modified nil
-  "Non-nil if the database has been modified.")
-
 (defvar bbdb-modeline-info (make-vector 4 nil)
   "Precalculated mode line info for BBDB commands.
 This is a vector [APPEND-M INVERT-M APPEND INVERT].
@@ -2705,8 +2702,7 @@ copy it to `bbdb-file'."
         (add-hook 'after-save-hook hook nil t))
 
       (setq bbdb-end-marker nil
-            bbdb-changed-records nil
-            bbdb-modified nil)
+            bbdb-changed-records nil)
 
       (fillarray bbdb-hashtable 0)
       (setq bbdb-mail-aliases-need-rebuilt 'parse)
@@ -2934,8 +2930,7 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
 
 (defun bbdb-after-save ()
   "Run after saving `bbdb-file' as buffer-local part of `after-save-hook'."
-  (setq bbdb-modified nil
-        bbdb-changed-records nil)
+  (setq bbdb-changed-records nil)
   (dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (if (eq major-mode 'bbdb-mode)
@@ -2996,8 +2991,7 @@ With REMHASH non-nil, also remove RECORD from the hash table."
         (bbdb-remhash mail record))
       (dolist (aka (bbdb-record-field record 'aka-all))
         (bbdb-remhash aka record)))
-    (bbdb-record-set-sortkey record nil)
-    (setq bbdb-modified t)))
+    (bbdb-record-set-sortkey record nil)))
 
 ;; inspired by `gnus-bind-print-variables'
 (defmacro bbdb-with-print-loadably (&rest body)
@@ -3056,7 +3050,6 @@ that calls the hooks, too."
        (bbdb-with-print-loadably (prin1-to-string record)) "\n")
       (set-marker (bbdb-cache-marker cache) point)
       (bbdb-record-set-cache record cache))
-    (setq bbdb-modified t)
     record))
 
 (defun bbdb-overwrite-record-internal (record)
@@ -3091,7 +3084,6 @@ that calls the hooks, too."
                 (bbdb-record-marker record))
             (error "Overwrite failed")))
 
-      (setq bbdb-modified t)
       record)))
 
 ;; Record formatting:
@@ -3816,8 +3808,11 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
                               (bbdb-concat " " (elt bbdb-modeline-info 0)
                                            (elt bbdb-modeline-info 1)))))
         mode-line-modified
-        '(bbdb-read-only (bbdb-modified "%*" "%%")
-                         (bbdb-modified "**" "--")))
+        ;; For the mode-line we want to be fast. So we skip the checks
+        ;; performed by `bbdb-with-db-buffer'.
+        '(:eval (if (buffer-modified-p bbdb-buffer)
+                    (if bbdb-read-only "%*" "**")
+                  (if bbdb-read-only "%%" "--"))))
   ;; `bbdb-revert-buffer' acts on `bbdb-buffer'.  Yet this command is usually
   ;; called from the *BBDB* buffer.
   (set (make-local-variable 'revert-buffer-function)
@@ -4039,7 +4034,6 @@ however, after having used other programs to add records to the BBDB."
             (bbdb-with-print-loadably (prin1 record buf))
             (bbdb-record-set-cache record cache)
             (insert ?\n)))
-        (setq bbdb-modified t)
         (message "BBDB was mis-sorted; fixing...done")))))
 
 

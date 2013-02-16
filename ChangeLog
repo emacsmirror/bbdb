@@ -1,8 +1,14 @@
+2013-02-15  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-modified): Removed.
+	(bbdb-buffer, bbdb-after-save, bbdb-delete-record-internal)
+	(bbdb-insert-record-internal, bbdb-overwrite-record-internal)
+	(bbdb-sort-records): Do not set bbdb-modified.
+	(bbdb-mode): Use buffer-modified-p.
+
 2013-02-02  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mail-user-agent): Use non-nil default taken
 	from mail-user-agent.
-	(bbdb-lastname-re, bbdb-lastname-suffix-re): New
-	user variables.
+	(bbdb-lastname-re, bbdb-lastname-suffix-re): New user variables.
 	(bbdb-divide-name): Use them.  Pass first and last name through
 	bbdb-string-trim.
 
