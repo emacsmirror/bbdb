@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/02/16 14:37:17 $"
+(defconst bbdb-version-date "$Date: 2013/04/13 13:39:40 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -2141,7 +2141,9 @@ KEY must be a string or nil.  Empty strings and nil are ignored."
                 (unintern sym bbdb-hashtable)))))))
 
 (defun bbdb-hash-record (record)
-  "Insert RECORD in `bbdb-hashtable'."
+  "Insert RECORD in `bbdb-hashtable'.
+This performs all initializations required for a new record.
+Do not call this for existing records that require updating."
   (bbdb-puthash (bbdb-record-name record) record)
   (bbdb-puthash (bbdb-record-name-lf record) record)
   (dolist (organization (bbdb-record-organization record))
@@ -2993,8 +2995,10 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
 
 (defun bbdb-change-record (record &optional need-to-sort new)
   "Update the database after a change of RECORD.
-NEED-TO-SORT is t when the name has changed.  You still need to worry
-about updating the name hash-table.  If NEW is t treat RECORD as new."
+NEED-TO-SORT is t when the name has changed.
+If NEW is t treat RECORD as new.  New records are hashed.
+If a record is not new, it is the caller's responsibility
+to update the hash-table for RECORD."
   (if bbdb-read-only
       (error "The Insidious Big Brother Database is read-only."))
   (unless bbdb-notice-hook-pending
@@ -3015,11 +3019,12 @@ about updating the name hash-table.  If NEW is t treat RECORD as new."
            ;; We assume it got updated by the caller.
            (bbdb-delete-record-internal record)
            (bbdb-insert-record-internal record)))
+        ;; Mostly we do not rely on NEW to identify new records.
         ((not new)
          (error "Changes are lost."))
-        (t ;; Record is not yet in database, so add it.
+        (t ;; Record is not yet in database (whatever NEW says), so add it.
          (bbdb-insert-record-internal record)
-         (bbdb-hash-record record))) ; to be safe
+         (bbdb-hash-record record)))
   (unless (memq record bbdb-changed-records)
     (push record bbdb-changed-records))
   (run-hook-with-args 'bbdb-after-change-hook record)
