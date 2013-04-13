@@ -130,6 +130,11 @@
   :group 'bbdb-utilities)
 (put 'bbdb-utilities-ispell 'custom-loads '(bbdb-ispell))
 
+(defgroup bbdb-utilities-snarf nil
+  "Customizations for BBDB snarf"
+  :group 'bbdb-utilities)
+(put 'bbdb-utilities-snarf 'custom-loads '(bbdb-snarf))
+
 ;;; Customizable variables
 (defcustom bbdb-file "~/.bbdb"
   "The name of the Insidious Big Brother Database file."

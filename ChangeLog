@@ -1,4 +1,9 @@
 2013-04-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-utilities-snarf): New custom group.
+	* lisp/bbdb-snarf.el: New file.
+	* lisp/Makefile.in, lisp/makefile-temp: Compile it.
+
+2013-04-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-merge-records): Fix docstring.  Merge
 	also affixes.  Do not enforce multi-line layout for display.
 

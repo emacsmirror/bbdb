@@ -51,7 +51,7 @@ PUSHPATH = -eval '(push "./" load-path)'
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
 DEPSRCS=	bbdb-com.el bbdb-print.el bbdb-anniv.el \
-		bbdb-migrate.el \
+		bbdb-migrate.el bbdb-snarf.el \
 		bbdb-mua.el bbdb-message.el bbdb-rmail.el \
 		bbdb-gnus.el bbdb-mhe.el bbdb-vm.el bbdb-sc.el
 
@@ -133,13 +133,16 @@ bbdb-anniv.elc:	bbdb.elc bbdb-anniv.el
 bbdb-ispell.elc:	bbdb.elc bbdb-ispell.el
 	@HUSHMAKE@$(emacs) $(PUSHPATH) \
 		-f batch-byte-compile $(@:.elc=.el)
+bbdb-snarf.elc:	bbdb.elc bbdb-snarf.el
+	@HUSHMAKE@$(emacs) $(PUSHPATH) \
+		-f batch-byte-compile $(@:.elc=.el)
 
 autoloads: bbdb-loaddefs.el
 
 bbdb:	bbdb-loaddefs.el bbdb.elc bbdb-com.elc bbdb-print.elc \
 	bbdb-anniv.elc bbdb-migrate.elc bbdb-mua.elc \
 	bbdb-message.elc bbdb-rmail.elc bbdb-gnus.elc bbdb-mhe.elc \
-	bbdb-sc.elc bbdb-ispell.elc
+	bbdb-sc.elc bbdb-ispell.elc bbdb-snarf.elc
 vm:	bbdb-vm.elc
 
 install-el: all
