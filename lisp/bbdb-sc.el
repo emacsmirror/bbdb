@@ -35,7 +35,7 @@
 ;;;
 ;;; If the From header in the mail to which you are replying only contains
 ;;; the mail address, the personal name is looked up in BBDB.  The attribution
-;;; is stored under the key `attribution' (unless you have changed
+;;; is stored in the xfield `attribution' (unless you have changed
 ;;; `bbdb/sc-attribution-field').
 
 ;;; To use this code add "sc-consult" to `sc-preferred-attribution-list', e.g.,
@@ -86,7 +86,7 @@ should be asked before creation and NIL if we never create a new record."
         (const "Do not create a new record" nil)))
 
 (defcustom bbdb/sc-attribution-field 'attribution
-  "The BBDB field used for Supercite attribution information."
+  "The BBDB xfield used for Supercite attribution information."
   :group 'bbdb-utilities-supercite
   :type '(symbol :tag "Field name"))
 

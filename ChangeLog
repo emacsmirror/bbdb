@@ -1,4 +1,7 @@
 2013-04-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-sc.el (bbdb/sc-attribution-field): Fix docstring.
+
+2013-04-13  Roland Winkler  <winkler@gnu.org>
 	* tex/Makefile.in: Acknowledge DESTDIR.
 
 2013-02-16  Roland Winkler  <winkler@gnu.org>
