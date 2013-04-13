@@ -1009,10 +1009,10 @@ to `bbdb-address-format-list'."
                                  (bbdb-address-streets address))))
               ((eq elt ?c)
                (aset new-addr 1 (bbdb-read-string
-                              "City: " (bbdb-address-city address))))
+                                 "City: " (bbdb-address-city address))))
               ((eq elt ?S)
                (aset new-addr 2 (bbdb-read-string
-                              "State: " (bbdb-address-state address))))
+                                 "State: " (bbdb-address-state address))))
               ((eq elt ?p)
                (aset new-addr 3
                      (bbdb-error-retry
@@ -1352,8 +1352,9 @@ With prefix N, omit the next N records.  If negative, omit backwards."
 (defun bbdb-merge-records (old-record new-record)
   "Merge OLD-RECORD into NEW-RECORD.
 This copies all the data in OLD-RECORD into NEW-RECORD.  Then OLD-RECORD
-is deleted.  If both records have names and/or organizations, ask which to use.
-Phone numbers, addresses, and mail addresses are simply concatenated.
+is deleted.  If both records have names ask which to use.
+Affixes, organizations, phone numbers, addresses, and mail addresses
+are simply concatenated.
 
 Interactively, OLD-RECORD is the current record.  NEW-RECORD is prompted for.
 With prefix arg NEW-RECORD defaults to the first record with the same name."
@@ -1418,6 +1419,8 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
       (bbdb-record-set-field new-record 'aka old-aka t)))
 
   ;; Merge other stuff
+  (bbdb-record-set-field new-record 'affix
+                         (bbdb-record-affix old-record) t)
   (bbdb-record-set-field new-record 'organization
                          (bbdb-record-organization old-record) t)
   (bbdb-record-set-field new-record 'phone
@@ -1431,13 +1434,11 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
                          (bbdb-record-xfields old-record) t)
 
   (bbdb-delete-records (list old-record) 'noprompt)
-  (bbdb-change-record new-record t t)
-  (let ((bbdb-layout 'multi-line))
-    (if (assq new-record bbdb-records)
-        (bbdb-redisplay-record new-record))
-    (unless bbdb-records             ; nothing displayed, display something.
-      (bbdb-display-records (list new-record))))
-  (message "Records merged."))
+  (bbdb-change-record new-record t)
+  (if (assq new-record bbdb-records)
+      (bbdb-redisplay-record new-record)
+    ;; Append NEW-RECORD to the list of displayed records.
+    (bbdb-display-records (list new-record) nil t)))
 
 ;; The following sorting functions are also intended for use
 ;; in `bbdb-change-hook'.  Then they will be called with one arg, the record.
