@@ -1,4 +1,8 @@
 2013-04-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-format-address-default, bbdb-format-address):
+	Allow city, postcode, state, and country to be nil.
+
+2013-04-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-hash-record, bbdb-change-record): Fix
 	docstring.
 

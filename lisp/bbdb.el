@@ -3189,11 +3189,11 @@ This function is a possible formatting function for
   (let ((country (bbdb-address-country address))
         (streets (bbdb-address-streets address)))
     (concat (if streets
-                (concat (mapconcat 'identity streets "\n") "\n") "")
+                (concat (mapconcat 'identity streets "\n") "\n"))
             (bbdb-concat ", " (bbdb-address-city address)
                          (bbdb-concat " " (bbdb-address-state address)
                                       (bbdb-address-postcode address)))
-            (if (string= "" country) ""
+            (unless (or (not country) (string= "" country))
               (concat "\n" country)))))
 
 (defun bbdb-format-address (address layout)
@@ -3220,20 +3220,20 @@ The formatting rules are defined in `bbdb-address-format-list'."
                  (setq string "")
                  (dolist (form (split-string (substring format 1 -1)
                                              (substring format 0 1) t))
-                   (cond ((string-match "%s" form)
+                   (cond ((string-match "%s" form) ; street
                           (mapc (lambda (s) (setq string (concat string (format form s))))
                                 (bbdb-address-streets address)))
-                         ((string-match "%c" form)
-                          (unless (string= "" (setq str (bbdb-address-city address)))
+                         ((string-match "%c" form) ; city
+                          (unless (or (not (setq str (bbdb-address-city address))) (string= "" str))
                             (setq string (concat string (format (replace-regexp-in-string "%c" "%s" form) str)))))
-                         ((string-match "%p" form)
-                          (unless (string= ""  (setq str (bbdb-address-postcode address)))
+                         ((string-match "%p" form) ; postcode
+                          (unless (or (not (setq str (bbdb-address-postcode address))) (string= "" str))
                             (setq string (concat string (format (replace-regexp-in-string "%p" "%s" form) str)))))
-                         ((string-match "%S" form)
-                          (unless (string= ""  (setq str (bbdb-address-state address)))
+                         ((string-match "%S" form) ; state
+                          (unless (or (not (setq str (bbdb-address-state address))) (string= "" str))
                             (setq string (concat string (format (replace-regexp-in-string "%S" "%s" form t) str)))))
-                         ((string-match "%C" form)
-                          (unless (string= ""  country)
+                         ((string-match "%C" form) ; country
+                          (unless (or (not country) (string= ""  country))
                             (setq string (concat string (format (replace-regexp-in-string "%C" "%s" form t) country)))))
                          (t (error "Malformed address format element %s" form)))))
                 (t (error "Malformed address format %s" format))))))
