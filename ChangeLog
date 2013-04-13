@@ -1,4 +1,10 @@
 2013-04-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-summary-unify)
+	(bbdb-mua-summary-mark): Allow bbdb-mua-summary-mark-field to be a
+	function.
+	* lisp/bbdb.el (bbdb-mua-summary-mark-field): Fix docstring.
+
+2013-04-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-extract-address-components): New function.
 	(bbdb-puthash-mail): Use it.
 	* lisp/bbdb-com.el (bbdb-dwim-mail): Use it.

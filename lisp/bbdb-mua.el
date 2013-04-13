@@ -1093,6 +1093,8 @@ of these MUAs.  Also, the MUA Summary format string must use
     (format "%s%s"
             (cond ((not bbdb-mua-summary-mark) "")
                   ((not record) " ")
+                  ((functionp bbdb-mua-summary-mark-field)
+                   (funcall bbdb-mua-summary-mark-field record))
                   ((bbdb-record-xfield record bbdb-mua-summary-mark-field))
                   (t bbdb-mua-summary-mark))
             (or val name mail address "**UNKNOWN**"))))
@@ -1113,7 +1115,9 @@ if this xfield is in the poster's record, and `bbdb-mua-summary-mark' otherwise.
            (record (and (or name mail)
                         (car (bbdb-message-search name mail)))))
       (if record
-          (or (bbdb-record-xfield record bbdb-mua-summary-mark-field)
+          (or (prog1 (functionp bbdb-mua-summary-mark-field)
+                (funcall bbdb-mua-summary-mark-field record))
+              (bbdb-record-xfield record bbdb-mua-summary-mark-field)
               bbdb-mua-summary-mark)
         " "))))
 

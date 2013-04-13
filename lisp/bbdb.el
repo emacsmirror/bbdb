@@ -1302,7 +1302,8 @@ or if some FIELD of RECORD is empty."
 
 (defcustom bbdb-mua-summary-mark-field 'mark-char
   "BBDB xfield whose value is used to mark message addresses known to BBDB.
-See `bbdb-mua-summary-mark' and `bbdb-mua-summary-unify'.
+This may also be a function, called with one arg, the record, which should
+return the mark.  See `bbdb-mua-summary-mark' and `bbdb-mua-summary-unify'.
 See also `bbdb-mua-summary-mark'."
   :group 'bbdb-mua-gnus
   :type 'symbol)
