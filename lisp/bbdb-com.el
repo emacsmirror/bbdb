@@ -1517,15 +1517,13 @@ If MAIL is nil use the first mail address of RECORD."
                      (car mails)))))
   (unless mail (error "Record has no mail addresses"))
   (let (name fn ln)
-    (cond ((or ;; MAIL already in "foo <bar>" or "bar (foo)" format.
-            (string-match "\\`[ \t]*[^<]+[ \t]*<" mail)
-            (string-match "\\`[ \t]*[^(]+[ \t]*(" mail))
-           ;; We need to know whether we should quote the name part of MAIL
-           ;; because of special characters.
-           (let ((address (mail-extract-address-components mail)))
-             (setq mail (cadr address)
-                   name (car address)
-                   ln name)))
+    (cond ((let ((address (bbdb-extract-address-components mail)))
+             ;; We need to know whether we should quote the name part of MAIL
+             ;; because of special characters.
+             (if (car address)
+                 (setq mail (cadr address)
+                       name (car address)
+                       ln name))))
           ((functionp bbdb-mail-name)
            (setq name (funcall bbdb-mail-name record))
            (if (consp name)

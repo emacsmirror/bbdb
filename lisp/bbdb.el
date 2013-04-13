@@ -1961,6 +1961,42 @@ Used with return values of `bbdb-add-job'."
       (and (eq spec 'query)
            (or bbdb-silent (y-or-n-p prompt)))))
 
+;; Inspired by `gnus-extract-address-components' from gnus-utils.
+(defun bbdb-extract-address-components (mail)
+  "Given an RFC-822 address MAIL, extract full name and canonical address.
+Return a list of the form (FULL-NAME CANONICAL-ADDRESS).
+If no name can be extracted, FULL-NAME will be nil.
+
+For an address `<Joe_Smith@foo.com>' the more sophisticated function
+`mail-extract-address-components' returns the name \"Joe Smith\".
+This is useful when analyzing the headers of email messages we receive
+from the outside world.  Yet when analyzing the mail addresses stored
+in BBDB, this pollutes the mail-aka space.  So we define here
+an intentionally much simpler function for extracting the names
+and canonical addresses in the mail field of BBDB records."
+  (let (name address)
+    ;; First find the address - the thing with the @ in it.
+    (cond (;; Check `<foo@bar>' first in order to handle the quite common
+	   ;; form `"abc@xyz" <foo@bar>' (i.e. `@' as part of a comment)
+	   ;; correctly.
+	   (string-match "<\\([^@ \t<>]+[!@][^@ \t<>]+\\)>" mail)
+	   (setq address (match-string 1 mail)))
+	  ((string-match "\\b[^@ \t<>]+[!@][^@ \t<>]+\\b" mail)
+	   (setq address (match-string 0 mail))))
+    ;; Then check whether the `name <address>' format is used.
+    (and address
+	 ;; Linear white space is not required.
+	 (string-match (concat "[ \t]*<" (regexp-quote address) ">") mail)
+	 (setq name (substring mail 0 (match-beginning 0)))
+         ;; Strip any quotes mail the name.
+         (string-match "^\".*\"$" name)
+         (setq name (substring name 1 (1- (match-end 0)))))
+    ;; If not, then check whether the `address (name)' format is used.
+    (or name
+	(and (string-match "(\\([^)]+\\))" mail)
+	     (setq name (match-string 1 mail))))
+    (list (if (equal name "") nil name) (or address mail))))
+
 ;; BBDB data structure
 (defmacro bbdb-defstruct (name &rest elts)
   "Define two functions to operate on vector NAME for each symbol ELT in ELTS.
@@ -2117,11 +2153,7 @@ KEY must be a string or nil.  Empty strings and nil are ignored."
   "For RECORD put mail into `bbdb-hashtable'."
   (let (mail-aka mail-canon address)
     (dolist (mail (bbdb-record-mail record))
-      (setq address (mail-extract-address-components mail))
-      ;; For an address <Joe_Smith@foo.com> this returns
-      ;; the name "Joe Smith".  Thus if <Joe_Smith@foo.com>
-      ;; is a mail address in the record of "John Smith"
-      ;; we get the mail-aka "Joe Smith".  Bother?
+      (setq address (bbdb-extract-address-components mail))
       (when (car address)
         (push (car address) mail-aka)
         (bbdb-puthash (car address) record))

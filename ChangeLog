@@ -1,4 +1,9 @@
 2013-04-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-extract-address-components): New function.
+	(bbdb-puthash-mail): Use it.
+	* lisp/bbdb-com.el (bbdb-dwim-mail): Use it.
+
+2013-04-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-complete-mail): Simplify. Do not throw
 	error messages that prevent other completion functions to take
 	over.
