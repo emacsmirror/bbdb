@@ -1,4 +1,13 @@
 2013-04-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-vm.el (bbdb/vm-auto-folder-field)
+	(bbdb/vm-virtual-folder-field, bbdb/vm-auto-folder)
+	(bbdb/vm-auto-add-label-list, bbdb/vm-auto-add-label-field): Fix
+	docstring.
+	(bbdb/vm-virtual-folder): Check more carefully whether
+	vm-virtual-folder-alist contains already what we want to add. Fix
+	docstring.
+
+2013-04-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-sc.el (bbdb/sc-attribution-field): Fix docstring.
 
 2013-04-13  Roland Winkler  <winkler@gnu.org>

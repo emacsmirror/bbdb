@@ -127,13 +127,13 @@ The order in this list is the order how matching will be performed."
 
 ;;;###autoload
 (defcustom bbdb/vm-auto-folder-field 'vm-folder
-  "The field which `bbdb/vm-auto-folder' searches for."
+  "The xfield which `bbdb/vm-auto-folder' searches for."
   :group 'bbdb-mua-vm
   :type 'symbol)
 
 ;;;###autoload
 (defcustom bbdb/vm-virtual-folder-field 'vm-virtual
-  "The field which `bbdb/vm-virtual-folder' searches for."
+  "The xfield which `bbdb/vm-virtual-folder' searches for."
   :group 'bbdb-mua-vm
   :type 'symbol)
 
@@ -147,17 +147,17 @@ If nil use `vm-primary-inbox'."
 ;;;###autoload
 (defun bbdb/vm-auto-folder ()
   "Add entries to `vm-auto-folder-alist' for the records in BBDB.
-For each record that has a `vm-folder' attribute, add an element
+For each record that has a `vm-folder' xfield, add an element
 \(MAIL-REGEXP . FOLDER-NAME) to `vm-auto-folder-alist'.
 The element gets added to the sublists of `vm-auto-folder-alist'
 specified in `bbdb/vm-auto-folder-headers'.
 MAIL-REGEXP matches the mail addresses of the BBDB record.
-The value of the `vm-folder' attribute becomes FOLDER-NAME.
-The `vm-folder' attribute is defined via `bbdb/vm-auto-folder-field'.
+The value of the `vm-folder' xfield becomes FOLDER-NAME.
+The `vm-folder' xfield is defined via `bbdb/vm-auto-folder-field'.
 
 Add this function to `bbdb-before-save-hook' and your .vm."
   (interactive)
-  (let ((records ; Collect BBDB records with a vm-folder attribute.
+  (let ((records ; Collect BBDB records with a vm-folder xfield.
           (delq nil
                 (mapcar (lambda (r)
                           (if (bbdb-record-xfield r bbdb/vm-auto-folder-field)
@@ -196,47 +196,49 @@ Add this function to `bbdb-before-save-hook' and your .vm."
 ;;;###autoload
 (defun bbdb/vm-virtual-folder ()
   "Create `vm-virtual-folder-alist' according to the records in BBDB.
-For each record that has a `vm-virtual' attribute, add or modify the
+For each record that has a `vm-virtual' xfield, add or modify the
 corresponding VIRTUAL-FOLDER-NAME element of `vm-virtual-folder-alist'.
 
   (VIRTUAL-FOLDER-NAME ((FOLDER-NAME ...)
                         (author-or-recipient MAIL-REGEXP)))
 
-VIRTUAL-FOLDER-NAME is the first element of the `vm-virtual' attribute.
-FOLDER-NAME ... are either the remaining attributes of vm-virtual,
+VIRTUAL-FOLDER-NAME is the first element of the `vm-virtual' xfield.
+FOLDER-NAME ... are either the remaining elements of the `vm-virtual' xfield,
 or `bbdb/vm-virtual-real-folders' or `vm-primary-inbox'.
 MAIL-REGEXP matches the mail addresses of the BBDB record.
-The `vm-virtual' attribute is defined via `bbdb/vm-virtual-folder-field'.
+The `vm-virtual' xfield is defined via `bbdb/vm-virtual-folder-field'.
 
 Add this function to `bbdb-before-save-hook' and your .vm."
   (interactive)
-  (let (real-folders mail-regexp folder val selector)
+  (let (real-folders mail-regexp folder val tmp)
     (dolist (record (bbdb-records))
-      (when (setq val (bbdb-record-xfield-split record bbdb/vm-virtual-folder-field))
+      (when (setq val (bbdb-record-xfield-split
+                       record bbdb/vm-virtual-folder-field))
         (setq mail-regexp (regexp-opt (bbdb-record-mail record)))
         (unless (string= "" mail-regexp)
           (setq folder (car val)
                 real-folders (mapcar
-                              (lambda (f) (if (file-name-absolute-p f) f
-                                            (abbreviate-file-name
-                                             (expand-file-name f vm-folder-directory))))
-                              (or (cdr val) bbdb/vm-virtual-real-folders (list vm-primary-inbox)))
-                selector (assoc 'author-or-recipient
-                                (assoc real-folders
-                                       ;; Either extend the definition of an already defined
-                                       ;; virtual folder...
-                                       (or (assoc folder vm-virtual-folder-alist)
-                                           (car ; ...or define a new one.
-                                            (push (list folder
-                                                        (list real-folders
-                                                              (list 'author-or-recipient)))
-                                                  vm-virtual-folder-alist))))))
-          (if (cdr selector)
-              (unless (string-match (regexp-quote mail-regexp)
-                                    (cadr selector))
-                (setcdr selector (list (concat (cadr selector) "\\|"
-                                               mail-regexp))))
-            (nconc selector (list mail-regexp))))))))
+                              (lambda (f)
+                                (if (file-name-absolute-p f) f
+                                  (abbreviate-file-name
+                                   (expand-file-name f vm-folder-directory))))
+                              (or (cdr val) bbdb/vm-virtual-real-folders
+                                  (list vm-primary-inbox)))
+                ;; Either extend the definition of an already defined
+                ;; virtual folder or define a new virtual folder
+                tmp (or (assoc folder vm-virtual-folder-alist)
+                        (car (push (list folder) vm-virtual-folder-alist)))
+                tmp (or (assoc real-folders (cdr tmp))
+                        (car (setcdr tmp (cons (list real-folders)
+                                               (cdr tmp)))))
+                tmp (or (assoc 'author-or-recipient (cdr tmp))
+                        (car (setcdr tmp (cons (list 'author-or-recipient)
+                                               (cdr tmp))))))
+          (cond ((not (cdr tmp))
+                 (setcdr tmp (list mail-regexp)))
+                ((not (string-match (regexp-quote mail-regexp)
+                                    (cadr tmp)))
+                 (setcdr tmp (list (concat (cadr tmp) "\\|" mail-regexp))))))))))
 
 
 ;; RW: Adding custom labels to VM messages allows one to create,
@@ -252,16 +254,16 @@ Add this function to `bbdb-before-save-hook' and your .vm."
 ;;; Howard Melman, contributed Jun 16 2000
 (defcustom bbdb/vm-auto-add-label-list nil
   "List used by `bbdb/vm-auto-add-label' to automatically label VM messages.
-Its elements may be strings used both as the field value to check for
+Its elements may be strings used both as the xfield value to check for
 and as the label to apply to the message.
-If an element is a cons pair (VALUE . LABEL), VALUE is the field value
+If an element is a cons pair (VALUE . LABEL), VALUE is the xfield value
 to search for and LABEL is the label to apply."
   :group 'bbdb-mua-vm
   :type 'list)
 
 (defcustom bbdb/vm-auto-add-label-field bbdb-mail-alias-field
-  "Fields used by `bbdb/vm-auto-add-label' to automatically label messages.
-This is either a single BBDB field or a list of fields that
+  "Xfields used by `bbdb/vm-auto-add-label' to automatically label messages.
+This is either a single BBDB xfield or a list of xfields that
 `bbdb/vm-auto-add-label' uses to check for labels to apply to a message.
 Defaults to `bbdb-mail-alias-field' which defaults to `mail-alias'."
   :group 'bbdb-mua-vm
