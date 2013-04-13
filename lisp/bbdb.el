@@ -961,7 +961,7 @@ See also `bbdb-new-mails-primary'."
                  (function :tag "Function for analyzing name handling")
                  (regexp :tag "If the new address matches this regexp ignore it.")))
 
-(defcustom bbdb-new-mails-primary nil
+(defcustom bbdb-new-mails-primary 'query
   "Where to put new mail addresses for existing BBDB records.
 A new mail address may either become the new primary mail address,
 when it is put at the beginning of the list of mail addresses.

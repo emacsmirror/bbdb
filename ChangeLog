@@ -1,4 +1,7 @@
 2013-04-13  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-new-mails-primary): Change default to query.
+
+2013-04-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-summary-unify)
 	(bbdb-mua-summary-mark): Allow bbdb-mua-summary-mark-field to be a
 	function.
