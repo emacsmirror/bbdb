@@ -27,7 +27,7 @@ RM   = @RM@
 LN_S = @LN_S@
 
 install-tex:
-	if test "x$(tex_dir)" != "x"; then		\
+	if test "x$(tex_dir)" != "x$(DESTDIR)"; then		\
 	    $(INSTALL) -d -m 0755 "$(tex_dir)/";	\
 	    for tex in *.tex; do			\
 	        echo "Install $$tex in $(tex_dir)/";	\
