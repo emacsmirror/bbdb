@@ -1,3 +1,7 @@
+2013-04-21  Leo Liu  <sdl.web@gmail.com>
+	* lisp/bbdb-mua.el (bbdb-mua-summary-mark): Do not call
+	bbdb-mua-summary-mark-field as a function if it is not a function.
+
 2013-04-13  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-utilities-snarf): New custom group.
 	* lisp/bbdb-snarf.el: New file.

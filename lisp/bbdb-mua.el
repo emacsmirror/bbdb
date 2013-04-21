@@ -1115,8 +1115,9 @@ if this xfield is in the poster's record, and `bbdb-mua-summary-mark' otherwise.
            (record (and (or name mail)
                         (car (bbdb-message-search name mail)))))
       (if record
-          (or (prog1 (functionp bbdb-mua-summary-mark-field)
-                (funcall bbdb-mua-summary-mark-field record))
+          (or (when (functionp bbdb-mua-summary-mark-field)
+                (funcall bbdb-mua-summary-mark-field record)
+                t)
               (bbdb-record-xfield record bbdb-mua-summary-mark-field)
               bbdb-mua-summary-mark)
         " "))))
