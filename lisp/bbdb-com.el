@@ -597,22 +597,23 @@ NAME may match FIRST_LAST, LAST_FIRST or AKA.
 This function performs a fast search using `bbdb-hashtable'.
 NAME and MAIL must be strings or nil.
 See `bbdb-search' for searching records with regexps."
-  (bbdb-buffer)  ; make sure database is loaded and up-to-date
-  (let ((mrecords (if mail (bbdb-gethash mail '(mail))))
-        (nrecords (if name (bbdb-gethash name '(fl-name lf-name aka)))))
-    ;; (1) records matching NAME and MAIL
-    (or (and mrecords nrecords
-             (let (records)
-               (dolist (record nrecords)
-                 (mapc (lambda (mr) (if (and (eq record mr)
-                                             (not (memq record records)))
-                                        (push record records)))
-                       mrecords))
-               records))
-        ;; (2) records matching MAIL
-        mrecords
-        ;; (3) records matching NAME
-        nrecords)))
+  (when (or name mail)
+    (bbdb-buffer)  ; make sure database is loaded and up-to-date
+    (let ((mrecords (if mail (bbdb-gethash mail '(mail))))
+          (nrecords (if name (bbdb-gethash name '(fl-name lf-name aka)))))
+      ;; (1) records matching NAME and MAIL
+      (or (and mrecords nrecords
+               (let (records)
+                 (dolist (record nrecords)
+                   (mapc (lambda (mr) (if (and (eq record mr)
+                                               (not (memq record records)))
+                                          (push record records)))
+                         mrecords))
+                 records))
+          ;; (2) records matching MAIL
+          mrecords
+          ;; (3) records matching NAME
+          nrecords))))
 
 (defun bbdb-read-record (&optional first-and-last)
   "Prompt for and return a new BBDB record.
@@ -1518,7 +1519,7 @@ If MAIL is nil use the first mail address of RECORD."
                      (car mails)))))
   (unless mail (error "Record has no mail addresses"))
   (let (name fn ln)
-    (cond ((let ((address (bbdb-extract-address-components mail)))
+    (cond ((let ((address (bbdb-decompose-bbdb-address mail)))
              ;; We need to know whether we should quote the name part of MAIL
              ;; because of special characters.
              (if (car address)
@@ -1976,10 +1977,9 @@ as part of the MUA insinuation."
     ;; Therefore cycling may consider different records than completion.
     (when (and (not done) bbdb-complete-mail-allow-cycling)
       ;; find the record we are working on.
-      (let* ((address (mail-extract-address-components orig))
-             (record (and (listp address)
-                          (car (bbdb-message-search (nth 0 address)
-                                                    (nth 1 address))))))
+      (let* ((address (bbdb-extract-address-components orig))
+             (record (car (bbdb-message-search
+                           (car address) (cadr address)))))
         (if (and record
                  (setq dwim-completions
                        (mapcar (lambda (m) (bbdb-dwim-mail record m))
@@ -2075,7 +2075,7 @@ If we are past `fill-column', wrap at the previous comma."
           (if (looking-at "[ \t\n]+")
               (delete-region (point) (match-end 0))))))
   (if (or bbdb-completion-display-record bbdb-complete-mail-hook)
-      (let* ((address (mail-extract-address-components mail))
+      (let* ((address (bbdb-extract-address-components mail))
              (records (bbdb-message-search (car address) (nth 1 address))))
         ;; Update the *BBDB* buffer if desired.
         (if bbdb-completion-display-record

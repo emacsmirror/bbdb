@@ -94,24 +94,28 @@ Allowed values are:
 ;; have your VM summary buffers display BBDB's idea of the sender's full
 ;; name instead of the name (or lack thereof) in the message itself.
 
-(defun vm-summary-function-B (m &optional to-p)
+;; RW: this is a VM-specific version of `bbdb-mua-summary-unify'
+;; which respects `vm-summary-uninteresting-senders'.
+
+(defun vm-summary-function-B (m)
   "For VM message M return the BBDB name of the sender.
-Respects `vm-summary-uninteresting-senders'."
-  (if (and vm-summary-uninteresting-senders (not to-p))
-      (let (case-fold-search)
-        (if (string-match vm-summary-uninteresting-senders (vm-su-from m))
+Respect `vm-summary-uninteresting-senders'."
+  (if vm-summary-uninteresting-senders
+        (if (let ((case-fold-search t))
+              (string-match vm-summary-uninteresting-senders (vm-su-from m)))
             (concat vm-summary-uninteresting-senders-arrow
-                    (vm-summary-function-B m t))
+                    (or (bbdb/vm-alternate-full-name (vm-su-to m))
+                        (vm-decode-mime-encoded-words-in-string
+                         (vm-su-to-names m))))
           (or (bbdb/vm-alternate-full-name (vm-su-from m))
-              (vm-su-full-name m))))
-    (or (bbdb/vm-alternate-full-name (if to-p (vm-su-to m) (vm-su-from m)))
-        (vm-decode-mime-encoded-words-in-string
-         (if to-p (vm-su-to-names m) (vm-su-full-name m))))))
+              (vm-su-full-name m)))
+    (or (bbdb/vm-alternate-full-name (vm-su-from m))
+        (vm-decode-mime-encoded-words-in-string (vm-su-full-name m)))))
 
 (defun bbdb/vm-alternate-full-name (address)
   (if address
-      (let ((record (car (bbdb-message-search
-                          nil (bbdb-canonicalize-mail address)))))
+      (let* ((data (bbdb-extract-address-components address))
+             (record (car (bbdb-message-search (car data) (cadr data)))))
         (if record
             (or (bbdb-record-xfield record 'mail-name)
                 (bbdb-record-name record))))))

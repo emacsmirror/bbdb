@@ -1,3 +1,34 @@
+2013-05-26  Roland Winkler  <winkler@gnu.org>
+	Use new function bbdb-extract-address-components which honors
+	bbdb-message-clean-name-function and
+	bbdb-canonicalize-mail-function.
+
+	* lisp/bbdb.el (bbdb-clean-address-components)
+	(bbdb-extract-address-components): New functions.
+	(bbdb-decompose-bbdb-address): Renamed from
+	bbdb-extract-address-components.
+	(bbdb-puthash-mail): Use it.
+
+	* lisp/bbdb-com.el (bbdb-message-search): Do nothing if both args
+	are nil.
+	(bbdb-complete-mail, bbdb-complete-mail-cleanup): Use
+	bbdb-extract-address-components.
+
+	* lisp/bbdb-mua.el (bbdb-get-address-components)
+	(bbdb-mua-summary-unify, bbdb-mua-summary-mark): Use
+	bbdb-extract-address-components.
+	(bbdb-canonicalize-mail): Remove.
+
+	* lisp/bbdb-snarf.el (bbdb-snarf-name-mail)
+	(bbdb-snarf-mail-address): Use bbdb-extract-address-components.
+
+	* lisp/bbdb-sc.el (bbdb/sc-consult-attr, bbdb/sc-default): Use
+	bbdb-extract-address-components.
+
+	* lisp/bbdb-vm.el (vm-summary-function-B): Simplify.
+	(bbdb/vm-alternate-full-name): Use
+	bbdb-extract-address-components.
+
 2013-04-21  Leo Liu  <sdl.web@gmail.com>
 	* lisp/bbdb-mua.el (bbdb-mua-summary-mark): Do not call
 	bbdb-mua-summary-mark-field as a function if it is not a function.

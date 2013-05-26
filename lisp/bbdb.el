@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/04/13 13:39:40 $"
+(defconst bbdb-version-date "$Date: 2013/05/15 13:17:58 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -1967,18 +1967,41 @@ Used with return values of `bbdb-add-job'."
       (and (eq spec 'query)
            (or bbdb-silent (y-or-n-p prompt)))))
 
-;; Inspired by `gnus-extract-address-components' from gnus-utils.
-(defun bbdb-extract-address-components (mail)
-  "Given an RFC-822 address MAIL, extract full name and canonical address.
-Return a list of the form (FULL-NAME CANONICAL-ADDRESS).
-If no name can be extracted, FULL-NAME will be nil.
+(defun bbdb-clean-address-components (components)
+  "Clean mail address COMPONENTS.
+COMPONENTS is a list (FULL-NAME CANONICAL-ADDRESS) as returned
+by `mail-extract-address-components'.
+Pass FULL-NAME through `bbdb-message-clean-name-function'
+and CANONICAL-ADDRESS through `bbdb-canonicalize-mail-function'."
+  (list (if (car components)
+            (if bbdb-message-clean-name-function
+                (funcall bbdb-message-clean-name-function (car components))
+              (car components)))
+        (if (cadr components)
+            (if bbdb-canonicalize-mail-function
+                (funcall bbdb-canonicalize-mail-function (cadr components))
+              ;; Minimalistic clean-up
+              (bbdb-string-trim (cadr components))))))
 
-For an address `<Joe_Smith@foo.com>' the more sophisticated function
-`mail-extract-address-components' returns the name \"Joe Smith\".
+(defun bbdb-extract-address-components (address &optional all)
+  "Given an RFC-822 address ADDRESS, extract full name and canonical address.
+This function behaves like `mail-extract-address-components', but it passes
+its return value through `bbdb-clean-address-components'."
+  (if all
+      (mapcar 'bbdb-clean-address-components
+              (mail-extract-address-components address t))
+    (bbdb-clean-address-components (mail-extract-address-components address))))
+
+;; Inspired by `gnus-extract-address-components' from gnus-utils.
+(defun bbdb-decompose-bbdb-address (mail)
+  "Given an RFC-822 address MAIL, extract full name and canonical address.
+In general, this function behaves like the more sophisticated function
+`mail-extract-address-components'.  Yet for an address `<Joe_Smith@foo.com>'
+lacking a real name the latter function returns the name \"Joe Smith\".
 This is useful when analyzing the headers of email messages we receive
 from the outside world.  Yet when analyzing the mail addresses stored
 in BBDB, this pollutes the mail-aka space.  So we define here
-an intentionally much simpler function for extracting the names
+an intentionally much simpler function for decomposing the names
 and canonical addresses in the mail field of BBDB records."
   (let (name address)
     ;; First find the address - the thing with the @ in it.
@@ -2161,7 +2184,7 @@ Do not call this for existing records that require updating."
   "For RECORD put mail into `bbdb-hashtable'."
   (let (mail-aka mail-canon address)
     (dolist (mail (bbdb-record-mail record))
-      (setq address (bbdb-extract-address-components mail))
+      (setq address (bbdb-decompose-bbdb-address mail))
       (when (car address)
         (push (car address) mail-aka)
         (bbdb-puthash (car address) record))

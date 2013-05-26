@@ -101,14 +101,14 @@ used to compare against citation selected by the user."
 FROM is user mail address to look for in BBDB."
   ;; The From header is analyzed in a way similar
   ;; to what `bbdb-get-address-components' does.
-  (let* ((from (if (or (null from)
-                       (string-match bbdb-user-mail-address-re from))
-                   (cadr (mail-extract-address-components
-                          (or (sc-mail-field "to") from)))
-                 from))
-         (record (and from (car (bbdb-message-search nil from)))))
-    (and record
-         (bbdb-record-field record bbdb/sc-attribution-field))))
+  (let* ((tmp (car (bbdb-extract-address-components
+                    (if (or (not from)
+                            (string-match bbdb-user-mail-address-re from))
+                        (or (sc-mail-field "to") from)
+                      from))))
+         (record (car (bbdb-message-search (car tmp) (cadr tmp)))))
+    (if record
+        (bbdb-record-field record bbdb/sc-attribution-field))))
 
 (defun bbdb/sc-set-attr ()
   "Add attribute to BBDB."
@@ -120,8 +120,8 @@ FROM is user mail address to look for in BBDB."
              (not (string-equal attr bbdb/sc-last-attribution))
              (not (string-match bbdb-user-mail-address-re address))
              (setq record (bbdb-annotate-message from))) ;; update
-        (let ((old (bbdb-record-field record 'attribution)))
-          ;; ignore if we have an value and same value
+        (let ((old (bbdb-record-field record bbdb/sc-attribution-field)))
+          ;; ignore if the new value is what we already have
           (when (and (not (and old (string-equal old attr)))
                      (or (not (eq bbdb/sc-replace-attr-p 'ask))
                          (y-or-n-p (concat "Change attribution " attr))))
@@ -131,17 +131,17 @@ FROM is user mail address to look for in BBDB."
 ;;;###autoload
 (defun bbdb/sc-default ()
   "If the current \"from\" field in `sc-mail-info' alist
-contains only an mail address, lookup mail address in
-BBDB, and prepend a new \"from\" field to `sc-mail-info'."
+contains only a mail address, lookup mail address in BBDB,
+and prepend a new \"from\" field to `sc-mail-info'."
   (let* ((from (sc-mail-field "from"))
-         (pair (and from (mail-extract-address-components from)))
-         (record (and pair (not (car pair))
-                      (car (bbdb-message-search nil (cadr pair)))))
+         (pair (and from (bbdb-extract-address-components from)))
+         ;; Should we always use the NAME of RECORD?
+         (record (unless (car pair)
+                   (car (bbdb-message-search nil (cadr pair)))))
          (name (and record (bbdb-record-name record))))
     (if name
-        (setq sc-mail-info
-              (cons (cons "from" (format "%s (%s)" (car (cdr pair)) name))
-                    sc-mail-info)))))
+        (push (cons "from" (format "%s (%s)" (cadr pair) name))
+                    sc-mail-info))))
 
 ;; Insert our hooks
 

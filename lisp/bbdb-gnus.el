@@ -286,7 +286,7 @@ spooled, using the addresses in the headers and information from BBDB."
                            ", "
                            (mail-fetch-field "apparently-to" nil t))
                    "")))
-      (dolist (address (mail-extract-address-components hdr t))
+      (dolist (address (bbdb-extract-address-components hdr t))
         (let* ((rv (bbdb/gnus-split-to-group address))
                (pr (nth (cdr rv) prq)))
           (unless (member-ignore-case (car rv) pr)
@@ -306,35 +306,35 @@ spooled, using the addresses in the headers and information from BBDB."
 (defun bbdb/gnus-split-to-group (address &optional source)
   "This function is called from `bbdb/gnus-split-method' in order to
 determine the group and spooling priority for a single address."
-  (condition-case tmp
-      (progn
-        (setq tmp (mail-extract-address-components address))
-        (let* ((nam (car tmp))
-               (mail (bbdb-canonicalize-mail (car (cdr tmp))))
-               (record (car (bbdb-message-search nam mail)))
-               pub prv rgx)
-          (if (not record) nil
-            (setq prv (bbdb-record-xfield record bbdb/gnus-split-private-field)
-                  pub (bbdb-record-xfield record bbdb/gnus-split-public-field))
-            (if (and pub (not source) (string-match "^\\([^ ]+\\) \\(.*\\)$" pub))
-                (setq rgx (substring pub (match-beginning 2) (match-end 2))
-                      pub (substring pub (match-beginning 1) (match-end 1)))
-              (setq pub nil)))
-          (cond
-           ((and rgx pub
-                 (goto-char (point-min))
-                 (re-search-forward "^From: \\([^ \n]+\\)[ \n]" nil t)
-                 (string-match rgx (buffer-substring (match-beginning 1)
-                                                     (match-end 1))))
-            (cons pub 3))
-           (prv
-            (cons prv
-                  (- 1 (if source -1 0)
-                     (if (string-match bbdb/gnus-split-myaddr-regexp mail) 1 0))))
-           (t
-            (cons bbdb/gnus-split-default-group
-                  (if (string-match bbdb/gnus-split-myaddr-regexp mail) 0
-                    (if source 2 (if bbdb/gnus-split-crosspost-default 1 0))))))))
+  (condition-case nil
+      (let* ((tmp (bbdb-extract-address-components address))
+             (mail (cadr tmp))
+             (record (car (bbdb-message-search (car tmp) mail)))
+             public private rgx)
+        (when record
+          (setq private (bbdb-record-xfield record bbdb/gnus-split-private-field)
+                public (bbdb-record-xfield record bbdb/gnus-split-public-field))
+          (if (and public (not source) (string-match "^\\([^ ]+\\) \\(.*\\)$" public))
+              (setq rgx (substring public (match-beginning 2) (match-end 2))
+                    public (substring public (match-beginning 1) (match-end 1)))
+            (setq public nil)))
+        (cond
+         ((and rgx public
+               (goto-char (point-min))
+               (re-search-forward "^From: \\([^ \n]+\\)[ \n]" nil t)
+               (string-match rgx (buffer-substring (match-beginning 1)
+                                                   (match-end 1))))
+          (cons public 3))
+         (private
+          (cons private
+                (- 1 (if source -1 0)
+                   (if (string-match bbdb/gnus-split-myaddr-regexp mail) 1 0))))
+         (t
+          (cons bbdb/gnus-split-default-group
+                (cond ((string-match bbdb/gnus-split-myaddr-regexp mail) 0)
+                      (source 2)
+                      (bbdb/gnus-split-crosspost-default 1)
+                      (t 0))))))
     (error (cons bbdb/gnus-split-default-group 0))))
 
 ;;

@@ -140,7 +140,7 @@ The string LABEL denotes the default label for FIELD."
   (let ((name (bbdb-record-lastname record)))
     (when (and (not name)
                (bbdb-record-mail record)
-               (setq name (car (mail-extract-address-components
+               (setq name (car (bbdb-extract-address-components
                                 (car (bbdb-record-mail record)))))
                (setq name (bbdb-divide-name name)))
       (bbdb-record-set-firstname record (car name))
@@ -151,7 +151,7 @@ The string LABEL denotes the default label for FIELD."
   ;; The voodoo of `mail-extract-address-components' makes
   ;; the following quite powerful.  If this function is used as part of
   ;; a more complex rule, the buffer should be narrowed appropriately.
-  (let* ((data (mail-extract-address-components (buffer-string)))
+  (let* ((data (bbdb-extract-address-components (buffer-string)))
          (name (and (car data) (bbdb-divide-name (car data)))))
     (bbdb-record-set-firstname record (car name))
     (bbdb-record-set-lastname  record (cdr name))

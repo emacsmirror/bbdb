@@ -173,15 +173,12 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
     (dolist (headers message-headers)
       (dolist (header (cdr headers))
         (when (setq content (bbdb-message-header header))
-          ;; Real work is done by `mail-extract-address-components'.
           ;; Always extract all addresses because we do not know yet which
           ;; address might match IGNORE-ADDRESS.
-          (dolist (address (mail-extract-address-components content t))
+          (dolist (address (bbdb-extract-address-components content t))
             ;; We canonicalize name and mail as early as possible.
-            (setq name (nth 0 address)
-                  mail (bbdb-canonicalize-mail (nth 1 address))) ; may be nil
-            (if name ; may be nil
-                (setq name (funcall bbdb-message-clean-name-function name)))
+            (setq name (car address)
+                  mail (cadr address))
             ;; ignore uninteresting addresses
             (unless (or (and (stringp ignore-address)
                              (or (and name (string-match ignore-address name))
@@ -888,14 +885,6 @@ For use as an element of `bbdb-notice-mail-hook'."
 
 ;;; Massage of mail addresses
 
-(defun bbdb-canonicalize-mail (mail)
-  "Canonicalize MAIL address using `bbdb-canonicalize-mail-function'."
-  (if mail
-      (if (functionp bbdb-canonicalize-mail-function)
-          (funcall bbdb-canonicalize-mail-function mail)
-        ;; Minimalistic clean-up
-        (bbdb-string-trim mail))))
-
 (defcustom bbdb-canonical-hosts
   ;; Example
   (regexp-opt '("cs.cmu.edu" "ri.cmu.edu"))
@@ -1074,12 +1063,10 @@ Currently this works with Gnus and VM.  It requires the BBDB insinuation
 of these MUAs.  Also, the MUA Summary format string must use
 `bbdb-mua-summary-unify-format-letter' (see there)."
   ;; ADDRESS is analyzed as in `bbdb-get-address-components'.
-  (let* ((data (mail-extract-address-components address))
-         (name (and (car data)
-                    (funcall bbdb-message-clean-name-function (car data))))
-         (mail (bbdb-canonicalize-mail (cadr data))) ; may be nil
-         (record (and (or name mail)
-                      (car (bbdb-message-search name mail))))
+  (let* ((data (bbdb-extract-address-components address))
+         (name (car data))
+         (mail (cadr data))
+         (record (car (bbdb-message-search name mail)))
          (u-list bbdb-mua-summary-unification-list)
          elt val)
     (while (setq elt (pop u-list))
@@ -1108,12 +1095,8 @@ if this xfield is in the poster's record, and `bbdb-mua-summary-mark' otherwise.
   (if (not bbdb-mua-summary-mark)
       "" ; for consistency
     ;; ADDRESS is analyzed as in `bbdb-get-address-components'.
-    (let* ((data (mail-extract-address-components address))
-           (name (and (car data)
-                      (funcall bbdb-message-clean-name-function (car data))))
-           (mail (bbdb-canonicalize-mail (cadr data))) ; may be nil
-           (record (and (or name mail)
-                        (car (bbdb-message-search name mail)))))
+    (let* ((data (bbdb-extract-address-components address))
+           (record (car (bbdb-message-search (car data) (cadr data)))))
       (if record
           (or (when (functionp bbdb-mua-summary-mark-field)
                 (funcall bbdb-mua-summary-mark-field record)
