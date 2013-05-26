@@ -3,7 +3,7 @@ dnl configure.ac --- configuration setup for BBDB
 dnl Author:        Didier Verna <didier@xemacs.org>
 dnl Maintainer:    Roland Winkler <winkler@gnu.org>
 dnl Created:       Tue Nov 14 18:28:52 2000
-dnl Last Revision: $Date: 2013/01/13 18:44:58 $
+dnl Last Revision: $Date: 2013/05/26 17:45:59 $
 
 dnl Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
 dnl Copyright (C) 2011-2013 Roland Winkler <winkler@gnu.org>
@@ -30,7 +30,7 @@ AC_INIT([BBDB],[BBDB_VERSION],[bbdb-info@lists.sourceforge.net])
 
 AC_COPYRIGHT([Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>.
 Copyright (C) 2011-2013 Roland Winkler <winkler@gnu.org>.])
-AC_REVISION([$Revision: 1.15 $])
+AC_REVISION([$Revision: 1.16 $])
 
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_FILES([Makefile
@@ -64,14 +64,6 @@ BBDB_WITH_VM
 
 BBDB_PATH_LISPDIR
 BBDB_PATH_TEXDIR
-
-dnl For now this only allows you to see the compile commands
-AC_ARG_ENABLE(developer,
-              AS_HELP_STRING([--enable-developer],
-                             [enable developer hooks [no]]),
-              [if test "x$enableval" = "xyes"; then HUSHMAKE=; else HUSHMAKE=@; fi],
-              [HUSHMAKE=@])
-AC_SUBST([HUSHMAKE])
 
 AC_OUTPUT
 

@@ -1,4 +1,9 @@
 2013-05-26  Roland Winkler  <winkler@gnu.org>
+	* configure.ac: Remove option --enable-developer.
+	* lisp/Makefile.in, lisp/makefile-temp: Remove HUSHMAKE and
+	PUSHPATH.  Use emacs options --quick and --directory.
+
+2013-05-26  Roland Winkler  <winkler@gnu.org>
 	* aclocal.m4: Convert VM path to absolute and canonicalize it. Use
 	more verbose error message.
 

@@ -35,7 +35,7 @@ LN_S = ln -s
 EMACS = emacs
 
 # Command line flags for Emacs.
-EMACSOPT = --batch --no-site-file --no-init-file
+EMACSOPT = --batch --quick --directory=./
 
 # The actual Emacs command run in the targets below.
 emacs = LC_ALL=C $(EMACS) $(EMACSOPT)
@@ -44,9 +44,7 @@ emacs = LC_ALL=C $(EMACS) $(EMACSOPT)
 # See also the target all below.
 VMDIR =
 
-VM	= -eval '(if (not (string-match "$(VMDIR)" "")) (setq load-path (cons "$(VMDIR)" load-path)))'
-
-PUSHPATH = -eval '(push "./" load-path)'
+VM = -eval '(unless (string-match "$(VMDIR)" "") (push "$(VMDIR)" load-path))'
 
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
@@ -76,66 +74,54 @@ bbdb-loaddefs.el: $(SRCS)
 	  echo "*** Delete these files; do not load them from your init file ***") && \
 	  false ; \
 	fi
-	@-$(RM) $@;
+	-$(RM) $@;
 	@echo "(provide 'bbdb-loaddefs)" > $@;
 	@echo "(if (and load-file-name (file-name-directory load-file-name))" >> $@;
 	@echo "    (add-to-list 'load-path (file-name-directory load-file-name)))" >> $@;
 	@echo "" >> $@;
 #	generated-autoload-file must have an absolute path
 #	$srcdir can be relative.
-	@$(emacs) -l autoload					\
-		--eval '(setq generated-autoload-file "'`pwd`/$@'")'	\
-		--eval '(setq make-backup-files nil)'			\
+	$(emacs) -l autoload \
+		--eval '(setq generated-autoload-file "'`pwd`/$@'")' \
+		--eval '(setq make-backup-files nil)' \
 		-f batch-update-autoloads `pwd`
 
 .PHONY: no-bbdb-autoloads
 no-bbdb-autoloads:
 
 .el.elc:
-	@$(emacs) $(PUSHPATH) -f batch-byte-compile $<
+	$(emacs) -f batch-byte-compile $<
 
-bbdb.elc:	bbdb.el
-	@$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb.elc: bbdb.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
 
-bbdb-com.elc:	bbdb.elc bbdb-com.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-mua.elc:  bbdb.elc bbdb-com.elc bbdb-mua.el
-	@$(emacs) $(PUSHPATH) \
-	-eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
+bbdb-com.elc: bbdb.elc bbdb-com.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb-mua.elc: bbdb.elc bbdb-com.elc bbdb-mua.el
+	$(emacs) -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
 	-f batch-byte-compile $(@:.elc=.el)
 bbdb-rmail.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-rmail.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-gnus.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-gnus.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-mhe.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-mhe.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb-gnus.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-gnus.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb-mhe.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-mhe.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
 # VM is not part of GNU Emacs
-bbdb-vm.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-vm.el
-	@$(emacs) $(PUSHPATH) $(VM) \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-sc.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-sc.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
+bbdb-vm.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-vm.el
+	$(emacs) $(VM) -f batch-byte-compile $(@:.elc=.el)
+bbdb-sc.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-sc.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
 
 bbdb-print.elc:	bbdb.elc bbdb-com.elc bbdb-print.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-migrate.elc:	bbdb.elc bbdb-migrate.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-anniv.elc:	bbdb.elc bbdb-anniv.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-ispell.elc:	bbdb.elc bbdb-ispell.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
-bbdb-snarf.elc:	bbdb.elc bbdb-snarf.el
-	@$(emacs) $(PUSHPATH) \
-		-f batch-byte-compile $(@:.elc=.el)
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb-migrate.elc: bbdb.elc bbdb-migrate.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb-anniv.elc:	bbdb.elc bbdb-com.elc bbdb-anniv.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb-ispell.elc: bbdb.elc bbdb-ispell.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb-snarf.elc:	bbdb.elc bbdb-com.elc bbdb-snarf.el
+	$(emacs) -f batch-byte-compile $(@:.elc=.el)
 
 autoloads: bbdb-loaddefs.el
 
@@ -147,31 +133,31 @@ vm:	bbdb-vm.elc
 
 install-el: all
 	$(INSTALL) -d -m 0755 "$(lispdir)/"
-	for elc in *.elc; do                                        \
-	    el=`basename $$elc c`;                                  \
-	    if test -f "$(srcdir)/$$el"; then                       \
-	        echo "Install $$el in $(lispdir)/";                 \
-	        $(INSTALL_DATA) "${srcdir}/$$el" "$(lispdir)/";     \
-	    fi;                                                     \
+	for elc in *.elc; do \
+	    el=`basename $$elc c`; \
+	    if test -f "$(srcdir)/$$el"; then \
+	        echo "Install $$el in $(lispdir)/"; \
+	        $(INSTALL_DATA) "${srcdir}/$$el" "$(lispdir)/"; \
+	    fi; \
         done;
-	for el in bbdb-loaddefs.el; do             \
-	    echo "Install $$el in $(lispdir)/";    \
-	    $(INSTALL_DATA) $$el "$(lispdir)/";    \
+	for el in bbdb-loaddefs.el; do \
+	    echo "Install $$el in $(lispdir)/"; \
+	    $(INSTALL_DATA) $$el "$(lispdir)/"; \
         done;
 
 install-elc: all
 	$(INSTALL) -d -m 0755 "$(lispdir)/"
-	for elc in bbdb-loaddefs.el *.elc; do      \
-	    echo "Install $$elc in $(lispdir)/";   \
-	    $(INSTALL_DATA) $$elc "$(lispdir)/";   \
+	for elc in bbdb-loaddefs.el *.elc; do \
+	    echo "Install $$elc in $(lispdir)/"; \
+	    $(INSTALL_DATA) $$elc "$(lispdir)/"; \
         done;
 
 uninstall:
-	for elc in *.elc; do        \
+	for elc in *.elc; do \
 	  $(RM) "$(lispdir)/$$elc"; \
 	done
-	for el in *.el; do          \
-	  $(RM) "$(lispdir)/$$el";  \
+	for el in *.el; do \
+	  $(RM) "$(lispdir)/$$el"; \
 	done
 
 # Assorted clean-up targets
