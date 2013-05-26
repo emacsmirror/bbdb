@@ -1,4 +1,8 @@
 2013-05-26  Roland Winkler  <winkler@gnu.org>
+	* aclocal.m4: Convert VM path to absolute and canonicalize it. Use
+	more verbose error message.
+
+2013-05-26  Roland Winkler  <winkler@gnu.org>
 	Use new function bbdb-extract-address-components which honors
 	bbdb-message-clean-name-function and
 	bbdb-canonicalize-mail-function.
