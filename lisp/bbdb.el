@@ -798,7 +798,7 @@ for the respective MUAs in your init file."
 
 (defcustom bbdb-update-records-p 'search
   "Return value for `bbdb-select-message' and friends.
-These commands can select messages for further processing by BBDB,
+These functions can select messages for further processing by BBDB,
 The amount of subsequent processing is determined by `bbdb-update-records-p'.
 
 Allowed values are (here ADDRESS is an email address selected

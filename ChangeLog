@@ -1,3 +1,6 @@
+2013-07-07  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-update-records-p): Fix docstring.
+
 2013-05-26  Roland Winkler  <winkler@gnu.org>
 	* configure.ac: Remove option --enable-developer.
 	* lisp/Makefile.in, lisp/makefile-temp: Remove HUSHMAKE and
