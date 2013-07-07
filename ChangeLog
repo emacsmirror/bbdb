@@ -1,4 +1,7 @@
 2013-07-07  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-auto-update): Use bbdb-pop-up-layout.
+
+2013-07-07  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-buffer): Simplify.  Avoid creating auto-save
 	files for bbdb-file till it contains at least one record.
 	* lisp/bbdb.el (bbdb-revert-buffer): Handle the case that we did

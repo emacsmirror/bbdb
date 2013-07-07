@@ -752,8 +752,9 @@ use all classes in `bbdb-message-headers'.
 UPDATE-P may take the same values as `bbdb-mua-auto-update-p'.
 If UPDATE-P is nil, use `bbdb-mua-auto-update-p' (which see).
 
-If `bbdb-mua-pop-up' is non-nil, the *BBDB* buffer is displayed
-along with the MUA window(s), showing the matching records.
+If `bbdb-mua-pop-up' is non-nil, BBDB pops up the *BBDB* buffer
+along with the MUA window(s), displaying the matching records
+using `bbdb-pop-up-layout'.
 If this is nil, BBDB is updated silently.
 
 This function is intended for noninteractive use via appropriate MUA hooks.
@@ -767,7 +768,8 @@ See `bbdb-mua-display-records' and friends for interactive commands."
          (bbdb-pop-up-window-size bbdb-mua-pop-up-window-size))
     (if bbdb-mua-pop-up
         (if records
-              (bbdb-display-records records nil nil nil (bbdb-mua-window-p))
+              (bbdb-display-records records bbdb-pop-up-layout
+                                    nil nil (bbdb-mua-window-p))
           ;; If there are no records, empty the BBDB window.
           (bbdb-undisplay-records)))
     records))
