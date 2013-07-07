@@ -56,7 +56,7 @@
   (defvar gnus-article-buffer)) ;; gnus-art.el
 
 (defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/05/15 13:17:58 $"
+(defconst bbdb-version-date "$Date: 2013/07/07 07:16:09 $"
   "Version date of BBDB.")
 
 ;; Custom groups
@@ -2777,7 +2777,10 @@ copy it to `bbdb-file'."
            'bbdb-revert-buffer)
 
       (setq buffer-file-coding-system bbdb-file-coding-system
-            buffer-read-only bbdb-read-only)
+            buffer-read-only bbdb-read-only
+            bbdb-mail-aliases-need-rebuilt 'parse
+            bbdb-changed-records nil)
+
       ;; `bbdb-before-save-hook' and `bbdb-after-save-hook' are user variables.
       ;; To avoid confusion, we hide the hook functions `bbdb-before-save'
       ;; and `bbdb-after-save' from the user as these are essential for BBDB.
@@ -2786,11 +2789,7 @@ copy it to `bbdb-file'."
       (dolist (hook (cons 'bbdb-after-save bbdb-after-save-hook))
         (add-hook 'after-save-hook hook nil t))
 
-      (setq bbdb-end-marker nil
-            bbdb-changed-records nil)
-
       (fillarray bbdb-hashtable 0)
-      (setq bbdb-mail-aliases-need-rebuilt 'parse)
 
       (if (/= (point-min) (point-max))
           (bbdb-parse-records) ; normal case: nonempty db
@@ -2799,8 +2798,15 @@ copy it to `bbdb-file'."
         (insert (format (concat ";; -*- mode: Emacs-Lisp; coding: %s; -*-"
                                 "\n;;; file-format: %d\n")
                         bbdb-file-coding-system bbdb-file-format))
+        ;; We pretend that `bbdb-buffer' is still unmodified,
+        ;; so that we will (auto-)save it only if we also add records to it.
+        (set-buffer-modified-p nil)
         (setq bbdb-end-marker (point-marker)
-              bbdb-records nil)) ; to make `bbdb-records' buffer-local
+              ;; Setting `bbdb-records' makes it buffer-local,
+              ;; so that we can use it as a test whether we have
+              ;; initialized BBDB.
+              bbdb-records nil))
+
       (run-hooks 'bbdb-after-read-db-hook)))
 
   ;; return `bbdb-buffer'
@@ -2839,8 +2845,20 @@ Return nil otherwise."
   (unless (buffer-live-p bbdb-buffer)
     (error "No live BBDB buffer to revert"))
   (with-current-buffer bbdb-buffer
-    (cond (;; If nothing has changed do nothing, return t.
-           (and (verify-visited-file-modtime bbdb-buffer) ; arg for Emacs 23
+    (cond ((not buffer-file-number)
+           ;; We have not yet created `bbdb-file'
+           (when (or noconfirm
+                     (yes-or-no-p "Flush your changes? "))
+             (erase-buffer)
+             (kill-all-local-variables)  ; clear database
+             (bbdb-buffer)               ; re-initialize
+             (set-buffer-modified-p nil)
+             (dolist (buffer (buffer-list))
+               (with-current-buffer buffer
+                 (if (eq major-mode 'bbdb-mode)
+                     (bbdb-undisplay-records))))))
+          ;; If nothing has changed do nothing, return t.
+          ((and (verify-visited-file-modtime bbdb-buffer) ; arg for Emacs 23
                 (not (buffer-modified-p))))
           ((or (and (not (verify-visited-file-modtime bbdb-buffer))
                     ;; File changed on disk
