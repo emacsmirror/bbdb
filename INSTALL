@@ -44,7 +44,7 @@ To compile and install BBDB with `make':
    The TeX files in the tex directories are installed in ${datadir}
    which defaults to /usr/local/share/bbdb/.  These files are only
    used by BBDB.  They need not be made known to your local TeX
-   installation.  See the user variable bbdb-print-tex-directory below.
+   installation.  See the user variable bbdb-print-tex-path below.
 
    `make install' is not required to run BBDB.
 
@@ -60,7 +60,7 @@ To compile and install BBDB with `make':
 
    ii)  Add the /path/to/bbdb/doc subdirectory to the Info search path.
 
-   iii) The user variable bbdb-print-tex-directory should point to
+   iii) The user variable bbdb-print-tex-path should point to
         /path/to/bbdb/tex
 
 ===============================================================================
