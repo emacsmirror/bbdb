@@ -53,13 +53,6 @@
 ;;; are controlled by the variable `bbdb-print-alist'. See its
 ;;; documentation for the allowed options.
 
-;;; Installation:
-;;;
-;;; Put this file somewhere in `load-path'.
-;;; Put (require 'bbdb-print) into ~/.emacs, or autoload it.
-;;; Put bbdb-print.tex, bbdb-print-brief.tex, and bbdb-cols.tex
-;;; in TEXINPUTS path.
-;;;
 ;;; This program was adapted for BBDB by Boris Goldowsky
 ;;; <boris@cs.rochester.edu> and Dirk Grunwald
 ;;; <grunwald@cs.colorado.edu> using a TeX format designed by Luigi
@@ -302,6 +295,11 @@ In any case, this function should call `bbdb-print-tex-quote' as needed."
   :type '(choice (symbol :tag "xfield")
                  (function :tag "print name function")))
 
+(defcustom bbdb-print-tex-path '("/usr/local/share")
+  "List of directories with the BBDB tex files."
+  :group 'bbdb-utilities-print
+  :type '(repeat (directory :tag "Directory")))
+
 ;;; Functions:
 
 (defsubst bbdb-print-field-p (field)
@@ -372,12 +370,19 @@ of the printout, notably the variables `bbdb-print-alist' and
     (widen)
     (erase-buffer)
     (insert bbdb-print-prolog)
-    (let (val)
+    (let (tmp)
       (dolist (dim '(hsize vsize hoffset voffset))
-        (if (setq val (cdr (assoc dim alist)))
-            (insert (format "\\%s=%s\n" dim val)))))
-    (dolist (file (cdr (assoc 'include-files alist)))
-      (insert (format "\\input %s\n" file)))
+        (if (setq tmp (cdr (assoc dim alist)))
+            (insert (format "\\%s=%s\n" dim tmp))))
+      (dolist (file (cdr (assoc 'include-files alist)))
+        (if (setq tmp (locate-file file bbdb-print-tex-path '(".tex" "")))
+            (progn
+              ;; We use lisp `insert-file-contents' instead of TeX `\input'
+              ;; because installing the respective files in the proper place
+              ;; of a TeX installation can be tricky...
+              (insert-file-contents tmp)
+              (goto-char (point-max)))
+          (error "File `%s' not found, check bbdb-print-tex-path" file))))
     (insert (format "\n\\set%ssize{%d}\n"
                     psstring (cdr (assoc 'font-size alist)))
             (format "\\setseparator{%d}\n"

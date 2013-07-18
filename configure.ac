@@ -1,70 +1,63 @@
-dnl configure.ac --- configuration setup for BBDB
+#                                               -*- Autoconf -*-
+# configuration setup for BBDB
 
-dnl Author:        Didier Verna <didier@xemacs.org>
-dnl Maintainer:    Roland Winkler <winkler@gnu.org>
-dnl Created:       Tue Nov 14 18:28:52 2000
-dnl Last Revision: $Date: 2013/05/26 17:45:59 $
+# Author:        Didier Verna <didier@xemacs.org>
+# Maintainer:    Roland Winkler <winkler@gnu.org>
+# Created:       Tue Nov 14 18:28:52 2000
+# Last Revision: $Date: 2013/07/16 15:01:37 $
+# 
+# Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
+# Copyright (C) 2011-2013 Roland Winkler <winkler@gnu.org>
+# 
+# BBDB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# BBDB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
+# 
+# Process this file with autoconf to produce a configure script.
 
-dnl Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
-dnl Copyright (C) 2011-2013 Roland Winkler <winkler@gnu.org>
+AC_PREREQ(2.69)
 
-dnl BBDB is free software: you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation, either version 3 of the License, or
-dnl (at your option) any later version.
-dnl
-dnl BBDB is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
+AC_INIT([BBDB],[3.02],[bbdb-info@lists.sourceforge.net])
+# We need GNU Automake 1.14 for AM_ELCFLAGS.
+AM_INIT_AUTOMAKE([1.14])
 
-dnl Process this file with autoconf to produce a new configure script
+# Checks for programs.
+AC_PROG_INSTALL
 
-AC_PREREQ(2.65)
+# Search for Emacs
+AM_PATH_LISPDIR
 
-BBDB_PRE_INIT
-AC_INIT([BBDB],[BBDB_VERSION],[bbdb-info@lists.sourceforge.net])
+# Checks for libraries.
+AC_ARG_WITH([vm-dir],
+AS_HELP_STRING([--with-vm-dir=DIR], [where to find VM's lisp directory]),
+# if VM was requested, make sure we have access to the source
+[if test "x$with_vm_dir" != "x"; then
+    AC_MSG_CHECKING([for VM files])
+    # convert path to absolute and canonicalize it.
+    VMDIR=`${EMACS} -batch --quick -eval "(message \"%s\" (expand-file-name \"${with_vm_dir}\"))" 2>&1`
+    BBDB_VM=`${EMACS} -batch --quick --directory=${VMDIR} -eval "(if (or (locate-library \"vm-autoload\") (locate-library \"vm-autoloads\")) (message \"vm\"))" 2>&1`
+    if test "x$BBDB_VM" = "x"; then
+       AC_MSG_ERROR([*** VM's vm-autoloads.el must exist in directory passed to `--with-vm-dir'.])
+    fi
+    AC_MSG_RESULT($VMDIR)
+    AM_ELCFLAGS=--directory=$VMDIR
+    AC_SUBST([AM_ELCFLAGS])
+ fi])
+AM_CONDITIONAL([VM], [test x$VMDIR != x])
 
-AC_COPYRIGHT([Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>.
-Copyright (C) 2011-2013 Roland Winkler <winkler@gnu.org>.])
-AC_REVISION([$Revision: 1.16 $])
-
-AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_FILES([Makefile
                  lisp/Makefile
                  doc/Makefile
                  tex/Makefile])
 
-dnl Common system utilities checking:
-AC_PROG_MAKE_SET
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PATH_PROG(GREP, grep, /bin/grep)
-
-AC_PATH_PROG(RM, rm, /bin/rm)
-dnl If RM really /is/ rm (i.e. we're not on DOS, for example)
-dnl then make it 'quiet'.
-if test "${RM}" = "/bin/rm" -o "${RM}" = "/usr/bin/rm"; then
-  RM="${RM} -f"
-fi
-
-dnl External programs checking:
-BBDB_PROG_GNU_TAR
-BBDB_PROG_COMPRESS
-BBDB_PROG([MAKEINFO],[makeinfo],[*** Use Emacs to build info files.])
-BBDB_PROG([TEXI2DVI],[texi2dvi],[*** DVI files will not be built.])
-BBDB_PROG([TEXI2PDF],[texi2pdf],[*** PDF files will not be built.])
-BBDB_PROG([DVIPS],[dvips],[*** PS files will not be built.])
-BBDB_PROG([ETAGS],[etags],[*** Tags file will not be built.])
-BBDB_PROG_EMACS
-BBDB_WITH_VM
-
-BBDB_PATH_LISPDIR
-BBDB_PATH_TEXDIR
-
 AC_OUTPUT
 
-dnl configure.ac ends here

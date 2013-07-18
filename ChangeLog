@@ -1,3 +1,16 @@
+2013-07-17  Roland Winkler  <winkler@gnu.org>
+	Use Automake.  (Thanks to Christian Egli <christian.egli@sbs.ch>)
+	* Makefile.am, lisp/Makefile.am, doc/Makefile.am, tex/Makefile.am,
+	autogen.sh, AUTHORS, NEWS: New files.
+	* Makefile.in, lisp/Makefile.in, doc/Makefile.in, tex/Makefile.in:
+	Removed.
+	* configure.ac: Use automake.
+	* INSTALL: Update accordingly.
+	* .gitignore: Ignore Makefile.in.
+
+	* lisp/bbdb-print.el (bbdb-print-tex-path): New variable.
+	(bbdb-print): Use it.
+
 2013-07-07  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-auto-update): Use bbdb-pop-up-layout.
 

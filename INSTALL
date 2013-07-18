@@ -9,39 +9,46 @@ To compile and install BBDB with `make':
 
    Configure the configure process:
 
-   Run `autoconf' in the top directory of the BBDB code.
+   Run `autogen.sh' in the top directory of the BBDB code.
    This creates the `configure' script required for step 1).
 
 1) Configure the build process:
 
    Run the `configure' script in the top directory of the BBDB code.
    This performs a number of checks on your system and generates the
-   Makefiles accordingly.
+   Makefiles accordingly.  You need at least GNU Emacs 23.
 
    The `configure' script comes with various options:
-
-   `--with-emacs=PROG' selects a GNU Emacs program to use.
-     This defaults to emacs. You need at least GNU Emacs 23.
 
    `--with-vm-dir=DIR' specifies the path where VM can be found.
      Without this option the resulting BBDB build does not support VM.
 
    `--with-lispdir=DIR' specifies where to install the lisp files.
 
-   `--with-tex-dir=DIR' specifies where to install the TeX files.
-
    Use `configure --help' to see all available options.
 
 2) Build BBDB:
 
-   To build BBDB type 'make bbdb'.
+   To build BBDB type 'make'.
 
    If you use the BBDB development version, but you do not have autoconf,
    go to the lisp directory and type 'make --makefile=./makefile-temp'.
-   (The file lisp/makefile-temp will be deleted in the repository when
-   BBDB v3 is released with a configure script.)
 
 3) Install BBDB:
+
+   To install BBDB type `make install'.
+   This installs all files in their usual system directories.
+   You can override these defaults via respective options
+   for the configure script.
+
+   The TeX files in the tex directories are installed in ${datadir}
+   which defaults to /usr/local/share/bbdb/.  These files are only
+   used by BBDB.  They need not be made known to your local TeX
+   installation.  See the user variable bbdb-print-tex-directory below.
+
+   `make install' is not required to run BBDB.
+
+4) Activate BBDB:
 
    i)   If the BBDB lisp files are in a directory
         "/path/to/bbdb/lisp" you can use in your emacs init file
@@ -51,17 +58,10 @@ To compile and install BBDB with `make':
         This adds "/path/to/bbdb/lisp" to the load-path; so it is all
         you need to make BBDB known to your Emacs.
 
-   ii)  Add the BBDB texinfo subdirectory to the Info search path.
+   ii)  Add the /path/to/bbdb/doc subdirectory to the Info search path.
 
-   iii) Add the BBDB tex subdirectory to the TeX search path
-        This can be done, for example, by adding the path to the
-        BBDB tex subdirectory to the environment variable TEXINPUTS.
-
-   `make install' installs these files in their usual system directories.
-   These directories are listed in the output of the configure script.
-   You can override them via respective options for this script.
-
-   `make install' is not required to run BBDB.
+   iii) The user variable bbdb-print-tex-directory should point to
+        /path/to/bbdb/tex
 
 ===============================================================================
 

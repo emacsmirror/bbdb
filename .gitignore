@@ -3,6 +3,7 @@
 /lisp/bbdb-loaddefs.el
 /lisp/TAGS
 Makefile
+Makefile.in
 /autom4te.cache
 /config.*
 /configure
