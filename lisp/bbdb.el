@@ -34,6 +34,7 @@
 ;;;  -----------------------------------------------------------------------
 
 (require 'timezone)
+(require 'bbdb-version)
 
 ;; When running BBDB, we have (require 'bbdb-autoloads)
 (eval-when-compile              ; pacify the compiler.
@@ -54,10 +55,6 @@
   (defvar message-mode-map) ;; message.el
   (defvar mail-mode-map) ;; sendmail.el
   (defvar gnus-article-buffer)) ;; gnus-art.el
-
-(defconst bbdb-version "3.02" "Version of BBDB.")
-(defconst bbdb-version-date "$Date: 2013/07/07 07:16:09 $"
-  "Version date of BBDB.")
 
 ;; Custom groups
 

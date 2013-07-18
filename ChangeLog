@@ -1,3 +1,13 @@
+2013-07-18  Roland Winkler  <winkler@gnu.org>
+	Clean up usage of automake and autoconf.
+	* lisp/bbdb-version.el.in: New file.
+	* lisp/bbdb.el, lisp/Makefile.am: Use it.
+	* configure.ac: Use AC_CONFIG_SRCDIR.  Require Automake 1.13.
+	Test for presence of Emacs.  Configure lisp/bbdb-version.el.
+	* .gitignore: Ignore aclocal.m4, doc/texinfo.tex, install-sh,
+	lisp/bbdb-version.el, and missing.
+	* aclocal.m4, install-sh: Removed.
+
 2013-07-17  Roland Winkler  <winkler@gnu.org>
 	Use Automake.  (Thanks to Christian Egli <christian.egli@sbs.ch>)
 	* Makefile.am, lisp/Makefile.am, doc/Makefile.am, tex/Makefile.am,

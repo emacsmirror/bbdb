@@ -33,7 +33,8 @@ dist_lisp_LISP = 				\
 	bbdb-print.el				\
 	bbdb-rmail.el				\
 	bbdb-sc.el				\
-	bbdb-snarf.el
+	bbdb-snarf.el				\
+	bbdb-version.el
 
 if VM
 dist_lisp_LISP += bbdb-vm.el
@@ -66,4 +67,3 @@ bbdb-loaddefs.el: $(dist_lisp_LISP)
 		--eval '(setq generated-autoload-file "'$(abs_builddir)/$@'")' \
 		--eval '(setq make-backup-files nil)' \
 		-f batch-update-autoloads $(srcdir)
-
