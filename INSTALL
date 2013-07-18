@@ -58,10 +58,8 @@ To compile and install BBDB with `make':
         This adds "/path/to/bbdb/lisp" to the load-path; so it is all
         you need to make BBDB known to your Emacs.
 
-   ii)  Add the /path/to/bbdb/doc subdirectory to the Info search path.
-
-   iii) The user variable bbdb-print-tex-path should point to
-        /path/to/bbdb/tex
+   ii)  The user variable bbdb-print-tex-path should point to the directory
+        where the BBDB TeX files reside (default /usr/local/share/bbdb).
 
 ===============================================================================
 
