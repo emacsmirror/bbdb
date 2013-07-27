@@ -1,3 +1,16 @@
+2013-07-27  Roland Winkler  <winkler@gnu.org>
+	* m4/emacs_vm.m4, m4/package_date.m4: New files.
+	* configure.ac: Use them.  Use brackets for AC_PREREQ.  Define
+	macro directory.  Use Automake options -Wall and gnu.
+	* autgogen.sh: Simplify.  Use option --force.
+	* lisp/bbdb-site.el.in: Renamed from lisp/bbdb-version.el.in.
+	Define bbdb-print-tex-path.
+	* lisp/bbdb.el, lisp/bbdb-print.el, lisp/Makefile.am: Update
+	accordingly.
+	* .gitignore: Cover more files.
+	* INSTALL: Remove.  Merge with README.
+	* README: Update accordingly.
+
 2013-07-18  Roland Winkler  <winkler@gnu.org>
 	Clean up usage of automake and autoconf.
 	* lisp/bbdb-version.el.in: New file.

@@ -34,7 +34,7 @@
 ;;;  -----------------------------------------------------------------------
 
 (require 'timezone)
-(require 'bbdb-version)
+(require 'bbdb-site)
 
 ;; When running BBDB, we have (require 'bbdb-autoloads)
 (eval-when-compile              ; pacify the compiler.

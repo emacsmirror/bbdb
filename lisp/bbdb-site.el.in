@@ -1,4 +1,4 @@
-;;; bbdb-version.el --- version of BBDB
+;;; bbdb-site.el --- site-specific variables for BBDB
 
 ;; Copyright (C) 2013 Roland Winkler <winkler@gnu.org>
 
@@ -17,5 +17,19 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Code:
+
+(if (< emacs-major-version 23)
+  (error "BBDB requires GNU Emacs 23 or later"))
+
 (defconst bbdb-version "@PACKAGE_VERSION@" "Version of BBDB.")
-(provide 'bbdb-version)
+
+(defconst bbdb-version-date "@PACKAGE_DATE@"
+  "Version date of BBDB.")
+
+(defcustom bbdb-print-tex-path '("/usr/local/share")
+  "List of directories with the BBDB tex files."
+  :group 'bbdb-utilities-print
+  :type '(repeat (directory :tag "Directory")))
+
+(provide 'bbdb-site)

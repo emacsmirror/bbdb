@@ -295,11 +295,6 @@ In any case, this function should call `bbdb-print-tex-quote' as needed."
   :type '(choice (symbol :tag "xfield")
                  (function :tag "print name function")))
 
-(defcustom bbdb-print-tex-path '("/usr/local/share")
-  "List of directories with the BBDB tex files."
-  :group 'bbdb-utilities-print
-  :type '(repeat (directory :tag "Directory")))
-
 ;;; Functions:
 
 (defsubst bbdb-print-field-p (field)

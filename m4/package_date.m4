@@ -1,8 +1,6 @@
-#!/bin/sh
-### autogen.sh - tool to help build BBDB from a git checkout
+### package_date.m4
 
-## Copyright (C) 2013 Christian Egli <christian.egli@sbs.ch>
-##               and Roland Winkler <winkler@gnu.org>
+## Copyright (C) 2013 Roland Winkler <winkler@gnu.org>
 ##
 ## This file is part of the Insidious Big Brother Database (aka BBDB),
 ##
@@ -19,19 +17,17 @@
 ## You should have received a copy of the GNU General Public License
 ## along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
-### Commentary:
-
-## The BBDB git repository does not include the configure script
-## (and associated helpers).  The first time you fetch BBDB from git,
-## run this script to generate the necessary files.
-
-### Code:
-
-set -e
-
-# Refresh GNU autotools toolchain.
-autoreconf --verbose --force --install --warnings=all
-
-echo "You can now run \`./configure'."
-
-exit 0
+# Figure out timestamp information, for substitution.
+# If we are in a git repo, use the timestamp of the
+# most recent commit.  Otherwise, use the current time.
+AC_DEFUN([AC_PACKAGE_DATE],
+[
+if git log -1 &> /dev/null; then
+    PACKAGE_DATE="$(git show --format=format:'%cd' --date=iso $(git rev-parse HEAD) | head -n 1)"
+elif date --rfc-3339=seconds &> /dev/null; then
+    PACKAGE_DATE="$(date --rfc-3339=seconds)"
+else
+    PACKAGE_DATE="$(date)"
+fi
+AC_SUBST([PACKAGE_DATE])
+])

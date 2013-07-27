@@ -4,11 +4,14 @@
 /lisp/TAGS
 Makefile
 Makefile.in
-/autom4te.cache
+/autom4te.cache/
 /config.*
 /configure
 /aclocal.m4
+/doc/bbdb.pdf
+/doc/bbdb.t2p/
 /doc/texinfo.tex
 /install-sh
-/lisp/bbdb-version.el
+/INSTALL
+/lisp/bbdb-site.el
 /missing
