@@ -1,4 +1,7 @@
-2013-07-27  Roland Winkler  <winkler@gnu.org>
+2013-07-28  Roland Winkler  <winkler@gnu.org>
+	* m4/emacs_vm.m4: Fix typo.
+
+2013-07-28  Roland Winkler  <winkler@gnu.org>
 	* m4/emacs_vm.m4: Define conditional VM unconditionally.
 
 2013-07-27  Roland Winkler  <winkler@gnu.org>

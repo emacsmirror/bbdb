@@ -33,7 +33,7 @@ AS_HELP_STRING([--with-vm-dir=DIR], [where to find VM lisp directory]),
     AC_MSG_RESULT($VMDIR)
     # append VMDIR to AM_ELCFLAGS
     AM_ELCFLAGS="--directory=$VMDIR $AM_ELCFLAGS"
- fi]),
+ fi])
 # New conditional VM
 AM_CONDITIONAL([VM], [test x$VMDIR != x])
 ])
