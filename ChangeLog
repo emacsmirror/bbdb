@@ -1,4 +1,7 @@
 2013-07-27  Roland Winkler  <winkler@gnu.org>
+	* m4/emacs_vm.m4: Define conditional VM unconditionally.
+
+2013-07-27  Roland Winkler  <winkler@gnu.org>
 	* m4/emacs_vm.m4, m4/package_date.m4: New files.
 	* configure.ac: Use them.  Use brackets for AC_PREREQ.  Define
 	macro directory.  Use Automake options -Wall and gnu.
