@@ -22,9 +22,9 @@
 # most recent commit.  Otherwise, use the current time.
 AC_DEFUN([AC_PACKAGE_DATE],
 [
-if git log -1 &> /dev/null; then
+if git log -1 > /dev/null 2>&1; then
     PACKAGE_DATE="$(git show --format=format:'%cd' --date=iso $(git rev-parse HEAD) | head -n 1)"
-elif date --rfc-3339=seconds &> /dev/null; then
+elif date --rfc-3339=seconds > /dev/null 2>&1; then
     PACKAGE_DATE="$(date --rfc-3339=seconds)"
 else
     PACKAGE_DATE="$(date)"

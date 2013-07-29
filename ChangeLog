@@ -1,4 +1,8 @@
 2013-07-28  Roland Winkler  <winkler@gnu.org>
+	* m4/package_date.m4: Use more robust output redirection.
+	(Bug#39579)
+
+2013-07-28  Roland Winkler  <winkler@gnu.org>
 	* m4/emacs_vm.m4: Fix typo.
 
 2013-07-28  Roland Winkler  <winkler@gnu.org>
