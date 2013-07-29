@@ -1,4 +1,8 @@
 2013-07-28  Roland Winkler  <winkler@gnu.org>
+	* doc/bbdb.texi: Add @dircategory and @direntry.
+	(Bug#38794)
+
+2013-07-28  Roland Winkler  <winkler@gnu.org>
 	* m4/package_date.m4: Use more robust output redirection.
 	(Bug#39579)
 

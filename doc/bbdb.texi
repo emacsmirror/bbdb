@@ -19,6 +19,11 @@ A copy of the license is included in the section entitled
 @end quotation
 @end copying
 
+@dircategory Emacs misc features
+@direntry
+* BBDB: (bbdb).                 Insidious Big Brother Database (BBDB).
+@end direntry
+
 @titlepage
 @title Insidious Big Brother Database (BBDB) User Manual
 @page
