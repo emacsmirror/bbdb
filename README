@@ -1,9 +1,9 @@
 Copyright (C) 2010-2013 Roland Winkler <winkler@gnu.org>
 See the end of the file for license conditions.
 
-BBDB is the Insidious Big Brother Database for GNU Emacs. It
+BBDB is the Insidious Big Brother Database for GNU Emacs.  It
 provides an address book for email and snail mail addresses, phone
-numbers and the like. It can be linked with various Emacs mail
+numbers and the like.  It can be linked with various Emacs mail
 clients (Message and Mail mode, Rmail, Gnus, MH-E, and VM).
 BBDB is fully customizable.
 
@@ -89,14 +89,19 @@ happen automatically.  Yet it is recommended to make a copy of the
 old file, in case something unexpected happens or you might want
 to go back.
 
-The BBDB info manual is still awaiting a more complete overhaul.
-
 As compared with BBDB v2.xx, many variables, functions, and commands
 have changed in BBDB v3.  Most likely you will have to review your
 customizations carefully.  You may want to call bbdb-undocumented-variables
 to identify outdated (i.e., now usually undocumented) variables in
-your init file.  All user variables in BBDB v3 are listed at the beginning
-of bbdb.el.
+your init file.  All user variables for the core of BBDB v3 are listed
+at the beginning of bbdb.el.  Some extensions of BBDB v3 define their
+user variables at the beginning of the respective files.
+
+Generally the default values for user variables are chosen such that they make
+BBDB the least aggressive.  You can customize this behavior in many ways.
+See below for an overview.
+
+The BBDB info manual is still awaiting a more complete overhaul.
 
 
 BBDB interface with mail user agents (MUAs)
@@ -104,7 +109,7 @@ BBDB interface with mail user agents (MUAs)
 
 BBDB can interface with various mail user agents (MUAs).
 These include Rmail, Gnus, VM, MH-E, Message and Mail mode.
-This lets you 
+This lets you
 
  - display the BBDB records for the sender and/or recipients of a
    message you are viewing
@@ -129,7 +134,7 @@ MUA commands include
   bbdb-annotate-record, bbdb-mua-annotate-sender, bbdb-mua-annotate-recipients
   bbdb-mua-edit-field, bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients
 
-These MUA commands operate either on existing records only. Or they
+These MUA commands operate either on existing records only.  Or they
 can create new records.
 
 They are all controlled by bbdb-mua-update-interactive-p.
@@ -138,7 +143,8 @@ The car is used if the command is called without a prefix.
 The cdr is used if the command is called with a prefix (and if the prefix
         is not used for another purpose).
 
-Allowed values are (here ADDRESS is an email address found in a message):
+WITHOUT-PREFIX and WITH-PREFIX may take the values
+(here ADDRESS is an email address found in a message):
  nil          Do nothing.
  search       Search for existing records matching ADDRESS.
  update       Search for existing records matching ADDRESS;
@@ -152,7 +158,7 @@ Allowed values are (here ADDRESS is an email address found in a message):
  read         Read the value interactively.
 
 BBDB v2 also used MUA-specific variables bbdb/MUA-update-records-mode
-to control its interfaces with MUAs. In BBDB v3 the variables
+to control its interfaces with MUAs.  In BBDB v3 the variables
 bbdb/MUA-update-records-p are only used as fallback if the generic
 (MUA-independent) variables bbdb-mua-update-interactive-p,
 bbdb-update-records-p or bbdb-mua-auto-update-p result in a value of
@@ -166,10 +172,10 @@ to hook BBDB's hook function bbdb-mua-auto-update into the MUAs.
 
 bbdb-mua-auto-update automatically updates the BBDB records for the
 sender and/or recipients of a message.  If bbdb-mua-pop-up is non-nil,
-the matching records are also displayed in a continuously updated BBDB window, 
+the matching records are also displayed in a continuously updated BBDB window,
 
 The behavior of bbdb-mua-auto-update is controlled by bbdb-mua-auto-update-p.
-This may take the same values as bbdb-mua-update-interactive-p (except read). 
+This may take the same values as bbdb-mua-update-interactive-p (except read).
 Binding this to a function is often most helpful for noninteractive use.
 For example, you may want to bind bbdb-mua-auto-update-p to the function
 bbdb-select-message,  see bbdb-accept-message-alist and
@@ -184,12 +190,12 @@ Notes for BBDB lisp hackers:
 
 If you write your own functions and commands to modify BBDB records,
 do not call the low-level functions bbdb-record-set-* such as
-bbdb-record-set-aka, bbdb-record-set-mail etc. The recommended
+bbdb-record-set-aka, bbdb-record-set-mail etc.  The recommended
 sequence of calls is
 
 - one or multiple calls of bbdb-record-set-field for the respective
-  fields to be changed. This not only sets the fields, but it also
-  ensures the integrity of the database. Also, this makes your code
+  fields to be changed.  This not only sets the fields, but it also
+  ensures the integrity of the database.  Also, this makes your code
   more robust with respect to possible future changes of BBDB's
   innermost internals.
 
