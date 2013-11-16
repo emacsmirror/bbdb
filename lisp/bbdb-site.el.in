@@ -1,4 +1,4 @@
-;;; bbdb-site.el --- site-specific variables for BBDB
+;;; bbdb-site.el.in --- site-specific variables for BBDB
 
 ;; Copyright (C) 2013 Roland Winkler <winkler@gnu.org>
 
