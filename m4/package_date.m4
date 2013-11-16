@@ -23,7 +23,7 @@
 AC_DEFUN([AC_PACKAGE_DATE],
 [
 if git log -1 > /dev/null 2>&1; then
-    PACKAGE_DATE="$(git show --format=format:'%cd' --date=iso $(git rev-parse HEAD) | head -n 1)"
+    PACKAGE_DATE="$(git log -1 --format=format:'%ci')"
 elif date --rfc-3339=seconds > /dev/null 2>&1; then
     PACKAGE_DATE="$(date --rfc-3339=seconds)"
 else

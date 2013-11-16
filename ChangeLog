@@ -1,4 +1,7 @@
 2013-11-16  Roland Winkler  <winkler@gnu.org>
+	* m4/package_date.m4: Use git log.
+
+2013-11-16  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-sc.el: Fix documentation.
 	(bbdb/sc-consult-attr): Do not use car.
 	(Bug#40398)
