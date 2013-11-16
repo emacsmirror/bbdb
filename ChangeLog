@@ -1,4 +1,10 @@
 2013-11-16  Roland Winkler  <winkler@gnu.org>
+	* Makefile.am: New target elpa.
+	* lisp/bbdb-pkg.el.in: New file for elpa.
+	* configure.ac, .gitignore: Handle it.
+	* lisp/Makefile.am: Define CLEANFILES and EXTRA_DIST.
+
+2013-11-16  Roland Winkler  <winkler@gnu.org>
 	* m4/package_date.m4: Use git log.
 
 2013-11-16  Roland Winkler  <winkler@gnu.org>

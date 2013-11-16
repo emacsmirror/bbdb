@@ -45,13 +45,16 @@ endif
 lisp_DATA = bbdb-loaddefs.el
 
 MOSTLYCLEANFILES = bbdb-loaddefs.el
+CLEANFILES = bbdb-site.el bbdb-pkg.el
+
+EXTRA_DIST = bbdb-site.el.in bbdb-pkg.el.in
 
 bbdb-loaddefs.el: $(dist_lisp_LISP)
 #	2011-12-11: We switched from bbdb-autoloads.el to bbdb-loaddefs.el.
 #	If the user still has an old bbdb-autoloads.el in the BBDB
 #	lisp directory (and keeps loading it from the emacs init file),
-#	we might get strange mistakes that things fail. So we throw an error
-#	if these old files are found.
+#	we might get strange error messages that things fail.
+#	So we throw an error if these old files are found.
 	@if test -f bbdb-autoloads.el -o -f bbdb-autoloads.elc; then \
 	  (echo "*** ERROR: Old file(s) \`bbdb-autoloads.el(c)' found ***" ; \
 	  echo "*** Delete these files; do not load them from your init file ***") && \
@@ -61,7 +64,7 @@ bbdb-loaddefs.el: $(dist_lisp_LISP)
 	@echo "(if (and load-file-name (file-name-directory load-file-name))" >> $@;
 	@echo "    (add-to-list 'load-path (file-name-directory load-file-name)))" >> $@;
 	@echo "" >> $@;
-#	generated-autoload-file must have an absolute path
+#	Generated autoload-file must have an absolute path,
 #	$srcdir can be relative.
 	$(EMACS) -batch -l autoload \
 		--eval '(setq generated-autoload-file "'$(abs_builddir)/$@'")' \

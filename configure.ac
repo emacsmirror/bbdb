@@ -4,7 +4,7 @@
 # Author:        Didier Verna <didier@xemacs.org>
 # Maintainer:    Roland Winkler <winkler@gnu.org>
 # Created:       Tue Nov 14 18:28:52 2000
-# Last Revision: $Date: 2013/07/21 22:56:39 $
+# Last Revision: $Date: 2013/11/16 15:10:55 $
 # 
 # Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
 # Copyright (C) 2011-2013 Roland Winkler <winkler@gnu.org>
@@ -48,6 +48,7 @@ AC_SUBST([AM_ELCFLAGS])
 AC_CONFIG_FILES([Makefile
                  lisp/Makefile
                  lisp/bbdb-site.el
+                 lisp/bbdb-pkg.el
                  doc/Makefile
                  tex/Makefile])
 
