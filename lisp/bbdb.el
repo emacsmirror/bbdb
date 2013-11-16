@@ -133,7 +133,7 @@
 (put 'bbdb-utilities-snarf 'custom-loads '(bbdb-snarf))
 
 ;;; Customizable variables
-(defcustom bbdb-file "~/.bbdb"
+(defcustom bbdb-file (locate-user-emacs-file "bbdb" ".bbdb")
   "The name of the Insidious Big Brother Database file."
   :group 'bbdb
   :type 'file)
