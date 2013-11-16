@@ -33,10 +33,10 @@
 ;;; and it enables you to retrieve your standard attribution from BBDB.
 ;;; You need Supercite to make this code work.
 ;;;
-;;; If the From header in the mail to which you are replying only contains
-;;; the mail address, the personal name is looked up in BBDB.  The attribution
-;;; is stored in the xfield `attribution' (unless you have changed
-;;; `bbdb/sc-attribution-field').
+;;; If the From header in the mail to which you are replying only
+;;; contains the mail address, the personal name is looked up in BBDB.
+;;; The attribution is stored in the xfield `attribution' (unless you
+;;; have changed `bbdb/sc-attribution-field').
 
 ;;; To use this code add "sc-consult" to `sc-preferred-attribution-list', e.g.,
 ;;;
@@ -51,20 +51,20 @@
 ;;;                  ((".*" . (bbdb/sc-consult-attr
 ;;;                            (sc-mail-field "sc-from-address"))))))
 ;;;
-;;; And finally we set the `sc-mail-glom-frame' to enable the
-;;; fetching of the name of person when there is only an mail
-;;; address in the original mail, e.g.,
+;;; And finally we set the `sc-mail-glom-frame' to enable
+;;; the fetching of the name of person when there is only
+;;; a mail address in the original mail, e.g.,
 ;;;
-;;;   (setq sc-mail-glom-frame
-;;;         '((begin                        (setq sc-mail-headers-start (point)))
-;;;           ("^From "                     (sc-mail-check-from) nil nil)
-;;;           ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
-;;;           ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
-;;;           ("^$"                         (progn (bbdb/sc-default)
-;;;                                                (list 'abort '(step . 0))))
-;;;           ("^[ \t]+"                    (sc-mail-append-field))
-;;;           (sc-mail-warn-if-non-rfc822-p (sc-mail-error-in-mail-field))
-;;;           (end                          (setq sc-mail-headers-end (point)))))
+;;;  (setq sc-mail-glom-frame
+;;;        '((begin                        (setq sc-mail-headers-start (point)))
+;;;          ("^From "                     (sc-mail-check-from) nil nil)
+;;;          ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
+;;;          ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
+;;;          ("^$"                         (progn (bbdb/sc-default)
+;;;                                               (list 'abort '(step . 0))))
+;;;          ("^[ \t]+"                    (sc-mail-append-field))
+;;;          (sc-mail-warn-if-non-rfc822-p (sc-mail-error-in-mail-field))
+;;;          (end                          (setq sc-mail-headers-end (point)))))
 
 (require 'bbdb-com)
 (require 'bbdb-mua)
@@ -79,7 +79,7 @@
 (defcustom bbdb/sc-replace-attr-p t
  "t if you like to create a new BBDB record when
 entering a non-default attribution, 'ask if the user
-should be asked before creation and NIL if we never create a new record."
+should be asked before creation and nil if we never create a new record."
  :group 'bbdb-utilities-supercite
  :type '(choice (const "Create a new BBDB record" t)
         (const "Confirm new record creation" ask)
@@ -97,15 +97,18 @@ used to compare against citation selected by the user."
  :type '(string :tag "Default citation" ""))
 
 (defun bbdb/sc-consult-attr (from)
-  "Extract citing information from BBDB using sc-consult where
-FROM is user mail address to look for in BBDB."
+  "Extract citing information from BBDB using \"sc-consult\"
+where FROM is user mail address to look for in BBDB."
   ;; The From header is analyzed in a way similar
   ;; to what `bbdb-get-address-components' does.
-  (let* ((tmp (car (bbdb-extract-address-components
-                    (if (or (not from)
-                            (string-match bbdb-user-mail-address-re from))
-                        (or (sc-mail-field "to") from)
-                      from))))
+  (let* ((tmp (bbdb-extract-address-components
+               (if (or (not from)
+                       (string-match bbdb-user-mail-address-re from))
+                   ;; FIXME: What to do if the "To" field contains multiple
+                   ;; addresses?  The current code only considers the first.
+                   (or (sc-mail-field "to") from)
+                 from)))
+         ;; FIXME: What to do if we have multiple matching records?
          (record (car (bbdb-message-search (car tmp) (cadr tmp)))))
     (if record
         (bbdb-record-field record bbdb/sc-attribution-field))))
@@ -137,6 +140,7 @@ and prepend a new \"from\" field to `sc-mail-info'."
          (pair (and from (bbdb-extract-address-components from)))
          ;; Should we always use the NAME of RECORD?
          (record (unless (car pair)
+                   ;; FIXME: What to do if we have multiple matching records?
                    (car (bbdb-message-search nil (cadr pair)))))
          (name (and record (bbdb-record-name record))))
     (if name

@@ -1,4 +1,9 @@
 2013-11-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-sc.el: Fix documentation.
+	(bbdb/sc-consult-attr): Do not use car.
+	(Bug#40398)
+
+2013-11-16  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-field-menu): Use format.  Call
 	bbdb-browse-url for url xfields.
 	(bbdb-mouse-menu): Use format.
