@@ -1777,196 +1777,210 @@ as part of the MUA insinuation."
   (bbdb-buffer) ; Make sure the database is initialized.
 
   ;; Completion should begin after the preceding comma (separating
-  ;; two addresses) or colon (separating the field name of the header
-  ;; from the field body).  We want to ignore these characters
+  ;; two addresses) or colon (separating the header field name
+  ;; from the header field body).  We want to ignore these characters
   ;; if they appear inside a quoted string (RFC 5322, Sec. 3.2.4).
   ;; Note also that a quoted string may span multiple lines
   ;; (RFC 5322, Sec. 2.2.3).
-  ;; So to be save, we go back to the beginning of the field body
+  ;; So to be save, we go back to the beginning of the header field body
   ;; (past the colon, when we are certainly not inside a quoted string),
   ;; then we parse forward, looking for commas not inside a quoted string
   ;; and positioned before END.  - This fails with an unbalanced quote.
   ;; But an unbalanced quote is bound to fail anyway.
-  (unless beg
+  (when (and (not beg)
+             (<= (point)
+                 (save-restriction ; `mail-header-end'
+                   (widen)
+                   (save-excursion
+                     (rfc822-goto-eoh)
+                     (point)))))
     (let ((end (point))
           start pnt state)
       (save-excursion
-        (re-search-backward "^[^ \t\n:][^:]*:[ \t\n]+") ; Field name
+        ;; A header field name must appear at the beginning of a line,
+        ;; and it must be terminated by a colon.
+        (re-search-backward "^[^ \t\n:][^:]*:[ \t\n]+")
         (setq beg (match-end 0)
               start beg)
-        ;; FIXME: Here we should analyze more carefully that point
-        ;; is inside the body of a valid header we want to complete.
-        ;; If point is not inside the body of such a header,
-        ;; `bbdb-complete-mail' should do nothing and return nil.
-        ;; We could internally set BEG to nil to identify such
-        ;; a situation.
-        ;; (if (re-search-forward "\n[^ \t]" end t)
-        ;;     (error "Not a message header")) ; too simple!
         (goto-char beg)
-        ;; Parse field body up to END
-        (with-syntax-table bbdb-quoted-string-syntax-table
-          (while (setq pnt (re-search-forward ",[ \t\n]*" end t))
-            (setq state (parse-partial-sexp start pnt nil nil state)
-                  start pnt)
-            (unless (nth 3 state) (setq beg pnt)))))))
+        ;; If we are inside a syntactically correct header field,
+        ;; all continuation lines in between the field name and point
+        ;; must begin with a white space character.
+        (if (re-search-forward "\n[^ \t]" end t)
+            ;; An invalid header is identified via BEG set to nil.
+            (setq beg nil)
+          ;; Parse field body up to END
+          (with-syntax-table bbdb-quoted-string-syntax-table
+            (while (setq pnt (re-search-forward ",[ \t\n]*" end t))
+              (setq state (parse-partial-sexp start pnt nil nil state)
+                    start pnt)
+              (unless (nth 3 state) (setq beg pnt))))))))
+
+  ;; Do we have a meaningful way to set BEG if we are not in a message header?
+  (unless beg
+    (message "Not a valid buffer position for mail completion")
+    (sit-for 1))
 
   (let* ((end (point))
-         (orig (buffer-substring beg end))
+         (done (unless beg 'nothing))
+         (orig (and beg (buffer-substring beg end)))
          (completion-ignore-case t)
-         (completion (try-completion orig bbdb-hashtable
-                                     'bbdb-completion-predicate))
-         all-completions dwim-completions one-record done)
+         (completion (and orig
+                          (try-completion orig bbdb-hashtable
+                                          'bbdb-completion-predicate)))
+         all-completions dwim-completions one-record)
 
-    ;; We get fooled if a partial COMPLETION matches "," (for example,
-    ;; a comma in lf-name).  Such a partial COMPLETION cannot be protected
-    ;; by quoting.  Then the comma gets interpreted as BEG.
-    ;; So we never perform partial completion beyond the first comma.
-    ;; This works even if we have just one record matching ORIG (thus
-    ;; allowing dwim-completion) because ORIG is a substring of COMPLETION
-    ;; even after COMPLETION got truncated; and ORIG by itself must be
-    ;; sufficient to identify this record.
-    ;; Yet if multiple records match ORIG we can only offer a *Completions*
-    ;; buffer.
-    (if (and (stringp completion)
-             (string-match "," completion))
-        (setq completion (substring completion 0 (match-beginning 0))))
+    (unless done
+      ;; We get fooled if a partial COMPLETION matches "," (for example,
+      ;; a comma in lf-name).  Such a partial COMPLETION cannot be protected
+      ;; by quoting.  Then the comma gets interpreted as BEG.
+      ;; So we never perform partial completion beyond the first comma.
+      ;; This works even if we have just one record matching ORIG (thus
+      ;; allowing dwim-completion) because ORIG is a substring of COMPLETION
+      ;; even after COMPLETION got truncated; and ORIG by itself must be
+      ;; sufficient to identify this record.
+      ;; Yet if multiple records match ORIG we can only offer a *Completions*
+      ;; buffer.
+      (if (and (stringp completion)
+               (string-match "," completion))
+          (setq completion (substring completion 0 (match-beginning 0))))
 
-    ;; We cannot use the return value of the function `all-completions'
-    ;; to set the variable `all-completions' because this function
-    ;; converts all symbols into strings
-    (all-completions orig bbdb-hashtable
-                     (lambda (sym)
-                       (if (bbdb-completion-predicate sym)
-                           (push sym all-completions))))
-    ;; Resolve the records matching ORIG:
-    ;; Multiple completions may match the same record
-    (let ((records (delete-dups
-                    (apply 'append (mapcar 'symbol-value all-completions)))))
-      ;; Is there only one matching record?
-      (setq one-record (and (not (cdr records))
-                            (car records))))
+      ;; We cannot use the return value of the function `all-completions'
+      ;; to set the variable `all-completions' because this function
+      ;; converts all symbols into strings
+      (all-completions orig bbdb-hashtable
+                       (lambda (sym)
+                         (if (bbdb-completion-predicate sym)
+                             (push sym all-completions))))
+      ;; Resolve the records matching ORIG:
+      ;; Multiple completions may match the same record
+      (let ((records (delete-dups
+                      (apply 'append (mapcar 'symbol-value all-completions)))))
+        ;; Is there only one matching record?
+        (setq one-record (and (not (cdr records))
+                              (car records))))
 
-    ;; Clean up *Completions* buffer window, if it exists
-    (let ((window (get-buffer-window "*Completions*")))
-      (if (window-live-p window)
-          (quit-window nil window)))
+      ;; Clean up *Completions* buffer window, if it exists
+      (let ((window (get-buffer-window "*Completions*")))
+        (if (window-live-p window)
+            (quit-window nil window)))
 
-    (cond
-     ;; Match for a single record
-     (one-record
-      (let ((completion-list (if (eq t bbdb-completion-list)
-                                 '(fl-name lf-name mail aka organization)
-                               bbdb-completion-list))
-            (mails (bbdb-record-mail one-record))
-            mail elt)
-        (if (not mails)
-            (progn
-              (message "Matching record has no mail field")
-              (sit-for 1)
-              (setq done 'nothing))
+      (cond
+       ;; Match for a single record
+       (one-record
+        (let ((completion-list (if (eq t bbdb-completion-list)
+                                   '(fl-name lf-name mail aka organization)
+                                 bbdb-completion-list))
+              (mails (bbdb-record-mail one-record))
+              mail elt)
+          (if (not mails)
+              (progn
+                (message "Matching record has no mail field")
+                (sit-for 1)
+                (setq done 'nothing))
 
-          ;; Determine the mail address of ONE-RECORD to use for ADDRESS.
-          ;; Do we have a preferential order for the following tests?
-          ;; (1) If ORIG matches name, AKA, or organization of ONE-RECORD,
-          ;;     then ADDRESS will be the first mail address of ONE-RECORD.
-          (if (try-completion orig
-                              (append
-                               (if (memq 'fl-name completion-list)
-                                   (list (or (bbdb-record-name one-record) "")))
-                               (if (memq 'lf-name completion-list)
-                                   (list (or (bbdb-record-name-lf one-record) "")))
-                               (if (memq 'aka completion-list)
-                                   (bbdb-record-field one-record 'aka-all))
-                               (if (memq 'organization completion-list)
-                                   (bbdb-record-organization one-record))))
-              (setq mail (car mails)))
-          ;; (2) If ORIG matches one or multiple mail addresses of ONE-RECORD,
-          ;;     then we take the first one matching ORIG.
-          ;;     We got here with MAIL still nil only if `bbdb-completion-list'
-          ;;     includes 'mail or 'primary.
-          (unless mail
-            (while (setq elt (pop mails))
-              (if (try-completion orig (list elt))
-                  (setq mail elt
-                        mails nil))))
-          ;; This error message indicates a bug!
-          (unless mail (error "No match for %s" orig))
+            ;; Determine the mail address of ONE-RECORD to use for ADDRESS.
+            ;; Do we have a preferential order for the following tests?
+            ;; (1) If ORIG matches name, AKA, or organization of ONE-RECORD,
+            ;;     then ADDRESS will be the first mail address of ONE-RECORD.
+            (if (try-completion orig
+                                (append
+                                 (if (memq 'fl-name completion-list)
+                                     (list (or (bbdb-record-name one-record) "")))
+                                 (if (memq 'lf-name completion-list)
+                                     (list (or (bbdb-record-name-lf one-record) "")))
+                                 (if (memq 'aka completion-list)
+                                     (bbdb-record-field one-record 'aka-all))
+                                 (if (memq 'organization completion-list)
+                                     (bbdb-record-organization one-record))))
+                (setq mail (car mails)))
+            ;; (2) If ORIG matches one or multiple mail addresses of ONE-RECORD,
+            ;;     then we take the first one matching ORIG.
+            ;;     We got here with MAIL nil only if `bbdb-completion-list'
+            ;;     includes 'mail or 'primary.
+            (unless mail
+              (while (setq elt (pop mails))
+                (if (try-completion orig (list elt))
+                    (setq mail elt
+                          mails nil))))
+            ;; This error message indicates a bug!
+            (unless mail (error "No match for %s" orig))
 
-          (let ((dwim-mail (bbdb-dwim-mail one-record mail)))
-            (if (string= dwim-mail orig)
-                ;; We get here if `bbdb-mail-avoid-redundancy' is 'mail-only
-                ;; and `bbdb-completion-list' includes 'mail.
-                (unless (and bbdb-complete-mail-allow-cycling
-                             (< 1 (length (bbdb-record-mail one-record))))
-                  (setq done 'unchanged))
-              ;; Replace the text with the expansion
-              (delete-region beg end)
-              (insert dwim-mail)
-              (bbdb-complete-mail-cleanup dwim-mail beg)
-              (setq done 'unique))))))
+            (let ((dwim-mail (bbdb-dwim-mail one-record mail)))
+              (if (string= dwim-mail orig)
+                  ;; We get here if `bbdb-mail-avoid-redundancy' is 'mail-only
+                  ;; and `bbdb-completion-list' includes 'mail.
+                  (unless (and bbdb-complete-mail-allow-cycling
+                               (< 1 (length (bbdb-record-mail one-record))))
+                    (setq done 'unchanged))
+                ;; Replace the text with the expansion
+                (delete-region beg end)
+                (insert dwim-mail)
+                (bbdb-complete-mail-cleanup dwim-mail beg)
+                (setq done 'unique))))))
 
-     ;; Partial completion
-     ((and (stringp completion)
-           (not (bbdb-string= orig completion)))
-      (delete-region beg end)
-      (insert completion)
-      (setq done 'partial))
+       ;; Partial completion
+       ((and (stringp completion)
+             (not (bbdb-string= orig completion)))
+        (delete-region beg end)
+        (insert completion)
+        (setq done 'partial))
 
-     ;; Partial match not allowing further partial completion
-     (completion
-      (let ((completion-list (if (eq t bbdb-completion-list)
-                                 '(fl-name lf-name mail aka organization)
-                               bbdb-completion-list))
-            sname)
-        ;; Now collect all the dwim-addresses for each completion.
-        ;; Add it if the mail is part of the completions
-        (dolist (sym all-completions)
-          (setq sname (symbol-name sym))
-          (dolist (record (symbol-value sym))
-            (let ((mails (bbdb-record-mail record))
-                  accept)
-              (when mails
-                (dolist (field completion-list)
-                  (cond ((eq field 'fl-name)
-                         (if (bbdb-string= sname (bbdb-record-name record))
-                             (push (car mails) accept)))
-                        ((eq field 'lf-name)
-                         (if (bbdb-string= sname (bbdb-cache-lf-name
-                                                  (bbdb-record-cache record)))
-                             (push (car mails) accept)))
-                        ((eq field 'aka)
-                         (if (member-ignore-case sname (bbdb-record-field
-                                                        record 'aka-all))
-                             (push (car mails) accept)))
-                        ((eq field 'organization)
-                         (if (member-ignore-case sname (bbdb-record-organization
-                                                        record))
-                             (push (car mails) accept)))
-                        ((eq field 'primary)
-                         (if (bbdb-string= sname (car mails))
-                             (push (car mails) accept)))
-                        ((eq field 'mail)
-                         (dolist (mail mails)
-                           (if (bbdb-string= sname mail)
-                               (push mail accept))))))
-                (dolist (mail (delete-dups accept))
-                  (push (bbdb-dwim-mail record mail) dwim-completions))))))
+       ;; Partial match not allowing further partial completion
+       (completion
+        (let ((completion-list (if (eq t bbdb-completion-list)
+                                   '(fl-name lf-name mail aka organization)
+                                 bbdb-completion-list))
+              sname)
+          ;; Now collect all the dwim-addresses for each completion.
+          ;; Add it if the mail is part of the completions
+          (dolist (sym all-completions)
+            (setq sname (symbol-name sym))
+            (dolist (record (symbol-value sym))
+              (let ((mails (bbdb-record-mail record))
+                    accept)
+                (when mails
+                  (dolist (field completion-list)
+                    (cond ((eq field 'fl-name)
+                           (if (bbdb-string= sname (bbdb-record-name record))
+                               (push (car mails) accept)))
+                          ((eq field 'lf-name)
+                           (if (bbdb-string= sname (bbdb-cache-lf-name
+                                                    (bbdb-record-cache record)))
+                               (push (car mails) accept)))
+                          ((eq field 'aka)
+                           (if (member-ignore-case sname (bbdb-record-field
+                                                          record 'aka-all))
+                               (push (car mails) accept)))
+                          ((eq field 'organization)
+                           (if (member-ignore-case sname (bbdb-record-organization
+                                                          record))
+                               (push (car mails) accept)))
+                          ((eq field 'primary)
+                           (if (bbdb-string= sname (car mails))
+                               (push (car mails) accept)))
+                          ((eq field 'mail)
+                           (dolist (mail mails)
+                             (if (bbdb-string= sname mail)
+                                 (push mail accept))))))
+                  (dolist (mail (delete-dups accept))
+                    (push (bbdb-dwim-mail record mail) dwim-completions))))))
 
-        (setq dwim-completions (sort (delete-dups dwim-completions)
-                                     'string-lessp))
-        (cond ((not dwim-completions)
-               (message "Matching record has no mail field")
-               (sit-for 1)
-               (setq done 'nothing))
-              ;; It may happen that DWIM-COMPLETIONS contains only one element,
-              ;; if multiple completions match the same record.  Then we may
-              ;; proceed with DONE set to `unique'.
-              ((eq 1 (length dwim-completions))
-               (delete-region beg end)
-               (insert (car dwim-completions))
-               (bbdb-complete-mail-cleanup (car dwim-completions) beg)
-               (setq done 'unique))
-              (t (setq done 'choose))))))
+          (setq dwim-completions (sort (delete-dups dwim-completions)
+                                       'string-lessp))
+          (cond ((not dwim-completions)
+                 (message "Matching record has no mail field")
+                 (sit-for 1)
+                 (setq done 'nothing))
+                ;; DWIM-COMPLETIONS may contain only one element,
+                ;; if multiple completions match the same record.
+                ;; Then we may proceed with DONE set to `unique'.
+                ((eq 1 (length dwim-completions))
+                 (delete-region beg end)
+                 (insert (car dwim-completions))
+                 (bbdb-complete-mail-cleanup (car dwim-completions) beg)
+                 (setq done 'unique))
+                (t (setq done 'choose)))))))
 
     ;; By now, we have considered all possiblities to perform a completion.
     ;; If nonetheless we haven't done anything so far, consider cycling.

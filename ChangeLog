@@ -1,3 +1,7 @@
+2013-11-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-complete-mail): Only complete inside a
+	syntactically correct mail header.
+
 2013-10-06  Roland Winkler  <winkler@gnu.org>
 	* lisp/makefile-temp: Add commentary.  Copy bbdb-site.el.in to
 	bbdb-site.el.  Clean up.
