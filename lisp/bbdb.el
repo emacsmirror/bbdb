@@ -736,7 +736,8 @@ The car is used if the command is called without a prefix.
 The cdr is used if the command is called with a prefix (and if the prefix
         is not used for another purpose).
 
-Allowed values are (here ADDRESS is an email address found in a message):
+WITHOUT-PREFIX and WITH-PREFIX may take the values
+\(here ADDRESS is an email address found in a message):
  nil          Do nothing.
  search       Search for existing records matching ADDRESS.
  update       Search for existing records matching ADDRESS;
@@ -747,7 +748,6 @@ Allowed values are (here ADDRESS is an email address found in a message):
                 create a new record if it does not yet exist.
  a function   This functions will be called with no arguments.
                 It should return one of the above values.
-
  read         Read the value interactively."
   :group 'bbdb-mua
   :type '(cons (choice (const :tag "do nothing" nil)
