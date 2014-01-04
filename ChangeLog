@@ -1,3 +1,6 @@
+2014-01-03  Kevin Davidson <tkld@quadstone.com>
+	* lisp/bbdb-pgp.el: New file (taken from BBDB 2).
+
 2014-01-03  Roland Winkler  <winkler@gnu.org>
 	More flexible editing of xfields.
 	* lisp/bbdb.el (bbdb-read-string): Rename optional arg default to
