@@ -596,8 +596,6 @@ See `locate-file'."
   :group 'bbdb-record-display
   :type '(repeat (string :tag "File suffix")))
 
-
-;;; Record editing
 (defcustom bbdb-read-name-format 'fullname
   "Default format for reading names via `bbdb-read-name'.
 If it is 'first-last read first and last name separately.
@@ -609,6 +607,8 @@ See also `bbdb-name-format'."
                  (const :tag "Lastname, Firstname" last-first)
                  (const :tag "Full name" fullname)))
 
+
+;;; Record editing
 (defcustom bbdb-lastname-prefixes
  '("von" "de" "di")
   "List of lastname prefixes recognized in name fields.
@@ -737,8 +737,66 @@ Whether this is used at all depends on the variable `bbdb-check-postcode'."
   :group 'bbdb-record-edit
   :type '(repeat regexp))
 
+(defcustom bbdb-default-xfield 'notes
+  "Default xfield when editing BBDB records."
+  :group 'bbdb-record-edit
+  :type '(symbol :tag "Xfield"))
+
+(defcustom bbdb-edit-foo (cons bbdb-default-xfield 'current-fields)
+  "Fields to edit with command `bbdb-edit-foo'.
+This is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
+The car is used if the command is called without a prefix.
+The cdr is used if the command is called with a prefix.
+
+WITHOUT-PREFIX and WITH-PREFIX may take the values:
+ name            The full name
+ affix           The list of affixes
+ organization    The list of organizations
+ aka             the list of AKAs
+ mail            the list of email addresses
+ phone           the list of phone numbers
+ address         the list of addresses
+ current-fields  Read the field to edit using a completion table
+                   that includes all fields of the current record.
+ all-fields      Read the field to edit using a completion table
+                   that includes all fields currently known to BBDB.
+
+Any other symbol is interpreted as the label of an xfield."
+  :group 'bbdb-record-edit
+  :type '(cons (symbol :tag "Field without prefix")
+               (symbol :tag "Field with prefix")))
+
 
 ;;; MUA interface
+
+(defcustom bbdb-annotate-field bbdb-default-xfield
+  "Field to annotate via `bbdb-annotate-record' and friends.
+This may take the values:
+ affix           The list of affixes
+ organization    The list of organizations
+ aka             the list of AKAs
+ mail            the list of email addresses
+ all-fields      Read the field to edit using a completion table
+                   that includes all fields currently known to BBDB.
+
+Any other symbol is interpreted as the label of an xfield."
+  :group 'bbdb-mua
+  :type '(symbol :tag "Field to annotate"))
+
+(defcustom bbdb-mua-edit-field bbdb-default-xfield
+  "Field to edit with command `bbdb-mua-edit-field' and friends.
+This may take the values:
+ name            The full name
+ affix           The list of affixes
+ organization    The list of organizations
+ aka             the list of AKAs
+ mail            the list of email addresses
+ all-fields      Read the field to edit using a completion table
+                   that includes all fields currently known to BBDB.
+
+Any other symbol is interpreted as the label of an xfield."
+  :group 'bbdb-mua
+  :type '(symbol :tag "Field to edit"))
 
 (defcustom bbdb-mua-update-interactive-p '(search . query)
   "How BBDB's interactive MUA commands update BBDB records.
@@ -1137,7 +1195,7 @@ However, if the value of HEADER also matches an element of
 `bbdb-auto-notes-ignore-headers' no annotation is generated.
 
 The annotation will be added to FIELD of the respective record.
-FIELD defaults to 'notes.
+FIELD defaults to `bbdb-default-xfield'.
 
 STRING defines a replacement for the match of REGEXP in the value of HEADER.
 It may contain \\& or \\N specials used by `replace-match'.
@@ -1692,6 +1750,7 @@ APPEND and INVERT appear in the message area.")
     (define-key km "A"          'bbdb-mail-aliases)
     (define-key km "c"          'bbdb-create)
     (define-key km "e"          'bbdb-edit-field)
+    (define-key km ";"          'bbdb-edit-foo)
     (define-key km "n"          'bbdb-next-record)
     (define-key km "p"          'bbdb-prev-record)
     (define-key km "N"          'bbdb-next-field)
@@ -1804,6 +1863,7 @@ This is a child of `special-mode-map'.")
      ["Create new record" bbdb-create t]
      ["Edit current field" bbdb-edit-field t]
      ["Insert new field" bbdb-insert-field t]
+     ["Edit some field" bbdb-edit-foo t]
      ["Transpose fields" bbdb-transpose-fields t]
      ["Delete record or field" bbdb-delete-field-or-record t]
      "--"
@@ -4011,7 +4071,7 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
            (if (stringp field) field
              (vector (symbol-name field)
                      `(bbdb-insert-field
-                       ,record ',field (bbdb-prompt-for-new-field ',field))
+                       ,record ',field (bbdb-prompt-for-new-field ,record ',field))
                      (not (or (and (eq field 'affix) (bbdb-record-affix record))
                               (and (eq field 'organization)
                                    (bbdb-record-organization record))

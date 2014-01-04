@@ -255,9 +255,9 @@ but not allowing for regexps."
               clauses))
     (if xfield-re
         (push `(cond ((stringp ,xfield-re)
-                      ;; check xfield `notes'
+                      ;; check xfield `bbdb-default-xfield'
                       (string-match ,xfield-re
-                                    (or (bbdb-record-xfield record 'notes) "")))
+                                    (or (bbdb-record-xfield record bbdb-default-xfield) "")))
                      ((eq (car ,xfield-re) '*)
                       ;; check all xfields
                       (let ((labels bbdb-xfield-label-list) done tmp)
@@ -679,12 +679,12 @@ but does ensure that there will not be name collisions."
                                                  bbdb-default-area-code))))))
                (push (apply 'vector label phone-list) phones))
              (nreverse phones)))
-          ;; notes
-          (notes (bbdb-read-xfield 'notes)))
-      (setq notes (unless (string= notes "")
-                    `((notes . ,notes))))
+          ;; `bbdb-default-xfield'
+          (xfield (bbdb-read-xfield bbdb-default-xfield)))
       (vector (car name) (cdr name) nil nil organizations phones addresses
-              mail notes (make-vector bbdb-cache-length nil)))))
+              mail (unless (string= xfield "")
+                     (list (cons bbdb-default-xfield xfield)))
+              (make-vector bbdb-cache-length nil)))))
 
 (defun bbdb-read-name (&optional first-and-last dfirst dlast)
   "Read name for a record from minibuffer.
@@ -801,8 +801,7 @@ value of \"\", the default) means do not alter the address."
                         '(affix organization aka phone address mail)))
           (field "")
           (completion-ignore-case t)
-          (present (mapcar 'car (bbdb-record-xfields record)))
-          init init-f)
+          (present (mapcar 'car (bbdb-record-xfields record))))
      (if (bbdb-record-affix record) (push 'affix present))
      (if (bbdb-record-organization record) (push 'organization present))
      (if (bbdb-record-mail record) (push 'mail present))
@@ -812,13 +811,10 @@ value of \"\", the default) means do not alter the address."
      (setq list (mapcar 'symbol-name list))
      (while (string= field "")
        (setq field (downcase (completing-read "Insert Field: " list))))
-     (if (memq (intern field) present)
+     (setq field (intern field))
+     (if (memq field present)
          (error "Field \"%s\" already exists" field))
-     (setq init-f (intern-soft (concat "bbdb-init-" field))
-           init   (if (and init-f (functionp init-f))
-                      (funcall init-f record))
-           field (intern field))
-     (list record field (bbdb-prompt-for-new-field field init
+     (list record field (bbdb-prompt-for-new-field record field
                                                    current-prefix-arg))))
 
   (cond (;; affix
@@ -868,50 +864,51 @@ value of \"\", the default) means do not alter the address."
     (bbdb-change-record record)))
 
 ;; Used by `bbdb-insert-field' and `bbdb-insert-field-menu'.
-(defun bbdb-prompt-for-new-field (field &optional init flag)
-  (cond (;; affix
-         (eq field 'affix) (bbdb-read-string "Affix: " init))
-        ;; organization
-        ((eq field 'organization) (bbdb-read-organization init))
-        ;; mail
-        ((eq field 'mail)
-         (let ((mail (bbdb-read-string "Mail: " init)))
-           (if (string-match "^mailto:" mail)
-               (setq mail (substring mail (match-end 0))))
-           (if (or (not bbdb-default-domain)
-                   current-prefix-arg (string-match "[@%!]" mail))
-               mail
-             (concat mail "@" bbdb-default-domain))))
-        ;; AKA
-        ((eq field 'aka) (bbdb-read-string "Alternate Names: " init))
-        ;; Phone
-        ((eq field 'phone)
-         (let ((bbdb-phone-style
-                (if current-prefix-arg
-                    (if (eq bbdb-phone-style 'nanp) nil 'nanp)
-                  bbdb-phone-style)))
-           (apply 'vector
-                  (bbdb-read-string "Label: " nil bbdb-phone-label-list)
-                  (bbdb-error-retry
-                   (bbdb-parse-phone
-                    (read-string "Phone: "
-                                 (and (integerp bbdb-default-area-code)
-                                      (format "(%03d) "
-                                              bbdb-default-area-code))))))))
-        ;; Address
-        ((eq field 'address)
-         (let ((address (make-vector bbdb-address-length nil)))
-           (bbdb-record-edit-address address nil flag)
-           address))
-        ;; xfield
-        ((memq field bbdb-xfield-label-list)
-         (bbdb-read-string (format "%s: " field) init))
-        ;; New xfield
-        (t
-         (unless (y-or-n-p
-                  (format "\"%s\" is an unknown field name.  Define it? " field))
-           (error "Aborted"))
-         (bbdb-read-string (format "%s: " field) init))))
+(defun bbdb-prompt-for-new-field (record field &optional flag)
+  (let* ((init-f (intern-soft (concat "bbdb-init-" (symbol-name field))))
+         (init (if (and init-f (functionp init-f))
+                   (funcall init-f record))))
+    (cond (;; affix
+           (eq field 'affix) (bbdb-read-string "Affix: " init))
+          ;; organization
+          ((eq field 'organization) (bbdb-read-organization init))
+          ;; mail
+          ((eq field 'mail)
+           (let ((mail (bbdb-read-string "Mail: " init)))
+             (if (string-match "^mailto:" mail)
+                 (setq mail (substring mail (match-end 0))))
+             (if (or (not bbdb-default-domain)
+                     current-prefix-arg (string-match "[@%!]" mail))
+                 mail
+               (concat mail "@" bbdb-default-domain))))
+          ;; AKA
+          ((eq field 'aka) (bbdb-read-string "Alternate Names: " init))
+          ;; Phone
+          ((eq field 'phone)
+           (let ((bbdb-phone-style
+                  (if current-prefix-arg
+                      (if (eq bbdb-phone-style 'nanp) nil 'nanp)
+                    bbdb-phone-style)))
+             (apply 'vector
+                    (bbdb-read-string "Label: " nil bbdb-phone-label-list)
+                    (bbdb-error-retry
+                     (bbdb-parse-phone
+                      (read-string "Phone: "
+                                   (and (integerp bbdb-default-area-code)
+                                        (format "(%03d) "
+                                                bbdb-default-area-code))))))))
+          ;; Address
+          ((eq field 'address)
+           (let ((address (make-vector bbdb-address-length nil)))
+             (bbdb-record-edit-address address nil flag)
+             address))
+          ;; xfield
+          ((or (memq field bbdb-xfield-label-list)
+               ;; New xfield
+               (y-or-n-p
+                (format "\"%s\" is an unknown field name.  Define it? " field))
+               (error "Aborted"))
+           (bbdb-read-xfield field init)))))
 
 ;;;###autoload
 (defun bbdb-edit-field (record field &optional value flag)
@@ -978,9 +975,91 @@ a phone number or address with VALUE being nil."
           (t ; xfield
            (bbdb-record-set-xfield
             record field
-            (bbdb-read-string (format "%s: " field)
-                              (bbdb-record-xfield record field)))))
+            (bbdb-read-xfield field (bbdb-record-xfield record field)))))
     (bbdb-change-record record bbdb-need-to-sort)))
+
+(defun bbdb-edit-foo (record field &optional nvalue)
+  "For RECORD edit some FIELD (mostly interactively).
+FIELD may take the same values as the elements of the variable `bbdb-edit-foo'.
+If FIELD is 'phone or 'address, NVALUE should be an integer in order to edit
+the NVALUEth phone or address field; otherwise insert a new phone or address
+field.
+
+Interactively, if called without a prefix, the value of FIELD is the car
+of the variable `bbdb-edit-foo'.  When called with a prefix, the value
+of FIELD is the cdr of this variable."
+  (interactive
+   (let* ((_ (bbdb-editable))
+          (record (bbdb-current-record))
+          (tmp (if current-prefix-arg (cdr bbdb-edit-foo) (car bbdb-edit-foo)))
+          (field (if (memq tmp '(current-fields all-fields))
+                     ;; Do not require match so that we can define new xfields.
+                     (intern (completing-read
+                              "Field: " (mapcar 'list (if (eq tmp 'all-fields)
+                                                          (append '(name affix organization aka mail phone address)
+                                                                  bbdb-xfield-label-list)
+                                                        (append (if (bbdb-record-name record) '(name))
+                                                                (if (bbdb-record-affix record) '(affix))
+                                                                (if (bbdb-record-organization record) '(organization))
+                                                                (if (bbdb-record-aka record) '(aka))
+                                                                (if (bbdb-record-mail record) '(mail))
+                                                                (if (bbdb-record-phone record) '(phone))
+                                                                (if (bbdb-record-address record) '(address))
+                                                                (mapcar 'car (bbdb-record-xfields record)))))))
+                   tmp))
+          ;; Multiple phone and address fields may use the same label.
+          ;; So we cannot use these labels to uniquely identify
+          ;; a phone or address field.  So instead we number these fields
+          ;; consecutively.  But we do use the labels to annotate the numbers
+          ;; (available starting from GNU Emacs 24.1).
+          (nvalue (cond ((eq field 'phone)
+                         (let* ((phones (bbdb-record-phone record))
+                                (collection (cons (cons "new" "new phone #")
+                                                  (mapcar (lambda (n)
+                                                            (cons (format "%d" n) (bbdb-phone-label (nth n phones))))
+                                                          (number-sequence 0 (1- (length phones))))))
+                                (completion-extra-properties
+                                 '(:annotation-function
+                                   (lambda (s) (format "  (%s)" (cdr (assoc s collection)))))))
+                                ; (completion-annotate-function (cadr completion-extra-properties))) ; Emacs 23
+                           (if (< 0 (length phones))
+                               (completing-read "Phone field: " collection nil t)
+                             "new")))
+                        ((eq field 'address)
+                         (let* ((addresses (bbdb-record-address record))
+                                (collection (cons (cons "new" "new address")
+                                                  (mapcar (lambda (n)
+                                                            (cons (format "%d" n) (bbdb-address-label (nth n addresses))))
+                                                          (number-sequence 0 (1- (length addresses))))))
+                                (completion-extra-properties
+                                 '(:annotation-function
+                                   (lambda (s) (format "  (%s)" (cdr (assoc s collection)))))))
+                                ; (completion-annotate-function (cadr completion-extra-properties))) ; Emacs 23
+                           (if (< 0 (length addresses))
+                               (completing-read "Address field: " collection nil t)
+                             "new"))))))
+     (list record field (and (stringp nvalue)
+                             (if (string= "new" nvalue)
+                                 'new
+                               (string-to-number nvalue))))))
+
+  (if (memq field '(firstname lastname name-lf aka-all mail-aka mail-canon))
+      (error "Field `%s' illegal" field))
+  (let ((value (if (numberp nvalue)
+                   (nth nvalue (cond ((eq field 'phone) (bbdb-record-phone record))
+                                     ((eq field 'address) (bbdb-record-address record))
+                                     (t (error "%s: nvalue %s meaningless" field nvalue)))))))
+    (if (and (numberp nvalue) (not value))
+        (error "%s: nvalue %s out of range" field nvalue))
+    (if (or (and (eq field 'affix) (bbdb-record-affix record))
+            (and (eq field 'organization) (bbdb-record-organization record))
+            (and (eq field 'mail) (bbdb-record-mail record))
+            (and (eq field 'aka) (bbdb-record-aka record))
+            (assq field (bbdb-record-xfields record))
+            value)
+        (bbdb-edit-field record field value)
+      (bbdb-insert-field record field
+                         (bbdb-prompt-for-new-field record field)))))
 
 (defun bbdb-read-xfield (field &optional init)
   "Read xfield FIELD with optional INIT.

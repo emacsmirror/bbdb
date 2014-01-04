@@ -1,4 +1,26 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	Avoid hard-coded references to xfield notes.
+	* lisp/bbdb.el (bbdb-default-xfield, bbdb-edit-foo)
+	(bbdb-annotate-field, bbdb-mua-edit-field): New variables.
+	(bbdb-auto-notes-rules): Fix docstring.
+	* lisp/bbdb-com.el (bbdb-edit-foo): New command.
+	(bbdb-search, bbdb-read-record): Use bbdb-default-xfield.
+	(bbdb-insert-field): Do not handle initial value.
+	(bbdb-prompt-for-new-field): Replace arg init by arg record to
+	handle initial value here.
+	* lisp/bbdb.el (bbdb-insert-field-menu): Change accordingly.
+	* lisp/bbdb-mua.el (bbdb-annotate-record): Use
+	bbdb-annotate-field.  Allow empty strings for removing an xfield.
+	(bbdb-mua-annotate-field-interactive): New function.
+	(bbdb-mua-annotate-sender, bbdb-mua-annotate-recipients): Use it.
+	New optional arg field.
+	(bbdb-mua-edit-field-interactive, bbdb-mua-edit-field)
+	(bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients): Use
+	variable bbdb-mua-edit-field.
+	(bbdb-mua-edit-field-recipients): Use bbdb-default-xfield.
+	* lisp/bbdb-snarf.el (bbdb-snarf-notes): Use bbdb-default-xfield.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	After editing always update display in all BBDB buffers.
 	* lisp/bbdb.el (bbdb-delete-record-internal): Rename optional arg
 	remhash to completely.  Undisplay record if non-nil.

@@ -256,7 +256,7 @@ NANP is the North American Numbering Plan used in North and Central America."
     (bbdb-record-set-xfields
      record
      (nconc (bbdb-record-xfields record)
-            (list (cons 'notes (buffer-string)))))
+            (list (cons bbdb-default-xfield (buffer-string)))))
     (erase-buffer)))
 
 (defsubst bbdb-snarf-rule-interactive ()
