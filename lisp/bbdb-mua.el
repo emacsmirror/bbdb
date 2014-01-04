@@ -256,19 +256,20 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
                         ;; We put the call of `bbdb-notice-mail-hook'
                         ;; into `bbdb-annotate-message' so that this hook
                         ;; runs only if the user agreed to change a record.
-                        (cond ((eq bbdb-update-records-p 'create)
-                               (bbdb-annotate-message address 'create))
-                              ((eq bbdb-update-records-p 'query)
-                               (bbdb-annotate-message
-                                address 'bbdb-prompt-for-create))
-                              ((eq bbdb-update-records-p 'update)
-                               (bbdb-annotate-message address 'update))
-                              ((eq bbdb-update-records-p 'search)
+                        (cond ((or bbdb-read-only
+                                   (eq bbdb-update-records-p 'search))
                                ;; Search for records having this mail address
                                ;; but do not modify an existing record.
                                ;; This does not run `bbdb-notice-mail-hook'.
                                (bbdb-message-search (car address)
-                                                    (cadr address)))))
+                                                    (cadr address)))
+                              ((eq bbdb-update-records-p 'update)
+                               (bbdb-annotate-message address 'update))
+                              ((eq bbdb-update-records-p 'query)
+                               (bbdb-annotate-message
+                                address 'bbdb-prompt-for-create))
+                              ((eq bbdb-update-records-p 'create)
+                               (bbdb-annotate-message address 'create))))
                   nil)))
           (cond ((eq task 'quit)
                  (setq address-list nil))
@@ -287,9 +288,11 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
     (if (and records (not bbdb-message-all-addresses))
         (setq records (list (car records))))
 
-    (let ((bbdb-notice-hook-pending t))
-      (dolist (record records)
-        (run-hook-with-args 'bbdb-notice-record-hook record)))
+    (unless bbdb-read-only
+      (bbdb-editable)
+      (let ((bbdb-notice-hook-pending t))
+        (dolist (record records)
+          (run-hook-with-args 'bbdb-notice-record-hook record))))
 
     records))
 
@@ -376,7 +379,7 @@ Return the records matching ADDRESS or nil."
     ;; Create a new record if nothing else fits.
     ;; In this way, we can fill the slots of the new record with
     ;; the same code that updates the slots of existing records.
-    (unless (or records bbdb-read-only
+    (unless (or records
                 (eq update-p 'update)
                 (not (or name mail)))
       ;; If there is no name, try to use the mail address as name
@@ -401,7 +404,7 @@ Return the records matching ADDRESS or nil."
              change-p add-mails add-name)
 
         ;; Analyze the name part of the record.
-        (cond ((or bbdb-read-only (not name)
+        (cond ((or (not name)
                    ;; The following tests can differ for more complicated names
                    (bbdb-string= name old-name)
                    (and (equal fname (bbdb-record-firstname record)) ; possibly
@@ -457,7 +460,7 @@ Return the records matching ADDRESS or nil."
                            mail)))
 
         ;; Analyze the mail part of the new records
-        (cond ((or bbdb-read-only (not mail) (equal mail "???")
+        (cond ((or (not mail) (equal mail "???")
                    (member-ignore-case mail (bbdb-record-mail-canon record)))) ; do nothing
 
               (created-p ; new record
@@ -845,6 +848,7 @@ For use as an element of `bbdb-notice-record-hook'."
                                     (bbdb-message-header-re (nth 1 rule) (nth 2 rule)))))
                         (setq ignore t)))
                   ignore))
+      (bbdb-editable)
 
       ;; For speed-up expanded rules are stored in `bbdb-auto-notes-rules-expanded'.
       (when (and bbdb-auto-notes-rules

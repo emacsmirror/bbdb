@@ -142,29 +142,6 @@ With ARG a negative number do not append."
         (current-prefix-arg 'multi-line)
         (t bbdb-layout)))
 
-;; Should we call this more often?
-;; The MUA commands and functions call `bbdb-records' that checks
-;; consistency and tries to revert if necessary.
-(defun bbdb-editable ()
-  "Throw an error if BBDB is not editable.
-BBDB is not editable if it is read-only or out of sync."
-  (if bbdb-read-only
-      (error "The Insidious Big Brother Database is read-only."))
-  (unless (buffer-live-p bbdb-buffer)
-    (error "No live BBDB buffer"))
-  (unless (verify-visited-file-modtime bbdb-buffer)
-    (error "BBDB file changed on disk.  Revert?"))
-  ;; Is the following possible?  Superfluous tests do not hurt.
-  ;; (It is relevant only for editing commands in a BBDB buffer,
-  ;; but not for MUA-related editing functions.)
-  (if (and (eq major-mode 'bbdb-mode)
-           bbdb-records)
-      (unless (memq (caar bbdb-records)
-                    ;; Do not call `bbdb-records' that tries to revert.
-                    (with-current-buffer bbdb-buffer
-                      bbdb-records))
-        (error "The Insidious Big Brother Database is out of sync."))))
-
 (defun bbdb-search-invert-p ()
   "Return variable `bbdb-search-invert' and set it to nil.
 To set it again, use command `bbdb-search-invert'."
@@ -408,6 +385,7 @@ If UPDATE is non-nil (as in interactive calls) update the database.
 Otherwise, this is the caller's responsiblity (for example, when used
 in `bbdb-change-hook')."
   (interactive (list (bbdb-do-records) t))
+  (bbdb-editable)
   (dolist (record (bbdb-record-list records))
     (let (cmails)
       (dolist (mail (bbdb-record-mail record))
@@ -620,9 +598,7 @@ See `bbdb-search' for searching records with regexps."
   "Prompt for and return a new BBDB record.
 Does not insert it into the database or update the hashtables,
 but does ensure that there will not be name collisions."
-  (if bbdb-read-only
-      (error "The Insidious Big Brother Database is read-only."))
-  (bbdb-buffer)  ; make sure database is loaded and up-to-date
+  (bbdb-editable)
   (let (name)
     (bbdb-error-retry
      (setq name (bbdb-read-name first-and-last))
@@ -727,6 +703,7 @@ or [\"label\" \"phone-number\"]
 XFIELDS is an alist associating symbols with strings.
 
 If CHECK is non-nil throw an error if an argument is not syntactically correct."
+  (bbdb-editable)
   ;; name
   (cond ((stringp name)
          (setq name (bbdb-divide-name name)))
@@ -1359,7 +1336,8 @@ are simply concatenated.
 Interactively, OLD-RECORD is the current record.  NEW-RECORD is prompted for.
 With prefix arg NEW-RECORD defaults to the first record with the same name."
   (interactive
-   (let* ((old-record (bbdb-current-record))
+   (let* ((_ (bbdb-editable))
+          (old-record (bbdb-current-record))
           (name (bbdb-record-name old-record))
           (new-record (and current-prefix-arg
                            ;; take the first record with the same name
@@ -1377,6 +1355,7 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
                             "???"))
                 (list old-record))))))
 
+  (bbdb-editable)
   (cond ((eq old-record new-record) (error "Records are equal"))
         ((null new-record) (error "No record to merge with")))
 
@@ -1453,6 +1432,7 @@ If UPDATE is non-nil (as in interactive calls) update the database.
 Otherwise, this is the caller's responsiblity (for example, when used
 in `bbdb-change-hook')."
   (interactive (list (bbdb-do-records) t))
+  (bbdb-editable)
   (dolist (record (bbdb-record-list records))
     (bbdb-record-set-address
      record (sort (bbdb-record-address record)
@@ -1470,6 +1450,7 @@ If UPDATE is non-nil (as in interactive calls) update the database.
 Otherwise, this is the caller's responsiblity (for example, when used
 in `bbdb-change-hook')."
   (interactive (list (bbdb-do-records) t))
+  (bbdb-editable)
   (dolist (record (bbdb-record-list records))
     (bbdb-record-set-phone
      record (sort (bbdb-record-phone record)
@@ -1487,6 +1468,7 @@ If UPDATE is non-nil (as in interactive calls) update the database.
 Otherwise, this is the caller's responsiblity (for example, when used
 in `bbdb-change-hook')."
   (interactive (list (bbdb-do-records) t))
+  (bbdb-editable)
   (dolist (record (bbdb-record-list records))
     (bbdb-record-set-xfields
      record (sort (bbdb-record-xfields record)

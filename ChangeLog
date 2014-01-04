@@ -1,4 +1,17 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	Check more carefully/frequently that BBDB is editable.
+	* lisp/bbdb.el (bbdb-editable): Move here from lisp/bbdb-com.el.
+	Revert BBDB buffer if possible.
+	* lisp/bbdb.el (bbdb-record-set-field)
+	* lisp/bbdb-com.el (bbdb-read-record, bbdb-create-internal)
+	(bbdb-merge-records, bbdb-sort-addresses, bbdb-sort-phones)
+	(bbdb-sort-xfields)
+	* lisp/bbdb-snarf.el (bbdb-snarf): Check that BBDB is editable.
+	* lisp/bbdb-mua.el (bbdb-update-records): Obey bbdb-read-only.
+	(bbdb-annotate-message): Ignore bbdb-read-only.
+	(bbdb-auto-notes): Check that BBDB is editable.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-check-name, bbdb-extract-address-components):
 	Fix docstring.
 	* lisp/bbdb-com.el (bbdb-search-duplicates): Fix warning message.

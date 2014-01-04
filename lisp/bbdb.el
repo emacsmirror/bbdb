@@ -2473,6 +2473,7 @@ Any other symbol is interpreted as the label for an xfield.
 Then VALUE is the value of this xfield.
 
 See also `bbdb-record-field'."
+  (bbdb-editable)
   (if (memq field '(name-lf mail-aka mail-canon aka-all))
       (error "`%s' is not allowed as the name of a field" field))
   (let ((record-type (cdr bbdb-record-type)))
@@ -2833,6 +2834,22 @@ that window has been scrolled to the record we have just modified."
              ,@body)))
     `(with-current-buffer (bbdb-buffer)
        ,@body)))
+
+(defun bbdb-editable ()
+  "Ensure that BBDB is editable, otherwise throw an error.
+If BBDB is out of sync try to revert.
+BBDB is not editable if it is read-only."
+  (if bbdb-read-only (error "BBDB is read-only"))
+  (let ((buffer (bbdb-buffer))) ; this reverts if necessary / possible
+    ;; Is the following possible?  Superfluous tests do not hurt.
+    ;; It is relevant only for editing commands in a BBDB buffer,
+    ;; but not for MUA-related editing functions.
+    (if (and (eq major-mode 'bbdb-mode)
+             bbdb-records
+             (not (memq (caar bbdb-records)
+                        (with-current-buffer buffer bbdb-records))))
+        (error "BBDB is out of sync")))
+  t)
 
 ;;;###autoload
 (defsubst bbdb-records ()

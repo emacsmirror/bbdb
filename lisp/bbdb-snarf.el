@@ -303,6 +303,7 @@ See `bbdb-snarf-rule-alist' for details."
    (list (buffer-substring-no-properties (region-beginning) (region-end))
          (bbdb-snarf-rule-interactive)))
 
+  (bbdb-editable)
   (let ((record (bbdb-empty-record)))
     (with-current-buffer (get-buffer-create " *BBDB Snarf*")
       (erase-buffer)
