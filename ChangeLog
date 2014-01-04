@@ -1,4 +1,9 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-init-forms): Add init form for anniv.
+	(bbdb-initialize): Update docstring accordingly.
+	* lisp/bbdb-anniv.el: Update doc accordingly.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	Clean up handling of redundant email addresses.
 	* lisp/bbdb.el (bbdb-ignore-redundant-mails): Rename from
 	bbdb-canonicalize-redundant-mails, keeping the latter as obsolete

@@ -1613,7 +1613,9 @@ Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
     (message                    ; the gnus mail user agent
      (add-hook 'message-setup-hook 'bbdb-insinuate-message))
     (sc                         ; supercite
-     (add-hook 'sc-load-hook 'bbdb-insinuate-sc)))
+     (add-hook 'sc-load-hook 'bbdb-insinuate-sc))
+    (anniv                      ; anniversaries
+     (add-hook 'diary-list-entries-hook 'bbdb-anniv-diary-entries)))
   "Alist mapping features to insinuation forms.")
 
 (defvar bbdb-search-invert nil
@@ -1794,7 +1796,7 @@ This is a child of `special-mode-map'.")
      ["Sort xfields" bbdb-sort-xfields t]
      ["Merge records" bbdb-merge-records t]
      ["Sort database" bbdb-sort-records t]
-     ["Delete duplicate mails" bbdb-delete-duplicate-mails t]
+     ["Delete duplicate mails" bbdb-delete-redundant-mails t]
      "--"
      ["Save BBDB" bbdb-save t]
      ["Revert BBDB" revert-buffer t])
@@ -3902,7 +3904,7 @@ For address completion using the names and mail addresses in the database:
 
 Important variables:
 \t `bbdb-auto-revert'
-\t `bbdb-canonicalize-redundant-mails'
+\t `bbdb-ignore-redundant-mails'
 \t `bbdb-case-fold-search'
 \t `bbdb-completion-list'
 \t `bbdb-default-area-code'
@@ -4176,9 +4178,9 @@ however, after having used other programs to add records to the BBDB."
 
 ;;;###autoload
 (defun bbdb-initialize (&rest muas)
-  "Initialize BBDB for MUAS.
-List MUAS may include the following symbols
-to initialize the respective mail/news readers and composers:
+  "Initialize BBDB for MUAS and miscellaneous packages.
+List MUAS may include the following symbols to initialize the respective
+mail/news readers, composers, and miscellaneous packages:
   gnus       Gnus mail/news reader.
   mh-e       MH-E mail reader.
   rmail      Rmail mail reader.
@@ -4186,7 +4188,8 @@ to initialize the respective mail/news readers and composers:
   mail       Mail (M-x mail).
   message    Message mode.
 
-Initialization of miscellaneous packages:
+  anniv      Anniversaries in Emacs diary.
+
   sc         Supercite.
 
 See also `bbdb-mua-auto-update-init'.  The latter is a separate function

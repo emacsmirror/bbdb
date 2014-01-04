@@ -29,8 +29,8 @@
 ;; If FORM is nil, TEXT is used instead to display the anniversary entry
 ;; in the diary buffer.
 ;;
-;; To display BBDB anniversaries in the Emacs diary, use
-;; (add-hook 'diary-list-entries-hook 'bbdb-anniv-diary-entries)
+;; To display BBDB anniversaries in the Emacs diary,
+;; call `bbdb-initialize' with arg `anniv'.
 ;;
 ;; See the BBDB info manual for documentation.
 
