@@ -706,15 +706,12 @@ using the echo area, inserts the new record in BBDB, sorted alphabetically,
 and offers to save the BBDB file.  DO NOT call this from a program.
 Call `bbdb-create-internal' instead."
   (interactive (list (bbdb-read-record current-prefix-arg)))
-  (run-hook-with-args 'bbdb-create-hook record)
   (bbdb-change-record record t t)
   (bbdb-display-records (list record)))
 
-(defun bbdb-create-internal (name &optional affix aka organization mail
-                                  phone address xfields)
-  "Adds a record to the database; this function does a fair amount of
-error-checking on the passed in values, so it is safe to call this from
-other programs.
+(defun bbdb-create-internal (&optional name affix aka organization mail
+                                       phone address xfields check)
+  "Add a new record to the database and return it.
 
 NAME is a string or a cons cell (FIRST . LAST), the name of the person to add.
 An error is thrown if NAME is already in use and `bbdb-allow-duplicates' is nil.
@@ -726,37 +723,38 @@ ADDRESS is a list of address objects.  An address is a vector of the form
 PHONE is a list of phone-number objects.  A phone-number is a vector of
 the form [\"label\" areacode prefix suffix extension-or-nil]
 or [\"label\" \"phone-number\"]
-XFIELDS is an alist associating symbols with strings."
+XFIELDS is an alist associating symbols with strings.
+
+If CHECK is non-nil throw an error if an argument is not syntactically correct."
   ;; name
-  (if (stringp name)
-      (setq name (bbdb-divide-name name))
-    (bbdb-check-type name '(cons string string) t))
+  (cond ((stringp name)
+         (setq name (bbdb-divide-name name)))
+        (check (bbdb-check-type name '(or nil (cons string string)) t)))
   (let ((firstname (car name))
         (lastname (cdr name))
         (record-type (cdr bbdb-record-type)))
     (bbdb-check-name firstname lastname)
     ;; mail addresses
-    (if (stringp mail)
-        (setq mail (bbdb-split 'mail mail))
-      (bbdb-check-type mail (bbdb-record-mail record-type) t))
+    (cond ((stringp mail)
+           (setq mail (bbdb-split 'mail mail)))
+          (check (bbdb-check-type mail (bbdb-record-mail record-type) t)))
     (unless bbdb-allow-duplicates
       (dolist (elt mail)
         (if (bbdb-gethash elt '(mail))
             (error "%s is already in the database" elt))))
     ;; other fields
-    (bbdb-check-type affix (bbdb-record-affix record-type) t)
-    (bbdb-check-type aka (bbdb-record-aka record-type) t)
-    (bbdb-check-type organization (bbdb-record-organization record-type) t)
-    (bbdb-check-type phone (bbdb-record-phone record-type) t)
-    (bbdb-check-type address (bbdb-record-address record-type) t)
-    (bbdb-check-type xfields (bbdb-record-xfields record-type) t)
-    (let ((record
-           (vector firstname lastname affix aka organization phone
-                   address mail xfields
-                   (make-vector bbdb-cache-length nil))))
-      (run-hook-with-args 'bbdb-create-hook record)
-      (bbdb-change-record record t t)
-      record)))
+    (when check
+      (bbdb-check-type affix (bbdb-record-affix record-type) t)
+      (bbdb-check-type aka (bbdb-record-aka record-type) t)
+      (bbdb-check-type organization (bbdb-record-organization record-type) t)
+      (bbdb-check-type phone (bbdb-record-phone record-type) t)
+      (bbdb-check-type address (bbdb-record-address record-type) t)
+      (bbdb-check-type xfields (bbdb-record-xfields record-type) t))
+    (bbdb-change-record
+     (vector firstname lastname affix aka organization phone
+             address mail xfields
+             (make-vector bbdb-cache-length nil))
+     t t)))
 
 ;;;###autoload
 (defun bbdb-insert-field (record field value)
@@ -1351,7 +1349,7 @@ With prefix N, omit the next N records.  If negative, omit backwards."
 
 ;;;###autoload
 (defun bbdb-merge-records (old-record new-record)
-  "Merge OLD-RECORD into NEW-RECORD.
+  "Merge OLD-RECORD into NEW-RECORD, return NEW-RECORD.
 This copies all the data in OLD-RECORD into NEW-RECORD.  Then OLD-RECORD
 is deleted.  If both records have names ask which to use.
 Affixes, organizations, phone numbers, addresses, and mail addresses
@@ -1439,7 +1437,8 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
   (if (assq new-record bbdb-records)
       (bbdb-redisplay-record new-record)
     ;; Append NEW-RECORD to the list of displayed records.
-    (bbdb-display-records (list new-record) nil t)))
+    (bbdb-display-records (list new-record) nil t))
+  new-record)
 
 ;; The following sorting functions are also intended for use
 ;; in `bbdb-change-hook'.  Then they will be called with one arg, the record.

@@ -2089,6 +2089,13 @@ internals."
   "Record cache function: Return mail-canon for RECORD."
   (bbdb-cache-mail-canon (bbdb-record-cache record)))
 
+(defun bbdb-empty-record ()
+  "Return a new empty record structure with a cache.
+It is the caller's responsibility to make the new record known to BBDB."
+  (let ((record (make-vector bbdb-record-length nil)))
+    (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
+    record))
+
 ;; `bbdb-hashtable' associates with each KEY a list of matching records.
 ;; KEY includes fl-name, lf-name, organizations, AKAs and email addresses.
 ;; When loading the database the hash table is initialized by calling
@@ -3037,24 +3044,24 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
           (set-buffer-modified-p nil)))))
 
 (defun bbdb-change-record (record &optional need-to-sort new)
-  "Update the database after a change of RECORD.
+  "Update the database after a change of RECORD.  Return RECORD.
 NEED-TO-SORT is t when the name has changed.
 If NEW is t treat RECORD as new.  New records are hashed.
-If a record is not new, it is the caller's responsibility
-to update the hash-table for RECORD."
+If RECORD is not new, it is redisplayed.  Yet it is then the caller's
+responsibility to update the hash-table for RECORD."
   (if bbdb-read-only
       (error "The Insidious Big Brother Database is read-only."))
-  (unless bbdb-notice-hook-pending
-    (run-hook-with-args 'bbdb-change-hook record))
   ;; Do the changing.
   ;; The call of `bbdb-records' checks file synchronization.
   ;; If RECORD refers to an existing record that has been changed,
   ;; yet in the meanwhile we reverted the BBDB file, then RECORD
   ;; no longer refers to a record in `bbdb-records'.  So we are stuck!
   ;; All changes will be lost.
-  ;; To avoid this problem we would have to call `bbdb-editable'
-  ;; at an earlier stage.  Is this relevant?  Where?
+  ;; To avoid this problem we would have to inhibit that `bbdb-file'
+  ;; may change on disc.
   (cond ((memq record (bbdb-records))
+         (unless bbdb-notice-hook-pending
+           (run-hook-with-args 'bbdb-change-hook record))
          (if (not need-to-sort) ;; If we do not need to sort, overwrite RECORD.
              (bbdb-overwrite-record-internal record)
            ;; Since we need to sort, delete then insert RECORD.
@@ -3062,12 +3069,13 @@ to update the hash-table for RECORD."
            ;; We assume it got updated by the caller.
            (bbdb-delete-record-internal record)
            (bbdb-insert-record-internal record)))
-        ;; Mostly we do not rely on NEW to identify new records.
-        ((not new)
-         (error "Changes are lost."))
-        (t ;; Record is not yet in database (whatever NEW says), so add it.
+        (new ;; Record is new and not yet in database, so add it.
+         (run-hook-with-args 'bbdb-create-hook record)
+         (unless bbdb-notice-hook-pending
+           (run-hook-with-args 'bbdb-change-hook record))
          (bbdb-insert-record-internal record)
-         (bbdb-hash-record record)))
+         (bbdb-hash-record record))
+        (t (error "Changes are lost.")))
   (unless (memq record bbdb-changed-records)
     (push record bbdb-changed-records))
   (run-hook-with-args 'bbdb-after-change-hook record)
@@ -3113,7 +3121,7 @@ printed Lisp objects are loadable by BBDB."
      ,@body))
 
 (defun bbdb-insert-record-internal (record)
-  "Insert RECORD into the database file.
+  "Insert RECORD into the database file.  Return RECORD.
 Do not call this function directly, call instead `bbdb-change-record'
 that calls the hooks, too."
   (unless (bbdb-record-marker record)
@@ -3158,7 +3166,7 @@ that calls the hooks, too."
     record))
 
 (defun bbdb-overwrite-record-internal (record)
-  "Overwrite RECORD in the database file.
+  "Overwrite RECORD in the database file.  Return RECORD.
 Do not call this function directly, call instead `bbdb-change-record'
 that calls the hooks, too."
   (bbdb-with-db-buffer

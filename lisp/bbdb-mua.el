@@ -379,14 +379,12 @@ Return the records matching ADDRESS or nil."
                (or (null name)
                    (string= "" name)))
           (setq name (funcall bbdb-message-clean-name-function mail)))
-      (when (or (eq update-p 'create)
-                (and (eq update-p 'query)
-                     (y-or-n-p (format "%s is not in the BBDB.  Add? "
-                                       (or name mail)))))
-        (let ((record (make-vector bbdb-record-length nil)))
-          (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
-          (setq records (list record)
-                created-p t))))
+      (if (or (eq update-p 'create)
+              (and (eq update-p 'query)
+                   (y-or-n-p (format "%s is not in the BBDB.  Add? "
+                                     (or name mail)))))
+          (setq records (list (bbdb-empty-record))
+                created-p t)))
 
     (dolist (record records)
       (let* ((old-name (bbdb-record-name record))
@@ -473,14 +471,17 @@ Return the records matching ADDRESS or nil."
                         (or bbdb-silent
                             (y-or-n-p (format "Add address \"%s\" to %s? " mail
                                               (bbdb-record-name record)))
-                            (and (or (eq update-p 'create)
+                            (and (or (and (functionp update-p)
+                                          (progn (setq update-p (funcall update-p)) nil))
+                                     (memq update-p '(t create))
                                      (and (eq update-p 'query)
                                           (y-or-n-p
                                            (format "Create a new record for %s? "
                                                    (bbdb-record-name record)))))
-                                 (setq record (bbdb-create-internal
-                                               (cons fname lname))
-                                       created-p t)))))
+                                 (progn
+                                   (setq record (bbdb-empty-record))
+                                   (bbdb-record-set-name record fname lname)
+                                   (setq created-p t))))))
                ;; then modify RECORD
                (bbdb-record-set-field
                 record 'mail
@@ -499,7 +500,6 @@ Return the records matching ADDRESS or nil."
                            (bbdb-record-name record) mail)
                 (message "noticed naked address \"%s\"" mail))))
 
-        (if created-p (run-hook-with-args 'bbdb-create-hook record))
         (if change-p (bbdb-change-record record (eq change-p 'sort) created-p))
         (let ((bbdb-notice-hook-pending t))
           (run-hook-with-args 'bbdb-notice-mail-hook record))

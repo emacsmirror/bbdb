@@ -1,4 +1,21 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	Handle new records more carefully.
+	* lisp/bbdb.el (bbdb-empty-record): New function.
+	(bbdb-change-record): Use bbdb-create-hook.  Fix docstring.
+	(bbdb-insert-record-internal, bbdb-overwrite-record-internal): Fix
+	docstring.
+	* lisp/bbdb-com.el (bbdb-create): Do not use bbdb-create-hook.
+	(bbdb-create-internal): Make arg name optional and allow a nil
+	value.  Check validity of arguments only if new arg check is
+	non-nil.
+	(bbdb-merge-records): Return record.
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Use bbdb-empty-record.
+	Handle case that arg create-p is a function.  Do not use
+	bbdb-create-hook.
+	* lisp/bbdb-snarf.el (bbdb-snarf): Use bbdb-empty-record.  Return
+	record.  Do not use bbdb-create-hook.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-snarf.el (bbdb-snarf-rule-interactive): Use
 	symbol-name.
 

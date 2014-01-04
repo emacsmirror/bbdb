@@ -295,7 +295,7 @@ See `bbdb-snarf-rule-alist' for details."
 
 ;;;###autoload
 (defun bbdb-snarf (string &optional rule)
-  "Snarf a BBDB record in STRING using RULE.
+  "Snarf a BBDB record in STRING using RULE.  Return this record.
 Interactively, STRING is the current region.
 RULE defaults to `bbdb-snarf-rule-default'.
 See `bbdb-snarf-rule-alist' for details."
@@ -303,8 +303,7 @@ See `bbdb-snarf-rule-alist' for details."
    (list (buffer-substring-no-properties (region-beginning) (region-end))
          (bbdb-snarf-rule-interactive)))
 
-  (let ((record (make-vector bbdb-record-length nil)))
-    (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
+  (let ((record (bbdb-empty-record)))
     (with-current-buffer (get-buffer-create " *BBDB Snarf*")
       (erase-buffer)
       (insert (substring-no-properties string))
@@ -321,9 +320,9 @@ See `bbdb-snarf-rule-alist' for details."
       (if old-record
           (bbdb-merge-records old-record record)
         ;; create new record
-        (run-hook-with-args 'bbdb-create-hook record)
         (bbdb-change-record record t t)
-        (bbdb-display-records (list record))))))
+        (bbdb-display-records (list record))
+        record))))
 
 ;; Some test cases
 ;;
