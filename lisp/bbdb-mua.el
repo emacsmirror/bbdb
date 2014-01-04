@@ -200,7 +200,7 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
                (bbdb-get-address-components nil ignore-address))))))
 
 ;;;###autoload
-(defun bbdb-update-records (address-list &optional update-p)
+(defun bbdb-update-records (address-list &optional update-p sort)
   "Return the list of BBDB records matching ADDRESS-LIST.
 ADDRESS-LIST is a list of mail addresses.  (It can be extracted from
 a mail message using `bbdb-get-address-components'.)
@@ -275,8 +275,10 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
                    (add-to-list 'records hit))))
           (if (and records (not bbdb-message-all-addresses))
               (setq address-list nil))))
-      ;; Make RECORDS a list ordered like ADDRESS-LIST.
-      (setq records (nreverse records)))
+      (setq records
+            (if sort (sort records 'bbdb-record-lessp)
+              ;; Make RECORDS a list ordered like ADDRESS-LIST.
+              (nreverse records))))
 
     ;; `bbdb-message-search' might yield multiple records
     (if (and records (not bbdb-message-all-addresses))
@@ -507,11 +509,12 @@ Return the records matching ADDRESS or nil."
 
     (nreverse new-records)))
 
-(defun bbdb-mua-update-records (&optional header-class update-p)
+(defun bbdb-mua-update-records (&optional header-class update-p sort)
   "Wrapper for `bbdb-update-records'.
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'.
-UPDATE-P is defined in `bbdb-update-records'."
+UPDATE-P is defined in `bbdb-update-records'.
+If SORT is non-nil, sort records according to `bbdb-record-lessp'."
   (let ((mua (bbdb-mua)))
     (save-current-buffer
       (cond ;; VM
@@ -521,26 +524,26 @@ UPDATE-P is defined in `bbdb-update-records'."
         (vm-error-if-folder-empty)
         (let ((enable-local-variables t))  ; ...or vm bind this to nil.
           (bbdb-update-records (bbdb-get-address-components header-class)
-                               update-p)))
+                               update-p sort)))
        ;; Gnus
        ((eq mua 'gnus)
         (set-buffer gnus-article-buffer)
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p))
+                             update-p sort))
        ;; MH-E
        ((eq mua 'mh)
         (if mh-show-buffer (set-buffer mh-show-buffer))
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p))
+                             update-p sort))
        ;; Rmail
        ((eq mua 'rmail)
         (set-buffer rmail-buffer)
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p))
+                             update-p sort))
        ;; Message and Mail
        ((memq mua '(message mail))
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p))))))
+                             update-p sort))))))
 
 (defmacro bbdb-mua-wrapper (&rest body)
   "Perform BODY in a MUA buffer."
@@ -588,7 +591,7 @@ This return value can be used as arg HORIZ-P of `bbdb-display-records'."
     fun))
 
 ;;;###autoload
-(defun bbdb-mua-display-records (&optional header-class update-p)
+(defun bbdb-mua-display-records (&optional header-class update-p all)
   "Display the BBDB record(s) for the addresses in this message.
 This looks into the headers of a message according to HEADER-CLASS.
 Then for the mail addresses found the corresponding BBDB records are displayed.
@@ -598,14 +601,20 @@ or whether also new records are created for these mail addresses.
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'.
 UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'."
+For interactive calls, see function `bbdb-mua-update-interactive-p'.
+If ALL is non-nil, bind `bbdb-message-all-addresses' to ALL."
   (interactive (list nil (bbdb-mua-update-interactive-p)))
   (let ((bbdb-pop-up-window-size bbdb-mua-pop-up-window-size)
+        (bbdb-message-all-addresses (or all bbdb-message-all-addresses))
         records)
     (bbdb-mua-wrapper
-     (setq records (bbdb-mua-update-records header-class update-p)))
+     (setq records (bbdb-mua-update-records header-class update-p t)))
     (if records (bbdb-display-records records nil nil nil (bbdb-mua-window-p)))
     records))
+
+;; The following commands are some frontends for `bbdb-mua-display-records',
+;; which is always doing the real work.  In your init file, you can further
+;; modify or adapt these simple commands to your liking.
 
 ;;;###autoload
 (defun bbdb-mua-display-sender (&optional update-p)
@@ -623,14 +632,21 @@ For interactive calls, see function `bbdb-mua-update-interactive-p'."
   (interactive (list (bbdb-mua-update-interactive-p)))
   (bbdb-mua-display-records 'recipients update-p))
 
-;; RW: This command appears to be obsolete
 ;;;###autoload
-(defun bbdb-display-all-recipients (&optional header-class)
-  "Display BBDB records for all addresses of the message in this buffer.
-If the records do not exist, they are generated."
-  (interactive)
-  (let ((bbdb-message-all-addresses t))
-    (bbdb-mua-display-records header-class 'create)))
+(defun bbdb-mua-display-all-records (&optional update-p)
+  "Display the BBDB record(s) for all addresses in this message.
+UPDATE-P may take the same values as `bbdb-update-records-p'.
+For interactive calls, see function `bbdb-mua-update-interactive-p'."
+  (interactive (list (bbdb-mua-update-interactive-p)))
+  (bbdb-mua-display-records nil update-p t))
+
+;;;###autoload
+(defun bbdb-mua-display-all-recipients (&optional update-p)
+  "Display BBDB records for all recipients of this message.
+UPDATE-P may take the same values as `bbdb-update-records-p'.
+For interactive calls, see function `bbdb-mua-update-interactive-p'."
+  (interactive (list (bbdb-mua-update-interactive-p)))
+  (bbdb-mua-display-records 'recipients update-p t))
 
 (defun bbdb-annotate-record (record annotation &optional field replace)
   "In RECORD add an ANNOTATION to FIELD.

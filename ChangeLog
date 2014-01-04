@@ -1,4 +1,13 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	Display records for messages more flexibly.
+	* lisp/bbdb-mua.el (bbdb-update-records, bbdb-mua-update-records):
+	New optional arg sort.
+	(bbdb-mua-display-records): New optional arg all.
+	(bbdb-mua-display-all-records): New command.
+	(bbdb-mua-display-all-recipients): Renamed from
+	bbdb-display-all-recipients.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	Handle new records more carefully.
 	* lisp/bbdb.el (bbdb-empty-record): New function.
 	(bbdb-change-record): Use bbdb-create-hook.  Fix docstring.
