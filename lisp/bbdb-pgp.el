@@ -1,13 +1,13 @@
-;;; bbdb-pgp.el --- use BBDB to store PGP preferences
+;;; bbdb-v3-pgp.el --- use BBDB to store PGP preferences
 
 ;; Copyright (C) 1997,1999 Kevin Davidson
+;; Copyright (C) 2013 Gijs Hillenius
 
 ;; Author: Kevin Davidson tkld@quadstone.com
-;; Maintainer: Kevin Davidson tkld@quadstone.com
+;; Maintainer: Gijs Hillenius <gijs@hillenius.com>
 ;; Created: 10 Nov 1997
-;; Version: $Revision: 1.6 $
-;; Keywords: PGP BBDB message mailcrypt
-
+;; Version: $Revision: 2 $
+;; Keywords: PGP BBDB message
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,14 +20,14 @@
 ;; GNU General Public License for more details.
 
 ;; A copy of the GNU General Public License can be obtained from this
-;; program's author (send electronic mail to tkld@quadstone.com) or
+;; program's author (send electronic mail to gijs@hillenius.com) or
 ;; from the Free Software Foundation, Inc.,59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
 ;; LCD Archive Entry:
-;; bbdb-pgp|Kevin Davidson|tkld@quadstone.com
+;; bbdb-pgp|Gijs Hillenius|gijs@hillenius.com
 ;; |Use BBDB to store PGP preferences
-;; |$Date: 2003/08/11 08:54:35 $|$Revision: 1.6 $|~/packages/bbdb-pgp.el
+;; |$Date: 2014/10/14 18:36:10 $|$Revision: 2.0 $|~/packages/bbdb-pgp.el
 
 ;;; Commentary:
 ;;
@@ -39,13 +39,16 @@
 ;; This package allows you to mark the BBDB entries for those
 ;; individuals so that messages will be encrypted when they are sent.
 ;;
-;; These packages are required: BBDB, mailcrypt, message
+;; This package is revised to get it working with Bbdb version 3. This
+;; version also removes the link with mailcrypt, as this library was
+;; last updated in, 2002.
 ;;
-;; message.el is included with recent versions of Emacs.
+;; This package requires: BBDB (version 3) and a recent Emacs
+;;
 ;; You can use mail-mode as well as message-mode to send mail.
 
 ;;; Usage:
-;; (require 'bbdb-pgp)
+;; (require 'bbdb-v3-pgp)
 ;;
 ;; Then for all users who you want to send encrypted mail to, add the field
 ;; pgp-mail with the value `encrypt'. Alternatively you can add the value
@@ -58,26 +61,25 @@
 ;; is not in the BBDB.
 
 ;;; TODO
-;; Spot incoming PGP mail by hooking into mc-verify/decrypt and adding pgp-mail
-;; field to BBDB entry (creating one if necessary); like bbdb-sc.el maintains
+;; Spot incoming PGP mail and prompt for adding pgp-mail field to BBDB
+;; entry (creating one if necessary); like bbdb-sc.el maintains
 ;; attribution prefs.
 
 ;;; PGP Public Key
-;; The author's public key is available from any public PGP keyserver
-;; eg http://www.pgp.net/pgpnet/
-;; Fingerprint: 1F A9 3F 3E 90 F7 85 64  55 35 32 C8 75 91 3A E3
+;; The current maintainer's public key is available from any public PGP keyserver
+;; eg http://subkeys.pgp.net
+;; Fingerprint: 340F F9A4 8F6C 18FD D032  0C33 ABA1 CB30 E997 A3AF
 
 
 ;;; Code:
 
 (require 'message)
 (require 'bbdb)
-(condition-case nil (require 'mailcrypt) (error nil))
 
-(defconst bbdb/pgp-version (substring "$Revision: 1.6 $" 11 -2)
-  "$Id: bbdb-pgp.el,v 1.6 2003/08/11 08:54:35 waider Exp $
+(defconst bbdb/pgp-version (substring "$Revision: 2 $" 11 -2)
+  "$Id: bbdb-v3-pgp.el,v 2 2013/10/14 18:36:10 hillenius Exp $
 
-Report bugs to: Kevin Davidson tkld@quadstone.com")
+Report bugs to: Gijs Hillenius <gijs@hillenius.com>")
 
 ;;;###autoload
 (defgroup bbdb-utilities-pgp nil
@@ -96,18 +98,16 @@ encrypted. If it is \"sign\" then messages are signed."
   :require 'bbdb
   :group 'bbdb-utilities-pgp)
 
-(defcustom bbdb/pgp-method 'mailcrypt
+(defcustom bbdb/pgp-method 'mml-pgpmime
   "*How to sign or encrypt messages.
 
-'mailcrypt     means use Mailcrypt.
 'mml-pgp       means add MML tags for Message to use old PGP format
 'mml-pgpmime   means add MML tags for Message to use PGP/MIME
 'mml-smime     means add MML tags for Message to use S/MIME"
   :type '(choice
-      (const :tag "Mailcrypt" mailcrypt :require 'mailcrypt)
-      (const :tag "MML PGP" mml-pgp :require 'mml)
-      (const :tag "MML PGP/MIME" mml-pgpmime :require 'mml)
-      (const :tag "MML S/MIME" mml-smime :require 'mml))
+	  (const :tag "MML PGP" mml-pgp :require 'mml)
+	  (const :tag "MML PGP/MIME" mml-pgpmime :require 'mml)
+	  (const :tag "MML S/MIME" mml-smime :require 'mml))
   :tag "Signing/Encryption Method"
   :group 'bbdb-utilities-pgp)
 
@@ -118,9 +118,9 @@ nil         means do nothing.
 'encrypt    means encrypt message.
 'sign       means sign message."
   :type '(choice
-      (const :tag "Do Nothing")
-      (const :tag "Encrypt" encrypt)
-      (const :tag "Sign" sign))
+	  (const :tag "Do Nothing")
+	  (const :tag "Encrypt" encrypt)
+	  (const :tag "Sign" sign))
   :tag "Default Action"
   :group 'bbdb-utilities-pgp)
 
@@ -130,24 +130,22 @@ nil         means do nothing.
 nil         means normal messages/questions.
 't          means to be quiet."
   :type '(choice
-      (const :tag "normal")
-      (const :tag "quiet" t))
+	  (const :tag "normal")
+	  (const :tag "quiet" t))
   :tag "Quietness"
   :group 'bbdb-utilities-pgp)
 
 (defun bbdb/pgp-get-pgp (name address)
   "Look up user NAME and ADDRESS in BBDB and return the PGP preference."
-  (let* ((record (bbdb-search-simple name address))
-     (pgp (and record
-           (bbdb-record-getprop record bbdb/pgp-field))))
+  (let* ((record (bbdb-message-search name address))
+	 (pgp (and record
+		   (bbdb-record-field (car record) bbdb/pgp-field))))
     pgp))
 
 (defun bbdb/pgp-sign ()
   "Sign a message.
 bbdb/pgp-method controls the method used."
   (cond
-   ((eq bbdb/pgp-method 'mailcrypt)
-    (mc-sign 0))
    ((eq bbdb/pgp-method 'mml-pgp)
     (mml-secure-message-sign-pgp))
    ((eq bbdb/pgp-method 'mml-pgpmime)
@@ -161,8 +159,6 @@ bbdb/pgp-method controls the method used."
   "Encrypt and sign a message.
 bbdb/pgp-method controls the method used."
   (cond
-   ((eq bbdb/pgp-method 'mailcrypt)
-    (mc-encrypt 0))
    ((eq bbdb/pgp-method 'mml-pgp)
     (mml-secure-message-encrypt-pgp))
    ((eq bbdb/pgp-method 'mml-pgpmime)
@@ -181,37 +177,37 @@ The user is prompted before encryption or signing."
     (save-excursion
       (message-narrow-to-headers)
       (and (featurep 'mailalias)
-       (not (featurep 'mailabbrev))
-       mail-aliases
-       (expand-mail-aliases (point-min) (point-max)))
+	   (not (featurep 'mailabbrev))
+	   mail-aliases
+	   (expand-mail-aliases (point-min) (point-max)))
       (let* ((to-field (mail-fetch-field "To" nil t))
-         (address (mail-extract-address-components (or to-field ""))))
-    (widen)
-    (if (not (equal address '(nil nil)))
-        (let ((pgp-p (bbdb/pgp-get-pgp (car address) (car (cdr address)))))
-          (cond
-           ((string= "encrypt" pgp-p)
+	     (address (mail-extract-address-components (or to-field ""))))
+	(widen)
+	(if (not (equal address '(nil nil)))
+	    (let ((pgp-p (bbdb/pgp-get-pgp (car address) (car (cdr address)))))
+	      (cond
+	       ((string= "encrypt" pgp-p)
                 (and (or bbdb/pgp-quiet
                          (y-or-n-p "Encrypt message? "))
                      (bbdb/pgp-encrypt)))
-           ((string= "sign" pgp-p)
-        (and (or bbdb/pgp-quiet
+	       ((string= "sign" pgp-p)
+		(and (or bbdb/pgp-quiet
                          (y-or-n-p "Sign message? "))
                      (bbdb/pgp-sign)))
-           (t
-        (cond
-         ((eq bbdb/pgp-default-action 'encrypt)
-          (and (y-or-n-p "Encrypt message? ")
-               (bbdb/pgp-encrypt)))
-         ((eq bbdb/pgp-default-action 'sign)
-          (and (y-or-n-p "Sign message? ")
-               (bbdb/pgp-sign)))
-         (t
-          nil))))))))))
+	       (t
+		(cond
+		 ((eq bbdb/pgp-default-action 'encrypt)
+		  (and (y-or-n-p "Encrypt message? ")
+		       (bbdb/pgp-encrypt)))
+		 ((eq bbdb/pgp-default-action 'sign)
+		  (and (y-or-n-p "Sign message? ")
+		       (bbdb/pgp-sign)))
+		 (t
+		  nil))))))))))
 
 (add-hook 'message-send-hook 'bbdb/pgp-hook-fun)
 (add-hook 'mail-send-hook 'bbdb/pgp-hook-fun)
 
-(provide 'bbdb-pgp)
+(provide 'bbdb-v3-pgp)
 
-;;; bbdb-pgp.el ends here
+;;; bbdb-v3-pgp.el ends here

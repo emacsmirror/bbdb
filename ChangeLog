@@ -1,3 +1,9 @@
+2014-01-03  Gijs Hillenius <gijs@hillenius.com>
+	* lisp/bbdb-pgp.el: Adapt for BBDB 3.  Remove outdated mailcrypt
+	interface.
+	(bbdb/pgp-method): New default mml-pgpmime.
+	(bbdb/pgp-get-pgp): Use bbdb-message-search and bbdb-record-field.
+
 2014-01-03  Kevin Davidson <tkld@quadstone.com>
 	* lisp/bbdb-pgp.el: New file (taken from BBDB 2).
 
