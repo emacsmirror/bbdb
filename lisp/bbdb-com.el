@@ -737,7 +737,8 @@ NAME is a string or a cons cell (FIRST . LAST), the name of the person to add.
 An error is thrown if NAME is already in use and `bbdb-allow-duplicates' is nil.
 ORGANIZATION is a list of strings.
 MAIL is a comma-separated list of mail address, or a list of strings.
-An error is signalled if that mail address is already in use.
+An error is thrown if a mail address in MAIL is already in use
+and `bbdb-allow-duplicates' is nil.
 ADDRESS is a list of address objects.  An address is a vector of the form
 \[\"label\" (\"line1\" \"line2\" ... ) \"City\" \"State\" \"Postcode\" \"Country\"].
 PHONE is a list of phone-number objects.  A phone-number is a vector of
@@ -863,9 +864,8 @@ value of \"\", the default) means do not alter the address."
          (error "xfield \"%s\" already exists" field))
         (t
          (bbdb-record-set-xfield record field value)))
-  (bbdb-change-record record)
   (let (bbdb-layout)
-    (bbdb-redisplay-record record)))
+    (bbdb-change-record record)))
 
 ;; Used by `bbdb-insert-field' and `bbdb-insert-field-menu'.
 (defun bbdb-prompt-for-new-field (field &optional init flag)
@@ -980,8 +980,7 @@ a phone number or address with VALUE being nil."
             record field
             (bbdb-read-string (format "%s: " field)
                               (bbdb-record-xfield record field)))))
-    (bbdb-change-record record bbdb-need-to-sort)
-    (bbdb-redisplay-record record)))
+    (bbdb-change-record record bbdb-need-to-sort)))
 
 (defun bbdb-read-xfield (field &optional init)
   "Read xfield FIELD with optional INIT.
@@ -1214,8 +1213,7 @@ irrespective of the value of ARG."
             record (nth 1 ident)
             (bbdb-list-transpose (bbdb-record-field record (nth 1 ident))
                                  num1 num2))))
-    (bbdb-change-record record need-to-sort)
-    (bbdb-redisplay-record record)))
+    (bbdb-change-record record need-to-sort)))
 
 ;;;###autoload
 (defun bbdb-delete-field-or-record (records field &optional noprompt)
@@ -1255,8 +1253,7 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
                 ((eq type 'xfields)
                  (bbdb-record-set-xfield record type-x nil))
                 (t (error "Unknown field %s" type)))
-          (bbdb-change-record record)
-          (bbdb-redisplay-record record))))))
+          (bbdb-change-record record))))))
 
 ;;;###autoload
 (defun bbdb-delete-records (records &optional noprompt)
@@ -1271,7 +1268,6 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
               (y-or-n-p (format "Delete the BBDB record of %s? "
                                 (or (bbdb-record-name record)
                                     (car (bbdb-record-mail record))))))
-      (bbdb-redisplay-record record t)
       (bbdb-delete-record-internal record t)
       (setq bbdb-records (delq (assq record bbdb-records) bbdb-records))
       ;; Possibly we changed RECORD before deleting it.
@@ -1465,10 +1461,6 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
 
   (bbdb-delete-records (list old-record) 'noprompt)
   (bbdb-change-record new-record t)
-  (if (assq new-record bbdb-records)
-      (bbdb-redisplay-record new-record)
-    ;; Append NEW-RECORD to the list of displayed records.
-    (bbdb-display-records (list new-record) nil t))
   new-record)
 
 ;; The following sorting functions are also intended for use
@@ -1488,9 +1480,8 @@ in `bbdb-change-hook')."
     (bbdb-record-set-address
      record (sort (bbdb-record-address record)
                   (lambda (xx yy) (string< (aref xx 0) (aref yy 0)))))
-    (when update
-      (bbdb-change-record record)
-      (bbdb-redisplay-record record))))
+    (if update
+        (bbdb-change-record record))))
 
 ;;;###autoload
 (defun bbdb-sort-phones (records &optional update)
@@ -1506,9 +1497,8 @@ in `bbdb-change-hook')."
     (bbdb-record-set-phone
      record (sort (bbdb-record-phone record)
                   (lambda (xx yy) (string< (aref xx 0) (aref yy 0)))))
-    (when update
-      (bbdb-change-record record)
-      (bbdb-redisplay-record record))))
+    (if update
+        (bbdb-change-record record))))
 
 ;;;###autoload
 (defun bbdb-sort-xfields (records &optional update)
@@ -1526,9 +1516,8 @@ in `bbdb-change-hook')."
                   (lambda (a b)
                     (< (or (cdr (assq (car a) bbdb-xfields-sort-order)) 100)
                        (or (cdr (assq (car b) bbdb-xfields-sort-order)) 100)))))
-    (when update
-      (bbdb-change-record record)
-      (bbdb-redisplay-record record))))
+    (if update
+        (bbdb-change-record record))))
 (define-obsolete-function-alias 'bbdb-sort-notes 'bbdb-sort-xfields)
 
 ;;; Send-Mail interface
@@ -2312,9 +2301,8 @@ If pefix DELETE is non-nil, remove ALIAS from RECORD."
         ;; Add alias only if it is not there yet
         (add-to-list 'aliases alias))
       (setq aliases (bbdb-concat bbdb-mail-alias-field aliases))
-      (bbdb-record-set-xfield record bbdb-mail-alias-field aliases)
-      (bbdb-change-record record))
-    (bbdb-redisplay-record record)
+      (bbdb-record-set-xfield record bbdb-mail-alias-field aliases))
+    (bbdb-change-record record)
     ;; Rebuilt mail aliases
     (setq bbdb-mail-aliases-need-rebuilt
           (if delete

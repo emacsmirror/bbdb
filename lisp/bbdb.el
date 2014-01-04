@@ -2893,10 +2893,7 @@ Return nil otherwise."
              (kill-all-local-variables)  ; clear database
              (bbdb-buffer)               ; re-initialize
              (set-buffer-modified-p nil)
-             (dolist (buffer (buffer-list))
-               (with-current-buffer buffer
-                 (if (eq major-mode 'bbdb-mode)
-                     (bbdb-undisplay-records))))))
+             (bbdb-undisplay-records t)))
           ;; If nothing has changed do nothing, return t.
           ((and (verify-visited-file-modtime bbdb-buffer) ; arg for Emacs 23
                 (not (buffer-modified-p))))
@@ -2922,10 +2919,7 @@ Return nil otherwise."
            (let (revert-buffer-function)
              (revert-buffer ignore-auto t))
            (bbdb-buffer)                      ; re-initialize
-           (dolist (buffer (buffer-list))
-             (with-current-buffer buffer
-               (if (eq major-mode 'bbdb-mode)
-                   (bbdb-undisplay-records))))
+           (bbdb-undisplay-records t)
            t)))) ; return nil if the user rejected to revert
 
 (defun bbdb-goto-first-record ()
@@ -3104,7 +3098,9 @@ responsibility to update the hash-table for RECORD."
            ;; Do not mess with the hash table here.
            ;; We assume it got updated by the caller.
            (bbdb-delete-record-internal record)
-           (bbdb-insert-record-internal record)))
+           (bbdb-insert-record-internal record))
+         ;; If RECORD is currently displayed update display.
+         (bbdb-maybe-update-display record))
         (new ;; Record is new and not yet in database, so add it.
          (run-hook-with-args 'bbdb-create-hook record)
          (unless bbdb-notice-hook-pending
@@ -3117,10 +3113,12 @@ responsibility to update the hash-table for RECORD."
   (run-hook-with-args 'bbdb-after-change-hook record)
   record)
 
-(defun bbdb-delete-record-internal (record &optional remhash)
+(defun bbdb-delete-record-internal (record &optional completely)
   "Delete RECORD in the database file.
-With REMHASH non-nil, also remove RECORD from the hash table."
+With COMPLETELY non-nil, also undisplay RECORD and remove it
+from the hash table."
   (unless (bbdb-record-marker record) (error "BBDB: marker absent"))
+  (if completely (bbdb-maybe-update-display record t))
   (bbdb-with-db-buffer
     (let ((tail (memq record bbdb-records))
           (inhibit-quit t))
@@ -3130,7 +3128,7 @@ With REMHASH non-nil, also remove RECORD from the hash table."
                          (bbdb-record-marker (car (cdr tail)))
                        bbdb-end-marker))
       (setq bbdb-records (delq record bbdb-records))
-      (when remhash
+      (when completely
         (bbdb-remhash (bbdb-record-name record) record)
         (bbdb-remhash (bbdb-record-name-lf record) record)
         (dolist (organization (bbdb-record-organization record))
@@ -3691,20 +3689,23 @@ SELECT and HORIZ-P have the same meaning as in `bbdb-pop-up-window'."
         (goto-char (nth 2 (assq first-new bbdb-records)))
         (set-window-start (get-buffer-window (current-buffer)) (point))))))
 
-(defun bbdb-undisplay-records ()
-  "Undisplay records in `bbdb-buffer-name'."
-  (let ((buffer (get-buffer bbdb-buffer-name)))
-    (if (buffer-live-p buffer)
-        (with-current-buffer buffer
-          (let (buffer-read-only)
-            (erase-buffer))
-          (setq bbdb-records nil)
-          (set-buffer-modified-p nil)))))
+(defun bbdb-undisplay-records (&optional all-buffers)
+  "Undisplay records in *BBDB* buffer, leaving this buffer empty.
+If ALL-BUFFERS is non-nil undisplay records in all BBDB buffers."
+  (dolist (buffer (cond (all-buffers (buffer-list))
+                        ((let ((buffer (get-buffer bbdb-buffer-name)))
+                           (and (buffer-live-p buffer) (list buffer))))))
+    (with-current-buffer buffer
+      (when (eq major-mode 'bbdb-mode)
+        (let (buffer-read-only)
+          (erase-buffer))
+        (setq bbdb-records nil)
+        (set-buffer-modified-p nil)))))
 
 (defun bbdb-redisplay-record (record &optional delete-p)
-  "Redisplay one RECORD.
-If DELETE-P is nil RECORD is removed from the *BBDB* buffer.
-The *BBDB* buffer must be current when this is called."
+  "Redisplay RECORD.
+If DELETE-P is non-nil RECORD is removed from the BBDB buffer.
+The BBDB buffer must be current when this is called."
   ;; For deletion in the *BBDB* buffer we use the full information
   ;; about the record in the database. Therefore, we need to delete
   ;; the record in the *BBDB* buffer before deleting the record in
@@ -3747,33 +3748,18 @@ The *BBDB* buffer must be current when this is called."
                         record-number (1+ record-number)))))
           (run-hooks 'bbdb-display-hook))))))
 
-(defun bbdb-redisplay-records ()
-  "Redisplays the contents of the *BBDB* buffer, without scrolling.
-Use this command if multiple records have changed.
-Otherwise use `bbdb-redisplay-record'.
-The *BBDB* buffer must be current when this is called."
-  (let ((point (point))
-        (mark (mark t)))
-    (goto-char (window-start))
-    (let ((p2 (point)))
-      (bbdb-display-records bbdb-records)
-      (goto-char p2)
-      (if mark (set-mark mark)))
-    (recenter 0)
-    (goto-char point)
-    (run-hooks 'bbdb-display-hook)))
-
-(defun bbdb-maybe-update-display (record)
-  "If RECORD is currently displayed update display."
-  (let ((buffer (get-buffer bbdb-buffer-name)))
-    (if (buffer-live-p buffer)
-        (with-current-buffer buffer
-          (if (memq record (bbdb-records))
-              (let ((window (get-buffer-window bbdb-buffer-name)))
-                (if window
-                    (with-selected-window window
-                      (bbdb-redisplay-record record))
-                  (bbdb-redisplay-record record))))))))
+(defun bbdb-maybe-update-display (record &optional delete-p)
+  "If RECORD is currently displayed update display.
+If DELETE-P is nil RECORD is removed from the BBDB buffers."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (if (and (eq major-mode 'bbdb-mode)
+               (memq record (bbdb-records)))
+          (let ((window (get-buffer-window bbdb-buffer-name)))
+            (if window
+                (with-selected-window window
+                  (bbdb-redisplay-record record delete-p))
+              (bbdb-redisplay-record record delete-p)))))))
 
 
 
@@ -4206,7 +4192,8 @@ mail/news readers, composers, and miscellaneous packages:
 
   anniv      Anniversaries in Emacs diary.
 
-  sc         Supercite.
+  sc         Supercite.  However, this is not the full story.
+               See bbdb-sc.el for how to fully hook BBDB into Supercite.
 
   pgp        PGP support:  this adds `bbdb-pgp' to `message-send-hook'
                and `mail-send-hook' so that `bbdb-pgp' runs automatically

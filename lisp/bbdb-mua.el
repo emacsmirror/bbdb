@@ -786,8 +786,7 @@ use all classes in `bbdb-message-headers'."
      (when records
        (bbdb-display-records records nil nil nil (bbdb-mua-window-p))
        (dolist (record records)
-         (bbdb-edit-field record field)
-         (bbdb-maybe-update-display record))))))
+         (bbdb-edit-field record field))))))
 
 ;;;###autoload
 (defun bbdb-mua-edit-field-sender (&optional field update-p)

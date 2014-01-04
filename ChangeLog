@@ -1,4 +1,21 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	After editing always update display in all BBDB buffers.
+	* lisp/bbdb.el (bbdb-delete-record-internal): Rename optional arg
+	remhash to completely.  Undisplay record if non-nil.
+	(bbdb-maybe-update-display): Update record in all BBDB buffers.
+	(bbdb-change-record): Call it.
+	(bbdb-redisplay-records): Remove.
+	(bbdb-undisplay-records): New optional arg all-buffers.
+	(bbdb-revert-buffer): Use it.
+	* lisp/bbdb-com.el (bbdb-insert-field, bbdb-transpose-fields)
+	(bbdb-delete-field-or-record, bbdb-delete-records)
+	(bbdb-merge-records, bbdb-sort-addresses, bbdb-sort-phones)
+	(bbdb-sort-xfields, bbdb-add-mail-alias)
+	* lisp/bbdb-mua.el (bbdb-mua-edit-field): Do not call
+	bbdb-maybe-update-display.
+	* README: update accordingly.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	Clean up supercite support.
 	* lisp/bbdb.el (bbdb-utilities-sc): New custom group
 	(bbdb-initialize): Update docstring.
