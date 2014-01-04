@@ -200,10 +200,9 @@ sequence of calls is
   innermost internals.
 
 - a call of bbdb-change-record which updates the database after a
-  change of record.
+  change of record and redisplays the records.
 
-- If the changed record is displayed in the *BBDB* buffer, call
-  bbdb-redisplay-record.
+- To display newly created records call bbdb-display-records.
 
 ==================================================================
 
