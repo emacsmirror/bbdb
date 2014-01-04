@@ -1,4 +1,7 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	Update copyright year in all files.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	Avoid hard-coded references to xfield notes.
 	* lisp/bbdb.el (bbdb-default-xfield, bbdb-edit-foo)
 	(bbdb-annotate-field, bbdb-mua-edit-field): New variables.
@@ -1713,7 +1716,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010-2013 Roland Winkler <winkler@gnu.org>
+  Copyright (C) 2010-2014 Roland Winkler <winkler@gnu.org>
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 

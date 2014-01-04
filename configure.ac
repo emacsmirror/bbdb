@@ -7,7 +7,7 @@
 # Last Revision: $Date: 2013/11/16 15:10:55 $
 # 
 # Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
-# Copyright (C) 2011-2013 Roland Winkler <winkler@gnu.org>
+# Copyright (C) 2011-2014 Roland Winkler <winkler@gnu.org>
 # 
 # BBDB is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

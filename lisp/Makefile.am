@@ -1,8 +1,8 @@
 # lisp/Makefile.am for BBDB
 #
-# Copyright (C) 2010-2013 Roland Winkler <winkler@@gnu.org>
+# Copyright (C) 2010-2014 Roland Winkler <winkler@gnu.org>
 
-# Author: Roland Winkler <winkler@@gnu.org>
+# Author: Roland Winkler <winkler@gnu.org>
 #  	  Christian Egli <christian.egli@sbs.ch>
 # 
 # This file is part of the Insidious Big Brother Database (aka BBDB),
