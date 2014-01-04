@@ -421,7 +421,7 @@ in `bbdb-change-hook')."
   "Search all records that have duplicate entries for FIELDS.
 The list FIELDS may contain the symbols `name', `mail', and `aka'.
 If FIELDS is nil use all these fields.  With prefix, query for FIELDS.
-The search results are displayed in the bbdb buffer."
+The search results are displayed in the BBDB buffer."
   (interactive (list (if current-prefix-arg
                          (list (intern (completing-read "Field: "
                                                         '("name" "mail" "aka")
@@ -436,7 +436,7 @@ The search results are displayed in the bbdb buffer."
                                           '(fl-name lf-name aka)))
                  (> (length hash) 1))
         (setq ret (append hash ret))
-        (message "BBDB record `%s' causes duplicates, maybe it is equal to an organization name."
+        (message "BBDB record `%s' has duplicate name."
                  (bbdb-record-name record))
         (sit-for 0))
 
@@ -458,7 +458,8 @@ The search results are displayed in the bbdb buffer."
                        (bbdb-record-name record) aka)
               (sit-for 0)))))
 
-    (bbdb-display-records (delete-dups ret))))
+    (bbdb-display-records (sort (delete-dups ret)
+                                'bbdb-record-lessp))))
 
 ;;; Time-based functions
 

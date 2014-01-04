@@ -218,6 +218,9 @@ UPDATE-P may take the following values:
                 which may take one of the above values.
                 If this still gives nil, `bbdb-update-records' returns nil.
 
+If SORT is non-nil, sort records according to `bbdb-record-lessp'.
+Ottherwise, the records are ordered according to ADDRESS-LIST.
+
 Usually this function is called by the wrapper `bbdb-mua-update-records'."
   ;; UPDATE-P allows filtering of complete messages.
   ;; Filtering of individual addresses within an accepted message
@@ -567,7 +570,7 @@ If SORT is non-nil, sort records according to `bbdb-record-lessp'."
   "Interactive spec for arg UPDATE-P of `bbdb-mua-display-records' and friends.
 If these commands are called without a prefix, the value of their arg
 UPDATE-P is the car of the variable `bbdb-mua-update-interactive-p'.
-Called with a prefix, the value of UPDATE-P becomes the cdr of this variable."
+Called with a prefix, the value of UPDATE-P is the cdr of this variable."
   (let ((update-p (if current-prefix-arg
                       (cdr bbdb-mua-update-interactive-p)
                     (car bbdb-mua-update-interactive-p))))
@@ -820,7 +823,7 @@ See `bbdb-mua-auto-update' for details about the auto update feature."
   "Automatically annotate RECORD based on the headers of the current message.
 See the variables `bbdb-auto-notes-rules', `bbdb-auto-notes-ignore-messages'
 and `bbdb-auto-notes-ignore-headers'.
-For use as an element of `bbdb-notice-mail-hook'."
+For use as an element of `bbdb-notice-record-hook'."
   ;; This code re-evaluates the annotations each time a message is viewed.
   ;; It would be faster if we could somehow store (permanently?) that we
   ;; have already annotated a message.

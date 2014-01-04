@@ -1983,7 +1983,8 @@ and CANONICAL-ADDRESS through `bbdb-canonicalize-mail-function'."
 (defun bbdb-extract-address-components (address &optional all)
   "Given an RFC-822 address ADDRESS, extract full name and canonical address.
 This function behaves like `mail-extract-address-components', but it passes
-its return value through `bbdb-clean-address-components'."
+its return value through `bbdb-clean-address-components'.
+See also `bbdb-decompose-bbdb-address'."
   (if all
       (mapcar 'bbdb-clean-address-components
               (mail-extract-address-components address t))
@@ -2208,8 +2209,8 @@ Both OLD and NEW are lists of values."
     (bbdb-puthash elt record)))
 
 (defun bbdb-check-name (first last &optional record)
-  "Check whether the name FIRST LAST is not a duplicate.
-This throws an error if the name is already found in `bbdb-hashtable'
+  "Check whether the name FIRST LAST is a valid name.
+This throws an error if the name is already used by another record
 and `bbdb-allow-duplicates' is nil.  If RECORD is non-nil, FIRST and LAST
 may correspond to RECORD without raising an error."
   ;; Are there more useful checks for names beyond checking for duplicates?

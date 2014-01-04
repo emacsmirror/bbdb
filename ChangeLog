@@ -1,4 +1,12 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-check-name, bbdb-extract-address-components):
+	Fix docstring.
+	* lisp/bbdb-com.el (bbdb-search-duplicates): Fix warning message.
+	Sort records.
+	* lisp/bbdb-mua.el (bbdb-auto-notes)
+	(bbdb-mua-update-interactive-p): Fix docstring.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	Display records for messages more flexibly.
 	* lisp/bbdb-mua.el (bbdb-update-records, bbdb-mua-update-records):
 	New optional arg sort.
