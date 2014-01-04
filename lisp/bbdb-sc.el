@@ -19,133 +19,155 @@
 ;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;; This file contains the BBDB interface to Supercite (sc)
-;;; See bbdb.texinfo for documentation.
+;; This file contains the BBDB interface to Supercite (sc)
 
-;;; This file was written by Martin Sjolin <marsj@ida.liu.se>
-;;; based on the original code by Tom Tromey <tromey@busco.lanl.gov>.
-;;;
-;;; Thanks to Richard Stanton <stanton@haas.berkeley.edu> for ideas
-;;; for improvements and to Michael D. Carney  <carney@ltx-tr.com>
-;;; for testing and feedback.
+;; This file was written by Martin Sjolin <marsj@ida.liu.se>
+;; based on the original code by Tom Tromey <tromey@busco.lanl.gov>.
+;; Thanks to Richard Stanton <stanton@haas.berkeley.edu> for ideas
+;; for improvements and to Michael D. Carney  <carney@ltx-tr.com>
+;; for testing and feedback.
 
-;;; This file adds the ability to define attributions for Supercite in BBDB
-;;; and it enables you to retrieve your standard attribution from BBDB.
-;;; You need Supercite to make this code work.
-;;;
-;;; If the From header in the mail to which you are replying only
-;;; contains the mail address, the personal name is looked up in BBDB.
-;;; The attribution is stored in the xfield `attribution' (unless you
-;;; have changed `bbdb/sc-attribution-field').
+;; This file adds the ability to define attributions for Supercite in BBDB
+;; and it enables you to retrieve your standard attribution from BBDB.
+;; If the From header in the mail message to which you are replying only
+;; contains the mail address, the sender's name is looked up in BBDB.
+;; The attribution is stored in the xfield `attribution' (unless you
+;; have changed `bbdb-sc-attribution-field').
 
-;;; To use this code add "sc-consult" to `sc-preferred-attribution-list', e.g.,
-;;;
-;;;   (setq sc-preferred-attribution-list
-;;;         '("sc-lastchoice" "x-attribution" "sc-consult"
-;;;           "initials" "firstname" "lastname"))
-;;;
-;;; The variable `sc-attrib-selection-list' must include an expression as below:
-;;;
-;;;   (add-to-list 'sc-attrib-selection-list
-;;;                '("sc-from-address"
-;;;                  ((".*" . (bbdb/sc-consult-attr
-;;;                            (sc-mail-field "sc-from-address"))))))
-;;;
-;;; And finally we set the `sc-mail-glom-frame' to enable
-;;; the fetching of the name of person when there is only
-;;; a mail address in the original mail, e.g.,
-;;;
-;;;  (setq sc-mail-glom-frame
-;;;        '((begin                        (setq sc-mail-headers-start (point)))
-;;;          ("^From "                     (sc-mail-check-from) nil nil)
-;;;          ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
-;;;          ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
-;;;          ("^$"                         (progn (bbdb/sc-default)
-;;;                                               (list 'abort '(step . 0))))
-;;;          ("^[ \t]+"                    (sc-mail-append-field))
-;;;          (sc-mail-warn-if-non-rfc822-p (sc-mail-error-in-mail-field))
-;;;          (end                          (setq sc-mail-headers-end (point)))))
+;; To enable supercite support for BBDB, call `bbdb-initialize' with arg `sc'.
+;; Also customize supercite as follows:
+;; (1) Add element "sc-consult" to `sc-preferred-attribution-list'
+;;     (note that order matters!), e.g.,
+;;
+;;   (setq sc-preferred-attribution-list
+;;         '("sc-lastchoice" "x-attribution" "sc-consult"
+;;           "initials" "firstname" "lastname"))
+;;
+;; (2) The variable `sc-attrib-selection-list' should include an element
+;;
+;;   (add-to-list 'sc-attrib-selection-list
+;;                '("from" ((".*" . (bbdb-sc-get-attrib
+;;                                   (sc-mail-field "from"))))))
+;;
+;; (3) Set `sc-mail-glom-frame' as follows to fetch the sender's name from BBDB
+;;     if there is only a plain mail address in the From field of the mail message,
+;;     e.g.,
+;;
+;;  (setq sc-mail-glom-frame
+;;        '((begin                        (setq sc-mail-headers-start (point)))
+;;          ("^From "                     (sc-mail-check-from) nil nil)
+;;          ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
+;;          ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
+;;          ("^$"                         (list 'abort '(step . 0)))
+;;          ("^[ \t]+"                    (sc-mail-append-field))
+;;          (sc-mail-warn-if-non-rfc822-p (sc-mail-error-in-mail-field))
+;;          (end                          (progn
+;;                                          (bbdb-sc-update-from)
+;;                                          (setq sc-mail-headers-end (point))))))
 
 (require 'bbdb-com)
 (require 'bbdb-mua)
 (require 'supercite)
 
-;;; User variables
-(defgroup bbdb-utilities-supercite nil
-  "Customizations for using Supercite with the BBDB."
-  :group 'bbdb-utilities
-  :prefix "bbdb/sc")
-
-(defcustom bbdb/sc-replace-attr-p t
- "t if you like to create a new BBDB record when
-entering a non-default attribution, 'ask if the user
-should be asked before creation and nil if we never create a new record."
- :group 'bbdb-utilities-supercite
- :type '(choice (const "Create a new BBDB record" t)
-        (const "Confirm new record creation" ask)
-        (const "Do not create a new record" nil)))
-
-(defcustom bbdb/sc-attribution-field 'attribution
-  "The BBDB xfield used for Supercite attribution information."
-  :group 'bbdb-utilities-supercite
+(defcustom bbdb-sc-attribution-field 'attribution
+  "The BBDB xfield used for Supercite attribution."
+  :group 'bbdb-utilities-sc
   :type '(symbol :tag "Field name"))
+(define-obsolete-variable-alias 'bbdb/sc-attribution-field
+  'bbdb-sc-attribution-field)
 
-(defcustom bbdb/sc-last-attribution ""
- "Default attribution return by the SuperCite citation engine,
-used to compare against citation selected by the user."
- :group 'bbdb-utilities-supercite
- :type '(string :tag "Default citation" ""))
+(defcustom bbdb-sc-update-records-p 'search
+  "How `bbdb-sc-set-attrib' updates BBDB records automatically.
+This may take the same values as arg UPDATE-P of `bbdb-update-records'."
+  :group 'bbdb-utilities-sc
+  :type '(choice (const :tag "do nothing" nil)
+                 (const :tag "search for existing records" search)
+                 (const :tag "update existing records" update)
+                 (const :tag "query annotation of all messages" query)
+                 (const :tag "annotate all messages" create)
+                 (function :tag "User-defined function")))
 
-(defun bbdb/sc-consult-attr (from)
-  "Extract citing information from BBDB using \"sc-consult\"
-where FROM is user mail address to look for in BBDB."
-  ;; The From header is analyzed in a way similar
-  ;; to what `bbdb-get-address-components' does.
-  (let* ((tmp (bbdb-extract-address-components
-               (if (or (not from)
-                       (string-match bbdb-user-mail-address-re from))
-                   ;; FIXME: What to do if the "To" field contains multiple
-                   ;; addresses?  The current code only considers the first.
-                   (or (sc-mail-field "to") from)
-                 from)))
-         ;; FIXME: What to do if we have multiple matching records?
-         (record (car (bbdb-message-search (car tmp) (cadr tmp)))))
+(defcustom bbdb-sc-update-attrib-p 'query
+ "How `bbdb-sc-set-attrib' updates the attribution field.
+Allowed values include
+ nil    Do not create or modify the attribution field
+ query  Query before creating or modifying the attribution field.
+ t      Create or modify the attribution field."
+ :group 'bbdb-utilities-sc
+ :type '(choice (const "Do nothing" nil)
+                (const "Query before updating the attribution field" query)
+                (const "Update the attribution field" t)))
+
+;;; Internal variables
+(defvar bbdb-sc-last-attrib ""
+ "Last attribution used by Supercite.
+Used to compare against citation selected by the user.")
+
+(defun bbdb-sc-get-attrib (mail)
+  "Get the Supercite attribution from BBDB.
+MAIL is the mail address to look for in BBDB."
+  ;; We could store in `sc-mail-info' from which record we grabbed
+  ;; this attribution.  Yet we do not know whether `bbdb-sc-set-attrib'
+  ;; will want to use the same record.
+  (let* ((address (bbdb-extract-address-components mail))
+         (record (bbdb-message-search (car address)
+                                      (cadr address))))
+    ;; FIXME: What to do if we have multiple matching records?
+    (when (cdr record)
+      (message "Multiple records match %s" mail)
+      (sit-for 1))
     (if record
-        (bbdb-record-field record bbdb/sc-attribution-field))))
+        (bbdb-record-field (car record) bbdb-sc-attribution-field))))
+(define-obsolete-function-alias 'bbdb/sc-consult-attr 'bbdb-sc-get-attrib)
 
-(defun bbdb/sc-set-attr ()
-  "Add attribute to BBDB."
-  (let ((from (sc-mail-field "from"))
-        (address (sc-mail-field "sc-from-address"))
-        (attr (sc-mail-field "sc-attribution"))
+(defun bbdb-sc-set-attrib ()
+  "Store attribution in BBDB."
+  (let ((from (bbdb-extract-address-components (sc-mail-field "from")))
+        (attrib (sc-mail-field "sc-attribution"))
         bbdb-notice-mail-hook record)
-    (if (and from attr bbdb/sc-replace-attr-p
-             (not (string-equal attr bbdb/sc-last-attribution))
-             (not (string-match bbdb-user-mail-address-re address))
-             (setq record (bbdb-annotate-message from))) ;; update
-        (let ((old (bbdb-record-field record bbdb/sc-attribution-field)))
-          ;; ignore if the new value is what we already have
-          (when (and (not (and old (string-equal old attr)))
-                     (or (not (eq bbdb/sc-replace-attr-p 'ask))
-                         (y-or-n-p (concat "Change attribution " attr))))
-            (bbdb-record-set-field record bbdb/sc-attribution-field attr)
-            (bbdb-change-record record))))))
+    (when (and from attrib bbdb-sc-update-attrib-p
+               (not (string-equal attrib bbdb-sc-last-attrib))
+               (setq record (bbdb-update-records (list from)
+                                                 bbdb-sc-update-records-p)))
+      ;; FIXME: What to do if we have multiple matching records?
+      (when (cdr record)
+        (message "Multiple records match %s" from)
+        (sit-for 1))
+      (setq record (car record))
+      (let ((old (bbdb-record-field record bbdb-sc-attribution-field)))
+        ;; Do nothing if the new value equals the old value
+        (when (and (not (and old (string-equal old attrib)))
+                   (or (not (eq bbdb-sc-update-attrib-p 'query))
+                       (y-or-n-p (format (if (bbdb-record-field
+                                              record bbdb-sc-attribution-field)
+                                             "Change attribution for %s to %s?"
+                                           "For %s add attribution %s?")
+                                         (bbdb-record-name record) attrib))))
+          (bbdb-record-set-field record bbdb-sc-attribution-field attrib)
+          (bbdb-change-record record))))))
+(define-obsolete-function-alias 'bbdb/sc-set-attr 'bbdb-sc-set-attrib)
 
 ;;;###autoload
-(defun bbdb/sc-default ()
-  "If the current \"from\" field in `sc-mail-info' alist
-contains only a mail address, lookup mail address in BBDB,
-and prepend a new \"from\" field to `sc-mail-info'."
+(defun bbdb-sc-update-from ()
+  "Update the \"from\" field in `sc-mail-info'.
+If the \"from\" field in `sc-mail-info' contains only a plain mail address,
+complement the \"from\" field in `sc-mail-info' with the sender's name in BBDB."
   (let* ((from (sc-mail-field "from"))
-         (pair (and from (bbdb-extract-address-components from)))
-         ;; Should we always use the NAME of RECORD?
-         (record (unless (car pair)
-                   ;; FIXME: What to do if we have multiple matching records?
-                   (car (bbdb-message-search nil (cadr pair)))))
-         (name (and record (bbdb-record-name record))))
+         ;; Do not use `bbdb-extract-address-components' that can "invent" names.
+         (address (and from (bbdb-decompose-bbdb-address from)))
+         ;; FIXME: Should we always update the sender's name in `sc-mail-info'
+         ;; if it does not agree with what BBDB says?
+         (record (if (and (cadr address) (not (car address)))
+                     (bbdb-message-search nil (cadr address))))
+         ;; FIXME: What to do if we have multiple matching records?
+         (_ (when (cdr record)
+              (message "Multiple records match %s" from)
+              (sit-for 1)))
+         (name (and record (bbdb-record-name (car record)))))
     (if name
-        (push (cons "from" (format "%s (%s)" (cadr pair) name))
-                    sc-mail-info))))
+        (setcdr (assoc-string "from" sc-mail-info t)
+                (format "%s <%s>" name (cadr address))))))
+(define-obsolete-function-alias 'bbdb/sc-default 'bbdb-sc-update-from)
 
 ;; Insert our hooks
 
@@ -156,11 +178,13 @@ and prepend a new \"from\" field to `sc-mail-info'."
 ;;;###autoload
 (defun bbdb-insinuate-sc ()
   "Hook BBDB into Supercite.
-Do not call this in your init file.  Use `bbdb-initialize'."
-  (add-hook 'sc-post-hook 'bbdb/sc-set-attr)
+Do not call this in your init file.  Use `bbdb-initialize'.
+However, this is not the full story.  See bbdb-sc.el for how to fully hook
+BBDB into Supercite."
+  (add-hook 'sc-post-hook 'bbdb-sc-set-attrib)
   (add-hook 'sc-attribs-postselect-hook
             (lambda ()
-              (setq bbdb/sc-last-attribution
+              (setq bbdb-sc-last-attrib
                     (if sc-downcase-p
                         (downcase attribution)
                       attribution)))))

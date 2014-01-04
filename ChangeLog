@@ -1,4 +1,20 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	Clean up supercite support.
+	* lisp/bbdb.el (bbdb-utilities-sc): New custom group
+	(bbdb-initialize): Update docstring.
+	* lisp/bbdb-sc.el: Update doc.
+	(bbdb-sc-attribution-field): Rename from
+	bbdb/sc-attribution-field, keeping the old name as obsolete alias.
+	(bbdb-sc-update-records-p): New variable.
+	(bbdb-sc-update-attrib-p): Rename from bbdb/sc-replace-attr-p.
+	(bbdb-sc-last-attrib): Rename from bbdb/sc-last-attribution.  Make
+	it internal variable.
+	(bbdb-sc-set-attrib): Rename from bbdb/sc-set-attr, keeping the
+	old name as obsolete alias.
+	(bbdb-sc-update-from): Rename from bbdb/sc-default, keeping the
+	old name as obsolete alias.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	Overhaul lisp/bbdb-pgp.el for BBDB 3.
 	* lisp/bbdb-pgp.el (bbdb-pgp-field): Rename from bbdb/pgp-field.
 	(bbdb-pgp-default): Rename from bbdb/pgp-default-action.

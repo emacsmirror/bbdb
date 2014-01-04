@@ -137,6 +137,12 @@
   :group 'bbdb-utilities)
 (put 'bbdb-utilities-pgp 'custom-loads '(bbdb-pgp))
 
+(defgroup bbdb-utilities-sc nil
+  "Customizations for using Supercite with the BBDB."
+  :group 'bbdb-utilities
+  :prefix "bbdb-sc")
+(put 'bbdb-utilities-sc 'custom-loads '(bbdb-sc))
+
 ;;; Customizable variables
 (defcustom bbdb-file (locate-user-emacs-file "bbdb" ".bbdb")
   "The name of the Insidious Big Brother Database file."
