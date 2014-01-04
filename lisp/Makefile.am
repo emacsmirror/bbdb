@@ -30,6 +30,7 @@ dist_lisp_LISP = 				\
 	bbdb-mhe.el				\
 	bbdb-migrate.el				\
 	bbdb-mua.el				\
+	bbdb-pgp.el				\
 	bbdb-print.el				\
 	bbdb-rmail.el				\
 	bbdb-sc.el				\

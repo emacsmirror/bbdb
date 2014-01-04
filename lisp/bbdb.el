@@ -132,6 +132,11 @@
   :group 'bbdb-utilities)
 (put 'bbdb-utilities-snarf 'custom-loads '(bbdb-snarf))
 
+(defgroup bbdb-utilities-pgp nil
+  "Customizations for BBDB pgp"
+  :group 'bbdb-utilities)
+(put 'bbdb-utilities-pgp 'custom-loads '(bbdb-pgp))
+
 ;;; Customizable variables
 (defcustom bbdb-file (locate-user-emacs-file "bbdb" ".bbdb")
   "The name of the Insidious Big Brother Database file."
@@ -1612,10 +1617,15 @@ Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
             (add-hook 'mail-setup-hook 'bbdb-insinuate-mail)))
     (message                    ; the gnus mail user agent
      (add-hook 'message-setup-hook 'bbdb-insinuate-message))
+
     (sc                         ; supercite
      (add-hook 'sc-load-hook 'bbdb-insinuate-sc))
     (anniv                      ; anniversaries
-     (add-hook 'diary-list-entries-hook 'bbdb-anniv-diary-entries)))
+     (add-hook 'diary-list-entries-hook 'bbdb-anniv-diary-entries))
+    (pgp                        ; pgp-mail
+     (progn
+       (add-hook 'message-send-hook 'bbdb-pgp)
+       (add-hook 'mail-send-hook 'bbdb-pgp))))
   "Alist mapping features to insinuation forms.")
 
 (defvar bbdb-search-invert nil
@@ -4191,6 +4201,15 @@ mail/news readers, composers, and miscellaneous packages:
   anniv      Anniversaries in Emacs diary.
 
   sc         Supercite.
+
+  pgp        PGP support:  this adds `bbdb-pgp' to `message-send-hook'
+               and `mail-send-hook' so that `bbdb-pgp' runs automatically
+               when a message is sent.
+               Yet see info node `(message)Signing and encryption'
+               why you might not want to rely for encryption on a hook
+               function which runs just before the message is sent,
+               that is, you might want to call the command `bbdb-pgp' manually,
+               then call `mml-preview'.
 
 See also `bbdb-mua-auto-update-init'.  The latter is a separate function
 as this allows one to initialize the auto update feature for some MUAs only,

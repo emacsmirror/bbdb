@@ -1,213 +1,238 @@
-;;; bbdb-v3-pgp.el --- use BBDB to store PGP preferences
+;;; bbdb-pgp.el --- use BBDB to handle PGP preferences
 
 ;; Copyright (C) 1997,1999 Kevin Davidson
 ;; Copyright (C) 2013 Gijs Hillenius
+;; Copyright (C) 2013 Roland Winkler
 
-;; Author: Kevin Davidson tkld@quadstone.com
-;; Maintainer: Gijs Hillenius <gijs@hillenius.com>
-;; Created: 10 Nov 1997
-;; Version: $Revision: 2 $
-;; Keywords: PGP BBDB message
+;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
-;; This program is free software; you can redistribute it and/or modify
+;; BBDB is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful,
+;; BBDB is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
-;; A copy of the GNU General Public License can be obtained from this
-;; program's author (send electronic mail to gijs@hillenius.com) or
-;; from the Free Software Foundation, Inc.,59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
-
-;; LCD Archive Entry:
-;; bbdb-pgp|Gijs Hillenius|gijs@hillenius.com
-;; |Use BBDB to store PGP preferences
-;; |$Date: 2014/10/14 18:36:10 $|$Revision: 2.0 $|~/packages/bbdb-pgp.el
+;; You should have received a copy of the GNU General Public License
+;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;
 ;; It is believed that encrypted mail works best if all mail between
 ;; individuals is encrypted - even concerning matters that are not
-;; confidential. The reasoning is that confidential messages cannot
+;; confidential.  The reasoning is that confidential messages cannot
 ;; then be easily spotted and decryption efforts concentrated on them.
 ;; Some people therefore prefer to have all their email encrypted.
 ;; This package allows you to mark the BBDB entries for those
-;; individuals so that messages will be encrypted when they are sent.
-;;
-;; This package is revised to get it working with Bbdb version 3. This
-;; version also removes the link with mailcrypt, as this library was
-;; last updated in, 2002.
-;;
-;; This package requires: BBDB (version 3) and a recent Emacs
-;;
-;; You can use mail-mode as well as message-mode to send mail.
+;; individuals so that messages will be (signed or) encrypted
+;; when they are sent.
 
 ;;; Usage:
-;; (require 'bbdb-v3-pgp)
+;; Add the xfield pgp-mail (see `bbdb-pgp-field') with the value
+;; `sign' or `encrypt' to the BBDB records of the message recipients.
+;; If the value is `sign-query' or `encrypt-query', this will query
+;; whether to send signed or encrypted messages.
 ;;
-;; Then for all users who you want to send encrypted mail to, add the field
-;; pgp-mail with the value `encrypt'. Alternatively you can add the value
-;; `sign' if you just want to send signed messages.
+;; Then call `bbdb-pgp' on outgoing message to add MML tags,
+;; see info node `(message)security'.  For all message recipients
+;; in `bbdb-pgp-headers', this command grabs the action in `bbdb-pgp-field'
+;; of their BBDB records.  If this proposes multiple actions,
+;; perform the action which appears first in `bbdb-pgp-ranked-actions'.
+;; If this proposes no action at all, use `bbdb-pgp-default'.
+;; The variable `bbdb-pgp-method' defines the method which is actually used
+;; for signing and encrypting, see also `bbdb-pgp-method-alist'.
 ;;
-;; and possibly (if you do not want the PGP field printed out)
-;; (add-hook 'bbdb-print-elide bbdb-pgp-field)
+;; `bbdb-pgp' works with both `mail-mode' and `message-mode' to send
+;; signed or encrypted mail.
 ;;
-;; The variable bbdb/pgp-default-action defines what to do if the recipient
-;; is not in the BBDB.
-
-;;; TODO
-;; Spot incoming PGP mail and prompt for adding pgp-mail field to BBDB
-;; entry (creating one if necessary); like bbdb-sc.el maintains
-;; attribution prefs.
-
-;;; PGP Public Key
-;; The current maintainer's public key is available from any public PGP keyserver
-;; eg http://subkeys.pgp.net
-;; Fingerprint: 340F F9A4 8F6C 18FD D032  0C33 ABA1 CB30 E997 A3AF
-
+;; To run `bbdb-pgp' automatically when sending a message,
+;; use `bbdb-initialize' with arg `pgp' to add this function
+;; to `message-send-hook' and `mail-send-hook'.
+;; Yet see info node `(message)Signing and encryption' why you
+;; might not want to rely for encryption on a hook function
+;; which runs just before the message is sent, that is, you might want
+;; to call the command `bbdb-pgp' manually, then call `mml-preview'.
+;;
+;; A thought: For these hooks we could define a wrapper that calls
+;; first `bbdb-pgp', then `mml-preview' for preview.  The wrapper should
+;; abort the sending of the message if the preview is not getting
+;; the user's approval.  Yet this might require some recursive editing mode
+;; so that the user can browse the preview before approving it.
+;;
+;;; Todo:
+;; Spot incoming PGP-signed or encrypted messages and prompt for adding
+;; `bbdb-pgp-field' to the senders' BBDB records; similar to how
+;; bbdb-sc.el maintains attribution preferences.
 
 ;;; Code:
 
 (require 'message)
-(require 'bbdb)
+(require 'bbdb-com)
 
-(defconst bbdb/pgp-version (substring "$Revision: 2 $" 11 -2)
-  "$Id: bbdb-v3-pgp.el,v 2 2013/10/14 18:36:10 hillenius Exp $
+(defcustom bbdb-pgp-field 'pgp-mail
+  "BBDB xfield holding the PGP action.
+If the recipient of a message has this xfield in his/her BBDB record,
+its value determines whether `bbdb-pgp' signs or encrypts the message.
+The value of this xfield should be one of the following symbols:
+  sign            Sign the message
+  sign-query      Query whether to sign the message
+  encrypt         Encrypt the message
+  encrypt-query   Query whether to encrypt the message
+If the xfield is absent use `bbdb-pgp-default'.
+See also info node `(message)security'."
+  :type '(symbol :tag "BBDB xfield")
+  :group 'bbdb-utilities-pgp)
 
-Report bugs to: Gijs Hillenius <gijs@hillenius.com>")
+(defcustom bbdb-pgp-default nil
+  "Default action when sending a message and the recipients are not in BBDB.
+This should be one of the following symbols:
+  nil             Do nothing
+  sign            Sign the message
+  sign-query      Query whether to sign the message
+  encrypt         Encrypt the message
+  encrypt-query   Query whether to encrypt the message
+See info node `(message)security'."
+  :type '(choice
+	  (const :tag "Do Nothing" nil)
+	  (const :tag "Encrypt" encrypt)
+	  (const :tag "Query encryption" encrypt-query)
+	  (const :tag "Sign" sign)
+	  (const :tag "Query signing" sign-query))
+  :group 'bbdb-utilities-pgp)
+
+(defcustom bbdb-pgp-ranked-actions
+  '(encrypt-query sign-query encrypt sign)
+  "Ranked list of actions when sending a message.
+If a message has multiple recipients such that their BBDB records specify
+different actions for this message, `bbdb-pgp' will perform the action
+which appears first in `bbdb-pgp-ranked-actions'.
+This list should include the following four symbols:
+  sign            Sign the message
+  sign-query      Query whether to sign the message
+  encrypt         Encrypt the message
+  encrypt-query   Query whether to encrypt the message."
+  :type '(repeat (symbol :tag "Action"))
+  :group 'bbdb-utilities-pgp)
+
+(defcustom bbdb-pgp-headers '("To" "Cc")
+  "Message headers to look at."
+  :type '(repeat (string :tag "Message header"))
+  :group 'bbdb-utilities-pgp)
+
+(defcustom bbdb-pgp-method 'pgpmime
+  "Method for signing and encrypting messages.
+It should be one of the keys of `bbdb-pgp-method-alist'.
+The default methods include
+  pgp       Add MML tags for PGP format
+  pgpauto   Add MML tags for PGP-auto format
+  pgpmime   Add MML tags for PGP/MIME
+  smime     Add MML tags for S/MIME
+See info node `(message)security'."
+  :type '(choice
+	  (const :tag "MML PGP" pgp)
+	  (const :tag "MML PGP-auto" pgpauto)
+	  (const :tag "MML PGP/MIME" pgpmime)
+	  (const :tag "MML S/MIME" smime)
+	  (symbol :tag "Custom"))
+  :group 'bbdb-utilities-pgp)
+
+(defcustom bbdb-pgp-method-alist
+  '((pgp mml-secure-message-sign-pgp
+         mml-secure-message-encrypt-pgp)
+    (pgpmime mml-secure-message-sign-pgpmime
+             mml-secure-message-encrypt-pgpmime)
+    (smime mml-secure-message-sign-smime
+           mml-secure-message-encrypt-smime)
+    (pgpauto mml-secure-message-sign-pgpauto
+             mml-secure-message-encrypt-pgpauto))
+  "Alist of methods for signing and encrypting a message with `bbdb-pgp'.
+Each method is a list (KEY SIGN ENCRYPT).
+The symbol KEY identifies the method.  The function SIGN signs the message;
+the function ENCRYPT encrypts it.  These functions take no arguments.
+The default methods include
+  pgp       Add MML tags for PGP format
+  pgpauto   Add MML tags for PGP-auto format
+  pgpmime   Add MML tags for PGP/MIME
+  smime     Add MML tags for S/MIME
+See info node `(message)security'."
+  :type '(repeat (list (symbol :tag "Key")
+                       (symbol :tag "Sign method")
+                       (symbol :tag "Encrypt method")))
+  :group 'bbdb-utilities-pgp)
 
 ;;;###autoload
-(defgroup bbdb-utilities-pgp nil
-  "Automatically sign and/or encrypt outgoing messages."
-  :link '(emacs-library-link :tag "Lisp Source File" "bbdb-pgp.el")
-  :group 'bbdb-utilities)
+(defun bbdb-read-xfield-pgp-mail (&optional init)
+  "Set `bbdb-pgp-field', requiring match with `bbdb-pgp-ranked-actions'."
+  (bbdb-read-string "PGP action: " init
+                    (mapcar 'list bbdb-pgp-ranked-actions) t))
 
+;;;###autoload
+(defun bbdb-pgp ()
+  "Add PGP MML tags to a message according to the recipients' BBDB records.
+For all message recipients in `bbdb-pgp-headers', this grabs the action
+in `bbdb-pgp-field' of their BBDB records.  If this proposes multiple actions,
+perform the action which appears first in `bbdb-pgp-ranked-actions'.
+If this proposes no action at all, use `bbdb-pgp-default'.
+The variable `bbdb-pgp-method' defines the method which is actually used
+for signing and encrypting.
 
-(defcustom bbdb/pgp-field 'pgp-mail
-  "*Field to use in BBDB to store PGP preferences.
+This command works with both `mail-mode' and `message-mode' to send
+signed or encrypted mail.
 
-If this field's value in a record is \"encrypt\" then messages are
-encrypted. If it is \"sign\" then messages are signed."
-  :type 'symbol
-  :tag "BBDB Field"
-  :require 'bbdb
-  :group 'bbdb-utilities-pgp)
-
-(defcustom bbdb/pgp-method 'mml-pgpmime
-  "*How to sign or encrypt messages.
-
-'mml-pgp       means add MML tags for Message to use old PGP format
-'mml-pgpmime   means add MML tags for Message to use PGP/MIME
-'mml-smime     means add MML tags for Message to use S/MIME"
-  :type '(choice
-	  (const :tag "MML PGP" mml-pgp :require 'mml)
-	  (const :tag "MML PGP/MIME" mml-pgpmime :require 'mml)
-	  (const :tag "MML S/MIME" mml-smime :require 'mml))
-  :tag "Signing/Encryption Method"
-  :group 'bbdb-utilities-pgp)
-
-(defcustom bbdb/pgp-default-action nil
-  "*Default action when sending a message and the recipient is not in BBDB.
-
-nil         means do nothing.
-'encrypt    means encrypt message.
-'sign       means sign message."
-  :type '(choice
-	  (const :tag "Do Nothing")
-	  (const :tag "Encrypt" encrypt)
-	  (const :tag "Sign" sign))
-  :tag "Default Action"
-  :group 'bbdb-utilities-pgp)
-
-(defcustom bbdb/pgp-quiet nil
-  "*Do not ask for confirmation on pgp-action.
-
-nil         means normal messages/questions.
-'t          means to be quiet."
-  :type '(choice
-	  (const :tag "normal")
-	  (const :tag "quiet" t))
-  :tag "Quietness"
-  :group 'bbdb-utilities-pgp)
-
-(defun bbdb/pgp-get-pgp (name address)
-  "Look up user NAME and ADDRESS in BBDB and return the PGP preference."
-  (let* ((record (bbdb-message-search name address))
-	 (pgp (and record
-		   (bbdb-record-field (car record) bbdb/pgp-field))))
-    pgp))
-
-(defun bbdb/pgp-sign ()
-  "Sign a message.
-bbdb/pgp-method controls the method used."
-  (cond
-   ((eq bbdb/pgp-method 'mml-pgp)
-    (mml-secure-message-sign-pgp))
-   ((eq bbdb/pgp-method 'mml-pgpmime)
-    (mml-secure-message-sign-pgpmime))
-   ((eq bbdb/pgp-method 'mml-smime)
-    (mml-secure-message-sign-smime))
-   (t
-    (error 'invalid-state "bbdb/pgp-method"))))
-
-(defun bbdb/pgp-encrypt ()
-  "Encrypt and sign a message.
-bbdb/pgp-method controls the method used."
-  (cond
-   ((eq bbdb/pgp-method 'mml-pgp)
-    (mml-secure-message-encrypt-pgp))
-   ((eq bbdb/pgp-method 'mml-pgpmime)
-    (mml-secure-message-encrypt-pgpmime))
-   ((eq bbdb/pgp-method 'mml-smime)
-    (mml-secure-message-encrypt-smime))
-   (t
-    (error 'invalid-state "bbdb/pgp-method"))))
-
-(defun bbdb/pgp-hook-fun ()
-  "Function to be added to message-send-hook
-Uses PGP to encrypt messages to users marked in the BBDB with the
-field `bbdb/pgp-field'.
-The user is prompted before encryption or signing."
-  (save-restriction
-    (save-excursion
+To run this command automatically when sending a message,
+use `bbdb-initialize' with arg `pgp' to add this function
+to `message-send-hook' and `mail-send-hook'.
+Yet see info node `(message)Signing and encryption' why you
+might not want to rely for encryption on a hook function
+which runs just before the message is sent, that is, you might want
+to call the command `bbdb-pgp' manually, then call `mml-preview'."
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (widen)
       (message-narrow-to-headers)
-      (and (featurep 'mailalias)
-	   (not (featurep 'mailabbrev))
-	   mail-aliases
-	   (expand-mail-aliases (point-min) (point-max)))
-      (let* ((to-field (mail-fetch-field "To" nil t))
-	     (address (mail-extract-address-components (or to-field ""))))
-	(widen)
-	(if (not (equal address '(nil nil)))
-	    (let ((pgp-p (bbdb/pgp-get-pgp (car address) (car (cdr address)))))
-	      (cond
-	       ((string= "encrypt" pgp-p)
-                (and (or bbdb/pgp-quiet
-                         (y-or-n-p "Encrypt message? "))
-                     (bbdb/pgp-encrypt)))
-	       ((string= "sign" pgp-p)
-		(and (or bbdb/pgp-quiet
-                         (y-or-n-p "Sign message? "))
-                     (bbdb/pgp-sign)))
-	       (t
-		(cond
-		 ((eq bbdb/pgp-default-action 'encrypt)
-		  (and (y-or-n-p "Encrypt message? ")
-		       (bbdb/pgp-encrypt)))
-		 ((eq bbdb/pgp-default-action 'sign)
-		  (and (y-or-n-p "Sign message? ")
-		       (bbdb/pgp-sign)))
-		 (t
-		  nil))))))))))
+      (when mail-aliases
+        ;; (sendmail-sync-aliases) ; needed?
+        (expand-mail-aliases (point-min) (point-max)))
+      (let ((actions
+             (or (delq nil
+                       (delete-dups
+                        (mapcar
+                         (lambda (record)
+                           (bbdb-record-xfield-intern record bbdb-pgp-field))
+                         (delete-dups
+                          (apply 'nconc
+                                 (mapcar
+                                  (lambda (address)
+                                    (bbdb-message-search (car address)
+                                                         (cadr address)))
+                                  (bbdb-extract-address-components
+                                   (mapconcat
+                                    (lambda (header)
+                                      (mail-fetch-field header nil t))
+                                    bbdb-pgp-headers ", ")
+                                   t)))))))
+                 (and bbdb-pgp-default
+                      (list bbdb-pgp-default)))))
+        (when actions
+          (widen) ; after analyzing the headers
+          (let ((ranked-actions bbdb-pgp-ranked-actions)
+                action)
+            (while ranked-actions
+              (if (memq (setq action (pop ranked-actions)) actions)
+                  (cond ((or (eq action 'sign)
+                             (and (eq action 'sign-query)
+                                  (y-or-n-p "Sign message? ")))
+                         (funcall (nth 1 (assq bbdb-pgp-method
+                                               bbdb-pgp-method-alist)))
+                         (setq ranked-actions nil))
+                        ((or (eq action 'encrypt)
+                             (and (eq action 'encrypt-query)
+                                  (y-or-n-p "Encrypt message? ")))
+                         (funcall (nth 2 (assq bbdb-pgp-method
+                                               bbdb-pgp-method-alist)))
+                         (setq ranked-actions nil)))))))))))
 
-(add-hook 'message-send-hook 'bbdb/pgp-hook-fun)
-(add-hook 'mail-send-hook 'bbdb/pgp-hook-fun)
-
-(provide 'bbdb-v3-pgp)
-
-;;; bbdb-v3-pgp.el ends here
+(provide 'bbdb-pgp)

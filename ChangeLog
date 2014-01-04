@@ -1,3 +1,22 @@
+2014-01-03  Roland Winkler  <winkler@gnu.org>
+	Overhaul lisp/bbdb-pgp.el for BBDB 3.
+	* lisp/bbdb-pgp.el (bbdb-pgp-field): Rename from bbdb/pgp-field.
+	(bbdb-pgp-default): Rename from bbdb/pgp-default-action.
+	(bbdb-pgp-ranked-actions, bbdb-pgp-headers)
+	(bbdb-pgp-method-alist): New variables.
+	(bbdb/pgp-quiet): Obsolete.
+	(bbdb-pgp-method): Rename from bbdb/pgp-method.  Include support
+	for PGP-auto format.
+	(bbdb-read-xfield-pgp-mail): New function.
+	(bbdb-pgp): Rename from bbdb/pgp-sign.  Consider all message
+	recipients in bbdb-pgp-headers.  Use bbdb-pgp-ranked-actions,
+	bbdb-pgp-headers, and bbdb-pgp-method-alist.
+	* lisp/bbdb.el (bbdb-utilities-pgp): New custom group
+	(bbdb-init-forms): Add init form for bbdb-pgp.
+	(bbdb-initialize): Update docstring accordingly.
+	* lisp/Makefile.am, lisp/makefile-temp: Support
+	lisp/bbdb-pgp.el.
+
 2014-01-03  Gijs Hillenius <gijs@hillenius.com>
 	* lisp/bbdb-pgp.el: Adapt for BBDB 3.  Remove outdated mailcrypt
 	interface.
