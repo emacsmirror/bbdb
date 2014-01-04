@@ -401,7 +401,8 @@ Return the records matching ADDRESS or nil."
              (lname (cdr fullname))
              (mail mail) ;; possibly changed below
              (created-p created-p)
-             change-p add-mails add-name)
+             (update-p update-p)
+             change-p add-mails add-name ignore-redundant)
 
         ;; Analyze the name part of the record.
         (cond ((or (not name)
@@ -412,8 +413,7 @@ Return the records matching ADDRESS or nil."
                    (member-ignore-case name (bbdb-record-aka record)))) ; do nothing
 
               (created-p ; new record
-               (bbdb-record-set-field record 'name (cons fname lname))
-               (setq change-p 'sort))
+               (bbdb-record-set-field record 'name (cons fname lname)))
 
               ((not (setq add-name (bbdb-add-job bbdb-add-name record name)))) ; do nothing
 
@@ -450,14 +450,27 @@ Return the records matching ADDRESS or nil."
                 record 'aka (cons name (bbdb-record-aka record)))
                (setq change-p 'sort)))
 
-        ;; It's kind of a kludge that the "redundancy" concept is built in.
-        ;; Maybe I should just add a new hook here...  The problem is that
-        ;; `bbdb-canonicalize-mail' is run before database lookup,
-        ;; and thus it cannot refer to the database to determine whether a mail
-        ;; is redundant.
-        (if (and bbdb-canonicalize-redundant-mails mail)
-            (setq mail (or (bbdb-mail-redundant-p mail (bbdb-record-mail record))
-                           mail)))
+        ;; Is MAIL redundant compared with the mail addresses
+        ;; that are already known for RECORD?
+        (if (and mail
+                 (setq ignore-redundant
+                       (bbdb-add-job bbdb-ignore-redundant-mails record mail)))
+            (let ((mails (bbdb-record-mail-canon record))
+                  (case-fold-search t) redundant ml re)
+              (while (setq ml (pop mails))
+                (if (and (setq re (bbdb-mail-redundant-re ml))
+                         (string-match re mail))
+                    (setq redundant ml mails nil)))
+              (if redundant
+                  (cond ((numberp ignore-redundant)
+                         (unless bbdb-silent
+                           (message "%s: redundant mail `%s'"
+                                    (bbdb-record-name record) mail)
+                           (sit-for ignore-redundant)))
+                        ((or (eq t ignore-redundant)
+                             bbdb-silent
+                             (y-or-n-p (format "Ignore redundant mail %s?" mail)))
+                         (setq mail redundant))))))
 
         ;; Analyze the mail part of the new records
         (cond ((or (not mail) (equal mail "???")
@@ -475,40 +488,76 @@ Return the records matching ADDRESS or nil."
                  (sit-for add-mails)))
 
               ((or (eq add-mails t) ; add it automatically
-                   (and (eq add-mails 'query)
-                        (or bbdb-silent
-                            (y-or-n-p (format "Add address \"%s\" to %s? " mail
-                                              (bbdb-record-name record)))
-                            (and (or (and (functionp update-p)
-                                          (progn (setq update-p (funcall update-p)) nil))
-                                     (memq update-p '(t create))
-                                     (and (eq update-p 'query)
-                                          (y-or-n-p
-                                           (format "Create a new record for %s? "
-                                                   (bbdb-record-name record)))))
-                                 (progn
-                                   (setq record (bbdb-empty-record))
-                                   (bbdb-record-set-name record fname lname)
-                                   (setq created-p t))))))
-               ;; then modify RECORD
-               (bbdb-record-set-field
-                record 'mail
-                (if (bbdb-eval-spec (bbdb-add-job bbdb-new-mails-primary
-                                                  record mail)
-                                    (format "Make \"%s\" the primary address? " mail))
-                    (cons mail (bbdb-record-mail record))
-                  (nconc (bbdb-record-mail record) (list mail))))
-               (unless change-p (setq change-p t))))
+                   bbdb-silent
+                   (y-or-n-p (format "Add address \"%s\" to %s? " mail
+                                     (bbdb-record-name record)))
+                   (and (or (and (functionp update-p)
+                                 (progn (setq update-p (funcall update-p)) nil))
+                            (memq update-p '(t create))
+                            (and (eq update-p 'query)
+                                 (y-or-n-p
+                                  (format "Create a new record for %s? "
+                                          (bbdb-record-name record)))))
+                        (progn
+                          (setq record (bbdb-empty-record))
+                          (bbdb-record-set-name record fname lname)
+                          (setq created-p t))))
 
-        (if (and change-p (not bbdb-silent))
-            (if (eq change-p 'sort)
-                (message "noticed \"%s\"" (bbdb-record-name record))
-              (if (bbdb-record-name record)
-                  (message "noticed %s's address \"%s\""
-                           (bbdb-record-name record) mail)
-                (message "noticed naked address \"%s\"" mail))))
+               (let ((mails (bbdb-record-mail record)))
+                 (if ignore-redundant
+                     ;; Does the new address MAIL make an old address redundant?
+                     (let ((mail-re (bbdb-mail-redundant-re mail))
+                           (case-fold-search t) okay redundant)
+                       (dolist (ml mails)
+                         (if (string-match mail-re ml) ; redundant mail address
+                             (push ml redundant)
+                           (push ml okay)))
+                       (let ((form (format "redundant mail%s %s"
+                                           (if (< 1 (length redundant)) "s" "")
+                                           (bbdb-concat 'mail (nreverse redundant))))
+                             (name (bbdb-record-name record)))
+                         (if redundant
+                             (cond ((numberp ignore-redundant)
+                                    (unless bbdb-silent
+                                      (message "%s: %s" name form)
+                                      (sit-for ignore-redundant)))
+                                   ((or (eq t ignore-redundant)
+                                        bbdb-silent
+                                        (y-or-n-p (format "Delete %s: " form)))
+                                    (if (eq t ignore-redundant)
+                                        (message "%s: deleting %s" name form))
+                                    (setq mails okay)))))))
 
-        (if change-p (bbdb-change-record record (eq change-p 'sort) created-p))
+                 ;; then modify RECORD
+                 (bbdb-record-set-field
+                  record 'mail
+                  (if (and mails
+                           (bbdb-eval-spec (bbdb-add-job bbdb-new-mails-primary
+                                                         record mail)
+                                           (format "Make \"%s\" the primary address? " mail)))
+                      (cons mail mails)
+                    (nconc mails (list mail))))
+                 (unless change-p (setq change-p t)))))
+
+        (cond (created-p
+               (unless bbdb-silent
+                 (if (bbdb-record-name record)
+                     (message "created %s's record with address \"%s\""
+                              (bbdb-record-name record) mail)
+                   (message "created record with naked address \"%s\"" mail)))
+               (bbdb-change-record record t t))
+
+              (change-p
+               (unless bbdb-silent
+                 (cond ((eq change-p 'sort)
+                        (message "noticed \"%s\"" (bbdb-record-name record)))
+                       ((bbdb-record-name record)
+                        (message "noticed %s's address \"%s\""
+                                 (bbdb-record-name record) mail))
+                       (t
+                        (message "noticed naked address \"%s\"" mail))))
+               (bbdb-change-record record (eq change-p 'sort))))
+
         (let ((bbdb-notice-hook-pending t))
           (run-hook-with-args 'bbdb-notice-mail-hook record))
         (push record new-records)))
@@ -917,22 +966,19 @@ For use as an element of `bbdb-notice-record-hook'."
 If the domain part of a mail address matches this regexp, the domain
 is replaced by the substring that actually matched this address.
 
-Certain sites have a single mail-host; for example, all mail originating
-at hosts whose names end in \".cs.cmu.edu\" can (and probably should) be
-sent to \"user@cs.cmu.edu\" instead.  Customize `bbdb-canonical-hosts'
-for this.
-
-Used by  `bbdb-canonicalize-mail-1'"
+Used by  `bbdb-canonicalize-mail-1'.  See also `bbdb-ignore-redundant-mails'."
   :group 'bbdb-mua
   :type '(regexp :tag "Regexp matching sites"))
 
 ;;;###autoload
 (defun bbdb-canonicalize-mail-1 (address)
-  "Example of `bbdb-canonicalize-mail-function'."
+  "Example of `bbdb-canonicalize-mail-function'.
+However, this function is too specific to be useful for the general user.
+Take it as a source of inspiration for what can be done."
   (setq address (bbdb-string-trim address))
   (cond
-   ;;
-   ;; rewrite mail-drop hosts.
+   ;; Rewrite mail-drop hosts.
+   ;; RW: The following is now also handled by `bbdb-ignore-redundant-mails'
    ((string-match
      (concat "\\`\\([^@%!]+@\\).*\\.\\(" bbdb-canonical-hosts "\\)\\'")
      address)
@@ -982,56 +1028,8 @@ Used by  `bbdb-canonicalize-mail-1'"
    ((string-match ".%uunet\\.uu\\.net@[^@%!]+\\'" address)
     (concat (substring address 0 (+ (match-beginning 0) 1)) "@UUNET.UU.NET"))
    ;;
-   ;; Otherwise, leave it as it is.  Returning a string equal to the one
-   ;; passed in tells BBDB that we are done.
+   ;; Otherwise, leave it as it is.
    (t address)))
-
-;;; Here is another approach not requiring the configuration of a user variable
-;;; such as `bbdb-canonical-hosts'.
-;;;
-;;; Sometimes one gets mail from foo@bar.baz.com, and then later gets mail
-;;; from foo@baz.com.  At this point, one would like to delete the bar.baz.com
-;;; address, since the baz.com address is obviously superior.
-
-(defun bbdb-mail-redundant-p (mail old-mails)
-  "Return non-nil if MAIL is a sub-domain of one of the OLD-MAILS.
-The return value is the address which makes this one redundant.
-For example, \"foo@bar.baz.com\" is redundant w.r.t. \"foo@baz.com\",
-and \"foo@quux.bar.baz.com\" is redundant w.r.t. \"foo@bar.baz.com\".
-
-See also `bbdb-canonicalize-redundant-mails'."
-  (let (redundant-address)
-    (while (and (not redundant-address) old-mails)
-      ;; Calculate a host-regexp for each address in OLD-MAILS
-      (let* ((old (car old-mails))
-             (host-index (string-match "@" old))
-             (name (and host-index (substring old 0 host-index)))
-             (host (and host-index (substring old (1+ host-index))))
-             ;; host-regexp is "^<name>@.*\.<host>$"
-             (host-regexp (and name host
-                               (concat "\\`" (regexp-quote name)
-                                       "@.*\\." (regexp-quote host)
-                                       "\\'"))))
-        ;; If MAIL matches host-regexp, then it is redundant
-        (if (and host-regexp mail
-                 (string-match host-regexp mail))
-            (setq redundant-address old)))
-      (setq old-mails (cdr old-mails)))
-    redundant-address))
-
-(defun bbdb-delete-redundant-mails (record)
-  "Delete redundant mail addresses of RECORD.
-For use as a value of `bbdb-change-hook'.  See also `bbdb-mail-redundant-p'."
-  (let ((mails (bbdb-record-mail record))
-         okay redundant)
-    (dolist (mail mails)
-      (if (bbdb-mail-redundant-p mail mails)
-          (push mail redundant)
-        (push mail okay)))
-    (when redundant
-      (message "Deleting redundant mails %s..."
-               (bbdb-concat 'mail (nreverse redundant)))
-      (bbdb-record-set-mail record (nreverse okay)))))
 
 (defun bbdb-message-clean-name-default (name)
   "Default function for `bbdb-message-clean-name-function'.

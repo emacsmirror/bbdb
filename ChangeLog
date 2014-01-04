@@ -1,4 +1,19 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	Clean up handling of redundant email addresses.
+	* lisp/bbdb.el (bbdb-ignore-redundant-mails): Rename from
+	bbdb-canonicalize-redundant-mails, keeping the latter as obsolete
+	alias.
+	(bbdb-add-mails, bbdb-canonicalize-mail-function): Fix docstring.
+	* lisp/bbdb-com.el (bbdb-mail-redundant-re): New function
+	(bbdb-delete-redundant-mails): Move here from lisp/bbdb-mua.el.
+	Merge with command bbdb-delete-duplicate-mails and make the latter
+	an obsolete alias.  New optional args query and update.
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Use
+	bbdb-mail-redundant-re and bbdb-delete-redundant-mails.
+	(bbdb-mail-redundant-p): Remove.
+	(bbdb-canonical-hosts): Update docstring.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	Check more carefully/frequently that BBDB is editable.
 	* lisp/bbdb.el (bbdb-editable): Move here from lisp/bbdb-com.el.
 	Revert BBDB buffer if possible.

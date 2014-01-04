@@ -372,28 +372,71 @@ the record to be displayed or nil otherwise."
 
 ;; clean-up functions
 
-;; This need not be restricted to mail field.
-;; RW: It seems that, as a minimum. one should always use `add-to-list'
-;; to avoid the problem which `bbdb-delete-duplicate-mails' is supposed
-;; to solve!
-(defun bbdb-delete-duplicate-mails (records &optional update)
-  "Remove duplicate mails from RECORDS.
-These duplicates may occur if we feed BBDB automatically.
+;;; Sometimes one gets mail from foo@bar.baz.com, and then later gets mail
+;;; from foo@baz.com.  At this point, one would like to delete the bar.baz.com
+;;; address, since the baz.com address is obviously superior.
+
+(defun bbdb-mail-redundant-re (mail)
+  "Return a regexp matching redundant variants of email address MAIL.
+For example, \"foo@bar.baz.com\" is redundant w.r.t. \"foo@baz.com\".
+Return nil if MAIL is not a valid plain email address.
+In particular, ignore addresses \"Joe Smith <foo@baz.com>\"."
+  (let* ((match (string-match "\\`\\([^ ]+\\)@\\(.+\\)\\'" mail))
+         (name (and match (match-string 1 mail)))
+         (host (and match (match-string 2 mail))))
+    (if (and name host)
+        (concat (regexp-quote name) "@.*\\." (regexp-quote host)))))
+
+(defun bbdb-delete-redundant-mails (records &optional query update)
+  "Delete redundant or duplicate mails from RECORDS.
+For example, \"foo@bar.baz.com\" is redundant w.r.t. \"foo@baz.com\".
+Duplicates may (but should not) occur if we feed BBDB automatically.
 Interactively, use BBDB prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
+If QUERY is non-nil (as in interactive calls, unless we use a prefix arg)
+query before deleting the redundant mail addresses.
 If UPDATE is non-nil (as in interactive calls) update the database.
-Otherwise, this is the caller's responsiblity (for example, when used
-in `bbdb-change-hook')."
-  (interactive (list (bbdb-do-records) t))
+Otherwise, this is the caller's responsiblity.
+
+Noninteractively, this may be used as an element of `bbdb-notice-record-hook'
+or `bbdb-change-hook'.  However, see also `bbdb-ignore-redundant-mails',
+which is probably more suited for your needs."
+  (interactive (list (bbdb-do-records) (not current-prefix-arg) t))
   (bbdb-editable)
   (dolist (record (bbdb-record-list records))
-    (let (cmails)
+    (let (mails redundant okay)
+      ;; We do not look at the canonicalized mail addresses of RECORD.
+      ;; An address "Joe Smith <foo@baz.com>" can only be entered manually
+      ;; into BBDB, and we assume that this is what the user wants.
+      ;; Anyway, if a mail field contains all the elements
+      ;; foo@baz.com, "Joe Smith <foo@baz.com>", "Jonathan Smith <foo@baz.com>"
+      ;; we do not know which address to keep and which ones to throw.
       (dolist (mail (bbdb-record-mail record))
-        (add-to-list 'cmails mail))
-      (bbdb-record-set-mail record (nreverse cmails))
-      (when update
-        (bbdb-change-record record)
-        (bbdb-redisplay-record record)))))
+        (if (assoc-string mail mails t) ; duplicate mail address
+            (push mail redundant)
+          (push mail mails)))
+      (let ((mail-re (delq nil (mapcar 'bbdb-mail-redundant-re mails)))
+            (case-fold-search t))
+        (if (not (cdr mail-re)) ; at most one mail-re address to consider
+            (setq okay (nreverse mails))
+          (setq mail-re (concat "\\`\\(?:" (mapconcat 'identity mail-re "\\|")
+                                "\\)\\'"))
+          (dolist (mail mails)
+            (if (string-match mail-re mail) ; redundant mail address
+                (push mail redundant)
+              (push mail okay)))))
+      (let ((form (format "redundant mail%s %s"
+                          (if (< 1 (length redundant)) "s" "")
+                          (bbdb-concat 'mail (nreverse redundant)))))
+        (when (and redundant
+                   (or (not query)
+                       (y-or-n-p (format "Delete %s: " form))))
+          (unless query (message "Deleting %s" form))
+          (bbdb-record-set-field record 'mail okay)
+          (when update
+            (bbdb-change-record record)))))))
+(define-obsolete-function-alias 'bbdb-delete-duplicate-mails
+  'bbdb-delete-redundant-mails)
 
 (defun bbdb-search-duplicates (&optional fields)
   "Search all records that have duplicate entries for FIELDS.

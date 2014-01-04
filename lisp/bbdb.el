@@ -954,7 +954,7 @@ Allowed values are:
                It should return one of the above values.
  a regexp    If the new mail address matches this regexp ignore the new address.
                Otherwise query to add it.
-See also `bbdb-new-mails-primary'."
+See also `bbdb-new-mails-primary' and `bbdb-ignore-redundant-mails'."
   :group 'bbdb-mua
   :type '(choice (const :tag "Automatically add new mail addresses" t)
                  (const :tag "Query before adding new mail addresses" query)
@@ -986,43 +986,43 @@ See also `bbdb-add-mails'."
 
 (defcustom bbdb-canonicalize-mail-function nil
   "If non-nil, it should be a function of one arg: a mail address string.
-Whenever BBDB \"notices\" a message, the corresponding mail address
-will be passed to this function first.  It acts as a kind of \"filter\"
-to transform the mail address before it is compared against or added
-to the database.
-Example: it is the case that CS.CMU.EDU is a valid return address
-for all mail originating at a machine in the .CS.CMU.EDU domain.
-So, if you wanted all such addresses to be canonically hashed
-as user@CS.CMU.EDU, instead of as user@host.CS.CMU.EDU, you might set
-this variable to a function like this:
-
- (setq bbdb-canonicalize-mail-function
-       '(lambda (address)
-          (cond ((string-match \"\\\\`\\\\([^@]+@\\\\).*\\\\.\\\\(CS\\\\.CMU\\\\.EDU\\\\)\\\\'\"
-                               address)
-                 (concat (match-string 1 address) (match-string 2 address)))
-                (t address))))
-
+When BBDB \"notices\" a message, the corresponding mail addresses are passed
+to this function first.  It acts as a kind of \"filter\" to transform
+the mail addresses before they are compared against or added to the database.
 See `bbdb-canonicalize-mail-1' for a more complete example.
+If this function returns nil, BBDB assumes that there is no mail address.
 
-If this function returns nil, BBDB assumes that there is no mail address."
+See also `bbdb-ignore-redundant-mails'."
   :group 'bbdb-mua
   :type 'function)
 
-(defcustom bbdb-canonicalize-redundant-mails t
-  "If non-nil, redundant mail addresses will be ignored.
-If a record has an address of the form foo@baz.com, setting this to t
-will cause subsequently-noticed addresses like foo@bar.baz.com to be
-ignored (since we already have a more general form of that address.)
-This is similar in function to one of the possible uses of the variable
-`bbdb-canonicalize-mail-function' but is somewhat more automatic.  (This
-cannot quite be implemented in terms of the `bbdb-canonicalize-mail-function'
-because it needs access to the database to determine whether an address is
-redundant, and the `bbdb-canonicalize-mail-function' is purely a textual
-manipulation which is performed before any database access.)"
+(defcustom bbdb-ignore-redundant-mails 'query
+  "How to handle redundant mail addresses for existing BBDB records.
+For example, \"foo@bar.baz.com\" is redundant w.r.t. \"foo@baz.com\".
+This affects two things, whether a new redundant mail address is added
+to BBDB and whether an old mail address, which has become redundant
+because of a newly added mail address, is removed from BBDB.
+
+Allowed values are:
+ t           Automatically ignore redundant mail addresses.
+ query       Query whether to ignore them.
+ nil         Do not ignore redundant mail addresses.
+ a number    Number of seconds BBDB displays redundant mail addresses
+               (without further action).
+ a function  This is called with two args, the record and the new mail address.
+               It should return one of the above values.
+ a regexp    If the new mail address matches this regexp never ignore
+               this mail address.  Otherwise query to ignore it.
+See also `bbdb-add-mails' and `bbdb-canonicalize-mail-function'."
   :group 'bbdb-mua
-  :type '(choice (const :tag "Ignore redundant addresses" t)
-                 (const :tag "Do not ignore redundant addresses" nil)))
+  :type '(choice (const :tag "Automatically ignore redundant mail addresses" t)
+                 (const :tag "Query whether to ignore them" query)
+                 (const :tag "Do not ignore redundant mail addresses" nil)
+                 (number :tag "Number of seconds to display redundant addresses")
+                 (function :tag "Function for handling redundant mail addresses")
+                 (regexp :tag "If the new address matches this regexp never ignore it.")))
+(define-obsolete-variable-alias 'bbdb-canonicalize-redundant-mails
+  'bbdb-ignore-redundant-mails)
 
 (defcustom bbdb-message-clean-name-function 'bbdb-message-clean-name-default
   "Function to clean up the name in the header of a message.
