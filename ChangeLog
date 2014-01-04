@@ -1,4 +1,15 @@
 2014-01-03  Roland Winkler  <winkler@gnu.org>
+	More flexible editing of xfields.
+	* lisp/bbdb.el (bbdb-read-string): Rename optional arg default to
+	init.  New optional arg require-match.
+	* lisp/bbdb-com.el (bbdb-read-organization)
+	(bbdb-record-edit-address, bbdb-completing-read-mails): Rename
+	optional arg default to init.
+	(bbdb-insert-field): Simplify.
+	(bbdb-read-xfield): New function.
+	(bbdb-prompt-for-new-field, bbdb-edit-field): Use it.
+
+2014-01-03  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-init-forms): Add init form for anniv.
 	(bbdb-initialize): Update docstring accordingly.
 	* lisp/bbdb-anniv.el: Update doc accordingly.

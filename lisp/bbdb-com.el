@@ -680,7 +680,7 @@ but does ensure that there will not be name collisions."
                (push (apply 'vector label phone-list) phones))
              (nreverse phones)))
           ;; notes
-          (notes (bbdb-read-string "Notes: ")))
+          (notes (bbdb-read-xfield 'notes)))
       (setq notes (unless (string= notes "")
                     `((notes . ,notes))))
       (vector (car name) (cdr name) nil nil organizations phones addresses
@@ -859,9 +859,9 @@ value of \"\", the default) means do not alter the address."
              (setq value (bbdb-split 'aka value)))
          (bbdb-record-set-field record 'aka value))
         ;; xfields
+        ((assq field (bbdb-record-xfields record))
+         (error "xfield \"%s\" already exists" field))
         (t
-         (if (assq field (bbdb-record-xfields record))
-             (error "xfield \"%s\" already exists" field))
          (bbdb-record-set-xfield record field value)))
   (bbdb-change-record record)
   (let (bbdb-layout)
@@ -983,7 +983,15 @@ a phone number or address with VALUE being nil."
     (bbdb-change-record record bbdb-need-to-sort)
     (bbdb-redisplay-record record)))
 
-(defun bbdb-read-organization (&optional default)
+(defun bbdb-read-xfield (field &optional init)
+  "Read xfield FIELD with optional INIT.
+This calls bbdb-read-xfield-FIELD if it exists."
+  (let ((read-fun (intern-soft (format "bbdb-read-xfield-%s" field))))
+    (if (fboundp read-fun)
+        (funcall read-fun init)
+      (bbdb-read-string (format "%s: " field) init))))
+
+(defun bbdb-read-organization (&optional init)
   "Read organization."
   (if (string< "24.3" emacs-version)
       (let ((crm-separator
@@ -992,10 +1000,10 @@ a phone number or address with VALUE being nil."
                      "[ \t\n]*"))
             (crm-local-completion-map bbdb-crm-local-completion-map))
         (completing-read-multiple "Organizations: " bbdb-organization-list
-                                  nil nil default))
-    (bbdb-split 'organization (bbdb-read-string "Organizations: " default))))
+                                  nil nil init))
+    (bbdb-split 'organization (bbdb-read-string "Organizations: " init))))
 
-(defun bbdb-record-edit-address (address &optional label default)
+(defun bbdb-record-edit-address (address &optional label init)
   "Edit ADDRESS.
 If LABEL is nil, edit the label sub-field of the address as well.
 If the country field of ADDRESS is set, use the matching rule from
@@ -1007,7 +1015,7 @@ to `bbdb-address-format-list'."
                                   bbdb-address-label-list)))
   (let ((country (or (bbdb-address-country address) ""))
         new-addr edit)
-    (unless (or default (string= "" country))
+    (unless (or init (string= "" country))
       (let ((list bbdb-address-format-list)
             identifier elt)
         (while (and (not edit) (setq elt (pop list)))
@@ -1763,9 +1771,9 @@ completion with."
              (nth (1- (string-to-number result)) records))))))
 
 ;;;###autoload
-(defun bbdb-completing-read-mails (prompt &optional default)
+(defun bbdb-completing-read-mails (prompt &optional init)
   "Like `read-string', but allows `bbdb-complete-mail' style completion."
-  (read-from-minibuffer prompt default
+  (read-from-minibuffer prompt init
                         bbdb-completing-read-mails-map))
 
 (defconst bbdb-quoted-string-syntax-table

@@ -1880,15 +1880,15 @@ This happens in addition to any pre-defined indentation of STRING."
                             (concat "\n" (make-string column ?\s) "\\1")
                             string))
 
-(defun bbdb-read-string (prompt &optional default collection)
+(defun bbdb-read-string (prompt &optional init collection require-match)
   "Read a string, trimming whitespace and text properties.
 PROMPT is a string to prompt with.
-DEFAULT appears as initial input which is useful for editing existing records.
-COLLECTION has the same meaning as in `completing-read'."
+INIT appears as initial input which is useful for editing existing records.
+COLLECTION and REQUIRE-MATCH have the same meaning as in `completing-read'."
   (bbdb-string-trim
    (if collection
-       (completing-read prompt collection nil nil default)
-     (read-string prompt default))))
+       (completing-read prompt collection nil require-match init)
+     (read-string prompt init))))
 
 (defun bbdb-current-record (&optional full)
   "Return the record point is at.
