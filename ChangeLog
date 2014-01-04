@@ -1,3 +1,7 @@
+2014-01-03  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-snarf.el (bbdb-snarf-rule-interactive): Use
+	symbol-name.
+
 2013-11-16  Roland Winkler  <winkler@gnu.org>
 	* configure.ac: Increase BBDB version number to 3.0.50.
 

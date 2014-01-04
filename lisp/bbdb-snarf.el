@@ -264,7 +264,8 @@ NANP is the North American Numbering Plan used in North and Central America."
   (intern
    (completing-read
     (format "Rule: (default `%s') " bbdb-snarf-rule-default)
-    bbdb-snarf-rule-alist nil t nil nil bbdb-snarf-rule-default)))
+    bbdb-snarf-rule-alist nil t nil nil
+    (symbol-name bbdb-snarf-rule-default))))
 
 ;;;###autoload
 (defun bbdb-snarf-paragraph (pos &optional rule)
