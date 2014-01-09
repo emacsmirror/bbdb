@@ -1,4 +1,8 @@
 2014-01-08  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-canonical-hosts, bbdb-canonicalize-mail-1)
+	(bbdb-message-clean-name-default): Move here from bbdb-mua.el.
+
+2014-01-08  Roland Winkler  <winkler@gnu.org>
 	Provide auto completion for cities, states and countries known to
 	BBDB.
 	* lisp/bbdb.el (bbdb-city-list, bbdb-state-list)
