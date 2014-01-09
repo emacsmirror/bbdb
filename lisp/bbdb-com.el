@@ -1115,10 +1115,12 @@ to `bbdb-address-format-list'."
                                  (bbdb-address-streets address))))
               ((eq elt ?c)
                (aset new-addr 1 (bbdb-read-string
-                                 "City: " (bbdb-address-city address))))
+                                 "City: " (bbdb-address-city address)
+                                 bbdb-city-list)))
               ((eq elt ?S)
                (aset new-addr 2 (bbdb-read-string
-                                 "State: " (bbdb-address-state address))))
+                                 "State: " (bbdb-address-state address)
+                                 bbdb-state-list)))
               ((eq elt ?p)
                (aset new-addr 3
                      (bbdb-error-retry
@@ -1129,7 +1131,8 @@ to `bbdb-address-format-list'."
                (aset new-addr 4
                      (bbdb-read-string
                       "Country: " (or (bbdb-address-country address)
-                                      bbdb-default-country)))))))
+                                      bbdb-default-country)
+                      bbdb-country-list))))))
     (bbdb-address-set-label address label)
     (bbdb-address-set-streets address (elt new-addr 0))
     (bbdb-address-set-city address (elt new-addr 1))
@@ -1166,13 +1169,15 @@ State:           state
 Postcode:        postcode
 Country:         country"
   (list (bbdb-edit-address-street (bbdb-address-streets address))
-        (bbdb-read-string "City: " (bbdb-address-city address))
-        (bbdb-read-string "State: " (bbdb-address-state address))
+        (bbdb-read-string "City: " (bbdb-address-city address) bbdb-city-list)
+        (bbdb-read-string "State: " (bbdb-address-state address)
+                          bbdb-state-list)
         (bbdb-error-retry
          (bbdb-parse-postcode
           (bbdb-read-string "Postcode: " (bbdb-address-postcode address))))
         (bbdb-read-string "Country: " (or (bbdb-address-country address)
-                                          bbdb-default-country))))
+                                          bbdb-default-country)
+                          bbdb-country-list)))
 
 (defun bbdb-record-edit-phone (phones phone)
   "For list PHONES edit PHONE number."

@@ -1733,6 +1733,15 @@ and mail.  In elisp lingo, this is really an obarray.")
 (defvar bbdb-organization-list nil
   "List of organizations known to BBDB.")
 
+(defvar bbdb-city-list nil
+  "List of cities known to BBDB.")
+
+(defvar bbdb-state-list nil
+  "List of states known to BBDB.")
+
+(defvar bbdb-country-list nil
+  "List of countries known to BBDB.")
+
 (defvar bbdb-modeline-info (make-vector 4 nil)
   "Precalculated mode line info for BBDB commands.
 This is a vector [APPEND-M INVERT-M APPEND INVERT].
@@ -1966,6 +1975,15 @@ COLLECTION and REQUIRE-MATCH have the same meaning as in `completing-read'."
        (completing-read prompt collection nil require-match init)
      (read-string prompt init))))
 
+(defun bbdb-add-to-list (list-var element)
+  "Add ELEMENT to the value of LIST-VAR if it isn't there yet and non-nil.
+The test for presence of ELEMENT is done with `equal'.
+The return value is the new value of LIST-VAR."
+  (if (or (not element)
+          (member element (symbol-value list-var)))
+      (symbol-value list-var)
+    (set list-var (cons element (symbol-value list-var)))))
+
 (defun bbdb-current-record (&optional full)
   "Return the record point is at.
 If FULL is non-nil record includes the display information."
@@ -2194,8 +2212,7 @@ KEY must be a string or nil.  Empty strings and nil are ignored."
   (if (and key (not (string= "" key))) ; do not hash empty strings
       (let ((sym (intern (downcase key) bbdb-hashtable)))
         (if (boundp sym)
-            (unless (memq record (symbol-value sym))
-              (set sym (cons record (symbol-value sym))))
+            (add-to-list sym record 'eq)
           (set sym (list record))))))
 
 (defun bbdb-gethash (key &optional predicate)
@@ -2399,8 +2416,7 @@ If VALUE is nil, remove xfield LABEL from RECORD.  Return VALUE."
   (if (memq label '(name firstname lastname affix organization
                          mail aka phone address xfields))
       (error "xfield label `%s' illegal" label))
-  (unless (memq label bbdb-xfield-label-list)
-    (push label bbdb-xfield-label-list))
+  (add-to-list 'bbdb-xfield-label-list label 'eq)
   (if (eq label 'mail-alias)
       (setq bbdb-mail-aliases-need-rebuilt 'edit))
   (if (and value (string= "" value)) (setq value nil))
@@ -2592,8 +2608,7 @@ See also `bbdb-record-field'."
            (if check (bbdb-check-type value (bbdb-record-organization record-type) t))
            (bbdb-hash-update record (bbdb-record-organization record) value)
            (dolist (organization value)
-             (unless (member organization bbdb-organization-list)
-               (push organization bbdb-organization-list)))
+             (add-to-list 'bbdb-organization-list organization))
            (bbdb-record-set-organization record value))
 
           ;; AKA
@@ -2632,9 +2647,7 @@ See also `bbdb-record-field'."
                                                    value 'equal)))
            (if check (bbdb-check-type value (bbdb-record-phone record-type) t))
            (dolist (phone value)
-             (let ((label (bbdb-phone-label phone)))
-               (unless (member label bbdb-phone-label-list)
-                 (push label bbdb-phone-label-list))))
+             (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone) 'eq))
            (bbdb-record-set-phone record value))
 
           ;; Address
@@ -2643,9 +2656,10 @@ See also `bbdb-record-field'."
                                                    value 'equal)))
            (if check (bbdb-check-type value (bbdb-record-address record-type) t))
            (dolist (address value)
-             (let ((label (bbdb-address-label address)))
-               (unless (member label bbdb-address-label-list)
-                 (push label bbdb-address-label-list))))
+             (add-to-list 'bbdb-address-label-list (bbdb-address-label address) 'eq)
+             (bbdb-add-to-list 'bbdb-city-list (bbdb-address-city address))
+             (bbdb-add-to-list 'bbdb-state-list (bbdb-address-state address))
+             (bbdb-add-to-list 'bbdb-country-list (bbdb-address-country address)))
            (bbdb-record-set-address record value))
 
           ;; all xfields
@@ -2661,8 +2675,7 @@ See also `bbdb-record-field'."
                ;; Ignore junk
                (when (and (cdr xfield) (not (string= "" (cdr xfield))))
                  (push xfield new-xfields)
-                 (unless (memq (car xfield) bbdb-xfield-label-list)
-                   (push (car xfield) bbdb-xfield-label-list))))
+                 (add-to-list 'bbdb-xfield-label-list (car xfield) 'eq)))
              (bbdb-record-set-xfields record new-xfields)))
 
           ;; Single xfield
@@ -2685,11 +2698,10 @@ SEPARATOR defaults to \"\\n\"."
 ;; Currently unused (but possible entry for `bbdb-merge-xfield-function-alist')
 (defun bbdb-merge-concat-remove-duplicates (string1 string2)
   "Concatenate STRING1 and STRING2, but remove duplicate lines."
-  (let ((xfield1 (split-string string1 "\n")))
+  (let ((lines (split-string string1 "\n")))
     (dolist (line (split-string string2 "\n"))
-      (unless (member line xfield1)
-        (push line xfield1)))
-    (bbdb-concat "\n" xfield1)))
+      (add-to-list 'lines line))
+    (bbdb-concat "\n" lines)))
 
 (defun bbdb-merge-string-least (string1 string2)
   "Return the string out of STRING1 and STRING2 that is `string-lessp'."
@@ -3037,60 +3049,59 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
         ;; `bbdb-address-label-list' to their customized values.  Bother?
         (setq bbdb-records records
               bbdb-xfield-label-list nil
-              bbdb-organization-list nil)
+              bbdb-organization-list nil
+              bbdb-city-list nil
+              bbdb-state-list nil
+              bbdb-country-list nil)
 
         (bbdb-goto-first-record)
-        (let (label)
-          (dolist (record records)
-            ;; We assume that the markers for each record need to go at each
-            ;; newline.  If this is not the case, things can go *very* wrong.
-            (bbdb-debug
-              (unless (looking-at "\\[")
-                (error "BBDB corrupted: junk between records at %s" (point))))
+        (dolist (record records)
+          ;; We assume that the markers for each record need to go at each
+          ;; newline.  If this is not the case, things can go *very* wrong.
+          (bbdb-debug
+            (unless (looking-at "\\[")
+              (error "BBDB corrupted: junk between records at %s" (point))))
 
-            (bbdb-cache-set-marker
-             (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
-             (point-marker))
-            (forward-line 1)
+          (bbdb-cache-set-marker
+           (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
+           (point-marker))
+          (forward-line 1)
 
-            ;; Set the completion lists
-            (dolist (phone (bbdb-record-phone record))
-              (unless (member (setq label (bbdb-phone-label phone))
-                              bbdb-phone-label-list)
-                (push label bbdb-phone-label-list)))
-            (dolist (address (bbdb-record-address record))
-              (unless (member (setq label (bbdb-address-label address))
-                              bbdb-address-label-list)
-                (push label bbdb-address-label-list)))
-            (dolist (xfield (bbdb-record-xfields record))
-              (unless (memq (setq label (car xfield)) bbdb-xfield-label-list)
-                (push label bbdb-xfield-label-list)))
-            (dolist (organization (bbdb-record-organization record))
-              (unless (member organization bbdb-organization-list)
-                (push organization bbdb-organization-list)))
+          ;; Set the completion lists
+          (dolist (phone (bbdb-record-phone record))
+            (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone) 'eq))
+          (dolist (address (bbdb-record-address record))
+            (add-to-list 'bbdb-address-label-list (bbdb-address-label address) 'eq)
+            (bbdb-add-to-list 'bbdb-city-list (bbdb-address-city address))
+            (bbdb-add-to-list 'bbdb-state-list (bbdb-address-state address))
+            (bbdb-add-to-list 'bbdb-country-list (bbdb-address-country address)))
+          (dolist (xfield (bbdb-record-xfields record))
+            (add-to-list 'bbdb-xfield-label-list (car xfield) 'eq))
+          (dolist (organization (bbdb-record-organization record))
+            (add-to-list 'bbdb-organization-list organization))
 
-            (let ((name (bbdb-concat 'name-first-last
-                                     (bbdb-record-firstname record)
-                                     (bbdb-record-lastname record))))
-              (when (and (not bbdb-allow-duplicates)
-                         (bbdb-gethash name '(fl-name aka)))
-                  ;; This does not check for duplicate mail fields.
-                  ;; Yet under normal circumstances, this should really
-                  ;; not be necessary each time BBDB is loaded as BBDB checks
-                  ;; whether creating a new record or modifying an existing one
-                  ;; results in duplicates.
-                  ;; Alternatively, you can use `bbdb-search-duplicates'.
-                (message "Duplicate BBDB record encountered: %s" name)
-                (sit-for 1)))
+          (let ((name (bbdb-concat 'name-first-last
+                                   (bbdb-record-firstname record)
+                                   (bbdb-record-lastname record))))
+            (when (and (not bbdb-allow-duplicates)
+                       (bbdb-gethash name '(fl-name aka)))
+              ;; This does not check for duplicate mail fields.
+              ;; Yet under normal circumstances, this should really
+              ;; not be necessary each time BBDB is loaded as BBDB checks
+              ;; whether creating a new record or modifying an existing one
+              ;; results in duplicates.
+              ;; Alternatively, you can use `bbdb-search-duplicates'.
+              (message "Duplicate BBDB record encountered: %s" name)
+              (sit-for 1)))
 
-            ;; We hash every record even if it is a duplicate and
-            ;; `bbdb-allow-duplicates' is nil.  Otherwise, an unhashed
-            ;; record would not be available for things like completion
-            ;; (and we would not know which record to keeep and which one
-            ;; to hide).  We trust the user she knows what she wants
-            ;; if she keeps duplicate records in the database though
-            ;; `bbdb-allow-duplicates' is nil.
-            (bbdb-hash-record record)))
+          ;; We hash every record even if it is a duplicate and
+          ;; `bbdb-allow-duplicates' is nil.  Otherwise, an unhashed
+          ;; record would not be available for things like completion
+          ;; (and we would not know which record to keeep and which one
+          ;; to hide).  We trust the user she knows what she wants
+          ;; if she keeps duplicate records in the database though
+          ;; `bbdb-allow-duplicates' is nil.
+          (bbdb-hash-record record))
 
         ;; We should remove those xfields from `bbdb-xfield-label-list'
         ;; that are handled automatically.  Yet those xfields that are
@@ -3168,8 +3179,7 @@ responsibility to update the hash-table for RECORD."
          (bbdb-insert-record-internal record)
          (bbdb-hash-record record))
         (t (error "Changes are lost.")))
-  (unless (memq record bbdb-changed-records)
-    (push record bbdb-changed-records))
+  (add-to-list 'bbdb-changed-records record 'eq)
   (run-hook-with-args 'bbdb-after-change-hook record)
   record)
 

@@ -1,3 +1,18 @@
+2014-01-08  Roland Winkler  <winkler@gnu.org>
+	Provide auto completion for cities, states and countries known to
+	BBDB.
+	* lisp/bbdb.el (bbdb-city-list, bbdb-state-list)
+	(bbdb-country-list): New internal variables.
+	(bbdb-add-to-list): New function.
+	(bbdb-puthash, bbdb-merge-concat-remove-duplicates)
+	(bbdb-change-record): Use add-to-list.
+	(bbdb-record-set-xfield, bbdb-parse-records): Use add-to-list and
+	bbdb-add-to-list.  Collect cities, states and countries known to
+	BBDB.
+	* lisp/bbdb-com.el (bbdb-record-edit-address)
+	(bbdb-edit-address-default): Provide auto completion for cities,
+	states and countries.
+
 2014-01-03  Roland Winkler  <winkler@gnu.org>
 	Update copyright year in all files.
 
