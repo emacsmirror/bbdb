@@ -1,4 +1,15 @@
 2014-01-12  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-pop-up-window-simple): New function.
+	(bbdb-pop-up-window): Use it.  Make sure the *BBDB* buffer exists.
+	Use display-buffer as an alternative to pop-up-buffer if the
+	*BBDB* buffer is not selected.  Use the tallest window even if
+	bbdb-pop-up-window-size is 1.0.
+	(bbdb-pop-up-window-size): Fix docstring accordingly.
+	* lisp/bbdb-com.el (bbdb-complete-mail-cleanup): Do not call
+	bbdb-pop-up-window before we created for sure the *BBDB* buffer.
+
+2014-01-12  Roland Winkler  <winkler@gnu.org>
+	Provide auto completion for streets and postcodes known to BBDB.
 	* lisp/bbdb.el (bbdb-street-list, bbdb-postcode-list): New
 	internal variables.
 	(bbdb-record-set-xfield, bbdb-parse-records)

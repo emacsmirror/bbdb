@@ -299,7 +299,7 @@ Lisp Hackers: See also `bbdb-silent-internal'."
 If it is an integer number, it is the number of lines used by BBDB.
 If it is a fraction between 0.0 and 1.0 (inclusive), it is the fraction
 of the tallest existing window that BBDB will take over.
-If it is t use `pop-to-buffer' to create the BBDB window.
+If it is t use `display-buffer'/`pop-to-buffer' to create the BBDB window.
 See also `bbdb-mua-pop-up-window-size'."
   :group 'bbdb-record-display
   :type '(choice (number :tag "BBDB window size")
@@ -3968,77 +3968,83 @@ Select this window if SELECT is non-nil.
 If `bbdb-mua-pop-up' is 'horiz, and the first window matching
 the predicate HORIZ-P is wider than the car of `bbdb-horiz-pop-up-window-size'
 then the window will be split horizontally rather than vertically."
-  (cond ((let ((window (get-buffer-window bbdb-buffer-name t)))
-           ;; We already have a BBDB window so that at most we select it
-           (and window
-                (or (not select) (select-window window)))))
+  (let ((buffer (get-buffer bbdb-buffer-name)))
+    (unless buffer
+      (error "No %s buffer to display" bbdb-buffer-name))
+    (cond ((let ((window (get-buffer-window buffer t)))
+             ;; We already have a BBDB window so that at most we select it
+             (and window
+                  (or (not select) (select-window window)))))
 
-        ;; try horizontal split
-        ((and (eq bbdb-mua-pop-up 'horiz)
-              horiz-p
-              (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
-              (let ((window-list (window-list))
-                    (b-width (cdr bbdb-horiz-pop-up-window-size))
-                    (search t) s-window)
-                (while (and (setq s-window (pop window-list))
-                            (setq search (not (funcall horiz-p s-window)))))
-                (unless (or search (<= (window-width s-window)
-                                       (car bbdb-horiz-pop-up-window-size)))
-                  (condition-case nil ; `split-window' might fail
-                      (let ((window (split-window
-                                     s-window
-                                     (if (integerp b-width)
-                                         (- (window-width s-window) b-width)
-                                       (round (* (- 1 b-width) (window-width s-window))))
-                                     t)) ; horizontal split
-                            (buffer (get-buffer bbdb-buffer-name)))
-                        (set-window-buffer window buffer)
-                        (cond (bbdb-dedicated-window
-                               (set-window-dedicated-p window bbdb-dedicated-window))
-                              ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
-                               (set-window-prev-buffers window nil)
-                               (display-buffer-record-window 'window window buffer)))
-                        (if select (select-window window))
-                        t)
-                    (error nil))))))
+          ;; try horizontal split
+          ((and (eq bbdb-mua-pop-up 'horiz)
+                horiz-p
+                (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
+                (let ((window-list (window-list))
+                      (b-width (cdr bbdb-horiz-pop-up-window-size))
+                      (search t) s-window)
+                  (while (and (setq s-window (pop window-list))
+                              (setq search (not (funcall horiz-p s-window)))))
+                  (unless (or search (<= (window-width s-window)
+                                         (car bbdb-horiz-pop-up-window-size)))
+                    (condition-case nil ; `split-window' might fail
+                        (let ((window (split-window
+                                       s-window
+                                       (if (integerp b-width)
+                                           (- (window-width s-window) b-width)
+                                         (round (* (- 1 b-width) (window-width s-window))))
+                                       t))) ; horizontal split
+                          (set-window-buffer window buffer)
+                          (cond (bbdb-dedicated-window
+                                 (set-window-dedicated-p window bbdb-dedicated-window))
+                                ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                                 (set-window-prev-buffers window nil)
+                                 (display-buffer-record-window 'window window buffer)))
+                          (if select (select-window window))
+                          t)
+                      (error nil))))))
 
-        ((eq t bbdb-pop-up-window-size)
-         ;; Don't do anything fancy.  Then `quit-window' deletes
-         ;; the *BBDB* window even with GNU Emacs 23 without the possibly
-         ;; irritating side effects of `set-window-dedicated-p'.
-         (pop-to-buffer (get-buffer bbdb-buffer-name)))
+          ((eq t bbdb-pop-up-window-size)
+           (bbdb-pop-up-window-simple buffer select))
 
-        ((eql bbdb-pop-up-window-size 1.0)
-         ;; Ignore arg SELECT
-         (condition-case nil ; `split-window' might fail
-             (switch-to-buffer (get-buffer bbdb-buffer-name))
-           (error (pop-to-buffer (get-buffer bbdb-buffer-name)))))
+          (t ;; vertical split
+           (let* ((window (selected-window))
+                  (window-height (window-height window)))
+             ;; find the tallest window...
+             (mapc (lambda (w)
+                     (let ((w-height (window-height w)))
+                       (if (> w-height window-height)
+                           (setq window w window-height w-height))))
+                   (window-list))
+             (condition-case nil
+                 (progn
+                   (unless (eql bbdb-pop-up-window-size 1.0)
+                     (setq window (split-window ; might fail
+                                   window
+                                   (if (integerp bbdb-pop-up-window-size)
+                                       (- window-height 1 ; for mode line
+                                          (max window-min-height bbdb-pop-up-window-size))
+                                     (round (* (- 1 bbdb-pop-up-window-size)
+                                               window-height))))))
+                   (set-window-buffer window buffer) ; might fail
+                   (cond (bbdb-dedicated-window
+                          (set-window-dedicated-p window bbdb-dedicated-window))
+                         ((and (fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                               (not (eql bbdb-pop-up-window-size 1.0)))
+                          (set-window-prev-buffers window nil)
+                          (display-buffer-record-window 'window window buffer)))
+                   (if select (select-window window)))
+               (error (bbdb-pop-up-window-simple buffer select))))))))
 
-        (t ;; vertical split
-         (let* ((tallest-window (selected-window))
-                (tw-height (window-height tallest-window))
-                w-height)
-           ;; find the tallest window...
-           (mapc (lambda (window)
-                   (if (> (setq w-height (window-height window)) tw-height)
-                       (setq tallest-window window tw-height w-height)))
-                 (window-list))
-           (condition-case nil ; `split-window' might fail
-               (let ((window (split-window
-                              tallest-window
-                              (if (integerp bbdb-pop-up-window-size)
-                                  (- tw-height 1 ; for mode line
-                                     (max window-min-height bbdb-pop-up-window-size))
-                                (round (* (- 1 bbdb-pop-up-window-size) tw-height)))))
-                     (buffer (get-buffer bbdb-buffer-name)))
-                 (set-window-buffer window buffer)
-                 (cond (bbdb-dedicated-window
-                        (set-window-dedicated-p window bbdb-dedicated-window))
-                       ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
-                        (set-window-prev-buffers window nil)
-                        (display-buffer-record-window 'window window buffer)))
-                 (if select (select-window window)))
-             (error (pop-to-buffer (get-buffer bbdb-buffer-name))))))))
+(defun bbdb-pop-up-window-simple (buffer select)
+  "Display BUFFER in some window, selecting it if SELECT is non-nil.
+If `bbdb-dedicated-window' is non-nil, mark the window as dedicated."
+  (let ((window (if select
+                    (progn (pop-to-buffer buffer)
+                           (get-buffer-window))
+                  (display-buffer buffer))))
+    (if bbdb-dedicated-window
+        (set-window-dedicated-p window bbdb-dedicated-window))))
 
 
 ;;; BBDB mode

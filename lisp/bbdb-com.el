@@ -2203,7 +2203,6 @@ If we are past `fill-column', wrap at the previous comma."
         (if bbdb-completion-display-record
             (let ((bbdb-silent-internal t))
               ;; FIXME: This pops up *BBDB* before removing *Completions*
-              (bbdb-pop-up-window)
               (bbdb-display-records records nil t)))
         ;; `bbdb-complete-mail-hook' may access MAIL, ADDRESS, and RECORDS.
         (run-hooks 'bbdb-complete-mail-hook))))
