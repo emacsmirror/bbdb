@@ -1733,11 +1733,17 @@ and mail.  In elisp lingo, this is really an obarray.")
 (defvar bbdb-organization-list nil
   "List of organizations known to BBDB.")
 
+(defvar bbdb-street-list nil
+  "List of streets known to BBDB.")
+
 (defvar bbdb-city-list nil
   "List of cities known to BBDB.")
 
 (defvar bbdb-state-list nil
   "List of states known to BBDB.")
+
+(defvar bbdb-postcode-list nil
+  "List of post codes known to BBDB.")
 
 (defvar bbdb-country-list nil
   "List of countries known to BBDB.")
@@ -2767,8 +2773,11 @@ See also `bbdb-record-field'."
            (if check (bbdb-check-type value (bbdb-record-address record-type) t))
            (dolist (address value)
              (add-to-list 'bbdb-address-label-list (bbdb-address-label address) 'eq)
+             (mapc (lambda (street) (bbdb-add-to-list 'bbdb-street-list street))
+                   (bbdb-address-streets address))
              (bbdb-add-to-list 'bbdb-city-list (bbdb-address-city address))
              (bbdb-add-to-list 'bbdb-state-list (bbdb-address-state address))
+             (bbdb-add-to-list 'bbdb-postcode-list (bbdb-address-postcode address))
              (bbdb-add-to-list 'bbdb-country-list (bbdb-address-country address)))
            (bbdb-record-set-address record value))
 
@@ -3160,8 +3169,10 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
         (setq bbdb-records records
               bbdb-xfield-label-list nil
               bbdb-organization-list nil
+              bbdb-street-list nil
               bbdb-city-list nil
               bbdb-state-list nil
+              bbdb-postcode-list nil
               bbdb-country-list nil)
 
         (bbdb-goto-first-record)
@@ -3182,8 +3193,11 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
             (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone) 'eq))
           (dolist (address (bbdb-record-address record))
             (add-to-list 'bbdb-address-label-list (bbdb-address-label address) 'eq)
+            (mapc (lambda (street) (bbdb-add-to-list 'bbdb-street-list street))
+                  (bbdb-address-streets address))
             (bbdb-add-to-list 'bbdb-city-list (bbdb-address-city address))
             (bbdb-add-to-list 'bbdb-state-list (bbdb-address-state address))
+            (bbdb-add-to-list 'bbdb-postcode-list (bbdb-address-postcode address))
             (bbdb-add-to-list 'bbdb-country-list (bbdb-address-country address)))
           (dolist (xfield (bbdb-record-xfields record))
             (add-to-list 'bbdb-xfield-label-list (car xfield) 'eq))

@@ -1,3 +1,10 @@
+2014-01-12  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-street-list, bbdb-postcode-list): New
+	internal variables.
+	(bbdb-record-set-xfield, bbdb-parse-records)
+	* lisp/bbdb-com.el (bbdb-record-edit-address)
+	(bbdb-edit-address-default): Use them.
+
 2014-01-08  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-canonical-hosts, bbdb-canonicalize-mail-1)
 	(bbdb-message-clean-name-default): Move here from bbdb-mua.el.
