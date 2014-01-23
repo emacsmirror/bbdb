@@ -1,4 +1,9 @@
 2014-01-23  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-puthash, bbdb-record-set-xfield)
+	(bbdb-record-set-field, bbdb-parse-records, bbdb-change-record):
+	Bugfix, make 'eq the 4th arg of add-to-list.
+
+2014-01-23  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-read-string): In
 	minibuffer-local-completion-map remove the binding of SPC to
 	minibuffer-complete-word and of ? to minibuffer-completion-help.
