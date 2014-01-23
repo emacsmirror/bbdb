@@ -1978,7 +1978,18 @@ INIT appears as initial input which is useful for editing existing records.
 COLLECTION and REQUIRE-MATCH have the same meaning as in `completing-read'."
   (bbdb-string-trim
    (if collection
-       (completing-read prompt collection nil require-match init)
+       ;; Hack: In `minibuffer-local-completion-map' remove
+       ;; the binding of SPC to `minibuffer-complete-word'
+       ;; and of ? to `minibuffer-completion-help'.
+       (minibuffer-with-setup-hook
+           (lambda ()
+             (use-local-map
+              (let ((map (make-sparse-keymap)))
+                (set-keymap-parent map (current-local-map))
+                (define-key map " " nil)
+                (define-key map "?" nil)
+                map)))
+         (completing-read prompt collection nil require-match init))
      (read-string prompt init))))
 
 (defun bbdb-add-to-list (list-var element)

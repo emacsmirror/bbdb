@@ -1,3 +1,8 @@
+2014-01-23  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-read-string): In
+	minibuffer-local-completion-map remove the binding of SPC to
+	minibuffer-complete-word and of ? to minibuffer-completion-help.
+
 2014-01-12  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-pop-up-window-simple): New function.
 	(bbdb-pop-up-window): Use it.  Make sure the *BBDB* buffer exists.
