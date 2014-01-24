@@ -3,7 +3,7 @@
 	(bbdb-record-set-field, bbdb-parse-records, bbdb-change-record):
 	Bugfix, make 'eq the 4th arg of add-to-list.
 
-2014-01-23  Roland Winkler  <winkler@gnu.org>
+2014-01-23  Stefan Monnier <monnier@iro.umontreal.ca>
 	* lisp/bbdb.el (bbdb-read-string): In
 	minibuffer-local-completion-map remove the binding of SPC to
 	minibuffer-complete-word and of ? to minibuffer-completion-help.
@@ -113,9 +113,10 @@
 	(bbdb-pgp-method): Rename from bbdb/pgp-method.  Include support
 	for PGP-auto format.
 	(bbdb-read-xfield-pgp-mail): New function.
-	(bbdb-pgp): Rename from bbdb/pgp-sign.  Consider all message
-	recipients in bbdb-pgp-headers.  Use bbdb-pgp-ranked-actions,
-	bbdb-pgp-headers, and bbdb-pgp-method-alist.
+	(bbdb-pgp): Rename from bbdb/pgp-sign.  Make it a command.
+	Consider all message recipients in bbdb-pgp-headers.  Use
+	bbdb-pgp-ranked-actions, bbdb-pgp-headers, and
+	bbdb-pgp-method-alist.
 	* lisp/bbdb.el (bbdb-utilities-pgp): New custom group
 	(bbdb-init-forms): Add init form for bbdb-pgp.
 	(bbdb-initialize): Update docstring accordingly.

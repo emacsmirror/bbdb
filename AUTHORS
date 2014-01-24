@@ -4,6 +4,7 @@ Abhi Yerra  <abhi@berkeley.edu>
 Adam C. Finnefrock  <adam@bigbro.biophys.cornell.edu>
 Alex Schroeder  <alex@gnu.org>
 Albert L. Ting <alt@artisan.com>
+Barak A. Pearlmutter <barak@cs.nuim.ie>
 Robert Widhopf-Fenk <bbdb@robf.de>
 Boris Goldowsky <boris@gnu.ai.mit.edu>: bbdb-print.el
 David Carlton <carlton@math.mit.edu>
@@ -15,6 +16,7 @@ Brian Edmonds  <edmonds@cs.ubc.ca>
 Christian Egli <christian.egli@sbs.ch>
 Dave Love  <fx@gnu.org>
 Greg Troxel <gdt@ir.bbn.com>
+Gijs Hillenius <gijs@hillenius.com>
 Dirk Grunwald <grunwald@cs.colorado.edu>: bbdb-print.el
 Hrvoje Niksic <hniksic@srce.hr>
 Ivan Kanis <ivan.kanis@googlemail.com>: bbdb-ispell
@@ -34,6 +36,7 @@ Kousik Nandy <kousik.nandy@gmail.com>
 Carsten Leonhardt  <leo@arioch.oche.de>
 Luigi Semenzato <luigi@paris.cs.berkeley.edu>: bbdb-print.el
 Marco Walther  <Marco.Walther@mch.sni.de>
+Stefan Monnier <monnier@iro.umontreal.ca>
 Jean-Yves Perrier  <perrier@nagra-kudelski.ch>
 Jens-Ulrik Holger Petersen <petersen@kurims.kyoto-u.ac.jp>
 Philip Hudson <phil.hudson@iname.com>
@@ -42,6 +45,7 @@ Sam Steingold  <sds@gnu.org>
 Seth Golub  <seth@cs.wustl.edu>
 Matt Simmons  <simmonmt@acm.org>
 SL Baur  <steve@altair.xemacs.org>
+Kevin Davidson <tkld@quadstone.com>: bbdb-pgp.el
 Todd Kaufmann <toad@cs.cmu.edu>:  bbdb-mhe.el
 Tom Tromey <tromey@redhat.com>
 Teodor Zlatanov  <tzz@lifelogs.com>
