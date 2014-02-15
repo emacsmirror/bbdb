@@ -1,3 +1,7 @@
+2014-02-15  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-update-records): Always evaluate arg
+	update-p twice if its value is a function.
+
 2014-01-23  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-puthash, bbdb-record-set-xfield)
 	(bbdb-record-set-field, bbdb-parse-records, bbdb-change-record):
