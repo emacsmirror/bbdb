@@ -240,7 +240,7 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
       (setq update-p (funcall update-p)))
   (cond ((eq t update-p)
          (setq update-p 'create))
-        ((not (memq update-p '(search update query nil)))
+        ((not (memq update-p '(search update query create nil)))
          (error "update-p ill-defined: %s" update-p)))
 
   (let (;; `bbdb-update-records-p' and `bbdb-offer-to-create' are used here

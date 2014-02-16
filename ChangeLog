@@ -1,3 +1,7 @@
+2014-02-16  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-update-records): Bug fix for previous
+	commit.  Allow value of update-p being create, too.
+
 2014-02-15  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-update-records): Always evaluate arg
 	update-p twice if its value is a function.
