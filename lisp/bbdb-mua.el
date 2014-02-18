@@ -225,23 +225,26 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
   ;; UPDATE-P allows filtering of complete messages.
   ;; Filtering of individual addresses within an accepted message
   ;; is done by `bbdb-get-address-components' using `bbdb-user-mail-address-re'.
-  ;; We resolve UPDATE-P up to two times.  This is needed, for example,
+  ;; We resolve UPDATE-P repeatedly.  This is needed, for example,
   ;; with the chain `bbdb-mua-auto-update-p' -> `bbdb-select-message'
-  ;; -> `bbdb-update-records-p'
-  (if (and (functionp update-p)
-           ;; Bad! `search' is a function in `cl-seq.el'.
-           (not (eq update-p 'search)))
-      (setq update-p (funcall update-p)))
-  (unless update-p ; fallback
-    (setq update-p (symbol-value (intern-soft (format "bbdb/%s-update-records-p"
-                                                      (bbdb-mua))))))
-  (if (and (functionp update-p)
-           (not (eq update-p 'search)))
-      (setq update-p (funcall update-p)))
+  ;; -> `bbdb-update-records-p'.
+  (let (done fallback)
+    (while (not done)
+      (cond ((and (functionp update-p)
+                  ;; Bad! `search' is a function in `cl-seq.el'.
+                  (not (eq update-p 'search)))
+             (setq update-p (funcall update-p)))
+            ((not (or update-p fallback))
+             ;; The fallback is applied at most once.
+             (setq update-p (symbol-value
+                             (intern-soft (format "bbdb/%s-update-records-p"
+                                                  (bbdb-mua))))
+                   fallback t))
+            ((setq done t)))))
   (cond ((eq t update-p)
          (setq update-p 'create))
         ((not (memq update-p '(search update query create nil)))
-         (error "update-p ill-defined: %s" update-p)))
+         (error "Illegal value of arg update-p: %s" update-p)))
 
   (let (;; `bbdb-update-records-p' and `bbdb-offer-to-create' are used here
         ;; as internal variables for communication with
