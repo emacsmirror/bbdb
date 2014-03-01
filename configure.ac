@@ -4,7 +4,7 @@
 # Author:        Didier Verna <didier@xemacs.org>
 # Maintainer:    Roland Winkler <winkler@gnu.org>
 # Created:       Tue Nov 14 18:28:52 2000
-# Last Revision: $Date: 2013/11/16 15:10:55 $
+# Last Revision: $Date: 2014/02/15 02:50:05 $
 # 
 # Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
 # Copyright (C) 2011-2014 Roland Winkler <winkler@gnu.org>
@@ -26,7 +26,7 @@
 
 AC_PREREQ([2.69])
 
-AC_INIT([bbdb],[3.0.50],[bbdb-info@lists.sourceforge.net],[],[http://savannah.nongnu.org/projects/bbdb/]) 
+AC_INIT([bbdb],[3.1],[bbdb-info@lists.sourceforge.net],[],[http://savannah.nongnu.org/projects/bbdb/]) 
 AC_CONFIG_SRCDIR([lisp/bbdb.el])
 AC_CONFIG_MACRO_DIR([m4])
 # We need GNU Automake 1.13 for AM_ELCFLAGS.

@@ -1,9 +1,9 @@
 Copyright (C) 2010-2014 Roland Winkler <winkler@gnu.org>
 See the end of the file for license conditions.
 
-BBDB is the Insidious Big Brother Database for GNU Emacs.  It
-provides an address book for email and snail mail addresses, phone
-numbers and the like.  It can be linked with various Emacs mail
+BBDB is the Insidious Big Brother Database for GNU Emacs.
+It provides an address book for email and snail mail addresses,
+phone numbers and the like.  It can be linked with various Emacs mail
 clients (Message and Mail mode, Rmail, Gnus, MH-E, and VM).
 BBDB is fully customizable.
 
@@ -81,20 +81,20 @@ To compile and install BBDB with `make':
 ===============================================================================
 Usage notes
 
-This revised version of BBDB requires GNU Emacs 23 or newer.
-Its code is still under development.  While it should work reliably,
-users of previous versions of BBDB are advised that the format of
-the BBDB database file has changed.  Migration to the new format should
-happen automatically.  Yet it is recommended to make a copy of the
-old file, in case something unexpected happens or you might want
-to go back.
+BBDB 3.1 is the first release of BBDB after a long time.
+It requires GNU Emacs 23 or newer.  Its code is still under development.
+While it should work reliably, users of previous versions of BBDB
+are advised that the format of the BBDB database file has changed.
+Migration to the new format should happen automatically.
+Yet it is recommended to make a copy of the old file, in case
+something unexpected happens or you might want to go back.
 
-As compared with BBDB v2.xx, many variables, functions, and commands
-have changed in BBDB v3.  Most likely you will have to review your
+As compared with BBDB 2.xx, many variables, functions, and commands
+have changed in BBDB 3.  Most likely you will have to review your
 customizations carefully.  You may want to call bbdb-undocumented-variables
 to identify outdated (i.e., now usually undocumented) variables in
-your init file.  All user variables for the core of BBDB v3 are listed
-at the beginning of bbdb.el.  Some extensions of BBDB v3 define their
+your init file.  All user variables for the core of BBDB 3 are listed
+at the beginning of bbdb.el.  Some extensions of BBDB 3 define their
 user variables at the beginning of the respective files.
 
 Generally the default values for user variables are chosen such that they make
@@ -130,9 +130,9 @@ the MUA interfaces based on interactive commands
 
 MUA commands include
 
-  bbdb-mua-display-records, bbdb-mua-display-sender, bbdb-mua-display-recipients
-  bbdb-annotate-record, bbdb-mua-annotate-sender, bbdb-mua-annotate-recipients
-  bbdb-mua-edit-field, bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients
+ bbdb-mua-display-records, bbdb-mua-display-sender, bbdb-mua-display-recipients
+ bbdb-annotate-record, bbdb-mua-annotate-sender, bbdb-mua-annotate-recipients
+ bbdb-mua-edit-field, bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients
 
 These MUA commands operate either on existing records only.  Or they
 can create new records.
@@ -157,8 +157,8 @@ WITHOUT-PREFIX and WITH-PREFIX may take the values
                 It should return one of the above values (see below).
  read         Read the value interactively.
 
-BBDB v2 also used MUA-specific variables bbdb/MUA-update-records-mode
-to control its interfaces with MUAs.  In BBDB v3 the variables
+BBDB 2 also used MUA-specific variables bbdb/MUA-update-records-mode
+to control its interfaces with MUAs.  In BBDB 3 the variables
 bbdb/MUA-update-records-p are only used as fallback if the generic
 (MUA-independent) variables bbdb-mua-update-interactive-p,
 bbdb-update-records-p or bbdb-mua-auto-update-p result in a value of
@@ -181,7 +181,7 @@ For example, you may want to bind bbdb-mua-auto-update-p to the function
 bbdb-select-message,  see bbdb-accept-message-alist and
 bbdb-ignore-message-alist.  If a message is accepted by bbdb-select-message,
 the actual action performed by BBDB (i.e., the return value of
-bbdb-select-message) is given by bbdb-mua-update-records-p.
+bbdb-select-message) is given by bbdb-update-records-p.
 
 ==================================================================
 

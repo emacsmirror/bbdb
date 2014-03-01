@@ -20,6 +20,8 @@
 
 SUBDIRS = lisp doc tex
 
+EXTRA_DIST = autogen.sh
+
 BBDB_ELPA_FILES = README COPYING lisp/*.el doc/bbdb.info doc/dir tex/*.tex
 BBDB_ELPA_PACKAGE = bbdb-$(PACKAGE_VERSION).tar
 
