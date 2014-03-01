@@ -284,7 +284,7 @@ but not allowing for regexps."
            (push record matches)))
        (nreverse matches))))
 
-(defun bbdb-search-prompt (&optional field)
+(defun bbdb-search-read (&optional field)
   "Read regexp to search FIELD values of records."
   (read-string (format "Search records%s %smatching regexp: "
                        (if field (concat " with " field) "")
@@ -294,7 +294,7 @@ but not allowing for regexps."
 (defun bbdb (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP
 in either the name(s), organization, address, phone, mail, or xfields."
-  (interactive (list (bbdb-search-prompt) (bbdb-layout-prefix)))
+  (interactive (list (bbdb-search-read) (bbdb-layout-prefix)))
   (let ((records (bbdb-search (bbdb-records) regexp regexp regexp
                               (cons '* regexp) regexp regexp)))
     (if records
@@ -305,32 +305,32 @@ in either the name(s), organization, address, phone, mail, or xfields."
 (defun bbdb-search-name (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP in the name
 \(or ``alternate'' names\)."
-  (interactive (list (bbdb-search-prompt "names") (bbdb-layout-prefix)))
+  (interactive (list (bbdb-search-read "names") (bbdb-layout-prefix)))
   (bbdb-display-records (bbdb-search (bbdb-records) regexp) layout))
 
 ;;;###autoload
 (defun bbdb-search-organization (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP in the organization field."
-  (interactive (list (bbdb-search-prompt "organization") (bbdb-layout-prefix)))
+  (interactive (list (bbdb-search-read "organization") (bbdb-layout-prefix)))
   (bbdb-display-records (bbdb-search (bbdb-records) nil regexp) layout))
 
 ;;;###autoload
 (defun bbdb-search-address (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP in the address fields."
-  (interactive (list (bbdb-search-prompt "address") (bbdb-layout-prefix)))
+  (interactive (list (bbdb-search-read "address") (bbdb-layout-prefix)))
   (bbdb-display-records (bbdb-search (bbdb-records) nil nil nil nil nil regexp)
                         layout))
 
 ;;;###autoload
 (defun bbdb-search-mail (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP in the mail address."
-  (interactive (list (bbdb-search-prompt "mail address") (bbdb-layout-prefix)))
+  (interactive (list (bbdb-search-read "mail address") (bbdb-layout-prefix)))
   (bbdb-display-records (bbdb-search (bbdb-records) nil nil regexp) layout))
 
 ;;;###autoload
 (defun bbdb-search-phone (regexp &optional layout)
   "Display all records in the BBDB matching REGEXP in the phones field."
-  (interactive (list (bbdb-search-prompt "phone") (bbdb-layout-prefix)))
+  (interactive (list (bbdb-search-read "phone") (bbdb-layout-prefix)))
   (bbdb-display-records
    (bbdb-search (bbdb-records) nil nil nil nil regexp) layout))
 
@@ -341,7 +341,7 @@ in either the name(s), organization, address, phone, mail, or xfields."
    (let ((field (completing-read "Xfield to search (RET for all): "
                                  (mapcar 'list bbdb-xfield-label-list) nil t)))
      (list (if (string= field "") '* (intern field))
-           (bbdb-search-prompt (if (string= field "")
+           (bbdb-search-read (if (string= field "")
                                    "any xfield"
                                  field))
            (bbdb-layout-prefix))))
@@ -638,7 +638,7 @@ See `bbdb-search' for searching records with regexps."
           nrecords))))
 
 (defun bbdb-read-record (&optional first-and-last)
-  "Prompt for and return a new BBDB record.
+  "Read and return a new BBDB record.
 Does not insert it into the database or update the hashtables,
 but does ensure that there will not be name collisions."
   (bbdb-editable)
@@ -721,10 +721,9 @@ Return cons with first and last name."
 
 ;;;###autoload
 (defun bbdb-create (record)
-  "Add a new RECORD to the bbdb database ; prompts for all relevant info
-using the echo area, inserts the new record in BBDB, sorted alphabetically,
-and offers to save the BBDB file.  DO NOT call this from a program.
-Call `bbdb-create-internal' instead."
+  "Add a new RECORD to BBDB.
+When called interactively read all relevant info.
+Do not call this from a program; call `bbdb-create-internal' instead."
   (interactive (list (bbdb-read-record current-prefix-arg)))
   (bbdb-change-record record t t)
   (bbdb-display-records (list record)))
@@ -780,19 +779,9 @@ If CHECK is non-nil throw an error if an argument is not syntactically correct."
 
 ;;;###autoload
 (defun bbdb-insert-field (record field value)
-  "Add a new field to the current record; the FIELD type and VALUE
-are prompted for if not supplied.
-
-If you are inserting a new phone-number field, the phone number style
-is controlled via `bbdb-phone-style'.  A prefix C-u inverts the style,
-
-If you are inserting a new mail address, you can have BBDB append a
-default domain to any mail address that does not contain one.  Set
-`bbdb-default-domain' to a string such as \"mycompany.com\" (or,
-depending on your environment, (getenv \"DOMAINNAME\")), and
-\"@mycompany.com\" will be appended to an address that is entered as
-just a username.  A prefix arg C-u (or a `bbdb-default-domain'
-value of \"\", the default) means do not alter the address."
+  "For RECORD, add a new FIELD with value VALUE.
+Interactively, read FIELD and VALUE; RECORD is the current record.
+A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
   (interactive
    (let* ((_ (bbdb-editable))
           (record (or (bbdb-current-record)
@@ -814,8 +803,7 @@ value of \"\", the default) means do not alter the address."
      (setq field (intern field))
      (if (memq field present)
          (error "Field \"%s\" already exists" field))
-     (list record field (bbdb-prompt-for-new-field record field
-                                                   current-prefix-arg))))
+     (list record field (bbdb-read-field record field current-prefix-arg))))
 
   (cond (;; affix
          (eq field 'affix)
@@ -863,8 +851,14 @@ value of \"\", the default) means do not alter the address."
   (let (bbdb-layout)
     (bbdb-change-record record)))
 
-;; Used by `bbdb-insert-field' and `bbdb-insert-field-menu'.
-(defun bbdb-prompt-for-new-field (record field &optional flag)
+(defun bbdb-read-field (record field &optional flag)
+  "For RECORD read FIELD interactively.
+If inserting a new phone number, the phone number style
+is controlled via `bbdb-phone-style'.  A non-nil FLAG inverts the style,
+
+If inserting a new mail address lacking a domain, BBDB appends
+`bbdb-default-domain' if this variable non-nil.  With non-nil FLAG
+\(or `bbdb-default-domain' being nil) do not alter the mail address."
   (let* ((init-f (intern-soft (concat "bbdb-init-" (symbol-name field))))
          (init (if (and init-f (functionp init-f))
                    (funcall init-f record))))
@@ -878,7 +872,7 @@ value of \"\", the default) means do not alter the address."
              (if (string-match "^mailto:" mail)
                  (setq mail (substring mail (match-end 0))))
              (if (or (not bbdb-default-domain)
-                     current-prefix-arg (string-match "[@%!]" mail))
+                     flag (string-match "[@%!]" mail))
                  mail
                (concat mail "@" bbdb-default-domain))))
           ;; AKA
@@ -886,8 +880,7 @@ value of \"\", the default) means do not alter the address."
           ;; Phone
           ((eq field 'phone)
            (let ((bbdb-phone-style
-                  (if current-prefix-arg
-                      (if (eq bbdb-phone-style 'nanp) nil 'nanp)
+                  (if flag (if (eq bbdb-phone-style 'nanp) nil 'nanp)
                     bbdb-phone-style)))
              (apply 'vector
                     (bbdb-read-string "Label: " nil bbdb-phone-label-list)
@@ -900,7 +893,7 @@ value of \"\", the default) means do not alter the address."
           ;; Address
           ((eq field 'address)
            (let ((address (make-vector bbdb-address-length nil)))
-             (bbdb-record-edit-address address nil flag)
+             (bbdb-record-edit-address address nil t)
              address))
           ;; xfield
           ((or (memq field bbdb-xfield-label-list)
@@ -1059,7 +1052,7 @@ of FIELD is the cdr of this variable."
             value)
         (bbdb-edit-field record field value)
       (bbdb-insert-field record field
-                         (bbdb-prompt-for-new-field record field)))))
+                         (bbdb-read-field record field)))))
 
 (defun bbdb-read-xfield (field &optional init)
   "Read xfield FIELD with optional INIT.
@@ -1081,19 +1074,19 @@ This calls bbdb-read-xfield-FIELD if it exists."
                                   nil nil init))
     (bbdb-split 'organization (bbdb-read-string "Organizations: " init))))
 
-(defun bbdb-record-edit-address (address &optional label init)
+(defun bbdb-record-edit-address (address &optional label ignore-country)
   "Edit ADDRESS.
 If LABEL is nil, edit the label sub-field of the address as well.
-If the country field of ADDRESS is set, use the matching rule from
-`bbdb-address-format-list'.  Otherwise use the default rule according
-to `bbdb-address-format-list'."
+If the country field of ADDRESS is nonempty and IGNORE-COUNTRY is nil,
+use the rule from `bbdb-address-format-list' matching this country.
+Otherwise, use the default rule according to `bbdb-address-format-list'."
   (unless label
     (setq label (bbdb-read-string "Label: "
                                   (bbdb-address-label address)
                                   bbdb-address-label-list)))
   (let ((country (or (bbdb-address-country address) ""))
         new-addr edit)
-    (unless (or init (string= "" country))
+    (unless (or ignore-country (string= "" country))
       (let ((list bbdb-address-format-list)
             identifier elt)
         (while (and (not edit) (setq elt (pop list)))
@@ -1812,7 +1805,7 @@ Obey `bbdb-completion-list'."
              nil)))))
 
 (defun bbdb-completing-read-records (prompt &optional omit-records)
-  "Prompt for and return list of records from the bbdb.
+  "Read and return list of records from the bbdb.
 Completion is done according to `bbdb-completion-list'.  If the user
 just hits return, nil is returned.  Otherwise, a valid response is forced."
   (let* ((completion-ignore-case t)

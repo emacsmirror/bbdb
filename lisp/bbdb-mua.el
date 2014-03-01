@@ -247,9 +247,9 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
          (error "Illegal value of arg update-p: %s" update-p)))
 
   (let (;; `bbdb-update-records-p' and `bbdb-offer-to-create' are used here
-        ;; as internal variables for communication with
-        ;; `bbdb-prompt-for-create'.  This does not affect the value of the
-        ;; global user variable `bbdb-update-records-p'.
+        ;; as internal variables for communication with `bbdb-query-create'.
+        ;; This does not affect the value of the global user variable
+        ;; `bbdb-update-records-p'.
         (bbdb-offer-to-create 'start)
         (bbdb-update-records-p update-p)
         address records)
@@ -275,7 +275,7 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
                                (bbdb-annotate-message address 'update))
                               ((eq bbdb-update-records-p 'query)
                                (bbdb-annotate-message
-                                address 'bbdb-prompt-for-create))
+                                address 'bbdb-query-create))
                               ((eq bbdb-update-records-p 'create)
                                (bbdb-annotate-message address 'create))))
                   nil)))
@@ -304,10 +304,10 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
 
     records))
 
-(defun bbdb-prompt-for-create ()
+(defun bbdb-query-create ()
   "Interactive query used by `bbdb-update-records'.
 Return t if the record should be created or `nil' otherwise.
-Honor previous answers such as \"!\"."
+Honor previous answers such as `!'."
   (let ((task bbdb-offer-to-create))
     ;; If we have remembered what the user typed previously,
     ;; `bbdb-offer-to-create' holds a character, i.e., a number.
@@ -360,7 +360,7 @@ Type q  to quit updating records.  No more search or annotation is done.")
                  (set-window-buffer window buffer)
                  (fit-window-to-buffer window)))
              ;; Try again!
-             (bbdb-prompt-for-create))))))
+             (bbdb-query-create))))))
 
 
 

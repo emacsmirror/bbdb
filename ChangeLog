@@ -1,4 +1,29 @@
 2014-02-28  Roland Winkler  <winkler@gnu.org>
+	Do not use `prompt' in a non-emacs sense.
+	* lisp/bbdb.el: Do not autoload bbdb-search and bbdb-search-prompt
+	when compiling.
+	(bbdb-auto-revert, bbdb-silent, bbdb-default-domain)
+	(bbdb-default-area-code, bbdb-offer-to-create)
+	(bbdb-update-records-address): Fix docstring.
+
+	* lisp/bbdb-com.el (bbdb-search-read): Renamed from
+	bbdb-search-prompt.
+	(bbdb, bbdb-search-name, bbdb-search-organization)
+	(bbdb-search-address, bbdb-search-mail, bbdb-search-phone)
+	(bbdb-search-xfields): Change accordingly.
+	(bbdb-read-record, bbdb-create, bbdb-completing-read-records): Fix
+	docstring.
+	(bbdb-read-field): Renamed from bbdb-prompt-for-new-field.  Use
+	arg flag instead of current-prefix-arg.  Add docstring.
+	(bbdb-insert-field): Change accordingly. Fix docstring.
+	(bbdb-edit-foo): Change accordingly.
+
+	* lisp/bbdb-mua.el (bbdb-query-create): Renamed from
+	bbdb-prompt-for-create.
+	(bbdb-update-records)
+	* lisp/bbdb.el (bbdb-insert-field-menu): Change accordingly.
+
+2014-02-28  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el: Do not autoload bbdb-search and bbdb-search-prompt
 	when compiling.
 	(bbdb-address-format-list, bbdb-buffer, bbdb-revert-buffer)
