@@ -46,8 +46,6 @@
   (autoload 'bbdb-dwim-mail "bbdb-com")
   (autoload 'bbdb-layout-prefix "bbdb-com")
   (autoload 'bbdb-completing-read-records "bbdb-com")
-  (autoload 'bbdb-search "bbdb-com")
-  (autoload 'bbdb-search-prompt "bbdb-com")
   (autoload 'mail-position-on-field "sendmail")
   (autoload 'vm-select-folder-buffer "vm-folder")
 
@@ -471,10 +469,10 @@ and formatting the address.
 
 IDENTIFIER may be a list of countries.
 IDENTIFIER may also be a function that is called with one arg, the address
-to be used.  The rule is used if the function returns non-nil.
+to be used.  The rule applies if the function returns non-nil.
 See `bbdb-address-continental-p' for an example.
-If IDENTIFIER is t, EDIT and FORMAT is used for all entries.
-Usually, this should be the last rule that becomes a fall-back (default).
+If IDENTIFIER is t, this rule always applies.  Usually, this should be
+the last rule that becomes a fall-back (default).
 
 EDIT may be a function that is called with one argument, the address.
 See `bbdb-edit-address-default' for an example.
@@ -2956,6 +2954,8 @@ Do this only if `bbdb-check-postcode' is non-nil."
 
 (defun bbdb-buffer ()
   "Return buffer that visits the BBDB file `bbdb-file'.
+Ensure that this buffer is in sync with `bbdb-file'.
+Revert the buffer if necessary.
 If `bbdb-file-remote' is non-nil and it is newer than `bbdb-file',
 copy it to `bbdb-file'."
   (unless (buffer-live-p bbdb-buffer)
@@ -3081,6 +3081,7 @@ This function also notices if the corresponding file on disk has been modified."
 (defun bbdb-revert-buffer (&optional ignore-auto noconfirm)
   "The `revert-buffer-function' for `bbdb-buffer' visiting `bbdb-file'.
 IGNORE-AUTO and NOCONFIRM have same meaning as in `revert-buffer'.
+See also variable `bbdb-auto-revert'.
 Return t if the reversion was successful (or not needed).
 Return nil otherwise."
   (interactive (list (not current-prefix-arg))) ; as in `revert-buffer'

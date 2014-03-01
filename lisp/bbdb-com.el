@@ -1861,15 +1861,15 @@ completion with."
 ;;;###autoload
 (defun bbdb-complete-mail (&optional beg cycle-completion-buffer)
   "In a mail buffer, complete the user name or mail before point.
-Completion happens up to the preceeding colon, or comma,
-or the value of BEG).
+Completion happens up to the preceeding colon, comma, or BEG.
 Return non-nil if there is a valid completion, else return nil.
 
-Completion behaviour can be controlled with `bbdb-completion-list'.
-If what has been typed is unique, insert an address formatted
-by `bbdb-dwim-mail' (see there).
-If what has been typed is a valid completion but not unique,
-a list of completions is displayed.
+Completion behaviour obeys `bbdb-completion-list' (see there).
+If what has been typed matches a unique BBDB record, insert an address
+formatted by `bbdb-dwim-mail' (see there).  Also, display this record
+if `bbdb-completion-display-record' is non-nil,
+If what has been typed is a valid completion but does not match
+a unique record, display a list of completions.
 If the completion is done and `bbdb-complete-mail-allow-cycling' is t
 then cycle through the mails for the matching record.  If BBDB
 would format a given address different from what we have in the mail buffer,

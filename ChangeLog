@@ -1,3 +1,9 @@
+2014-02-28  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el: Do not autoload bbdb-search and bbdb-search-prompt
+	when compiling.
+	(bbdb-address-format-list, bbdb-buffer, bbdb-revert-buffer)
+	* lisp/bbdb-com.el (bbdb-complete-mail): Fix docstring.
+
 2014-02-17  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-update-records): If value of arg update-p
 	is a function, evaluate it repeatedly as many times as needed.
