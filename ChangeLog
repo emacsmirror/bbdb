@@ -1,3 +1,6 @@
+2014-03-11  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+	* m4/package_date.m4: Use "date -u" if "date --rfc-3339" fails.
+
 2014-02-28  Roland Winkler  <winkler@gnu.org>
 	* configure.ac: Increase BBDB version number to 3.1.
 	* README: Update accordingly.  Fix typos.

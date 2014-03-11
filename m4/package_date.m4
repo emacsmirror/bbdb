@@ -26,6 +26,8 @@ if git log -1 > /dev/null 2>&1; then
     PACKAGE_DATE="$(git log -1 --format=format:'%ci')"
 elif date --rfc-3339=seconds > /dev/null 2>&1; then
     PACKAGE_DATE="$(date --rfc-3339=seconds)"
+elif date -u > /dev/null 2>&1; then
+    PACKAGE_DATE="$(date -u)"
 else
     PACKAGE_DATE="$(date)"
 fi
