@@ -74,3 +74,18 @@ bbdb-loaddefs.el: $(dist_lisp_LISP)
 		--eval '(setq generated-autoload-file "'$(abs_builddir)/$@'")' \
 		--eval '(setq make-backup-files nil)' \
 		-f batch-update-autoloads $(srcdir)
+
+# Generate bbdb-site.el here as pkgdatadir is only known at "make" time.
+# We protect the autoconf variables in the sed regular expressions
+# so as not to substitute them when processing Makefile.am.
+# Warning: the sed expressions will break if PACKAGE_VERSION, PACKAGE_DATE,
+# or pkgdatadir contain '='.
+
+bbdb-site.el: $(top_builddir)/config.status bbdb-site.el.in
+	sed -e "s=[@]pkgdatadir[@]=$(pkgdatadir)=" \
+	    -e "s=[@]PACKAGE_VERSION[@]=$(PACKAGE_VERSION)=" \
+	    -e "s=[@]PACKAGE_DATE[@]=$(PACKAGE_DATE)=" \
+	    < $@.in > $@
+
+# Be sure bbdb-site.el exists early for "(require 'bbdb-site)"
+BUILT_SOURCES = bbdb-site.el

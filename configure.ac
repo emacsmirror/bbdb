@@ -1,14 +1,11 @@
-#                                               -*- Autoconf -*-
-# configuration setup for BBDB
+# configure.ac --- configuration setup for BBDB
 
-# Author:        Didier Verna <didier@xemacs.org>
-# Maintainer:    Roland Winkler <winkler@gnu.org>
-# Created:       Tue Nov 14 18:28:52 2000
-# Last Revision: $Date: 2014/02/15 02:50:05 $
-# 
 # Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
 # Copyright (C) 2011-2014 Roland Winkler <winkler@gnu.org>
 # 
+# Author:        Didier Verna <didier@xemacs.org>
+# Maintainer:    Roland Winkler <winkler@gnu.org>
+#
 # BBDB is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -26,7 +23,7 @@
 
 AC_PREREQ([2.69])
 
-AC_INIT([bbdb],[3.1],[bbdb-info@lists.sourceforge.net],[],[http://savannah.nongnu.org/projects/bbdb/]) 
+AC_INIT([bbdb],[3.1.1],[bbdb-info@lists.sourceforge.net],[],[http://savannah.nongnu.org/projects/bbdb/]) 
 AC_CONFIG_SRCDIR([lisp/bbdb.el])
 AC_CONFIG_MACRO_DIR([m4])
 # We need GNU Automake 1.13 for AM_ELCFLAGS.
@@ -45,9 +42,10 @@ AS_IF([test "$EMACS" = no], [AC_MSG_ERROR([cannot find Emacs])])
 EMACS_VM
 AC_SUBST([AM_ELCFLAGS])
 
+# Generate lisp/bbdb-site.el via lisp/Makefile as pkgdatadir is only known
+# at "make" time.
 AC_CONFIG_FILES([Makefile
                  lisp/Makefile
-                 lisp/bbdb-site.el
                  lisp/bbdb-pkg.el
                  doc/Makefile
                  tex/Makefile])

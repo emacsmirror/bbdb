@@ -1,4 +1,13 @@
 2014-03-11  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+	Generate lisp/bbdb-site.el via lisp/Makefile as pkgdatadir is only
+	known at "make" time.
+	* configure.ac: Remove lisp/bbdb-site.el from autoconfig files.
+	Increase BBDB version number to 3.1.1
+	* lisp/Makefile.am: Generate lisp/bbdb-site.el.
+	* lisp/bbdb-site.el.in: Initialize bbdb-print-tex-path with a
+	placeholder for pkgdatadir.
+
+2014-03-11  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 	* Makefile.am: Install files COPYING, ChangeLog, AUTHORS, NEWS,
 	README, and TODO in the doc directory.
 	* doc/Makefile.am: Install bbdb.pdf in the doc directory.
