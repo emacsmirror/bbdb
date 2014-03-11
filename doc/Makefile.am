@@ -20,3 +20,7 @@
 
 info_TEXINFOS = bbdb.texi
 bbdb_TEXINFOS = doclicense.texi gpl.texi
+
+doc_DATA = bbdb.pdf
+
+bbdb.info bbdb.pdf: $(bbdb_TEXINFOS)

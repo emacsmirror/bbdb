@@ -20,6 +20,8 @@
 
 SUBDIRS = lisp doc tex
 
+doc_DATA = COPYING ChangeLog AUTHORS NEWS README TODO
+
 EXTRA_DIST = autogen.sh
 
 BBDB_ELPA_FILES = README COPYING lisp/*.el doc/bbdb.info doc/dir tex/*.tex
