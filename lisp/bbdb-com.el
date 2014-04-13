@@ -482,6 +482,23 @@ The search results are displayed in the BBDB buffer."
     (bbdb-display-records (sort (delete-dups ret)
                                 'bbdb-record-lessp))))
 
+(defun bbdb-fix-records (records)
+  "Fix broken RECORDS.
+Interactively, use BBDB prefix \
+\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records',"
+  (interactive (list (bbdb-do-records)))
+  (bbdb-editable)
+  (dolist (record (bbdb-record-list records))
+    ;; For the fields which take a list of strings (affix, organization,
+    ;; aka, and mail) `bbdb=record-set-field' calls `bbdb-list-strings'
+    ;; which removes all elements from such a list which are not non-empty
+    ;; strings.  This should fix most problems with these fields.
+    (bbdb-record-set-field record 'affix (bbdb-record-affix record))
+    (bbdb-record-set-field record 'organization (bbdb-record-organization record))
+    (bbdb-record-set-field record 'aka (bbdb-record-aka record))
+    (bbdb-record-set-field record 'mail (bbdb-record-mail record))
+    (bbdb-change-record record)))
+
 ;;; Time-based functions
 
 (defmacro bbdb-compare-records (cmpval label compare)
@@ -1064,7 +1081,7 @@ This calls bbdb-read-xfield-FIELD if it exists."
 
 (defun bbdb-read-organization (&optional init)
   "Read organization."
-  (if (string< "24.3" emacs-version)
+  (if (string< "24.3" (substring emacs-version 0 4))
       (let ((crm-separator
              (concat "[ \t\n]*"
                      (cadr (assq 'organization bbdb-separator-alist))
@@ -2146,7 +2163,7 @@ as part of the MUA insinuation."
       ;; For an older Emacs there is really no satisfactory workaround
       ;; (see GNU Emacs bug #4699), unless we use something radical like
       ;; advicing `choose-completion-string' (used by BBDB v2).
-      (if (string< emacs-version "23.2")
+      (if (string< (substring emacs-version 0 4) "23.2")
           (message "*Completions* buffer requires at least GNU Emacs 23.2")
         ;; `completion-in-region' does not work here as `dwim-completions'
         ;; is not a collection for completion in the usual sense, but it

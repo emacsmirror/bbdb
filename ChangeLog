@@ -1,4 +1,13 @@
 2014-04-12  Roland Winkler  <winkler@gnu.org>
+	Be more careful that empty strings do not pollute the data base.
+	* lisp/bbdb.el (bbdb-list-strings): New function.
+	(bbdb-record-set-field): Use it.
+	(bbdb-record-set-xfield): Clean up.
+	* lisp/bbdb-com.el (bbdb-fix-records): New command.
+	(bbdb-read-organization, bbdb-complete-mail): Check emacs version
+	properly.
+
+2014-04-12  Roland Winkler  <winkler@gnu.org>
 	Check type of record data structures more carefully.
 	* lisp/bbdb.el (bbdb-check-type): Simplify.  New arg `extended'.
 	* lisp/bbdb-com.el (bbdb-create-internal): Bug fix.

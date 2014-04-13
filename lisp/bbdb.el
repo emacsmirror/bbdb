@@ -1959,6 +1959,14 @@ The inverse function of `bbdb-split'."
                                                                (list x) x))
                                                strings))) separator))
 
+(defun bbdb-list-strings (list)
+  "Remove all elements from LIST which are not non-empty strings."
+  (let (new-list)
+    (dolist (elt list)
+      (if (and (stringp elt) (not (string= "" elt)))
+          (push elt new-list)))
+    (nreverse new-list)))
+
 ;; A call of `indent-region' swallows any indentation
 ;; that might be part of the field itself.  So we indent manually.
 (defsubst bbdb-indent-string (string column)
@@ -2534,27 +2542,29 @@ Splitting is based on `bbdb-separator-alist'."
 
 (defun bbdb-record-set-xfield (record label value)
   "For RECORD set xfield LABEL to VALUE.
-If VALUE is nil, remove xfield LABEL from RECORD.  Return VALUE."
+If VALUE is nil or an empty string, remove xfield LABEL from RECORD.
+Return VALUE."
   ;; In principle we can also have xfield labels `name' or `mail', etc.
   ;; Yet the actual code would get rather confused.  So we throw an error.
   (if (memq label '(name firstname lastname affix organization
                          mail aka phone address xfields))
       (error "xfield label `%s' illegal" label))
-  (add-to-list 'bbdb-xfield-label-list label nil 'eq)
   (if (eq label 'mail-alias)
       (setq bbdb-mail-aliases-need-rebuilt 'edit))
   (if (and value (string= "" value)) (setq value nil))
-  (let ((oldval (assq label (bbdb-record-xfields record))))
-    ;; Do nothing if both oldval and value are nil.
-    (cond ((and oldval value) ; update
-           (setcdr oldval value))
-          (value ; new field
+  (let ((old-xfield (assq label (bbdb-record-xfields record))))
+    ;; Do nothing if both OLD-XFIELD and VALUE are nil.
+    (cond ((and old-xfield value) ; update
+           (setcdr old-xfield value))
+          (value ; new xfield
+           (add-to-list 'bbdb-xfield-label-list label nil 'eq)
            (bbdb-record-set-xfields record
                                     (append (bbdb-record-xfields record)
                                             (list (cons label value)))))
-          (oldval ; remove
+          (old-xfield ; remove
            (bbdb-record-set-xfields record
-                                    (delq oldval (bbdb-record-xfields record))))))
+                                    (delq old-xfield
+                                          (bbdb-record-xfields record))))))
   value)
 
 (defun bbdb-check-type (object type &optional abort extended)
@@ -2747,6 +2757,7 @@ See also `bbdb-record-field'."
            (if merge (setq value (bbdb-merge-lists (bbdb-record-affix record)
                                                    value 'bbdb-string=)))
            (if check (bbdb-check-type value (bbdb-record-affix record-type) t))
+           (setq value (bbdb-list-strings value))
            (bbdb-record-set-affix record value))
 
           ;; Organization
@@ -2754,6 +2765,7 @@ See also `bbdb-record-field'."
            (if merge (setq value (bbdb-merge-lists (bbdb-record-organization record)
                                                    value 'bbdb-string=)))
            (if check (bbdb-check-type value (bbdb-record-organization record-type) t))
+           (setq value (bbdb-list-strings value))
            (bbdb-hash-update record (bbdb-record-organization record) value)
            (dolist (organization value)
              (add-to-list 'bbdb-organization-list organization))
@@ -2764,6 +2776,7 @@ See also `bbdb-record-field'."
            (if merge (setq value (bbdb-merge-lists (bbdb-record-aka record)
                                                    value 'bbdb-string=)))
            (if check (bbdb-check-type value (bbdb-record-aka record-type) t))
+           (setq value (bbdb-list-strings value))
            (unless bbdb-allow-duplicates
              (dolist (aka value)
                (let ((old (remq record (bbdb-gethash aka '(fl-name lf-name aka)))))
@@ -2777,6 +2790,7 @@ See also `bbdb-record-field'."
            (if merge (setq value (bbdb-merge-lists (bbdb-record-mail record)
                                                    value 'bbdb-string=)))
            (if check (bbdb-check-type value (bbdb-record-mail record-type) t))
+           (setq value (bbdb-list-strings value))
            (unless bbdb-allow-duplicates
              (dolist (mail value)
                (let ((old (remq record (bbdb-gethash mail '(mail)))))
