@@ -1,3 +1,7 @@
+2014-04-12  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-separator-alist): Treat AKAs consistent with
+	other fields.
+
 2014-03-11  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 	Generate lisp/bbdb-site.el via lisp/Makefile as pkgdatadir is only
 	known at "make" time.

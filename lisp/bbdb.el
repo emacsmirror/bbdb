@@ -534,7 +534,7 @@ This is used for fields which do not have an entry in `bbdb-separator-alist'."
 
 (defcustom bbdb-separator-alist
   '((name-first-last "[ ,;]" " ") (name-last-first "[ ,;]" ", ")
-    (organization "[,;]" ", ") (affix "[,;]"  ", ") (aka ";" "; ")
+    (organization "[,;]" ", ") (affix "[,;]"  ", ") (aka "[,;]" ", ")
     (mail "[,;]" ", ") (mail-alias "[,;]" ", ") (vm-folder "[,;]" ", ")
     (birthday "\n" "\n") (wedding "\n" "\n") (anniversary "\n" "\n")
     (notes "\n" "\n"))
