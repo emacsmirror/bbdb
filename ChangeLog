@@ -1,5 +1,8 @@
+2014-04-12  Barak A. Pearlmutter  <barak@cs.nuim.ie>
+	* lisp/Makefile.am: Include makefile-temp in distribution.
+
 2014-04-12  Roland Winkler  <winkler@gnu.org>
-	* lisp/bbdb-site.el.in:  Be more verbose about what we want.
+	* lisp/bbdb-site.el.in: Be more verbose about what we want.
 
 2014-04-12  Roland Winkler  <winkler@gnu.org>
 	* lisp/makefile-temp: Obey proper dependencies.  Clean up.

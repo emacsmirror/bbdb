@@ -51,7 +51,7 @@ CLEANFILES = bbdb-site.el bbdb-pkg.el
 # The Emacs function define-package is not autoloaded.
 # So we assume we need not compile bbdb-pkg.el (which otherwise
 # results in a compiler warning that define-package is not defined).
-EXTRA_DIST = bbdb-site.el.in bbdb-pkg.el.in bbdb-pkg.el
+EXTRA_DIST = bbdb-site.el.in bbdb-pkg.el makefile-temp
 
 bbdb-loaddefs.el: $(dist_lisp_LISP)
 #	2011-12-11: We switched from bbdb-autoloads.el to bbdb-loaddefs.el.
