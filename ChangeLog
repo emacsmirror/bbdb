@@ -1,3 +1,8 @@
+2014-04-12  Roland Winkler  <winkler@gnu.org>
+	Check type of record data structures more carefully.
+	* lisp/bbdb.el (bbdb-check-type): Simplify.  New arg `extended'.
+	* lisp/bbdb-com.el (bbdb-create-internal): Bug fix.
+
 2014-04-12  Barak A. Pearlmutter  <barak@cs.nuim.ie>
 	* lisp/Makefile.am: Include makefile-temp in distribution.
 

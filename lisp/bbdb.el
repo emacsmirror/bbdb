@@ -2557,61 +2557,79 @@ If VALUE is nil, remove xfield LABEL from RECORD.  Return VALUE."
                                     (delq oldval (bbdb-record-xfields record))))))
   value)
 
-(defun bbdb-check-type (object type &optional abort)
+(defun bbdb-check-type (object type &optional abort extended)
   "Return non-nil if OBJECT is of type TYPE.
+TYPE is a pseudo-code as in `bbdb-record-type'.
 If ABORT is non-nil, abort with error message if type checking fails.
-TYPE is a pseudo-code as in `bbdb-record-type'."
-  (let ((success
-         (catch 'success
-           ;; First atomic types
-           (cond ((eq type 'symbol) (throw 'success (symbolp object)))
-                 ((eq type 'integer) (throw 'success (integerp object)))
-                 ((eq type 'string) (throw 'success (stringp object)))
-                 ((eq type 'marker) (throw 'success (markerp object)))
-                 ((eq type 'sexp) (throw 'success t))) ; matches always
-           ;; compound types
-           (unless (consp type)
-             (error "atomic type `%s' undefined" type))
-           (let ((tp (pop type)))
-             (cond ((eq tp 'const)
-                    (throw 'success (equal (car type) object)))
-                   ((eq tp 'cons)
-                    (throw 'success
-                           (and (consp object)
-                                (bbdb-check-type (car object) (nth 0 type) abort)
-                                (bbdb-check-type (cdr object) (nth 1 type) abort))))
-                   ((eq tp 'list)
-                    (unless (listp object) (throw 'success nil))
-                    (let ((len (length type)) elt)
-                      (unless (eq len (length object)) (throw 'success nil))
-                      (while (setq elt (pop type))
-                        (unless (bbdb-check-type (pop object) elt abort)
-                          (throw 'success nil)))))
-                   ((eq tp 'repeat)
-                    (unless (listp object) (throw 'success nil))
-                    (let ((tp1 (car type)) elt)
-                      (while (setq elt (pop object))
-                        (unless (bbdb-check-type elt tp1 abort)
-                          (throw 'success nil)))))
-                   ((eq tp 'vector)
-                    (unless (vectorp object) (throw 'success nil))
-                    (let ((len (length type)) elt)
-                      (unless (eq len (length object)) (throw 'success nil))
-                      (dotimes (i len)
-                        (unless (bbdb-check-type (elt object i) (nth i type)
-                                                abort)
-                          (throw 'success nil)))))
-                   ((eq tp 'or) ; like customize `choice' type
-                    (let (elt)
-                      (while (setq elt (pop type))
-                        (if (bbdb-check-type object elt)
-                          (throw 'success t)))
-                      (throw 'success nil)))
-                   (t (error "type `%s' undefined" tp)))
-             t)))) ; success
-    (if (and abort (not success))
-        (error "type mismatch: expect %s, got `%s'" type object))
-    success))
+If EXTENDED is non-nil, consider extended atomic types which may include
+symbols, numbers, markers, and strings."
+  (let (tmp)
+    ;; Add more predicates?  Compare info node `(elisp.info)Type Predicates'.
+    (or (cond ((eq type 'symbol) (symbolp object))
+              ((eq type 'integer) (integerp object))
+              ((eq type 'marker) (markerp object))
+              ((eq type 'number) (numberp object))
+              ((eq type 'string) (stringp object))
+              ((eq type 'sexp) t) ; matches always
+              ((eq type 'face) (facep object))
+              ;; not quite a type
+              ((eq type 'bound) (and (symbolp object) (boundp object)))
+              ((eq type 'function) (functionp object))
+              ((eq type 'vector) (vectorp object))
+              ((and extended
+                    (cond ((symbolp type) (setq tmp (eq type object)) t)
+                          ((or (numberp type) (markerp type))
+                           (setq tmp (= type object)) t)
+                          ((stringp type)
+                           (setq tmp (and (stringp object)
+                                          (string= type object))) t)))
+               tmp)
+              ((not (consp type))
+               (error "Atomic type `%s' undefined" type))
+              ((eq 'const (setq tmp (car type)))
+               (equal (nth 1 type) object))
+              ((eq tmp 'cons)
+               (and (consp object)
+                    (bbdb-check-type (car object) (nth 1 type) abort extended)
+                    (bbdb-check-type (cdr object) (nth 2 type) abort extended)))
+              ((eq tmp 'list)
+               (and (listp object)
+                    (eq (length (cdr type)) (length object))
+                    (let ((type (cdr type)) (object object) (ok t))
+                      (while type
+                        (unless (bbdb-check-type (pop object) (pop type)
+                                                 abort extended)
+                          (setq ok nil type nil)))
+                      ok)))
+              ((eq tmp 'repeat)
+               (and (listp object)
+                    (let ((tp (nth 1 type)) (object object) (ok t))
+                      (while object
+                        (unless (bbdb-check-type (pop object) tp abort extended)
+                          (setq ok nil object nil)))
+                      ok)))
+              ((eq tmp 'vector)
+               (and (vectorp object)
+                    (let* ((i 0) (type (cdr type))
+                           (ok (eq (length object) (length type))))
+                      (when ok
+                        (while type
+                          (if (bbdb-check-type (aref object i) (pop type)
+                                               abort extended)
+                              (setq i (1+ i))
+                            (setq ok nil type nil)))
+                        ok))))
+              ((eq tmp 'or) ; like customize `choice' type
+               (let ((type (cdr type)) ok)
+                 (while type
+                   (if (bbdb-check-type object (pop type) nil extended)
+                       (setq ok t type nil)))
+                 ok))
+              ;; User-defined predicate
+              ((eq tmp 'user-p) (funcall (nth 1 type) object))
+              (t (error "Compound type `%s' undefined" tmp)))
+        (and abort
+             (error "Type mismatch: expect %s, got `%s'" type object)))))
 
 ;; (bbdb-check-type 'bar 'symbol)
 ;; (bbdb-check-type 'bar 'bar)
@@ -2620,8 +2638,14 @@ TYPE is a pseudo-code as in `bbdb-record-type'."
 ;; (bbdb-check-type nil '(const nil))
 ;; (bbdb-check-type '(bar . "foo") '(cons symbol string))
 ;; (bbdb-check-type '(bar "foo") '(list symbol string))
-;; (bbdb-check-type (vector 'sbar "foo") '(vector symbol string))
+;; (bbdb-check-type '("bar" "foo") '(repeat string))
+;; (bbdb-check-type (vector 'bar "foo") '(vector symbol string))
+;; (bbdb-check-type (vector 'bar "foo") 'vector)
 ;; (bbdb-check-type '(bar (bar . "foo")) '(list symbol (cons symbol string)))
+;; (bbdb-check-type '("aa" . "bb") '(or (const nil) (cons string string)) t)
+;; (bbdb-check-type nil '(or nil (cons string string)) t t)
+;; (bbdb-check-type "foo" '(user-p (lambda (a) (stringp a))))
+;; (bbdb-check-type 'set 'function)
 
 (defun bbdb-record-field (record field)
   "For RECORD return the value of FIELD.

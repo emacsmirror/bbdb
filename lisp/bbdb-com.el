@@ -750,7 +750,7 @@ If CHECK is non-nil throw an error if an argument is not syntactically correct."
   ;; name
   (cond ((stringp name)
          (setq name (bbdb-divide-name name)))
-        (check (bbdb-check-type name '(or nil (cons string string)) t)))
+        (check (bbdb-check-type name '(or (const nil) (cons string string)) t)))
   (let ((firstname (car name))
         (lastname (cdr name))
         (record-type (cdr bbdb-record-type)))
