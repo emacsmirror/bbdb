@@ -22,6 +22,9 @@
 # who like to use the latest BBDB, but do not have autotools installed.
 # This file can compile BBDB's lisp code on most systems.  Yet it is not
 # intended to be foolproof!
+# This file may also come handy for BBDB developers as it knows
+# about the proper dependencies of the elisp files, so that it keeps
+# the *.elc files consistently up to date.
 
 srcdir = .
 prefix = /usr/local
@@ -63,7 +66,7 @@ ELC =	bbdb.elc bbdb-site.elc bbdb-com.elc bbdb-print.elc bbdb-anniv.elc \
 	bbdb-gnus.elc bbdb-mhe.elc bbdb-pgp.elc bbdb-sc.elc \
 	bbdb-ispell.elc # bbdb-pkg.elc
 
-all: bbdb-loaddefs.el bbdb
+all: bbdb
 
 bbdb:	bbdb-loaddefs.el $(ELC)
 vm:	bbdb-vm.elc
@@ -91,9 +94,6 @@ bbdb-loaddefs.el: $(SRCS)
 		--eval '(setq make-backup-files nil)' \
 		-f batch-update-autoloads `pwd`
 
-.PHONY: no-bbdb-loaddefs
-no-bbdb-loaddefs:
-
 .el.elc:
 	$(emacs) -f batch-byte-compile $<
 
@@ -107,32 +107,32 @@ bbdb-site.elc: bbdb-site.el
 bbdb.elc: bbdb.el bbdb-site.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
 
-bbdb-com.elc: bbdb.elc bbdb-com.el
+bbdb-com.elc: bbdb-com.el bbdb.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
-bbdb-mua.elc: bbdb.elc bbdb-com.elc bbdb-mua.el
+bbdb-mua.elc: bbdb-mua.el bbdb-com.elc
 	$(emacs) -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
 	-f batch-byte-compile $(@:.elc=.el)
-bbdb-rmail.elc:	bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-rmail.el
+bbdb-rmail.elc: bbdb-rmail.el bbdb-mua.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
-bbdb-gnus.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-gnus.el
+bbdb-gnus.elc: bbdb-gnus.el bbdb-mua.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
-bbdb-mhe.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-mhe.el
+bbdb-mhe.elc: bbdb-mhe.el bbdb-mua.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
 # VM is not part of GNU Emacs
-bbdb-vm.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-vm.el
+bbdb-vm.elc: bbdb-vm.el bbdb-mua.elc
 	$(emacs) $(VM) -f batch-byte-compile $(@:.elc=.el)
-bbdb-sc.elc: bbdb.elc bbdb-com.elc bbdb-mua.elc bbdb-sc.el
+bbdb-sc.elc: bbdb-sc.el bbdb-mua.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
 
-bbdb-print.elc:	bbdb.elc bbdb-com.elc bbdb-print.el
+bbdb-print.elc: bbdb-print.el bbdb-com.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
-bbdb-migrate.elc: bbdb.elc bbdb-migrate.el
+bbdb-migrate.elc: bbdb-migrate.el bbdb.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
-bbdb-anniv.elc:	bbdb.elc bbdb-com.elc bbdb-anniv.el
+bbdb-anniv.elc: bbdb-anniv.el bbdb-com.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
-bbdb-ispell.elc: bbdb.elc bbdb-ispell.el
+bbdb-ispell.elc: bbdb-ispell.el bbdb.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
-bbdb-snarf.elc:	bbdb.elc bbdb-com.elc bbdb-snarf.el
+bbdb-snarf.elc: bbdb-snarf.el bbdb-com.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
 
 install-el: all
