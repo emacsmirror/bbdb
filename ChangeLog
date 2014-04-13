@@ -1,4 +1,7 @@
 2014-04-12  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-vm.el, m4/emacs_vm.m4: Require vm-autoloads.
+
+2014-04-12  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-separator-alist): Treat AKAs consistent with
 	other fields.
 

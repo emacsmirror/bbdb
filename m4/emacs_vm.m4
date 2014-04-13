@@ -26,7 +26,7 @@ AS_HELP_STRING([--with-vm-dir=DIR], [where to find VM lisp directory]),
     AC_MSG_CHECKING([for VM files])
     # convert path to absolute and canonicalize it.
     VMDIR=$(${EMACS} -batch --quick -eval "(message \"%s\" (expand-file-name \"${with_vm_dir}\"))" 2>&1)
-    VM_LOCATE=$(${EMACS} -batch --quick --directory="${VMDIR}" -eval "(if (or (locate-library \"vm-autoload\") (locate-library \"vm-autoloads\")) (message \"vm\"))" 2>&1)
+    VM_LOCATE=$(${EMACS} -batch --quick --directory="${VMDIR}" -eval "(if (locate-library \"vm-autoloads\") (message \"vm\"))" 2>&1)
     if test "x$VM_LOCATE" = "x"; then
        AC_MSG_ERROR([*** VM vm-autoloads.el must exist in directory passed to --with-vm-dir.])
     fi

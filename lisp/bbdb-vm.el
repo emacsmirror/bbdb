@@ -25,7 +25,7 @@
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-mua)
-(require 'vm-autoload)
+(require 'vm-autoloads)
 (require 'vm)
 (require 'vm-motion)
 (require 'vm-summary)
