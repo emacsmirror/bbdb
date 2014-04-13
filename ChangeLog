@@ -1,4 +1,7 @@
 2014-04-12  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-site.el.in:  Be more verbose about what we want.
+
+2014-04-12  Roland Winkler  <winkler@gnu.org>
 	* lisp/makefile-temp: Obey proper dependencies.  Clean up.
 
 2014-04-12  Roland Winkler  <winkler@gnu.org>

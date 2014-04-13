@@ -19,10 +19,10 @@
 
 ;;; Code:
 
-(if (< emacs-major-version 23)
-  (error "BBDB requires GNU Emacs 23 or later"))
-
 (defconst bbdb-version "@PACKAGE_VERSION@" "Version of BBDB.")
+
+(if (< emacs-major-version 23)
+  (error "BBDB %s requires GNU Emacs 23 or later" bbdb-version))
 
 (defconst bbdb-version-date "@PACKAGE_DATE@"
   "Version date of BBDB.")
