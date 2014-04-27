@@ -6,6 +6,20 @@ See the end of the file for license conditions.
 This file is about changes in BBDB version 3.
 
 
+* BBDB 3.1.2
+** Bug fix release
+** New command bbdb-fix-records
+
+
+* BBDB 3.1.1
+** Updated autoconf and automake scripts
+** Lisp code in 3.1.1 is identical to lisp code in 3.1.
+
+
+* BBDB 3.1
+Initial release
+
+
 
 ----------------------------------------------------------------------
 This file is part of the Insidious Big Brother Database (aka BBDB),

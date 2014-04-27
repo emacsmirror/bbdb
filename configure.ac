@@ -23,7 +23,7 @@
 
 AC_PREREQ([2.69])
 
-AC_INIT([bbdb],[3.1.1],[bbdb-info@lists.sourceforge.net],[],[http://savannah.nongnu.org/projects/bbdb/]) 
+AC_INIT([bbdb],[3.1.2],[bbdb-info@lists.sourceforge.net],[],[http://savannah.nongnu.org/projects/bbdb/]) 
 AC_CONFIG_SRCDIR([lisp/bbdb.el])
 AC_CONFIG_MACRO_DIR([m4])
 # We need GNU Automake 1.13 for AM_ELCFLAGS.

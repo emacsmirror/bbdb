@@ -1,3 +1,7 @@
+2014-04-27  Roland Winkler  <winkler@gnu.org>
+	* configure.ac: Increase BBDB version number to 3.1.2.
+	* NEWS: Update for release.
+
 2014-04-12  Roland Winkler  <winkler@gnu.org>
 	Be more careful that empty strings do not pollute the data base.
 	* lisp/bbdb.el (bbdb-list-strings): New function.
