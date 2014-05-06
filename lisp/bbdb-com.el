@@ -257,13 +257,14 @@ but not allowing for regexps."
         (push `(cond ((stringp ,xfield-re)
                       ;; check xfield `bbdb-default-xfield'
                       (string-match ,xfield-re
-                                    (or (bbdb-record-xfield record bbdb-default-xfield) "")))
+                                    (or (bbdb-record-xfield-string
+                                         record bbdb-default-xfield) "")))
                      ((eq (car ,xfield-re) '*)
                       ;; check all xfields
                       (let ((labels bbdb-xfield-label-list) done tmp)
                         (if (bbdb-record-xfields record)
                             (while (and (not done) labels)
-                              (setq tmp (bbdb-record-xfield record (car labels))
+                              (setq tmp (bbdb-record-xfield-string record (car labels))
                                     done (and tmp (string-match (cdr ,xfield-re)
                                                                 tmp))
                                     labels (cdr labels)))
@@ -273,7 +274,7 @@ but not allowing for regexps."
                         done))
                      (t ; check one field
                       (string-match (cdr ,xfield-re)
-                                    (or (bbdb-record-xfield
+                                    (or (bbdb-record-xfield-string
                                          record (car ,xfield-re)) ""))))
               clauses))
     `(let ((case-fold-search bbdb-case-fold-search)
@@ -869,13 +870,13 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
     (bbdb-change-record record)))
 
 (defun bbdb-read-field (record field &optional flag)
-  "For RECORD read FIELD interactively.
-If inserting a new phone number, the phone number style
-is controlled via `bbdb-phone-style'.  A non-nil FLAG inverts the style,
-
-If inserting a new mail address lacking a domain, BBDB appends
-`bbdb-default-domain' if this variable non-nil.  With non-nil FLAG
-\(or `bbdb-default-domain' being nil) do not alter the mail address."
+  "For RECORD read new FIELD interactively.
+- The phone number style is controlled via `bbdb-phone-style'.
+  A prefix FLAG inverts the style,
+- If a mail address lacks a domain, append `bbdb-default-domain'
+  if this variable non-nil.  With prefix FLAG do not alter the mail address.
+- The value of an xfield is a string.  With prefix FLAG the value may be
+  any lisp object."
   (let* ((init-f (intern-soft (concat "bbdb-init-" (symbol-name field))))
          (init (if (and init-f (functionp init-f))
                    (funcall init-f record))))
@@ -918,7 +919,7 @@ If inserting a new mail address lacking a domain, BBDB appends
                (y-or-n-p
                 (format "\"%s\" is an unknown field name.  Define it? " field))
                (error "Aborted"))
-           (bbdb-read-xfield field init)))))
+           (bbdb-read-xfield field init flag)))))
 
 ;;;###autoload
 (defun bbdb-edit-field (record field &optional value flag)
@@ -927,7 +928,10 @@ If point is in the middle of a multi-line field (e.g., address),
 then the entire field is edited, not just the current line.
 For editing phone numbers or addresses, VALUE must be the phone number
 or address that gets edited. An error is thrown when attempting to edit
-a phone number or address with VALUE being nil."
+a phone number or address with VALUE being nil.
+
+- The value of an xfield is a string.  With prefix FLAG the value may be
+  any lisp object."
   (interactive
    (save-excursion
      (bbdb-editable)
@@ -954,7 +958,7 @@ a phone number or address with VALUE being nil."
              record 'name
              (bbdb-read-name
               (if flag
-                  ;; Here we try to obey the name-format field for
+                  ;; Here we try to obey the name-format xfield for
                   ;; editing the name field.  Is this useful?  Or is this
                   ;; irritating overkill and we better obey consistently
                   ;; `bbdb-read-name-format'?
@@ -985,7 +989,7 @@ a phone number or address with VALUE being nil."
           (t ; xfield
            (bbdb-record-set-xfield
             record field
-            (bbdb-read-xfield field (bbdb-record-xfield record field)))))
+            (bbdb-read-xfield field (bbdb-record-xfield record field) flag))))
     (bbdb-change-record record bbdb-need-to-sort)))
 
 (defun bbdb-edit-foo (record field &optional nvalue)
@@ -1071,13 +1075,16 @@ of FIELD is the cdr of this variable."
       (bbdb-insert-field record field
                          (bbdb-read-field record field)))))
 
-(defun bbdb-read-xfield (field &optional init)
+(defun bbdb-read-xfield (field &optional init sexp)
   "Read xfield FIELD with optional INIT.
 This calls bbdb-read-xfield-FIELD if it exists."
   (let ((read-fun (intern-soft (format "bbdb-read-xfield-%s" field))))
-    (if (fboundp read-fun)
-        (funcall read-fun init)
-      (bbdb-read-string (format "%s: " field) init))))
+    (cond ((fboundp read-fun)
+           (funcall read-fun init))
+          ((and (not sexp) (string-or-null-p init))
+           (bbdb-read-string (format "%s: " field) init))
+          (t (read-minibuffer (format "%s (sexp): " field)
+                              (prin1-to-string init))))))
 
 (defun bbdb-read-organization (&optional init)
   "Read organization."
@@ -2388,8 +2395,7 @@ If pefix DELETE is non-nil, remove ALIAS from RECORD."
                     (error "Record has no alias"))
               (bbdb-get-mail-aliases))
             nil nil init) current-prefix-arg)))
-  (setq alias (bbdb-string-trim alias))
-  (unless (string= "" alias)
+  (when (setq alias (bbdb-string-trim alias t))
     (let ((aliases (bbdb-record-xfield-split record bbdb-mail-alias-field)))
       (if delete
           (setq aliases (delete alias aliases))

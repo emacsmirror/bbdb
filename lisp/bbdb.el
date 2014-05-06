@@ -1637,7 +1637,7 @@ You really should not disable debugging.  But it will speed things up."))
            (repeat (vector string (repeat string) string string
                            string string)) ; address
            (repeat string) ; mail
-           (repeat (cons symbol string)) ; xfields
+           (repeat (cons symbol sexp)) ; xfields
            sexp) ; cache
   "Pseudo-code for the structure of a record.  Used by `bbdb-record-type'.")
 
@@ -1912,16 +1912,18 @@ ARGS are passed to `message'."
   (ding t)
   (apply 'message args))
 
-(defsubst bbdb-string-trim (string)
+(defun bbdb-string-trim (string &optional null)
   "Remove leading and trailing whitespace and all properties from STRING.
-If STRING is nil return an empty string."
+If STRING is nil return an empty string unless NULL is non-nil."
   (if (null string)
-      ""
+      (unless null "")
+    (setq string (substring-no-properties string))
     (if (string-match "\\`[ \t\n]+" string)
-        (setq string (substring string (match-end 0))))
+        (setq string (substring-no-properties string (match-end 0))))
     (if (string-match "[ \t\n]+\\'" string)
-        (setq string (substring string 0 (match-beginning 0))))
-    (substring-no-properties string)))
+        (setq string (substring-no-properties string 0 (match-beginning 0))))
+    (unless (and null (string= "" string))
+      string)))
 
 (defsubst bbdb-string= (str1 str2)
   "Return t if strings STR1 and STR2 are equal, ignoring case."
@@ -2526,19 +2528,30 @@ Build and store it if necessary."
 Return nil if xfield LABEL is undefined."
   (cdr (assq label (bbdb-record-xfields record))))
 
-;; The values of xfields are always strings.  The following function
+;; The values of xfields are normally strings.  The following function
 ;; comes handy if we want to treat these values as symbols.
 (defun bbdb-record-xfield-intern (record label)
   "For RECORD return interned value of xfield LABEL.
 Return nil if xfield LABEL does not exist."
   (let ((value (bbdb-record-xfield record label)))
-    (if value (intern value))))
+    ;; If VALUE is not a string, return whatever it is.
+    (if (stringp value) (intern value) value)))
+
+(defun bbdb-record-xfield-string (record label)
+  "For RECORD return value of xfield LABEL as string.
+Return nil if xfield LABEL does not exist."
+  (let ((value (bbdb-record-xfield record label)))
+    (if (string-or-null-p value)
+        value
+      (let ((print-escape-newlines t))
+        (prin1-to-string value)))))
 
 (defsubst bbdb-record-xfield-split (record label)
   "For RECORD return value of xfield LABEL split as a list.
 Splitting is based on `bbdb-separator-alist'."
   (let ((val (bbdb-record-xfield record label)))
-    (if val (bbdb-split label val))))
+    (cond ((stringp val) (bbdb-split label val))
+          (val (error "Cannot split `%s'" val)))))
 
 (defun bbdb-record-set-xfield (record label value)
   "For RECORD set xfield LABEL to VALUE.
@@ -2551,7 +2564,7 @@ Return VALUE."
       (error "xfield label `%s' illegal" label))
   (if (eq label 'mail-alias)
       (setq bbdb-mail-aliases-need-rebuilt 'edit))
-  (if (and value (string= "" value)) (setq value nil))
+  (if (stringp value) (setq value (bbdb-string-trim value t)))
   (let ((old-xfield (assq label (bbdb-record-xfields record))))
     ;; Do nothing if both OLD-XFIELD and VALUE are nil.
     (cond ((and old-xfield value) ; update
@@ -2838,7 +2851,7 @@ See also `bbdb-record-field'."
              (if check (bbdb-check-type new-xfields (bbdb-record-xfields record-type) t))
              (dolist (xfield (nreverse value))
                ;; Ignore junk
-               (when (and (cdr xfield) (not (string= "" (cdr xfield))))
+               (when (and (cdr xfield) (not (equal "" (cdr xfield))))
                  (push xfield new-xfields)
                  (add-to-list 'bbdb-xfield-label-list (car xfield) nil 'eq)))
              (bbdb-record-set-xfields record new-xfields)))
@@ -2848,7 +2861,8 @@ See also `bbdb-record-field'."
            (if merge
                (setq value (bbdb-merge-xfield field (bbdb-record-xfield record field)
                                               value)))
-           (if check (bbdb-check-type value 'string t))
+           ;; The following test always succeeds
+           ;; (if check (bbdb-check-type value 'sexp t))
            ;; This removes xfield FIELD if its value is nil.
            (bbdb-record-set-xfield record field value))
 
@@ -2900,18 +2914,18 @@ If L1 or L2 are not lists, they are replaced by (list L1) and (list L2)."
 If LABEL has an entry in `bbdb-merge-xfield-function-alist', use it.
 If VALUE1 or VALUE2 is a substring of the other, return the longer one.
 Otherwise use `bbdb-concat'.  Return nil if we have nothing to merge."
-  (setq value1 (bbdb-string-trim value1)) ; converts nil to ""
-  (setq value2 (bbdb-string-trim value2)) ; converts nil to ""
-  (let ((b1 (not (string= "" value1)))
-        (b2 (not (string= "" value2))))
-    (cond ((and b1 b2)
-           (let ((fun (cdr (assq label bbdb-merge-xfield-function-alist))))
-             (cond (fun (funcall fun value1 value2))
-                   ((string-match (regexp-quote value1) value2) value2)
-                   ((string-match (regexp-quote value2) value1) value1)
-                   (t (bbdb-concat label value1 value2)))))
-          (b1 value1)
-          (b2 value2))))
+  (if (stringp value1) (setq value1 (bbdb-string-trim value1 t)))
+  (if (stringp value2) (setq value2 (bbdb-string-trim value2 t)))
+  (cond ((and value1 value2)
+         (let ((fun (cdr (assq label bbdb-merge-xfield-function-alist))))
+           (cond (fun (funcall fun value1 value2))
+                 ((not (and (stringp value1) (stringp value2)))
+                  (cons value1 value2)) ; concatenate lists
+                 ((string-match (regexp-quote value1) value2) value2)
+                 ((string-match (regexp-quote value2) value1) value1)
+                 (t (bbdb-concat label value1 value2)))))
+        (value1)
+        (value2)))
 
 ;;; Parsing other things
 
@@ -3720,11 +3734,18 @@ FIELD-LIST is the list of actually displayed FIELDS."
                    (bbdb-display-list aka 'aka "; "))))
             ;; xfields
             (t
-             (let ((xfield (assq field (bbdb-record-xfields record))))
-               (if xfield
-                   (bbdb-display-text (concat (replace-regexp-in-string
-                                               "\n" "; " (cdr xfield)) "; ")
-                                      `(xfields ,xfield)))))))
+             (let* ((xfield (assq field (bbdb-record-xfields record)))
+                    (value (cdr xfield)))
+               (if value
+                   (bbdb-display-text
+                    (concat (if (stringp value)
+                                (replace-regexp-in-string
+                                 "\n" "; " value)
+                              ;; value of xfield is a sexp
+                              (let ((print-escape-newlines t))
+                                (prin1-to-string value)))
+                            "; ")
+                    `(xfields ,xfield)))))))
     ;; delete the trailing "; "
     (if (looking-back "; ")
         (backward-delete-char 2))
@@ -3786,13 +3807,23 @@ FIELD-LIST is the list of actually displayed FIELDS."
                  (bbdb-display-list aka 'aka "\n"))))
             ;; xfields
             (t
-             (let ((xfield (assq field (bbdb-record-xfields record))))
-               (when xfield
+             (let* ((xfield (assq field (bbdb-record-xfields record)))
+                    (value (cdr xfield)))
+               (when value
                  (bbdb-display-text (format fmt field)
                                     `(xfields ,xfield field-label)
                                     'bbdb-field-name)
                  (setq start (point))
-                 (insert (bbdb-indent-string (cdr xfield) indent) "\n")
+                 (insert (bbdb-indent-string
+                          (if (stringp value)
+                              value
+                            ;; value of xfield is a sexp
+                            (let ((string (pp-to-string value)))
+                              (if (string-match "[ \t\n]+\\'" string)
+                                  (substring-no-properties
+                                   string 0 (match-beginning 0))
+                                string)))
+                          indent) "\n")
                  (bbdb-field-property start `(xfields ,xfield)))))))
     (insert "\n")))
 

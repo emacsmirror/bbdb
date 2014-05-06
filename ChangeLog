@@ -1,4 +1,21 @@
 2014-05-06  Roland Winkler  <winkler@gnu.org>
+	Allow arbitrary lisp expressions as values of xfields.
+	* lisp/bbdb.el (bbdb-record-type): Update accordingly.
+	(bbdb-string-trim): New optional arg null.
+	(bbdb-record-xfield-intern): Return xfield value unmodified if it
+	is not a string.
+	(bbdb-record-xfield-string): New function.
+	(bbdb-record-xfield-split): Throw error if xfield value is not a
+	string.
+	(bbdb-record-set-xfield, bbdb-record-set-field)
+	(bbdb-merge-xfield, bbdb-display-record-one-line)
+	(bbdb-display-record-multi-line)
+	* lisp/bbdb-com.el (bbdb-search, bbdb-read-field)
+	(bbdb-edit-field, bbdb-read-xfield): Allow xfield values that are
+	not a string.
+	(bbdb-add-mail-alias): Simplify.
+
+2014-05-06  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-parse-postcode): Finish immediately if one
 	test succeeds.
 
