@@ -298,9 +298,8 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
 
     (unless bbdb-read-only
       (bbdb-editable)
-      (let ((bbdb-notice-hook-pending t))
-        (dolist (record records)
-          (run-hook-with-args 'bbdb-notice-record-hook record))))
+      (dolist (record records)
+        (run-hook-with-args 'bbdb-notice-record-hook record)))
 
     records))
 
@@ -566,8 +565,7 @@ Return the records matching ADDRESS or nil."
                         (message "noticed naked address \"%s\"" mail))))
                (bbdb-change-record record (eq change-p 'sort))))
 
-        (let ((bbdb-notice-hook-pending t))
-          (run-hook-with-args 'bbdb-notice-mail-hook record))
+        (run-hook-with-args 'bbdb-notice-mail-hook record)
         (push record new-records)))
 
     (nreverse new-records)))

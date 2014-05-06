@@ -1,4 +1,15 @@
 2014-05-06  Roland Winkler  <winkler@gnu.org>
+	Do not treat bbdb-change-hook special when inside
+	bbdb-notice-mail-hook or bbdb-notice-record-hook.
+	* lisp/bbdb.el (bbdb-notice-mail-hook, bbdb-notice-record-hook):
+	Update docstring.
+	(bbdb-notice-hook-pending): Remove.
+	(bbdb-change-record): Always call bbdb-change-hook if a record was
+	changed.
+	* lisp/bbdb-mua.el (bbdb-update-records, bbdb-annotate-message):
+	Change accordingly.
+
+2014-05-06  Roland Winkler  <winkler@gnu.org>
 	Allow arbitrary lisp expressions as values of xfields.
 	* lisp/bbdb.el (bbdb-record-type): Update accordingly.
 	(bbdb-string-trim): New optional arg null.

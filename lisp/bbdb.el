@@ -1114,10 +1114,6 @@ to determine the header and class of the mail address according
 to `bbdb-message-headers'.  See `bbdb-auto-notes' for how to annotate records
 using `bbdb-update-records-address' and the headers of a mail message.
 
-The record need not have been modified for this hook to be called;
-use `bbdb-change-hook' for that.  `bbdb-change-hook' will NOT be called
-as a result of modifications you may make to the record inside this hook.
-
 If a message contains multiple mail addresses belonging to one BBDB record,
 this hook is run for each mail address.  Use `bbdb-notice-record-hook'
 if you want to notice each record only once per message."
@@ -1131,10 +1127,6 @@ record or it is a record BBDB has created for the mail address.  If a message
 contains multiple mail addresses belonging to one BBDB record, this hook
 is nonetheless run only once.  Use `bbdb-notice-mail-hook' if you want to run
 a hook function for each mail address in a message.
-
-The record need not have been modified for this hook to be called;
-use `bbdb-change-hook' for that.  `bbdb-change-hook' will NOT be called
-as a result of modifications you may make to the record inside this hook.
 
 Hook is run with one argument, the record."
   :group 'bbdb-mua
@@ -1657,10 +1649,6 @@ You really should not disable debugging.  But it will speed things up."))
 (defvar bbdb-silent-internal nil
   "Bind this to t to quiet things down - do not set it.
 See also `bbdb-silent'.")
-
-(defvar bbdb-notice-hook-pending nil
-  "Bound to t if inside `bbdb-notice-mail-hook' or `bbdb-notice-record-hook'.
-Calls of `bbdb-change-hook' are suppressed when this is non-nil.")
 
 (defvar bbdb-init-forms
   '((gnus                       ; gnus 3.15 or newer
@@ -3351,8 +3339,7 @@ responsibility to update the hash-table for RECORD."
   ;; To avoid this problem we would have to inhibit that `bbdb-file'
   ;; may change on disc.
   (cond ((memq record (bbdb-records))
-         (unless bbdb-notice-hook-pending
-           (run-hook-with-args 'bbdb-change-hook record))
+         (run-hook-with-args 'bbdb-change-hook record)
          (if (not need-to-sort) ;; If we do not need to sort, overwrite RECORD.
              (bbdb-overwrite-record-internal record)
            ;; Since we need to sort, delete then insert RECORD.
@@ -3364,8 +3351,7 @@ responsibility to update the hash-table for RECORD."
          (bbdb-maybe-update-display record))
         (new ;; Record is new and not yet in database, so add it.
          (run-hook-with-args 'bbdb-create-hook record)
-         (unless bbdb-notice-hook-pending
-           (run-hook-with-args 'bbdb-change-hook record))
+         (run-hook-with-args 'bbdb-change-hook record)
          (bbdb-insert-record-internal record)
          (bbdb-hash-record record))
         (t (error "Changes are lost.")))
