@@ -1,3 +1,7 @@
+2014-05-06  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-parse-postcode): Finish immediately if one
+	test succeeds.
+
 2014-04-27  Roland Winkler  <winkler@gnu.org>
 	* configure.ac: Increase BBDB version number to 3.1.2.
 	* NEWS: Update for release.

@@ -2940,12 +2940,13 @@ LAST is always a string (possibly empty).  FIRST may be nil."
 (defun bbdb-parse-postcode (string)
   "Check whether STRING is a legal postcode.
 Do this only if `bbdb-check-postcode' is non-nil."
-  (if (and bbdb-check-postcode
-           (not (memq t (mapcar (lambda (regexp)
-                                  ;; if it matches, (not (not index-of-match)) returns t
-                                  (not (not (string-match regexp string))))
-                                bbdb-legal-postcodes))))
-      (error "not a valid postcode.")
+  (if bbdb-check-postcode
+      (let ((postcodes bbdb-legal-postcodes) re done)
+        (while (setq re (pop postcodes))
+          (if (string-match re string)
+              (setq done t postcodes nil)))
+        (if done string
+          (error "not a valid postcode.")))
     string))
 
 (defun bbdb-phone-string (phone)
