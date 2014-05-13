@@ -1740,6 +1740,12 @@ APPEND-M is the mode line info if `bbdb-append-display' is non-nil.
 INVERT-M is the mode line info if `bbdb-search-invert' is non-nil.
 APPEND and INVERT appear in the message area.")
 
+(defvar bbdb-save-unchanged-records nil
+  "If non-nil save unchanged records.
+Normally calls of `bbdb-change-hook' and saving of a record are suppressed,
+if an editing command did not really change the record.  Bind this to t
+if you want to call `bbdb-change-hook' and save the record unconditionally.")
+
 ;;; Keymap
 (defvar bbdb-mode-map
   (let ((km (make-sparse-keymap)))
@@ -3330,33 +3336,65 @@ If RECORD is not new, it is redisplayed.  Yet it is then the caller's
 responsibility to update the hash-table for RECORD."
   (if bbdb-read-only
       (error "The Insidious Big Brother Database is read-only."))
-  ;; Do the changing.
   ;; The call of `bbdb-records' checks file synchronization.
   ;; If RECORD refers to an existing record that has been changed,
   ;; yet in the meanwhile we reverted the BBDB file, then RECORD
   ;; no longer refers to a record in `bbdb-records'.  So we are stuck!
   ;; All changes will be lost.
-  ;; To avoid this problem we would have to inhibit that `bbdb-file'
-  ;; may change on disc.
-  (cond ((memq record (bbdb-records))
-         (run-hook-with-args 'bbdb-change-hook record)
-         (if (not need-to-sort) ;; If we do not need to sort, overwrite RECORD.
-             (bbdb-overwrite-record-internal record)
-           ;; Since we need to sort, delete then insert RECORD.
-           ;; Do not mess with the hash table here.
-           ;; We assume it got updated by the caller.
-           (bbdb-delete-record-internal record)
-           (bbdb-insert-record-internal record))
-         ;; If RECORD is currently displayed update display.
-         (bbdb-maybe-update-display record))
-        (new ;; Record is new and not yet in database, so add it.
-         (run-hook-with-args 'bbdb-create-hook record)
-         (run-hook-with-args 'bbdb-change-hook record)
-         (bbdb-insert-record-internal record)
-         (bbdb-hash-record record))
-        (t (error "Changes are lost.")))
-  (add-to-list 'bbdb-changed-records record nil 'eq)
-  (run-hook-with-args 'bbdb-after-change-hook record)
+  ;; FIXME: Once all records have a UUID, we can identify the corresponding
+  ;; record on disk that got edited, so that the user can merge the edited
+  ;; record with what is now on disk (or do whatever with these two records).
+  ;; This implies, first of all, that *here* we make sure that UUIDs are
+  ;; always unique inside BBDB.  Should we maintain a second cache for that?
+  ;; If a new record happens to have the same UUID as an exisiting record,
+  ;; this should also throw an error / branch appropriately.  So the arg NEW
+  ;; will really not be needed anymore and all these things will have a natural
+  ;; solution.
+  (let ((tail (memq record (bbdb-records))))
+    (cond (tail ; RECORD is not new
+           ;; If the string we currently have for RECORD in `bbdb-buffer'
+           ;; is `equal' to the string we would write to `bbdb-buffer',
+           ;; we really did not change RECORD at all.  So we don't save RECORD
+           ;; unless `bbdb-save-unchanged-records' tells us to do so anyway.
+           ;; Also, we only call `bbdb-change-hook' and `bbdb-after-change-hook'
+           ;; if RECORD got changed.
+           ;; It would be nice to issue some message if RECORD did not change.
+           ;; Yet if we operate on multiple records at a time, it would be
+           ;; difficult to make it clear which records got changed and which
+           ;; ones remained unchanged.
+           (when (or bbdb-save-unchanged-records
+                     (not (string= (bbdb-with-db-buffer
+                                     (buffer-substring-no-properties
+                                      (bbdb-record-marker record)
+                                      (1- (if (cdr tail)
+                                              (bbdb-record-marker (cadr tail))
+                                            bbdb-end-marker))))
+                                   (let ((cache (bbdb-record-cache record))
+                                         (inhibit-quit t))
+                                     (bbdb-record-set-cache record nil)
+                                     (prog1 (bbdb-with-print-loadably
+                                              (prin1-to-string record))
+                                       (bbdb-record-set-cache record cache))))))
+             (run-hook-with-args 'bbdb-change-hook record)
+             (if (not need-to-sort) ;; If we do not need to sort, overwrite RECORD.
+                 (bbdb-overwrite-record-internal record)
+               ;; Since we need to sort, delete then insert RECORD.
+               ;; Do not mess with the hash table here.
+               ;; We assume it got updated by the caller.
+               (bbdb-delete-record-internal record)
+               (bbdb-insert-record-internal record))
+             (add-to-list 'bbdb-changed-records record nil 'eq)
+             (run-hook-with-args 'bbdb-after-change-hook record)
+             ;; If RECORD is currently displayed update display.
+             (bbdb-maybe-update-display record)))
+          (new ;; Record is new and not yet in database, so add it.
+           (run-hook-with-args 'bbdb-create-hook record)
+           (run-hook-with-args 'bbdb-change-hook record)
+           (bbdb-insert-record-internal record)
+           (bbdb-hash-record record)
+           (add-to-list 'bbdb-changed-records record nil 'eq)
+           (run-hook-with-args 'bbdb-after-change-hook record))
+          (t (error "Changes are lost."))))
   record)
 
 (defun bbdb-delete-record-internal (record &optional completely)

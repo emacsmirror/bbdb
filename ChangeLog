@@ -1,4 +1,11 @@
 2014-05-12  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-change-record): If an editing command did not
+	change a record compared to its value in bbdb-buffer, do not call
+	bbdb-change-hook and do not save it.
+	(bbdb-save-unchanged-records): New internal variable.
+	* lisp/bbdb-com.el (bbdb-touch-records): New command.
+
+2014-05-12  Roland Winkler  <winkler@gnu.org>
 	* lisp/makefile-temp: Create bbdb-pkg.el from bbdb-pkg.el.in.
 
 2014-05-06  Roland Winkler  <winkler@gnu.org>

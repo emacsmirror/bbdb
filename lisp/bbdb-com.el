@@ -486,7 +486,7 @@ The search results are displayed in the BBDB buffer."
 (defun bbdb-fix-records (records)
   "Fix broken RECORDS.
 Interactively, use BBDB prefix \
-\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records',"
+\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'."
   (interactive (list (bbdb-do-records)))
   (bbdb-editable)
   (dolist (record (bbdb-record-list records))
@@ -499,6 +499,16 @@ Interactively, use BBDB prefix \
     (bbdb-record-set-field record 'aka (bbdb-record-aka record))
     (bbdb-record-set-field record 'mail (bbdb-record-mail record))
     (bbdb-change-record record)))
+
+(defun bbdb-touch-records (records)
+  "Touch RECORDS by calling `bbdb-change-hook' unconditionally.
+Interactively, use BBDB prefix \
+\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'."
+  (interactive (list (bbdb-do-records)))
+  (bbdb-editable)
+  (let ((bbdb-save-unchanged-records t))
+    (dolist (record (bbdb-record-list records))
+      (bbdb-change-record record))))
 
 ;;; Time-based functions
 
