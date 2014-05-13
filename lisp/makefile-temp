@@ -103,6 +103,8 @@ bbdb-site.el: bbdb-site.el.in
 	$(CP) $< $@
 bbdb-site.elc: bbdb-site.el
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+bbdb-pkg.el: bbdb-pkg.el.in
+	$(CP) $< $@
 
 bbdb.elc: bbdb.el bbdb-site.elc
 	$(emacs) -f batch-byte-compile $(@:.elc=.el)

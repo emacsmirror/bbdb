@@ -1,3 +1,6 @@
+2014-05-12  Roland Winkler  <winkler@gnu.org>
+	* lisp/makefile-temp: Create bbdb-pkg.el from bbdb-pkg.el.in.
+
 2014-05-06  Roland Winkler  <winkler@gnu.org>
 	Do not treat bbdb-change-hook special when inside
 	bbdb-notice-mail-hook or bbdb-notice-record-hook.
