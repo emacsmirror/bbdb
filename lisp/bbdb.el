@@ -4036,16 +4036,17 @@ The BBDB buffer must be current when this is called."
           (delete-region (point) (or end-marker (point-max)))
           ;; If we deleted a record we need to update the subsequent
           ;; record numbers.
-          (if delete-p
-              (let* ((markers (append (mapcar (lambda (x) (nth 2 x))
-                                              (cdr (memq full-record bbdb-records)))
-                                      (list (point-max))))
-                     (start (pop markers)))
-                (dolist (end markers)
-                  (put-text-property start end
-                                     'bbdb-record-number record-number)
-                  (setq start end
-                        record-number (1+ record-number)))))
+          (when delete-p
+            (let* ((markers (append (mapcar (lambda (x) (nth 2 x))
+                                            (cdr (memq full-record bbdb-records)))
+                                    (list (point-max))))
+                   (start (pop markers)))
+              (dolist (end markers)
+                (put-text-property start end
+                                   'bbdb-record-number record-number)
+                (setq start end
+                      record-number (1+ record-number))))
+            (setq bbdb-records (delq full-record bbdb-records)))
           (run-hooks 'bbdb-display-hook))))))
 
 (defun bbdb-maybe-update-display (record &optional delete-p)

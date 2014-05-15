@@ -1477,12 +1477,15 @@ Interactively, use BBDB prefix \
   "Remove current record from the display without deleting it from BBDB.
 With prefix N, omit the next N records.  If negative, omit backwards."
   (interactive "p")
-  (while (not (= n 0))
-    (if (< n 0) (bbdb-prev-record 1))
-    (let ((record (bbdb-current-record t)))
-      (bbdb-redisplay-record (car record) t)
-      (setq bbdb-records (delete record bbdb-records)))
-    (setq n (if (> n 0) (1- n) (1+ n)))))
+  (let ((num  (get-text-property (if (and (not (bobp)) (eobp))
+                                     (1- (point)) (point))
+                                 'bbdb-record-number)))
+    (if (> n 0)
+        (setq n (min n (- (length bbdb-records) num)))
+      (setq n (min (- n) num))
+      (bbdb-prev-record n))
+    (dotimes (i n)
+      (bbdb-redisplay-record (bbdb-current-record) t))))
 
 ;;; Fixing up bogus records
 

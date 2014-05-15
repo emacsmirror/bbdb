@@ -1,4 +1,10 @@
 2014-05-15  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-redisplay-record): Delete record from
+	bbdb-records if record is undisplayed.
+	* lisp/bbdb-com.el (bbdb-omit-record): Simplify. Handle records at
+	beginning and end of bbdb-buffer properly.
+
+2014-05-15  Roland Winkler  <winkler@gnu.org>
 	Fix and improve previous patch.
 	* lisp/bbdb.el (bbdb-update-unchanged-records): Renamed from
 	bbdb-save-unchanged-records.
