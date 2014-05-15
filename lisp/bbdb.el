@@ -1740,11 +1740,11 @@ APPEND-M is the mode line info if `bbdb-append-display' is non-nil.
 INVERT-M is the mode line info if `bbdb-search-invert' is non-nil.
 APPEND and INVERT appear in the message area.")
 
-(defvar bbdb-save-unchanged-records nil
-  "If non-nil save unchanged records.
-Normally calls of `bbdb-change-hook' and saving of a record are suppressed,
+(defvar bbdb-update-unchanged-records nil
+  "If non-nil update unchanged records in the database.
+Normally calls of `bbdb-change-hook' and updating of a record are suppressed,
 if an editing command did not really change the record.  Bind this to t
-if you want to call `bbdb-change-hook' and save the record unconditionally.")
+if you want to call `bbdb-change-hook' and update the record unconditionally.")
 
 ;;; Keymap
 (defvar bbdb-mode-map
@@ -2028,6 +2028,21 @@ You really should not disable debugging.  But it will speed things up."
   (if bbdb-debug ; compile-time switch
       `(let ((debug-on-error t))
          ,@body)))
+
+;; inspired by `gnus-bind-print-variables'
+(defmacro bbdb-with-print-loadably (&rest body)
+  "Bind print-* variables for BBDB and evaluate BODY.
+This macro is used with `prin1', `prin1-to-string', etc. in order to ensure
+printed Lisp objects are loadable by BBDB."
+  (declare (indent 0))
+  `(let ((print-escape-newlines t) ;; BBDB needs this!
+         print-escape-nonascii print-escape-multibyte
+         print-quoted print-length print-level)
+         ;; print-circle print-gensym
+         ;; print-continuous-numbering
+         ;; print-number-table
+         ;; float-output-format
+     ,@body))
 
 (defun bbdb-timestamp (record)
   "For use as an element of `bbdb-change-hook'.
@@ -3329,7 +3344,9 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
           (set-buffer-modified-p nil)))))
 
 (defun bbdb-change-record (record &optional need-to-sort new)
-  "Update the database after a change of RECORD.  Return RECORD.
+  "Update the database after a change of RECORD.
+Return RECORD if RECORD got changed compared with the database,
+return nil otherwise.
 NEED-TO-SORT is t when the name has changed.
 If NEW is t treat RECORD as new.  New records are hashed.
 If RECORD is not new, it is redisplayed.  Yet it is then the caller's
@@ -3354,15 +3371,11 @@ responsibility to update the hash-table for RECORD."
     (cond (tail ; RECORD is not new
            ;; If the string we currently have for RECORD in `bbdb-buffer'
            ;; is `equal' to the string we would write to `bbdb-buffer',
-           ;; we really did not change RECORD at all.  So we don't save RECORD
-           ;; unless `bbdb-save-unchanged-records' tells us to do so anyway.
+           ;; we really did not change RECORD at all.  So we don't update RECORD
+           ;; unless `bbdb-update-unchanged-records' tells us to do so anyway.
            ;; Also, we only call `bbdb-change-hook' and `bbdb-after-change-hook'
            ;; if RECORD got changed.
-           ;; It would be nice to issue some message if RECORD did not change.
-           ;; Yet if we operate on multiple records at a time, it would be
-           ;; difficult to make it clear which records got changed and which
-           ;; ones remained unchanged.
-           (when (or bbdb-save-unchanged-records
+           (when (or bbdb-update-unchanged-records
                      (not (string= (bbdb-with-db-buffer
                                      (buffer-substring-no-properties
                                       (bbdb-record-marker record)
@@ -3386,16 +3399,17 @@ responsibility to update the hash-table for RECORD."
              (add-to-list 'bbdb-changed-records record nil 'eq)
              (run-hook-with-args 'bbdb-after-change-hook record)
              ;; If RECORD is currently displayed update display.
-             (bbdb-maybe-update-display record)))
+             (bbdb-maybe-update-display record)
+             record))
           (new ;; Record is new and not yet in database, so add it.
            (run-hook-with-args 'bbdb-create-hook record)
            (run-hook-with-args 'bbdb-change-hook record)
            (bbdb-insert-record-internal record)
            (bbdb-hash-record record)
            (add-to-list 'bbdb-changed-records record nil 'eq)
-           (run-hook-with-args 'bbdb-after-change-hook record))
-          (t (error "Changes are lost."))))
-  record)
+           (run-hook-with-args 'bbdb-after-change-hook record)
+           record)
+          (t (error "Changes are lost.")))))
 
 (defun bbdb-delete-record-internal (record &optional completely)
   "Delete RECORD in the database file.
@@ -3422,21 +3436,6 @@ from the hash table."
         (dolist (aka (bbdb-record-field record 'aka-all))
           (bbdb-remhash aka record))))
     (bbdb-record-set-sortkey record nil)))
-
-;; inspired by `gnus-bind-print-variables'
-(defmacro bbdb-with-print-loadably (&rest body)
-  "Bind print-* variables for BBDB and evaluate BODY.
-This macro is used with `prin1', `prin1-to-string', etc. in order to ensure
-printed Lisp objects are loadable by BBDB."
-  (declare (indent 0))
-  `(let ((print-escape-newlines t) ;; BBDB needs this!
-         print-escape-nonascii print-escape-multibyte
-         print-quoted print-length print-level)
-         ;; print-circle print-gensym
-         ;; print-continuous-numbering
-         ;; print-number-table
-         ;; float-output-format
-     ,@body))
 
 (defun bbdb-insert-record-internal (record)
   "Insert RECORD into the database file.  Return RECORD.

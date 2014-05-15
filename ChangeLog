@@ -1,3 +1,14 @@
+2014-05-15  Roland Winkler  <winkler@gnu.org>
+	Fix and improve previous patch.
+	* lisp/bbdb.el (bbdb-update-unchanged-records): Renamed from
+	bbdb-save-unchanged-records.
+	(bbdb-with-print-loadably): Put at beginning of bbdb.el.
+	(bbdb-change-record): Return record only if we updated it.
+	* lisp/bbdb-com.el (bbdb-touch-records): Use
+	bbdb-update-unchanged-records.
+	(bbdb-insert-field, bbdb-edit-field): Issue message if record
+	remained unchanged.
+
 2014-05-12  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-change-record): If an editing command did not
 	change a record compared to its value in bbdb-buffer, do not call

@@ -506,7 +506,7 @@ Interactively, use BBDB prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'."
   (interactive (list (bbdb-do-records)))
   (bbdb-editable)
-  (let ((bbdb-save-unchanged-records t))
+  (let ((bbdb-update-unchanged-records t))
     (dolist (record (bbdb-record-list records))
       (bbdb-change-record record))))
 
@@ -873,11 +873,11 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
          (bbdb-record-set-field record 'aka value))
         ;; xfields
         ((assq field (bbdb-record-xfields record))
-         (error "xfield \"%s\" already exists" field))
+         (error "Xfield \"%s\" already exists" field))
         (t
          (bbdb-record-set-xfield record field value)))
-  (let (bbdb-layout)
-    (bbdb-change-record record)))
+  (unless (bbdb-change-record record)
+    (message "Record unchanged")))
 
 (defun bbdb-read-field (record field &optional flag)
   "For RECORD read new FIELD interactively.
@@ -1000,7 +1000,8 @@ a phone number or address with VALUE being nil.
            (bbdb-record-set-xfield
             record field
             (bbdb-read-xfield field (bbdb-record-xfield record field) flag))))
-    (bbdb-change-record record bbdb-need-to-sort)))
+    (unless (bbdb-change-record record bbdb-need-to-sort)
+      (message "Record unchanged"))))
 
 (defun bbdb-edit-foo (record field &optional nvalue)
   "For RECORD edit some FIELD (mostly interactively).
