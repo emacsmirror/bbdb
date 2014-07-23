@@ -43,13 +43,16 @@ EMACS = emacs
 EMACSOPT =
 
 # The actual Emacs command run in the targets below.
-emacs = LC_ALL=C $(EMACS) --batch --directory=./ $(EMACSOPT)
+# --batch implies --no-init-file, yet let's be explicit about what we want
+emacs = LC_ALL=C $(EMACS) --batch --no-init-file --no-site-file \
+		--directory=./ $(EMACSOPT)
+emacs_compile = $(emacs) --funcall batch-byte-compile
 
-# If you want to use BBDB with VM this should point to your vm/lisp directory.
-# See also the target all below.
+# VM is not part of GNU Emacs.  If you want to use BBDB with VM
+# then the variable VMDIR should point to your vm/lisp directory.
 VMDIR =
 
-VM = -eval '(unless (string-match "$(VMDIR)" "") (push "$(VMDIR)" load-path))'
+VM = -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path))'
 
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
@@ -89,53 +92,52 @@ bbdb-loaddefs.el: $(SRCS)
 	@echo "" >> $@;
 #	Generated autoload-file must have an absolute path,
 #	$(srcdir) can be relative.
-	$(emacs) -l autoload \
+	$(emacs) --load autoload \
 		--eval '(setq generated-autoload-file "'`pwd`/$@'")' \
 		--eval '(setq make-backup-files nil)' \
-		-f batch-update-autoloads `pwd`
+		--funcall batch-update-autoloads `pwd`
 
 .el.elc:
-	$(emacs) -f batch-byte-compile $<
+	$(emacs_compile) $<
 
 # Not perfect, but better than nothing:  If we do not have / do not use
 # autotools, we simply copy bbdb-site.el.in to bbdb-site.el.
 bbdb-site.el: bbdb-site.el.in
 	$(CP) $< $@
 bbdb-site.elc: bbdb-site.el
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-pkg.el: bbdb-pkg.el.in
 	$(CP) $< $@
 
 bbdb.elc: bbdb.el bbdb-site.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 
 bbdb-com.elc: bbdb-com.el bbdb.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-mua.elc: bbdb-mua.el bbdb-com.elc
-	$(emacs) -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
-	-f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
+	$(@:.elc=.el)
 bbdb-rmail.elc: bbdb-rmail.el bbdb-mua.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-gnus.elc: bbdb-gnus.el bbdb-mua.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-mhe.elc: bbdb-mhe.el bbdb-mua.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
-# VM is not part of GNU Emacs
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-vm.elc: bbdb-vm.el bbdb-mua.elc
-	$(emacs) $(VM) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(VM) $(@:.elc=.el)
 bbdb-sc.elc: bbdb-sc.el bbdb-mua.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 
 bbdb-print.elc: bbdb-print.el bbdb-com.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-migrate.elc: bbdb-migrate.el bbdb.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-anniv.elc: bbdb-anniv.el bbdb-com.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-ispell.elc: bbdb-ispell.el bbdb.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-snarf.elc: bbdb-snarf.el bbdb-com.elc
-	$(emacs) -f batch-byte-compile $(@:.elc=.el)
+	$(emacs_compile) $(@:.elc=.el)
 
 install-el: all
 	$(INSTALL) -d -m 0755 "$(lispdir)/"

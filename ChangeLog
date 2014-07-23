@@ -1,3 +1,8 @@
+2014-07-22  Roland Winkler  <winkler@gnu.org>
+	* lisp/Makefile.am: Do not load init files or site files for byte
+	compilation (Bug#42482). Use long options.
+	* lisp/makefile-temp: Ditto.  New variable emacs_compile.
+
 2014-05-15  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-redisplay-record): Delete record from
 	bbdb-records if record is undisplayed.

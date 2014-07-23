@@ -20,6 +20,9 @@
 # You should have received a copy of the GNU General Public License
 # along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
+# --batch implies --no-init-file, yet let's be explicit about what we want
+AM_ELCFLAGS += --no-init-file --no-site-file
+
 dist_lisp_LISP = 				\
 	bbdb.el					\
 	bbdb-anniv.el				\
@@ -70,10 +73,11 @@ bbdb-loaddefs.el: $(dist_lisp_LISP)
 	@echo "" >> $@;
 #	Generated autoload-file must have an absolute path,
 #	$srcdir can be relative.
-	$(EMACS) -batch -l autoload \
+	$(EMACS) --batch $(AM_ELCFLAGS) $(ELCFLAGS) \
+		--load autoload \
 		--eval '(setq generated-autoload-file "'$(abs_builddir)/$@'")' \
 		--eval '(setq make-backup-files nil)' \
-		-f batch-update-autoloads $(srcdir)
+		--funcall batch-update-autoloads $(srcdir)
 
 # Generate bbdb-site.el here as pkgdatadir is only known at "make" time.
 # We protect the autoconf variables in the sed regular expressions
