@@ -1,4 +1,10 @@
 2014-08-01  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-mail-alias-list): New function.
+	(bbdb-add-mail-alias): Handle multiple records via * prefix.
+	Allow addition or deletion of multiple aliases per record.  Fix
+	docstring.
+
+2014-08-01  Roland Winkler  <winkler@gnu.org>
 	* lisp/makefile-temp: Fix previous change.
 
 2014-07-22  Roland Winkler  <winkler@gnu.org>

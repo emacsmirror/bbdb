@@ -2390,40 +2390,61 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
         (add-to-list 'result alias)))))
 
 ;;;###autoload
-(defun bbdb-add-mail-alias (record &optional alias delete)
-  "Add ALIAS to RECORD.
-If pefix DELETE is non-nil, remove ALIAS from RECORD."
-  (interactive
-   (let* ((_ (bbdb-editable))
-          (record (bbdb-current-record))
-          (init-f (concat "bbdb-init-" (symbol-name bbdb-mail-alias-field)))
-          (init (if (and (setq init-f (intern-soft init-f))
-                         (functionp init-f))
-                    (funcall init-f record))))
-     (list record
-           (completing-read
-            (format "%s mail alias: "
-                    (if current-prefix-arg "Remove" "Add"))
-            (if current-prefix-arg
-                (or (bbdb-record-xfield-split record bbdb-mail-alias-field)
-                    (error "Record has no alias"))
-              (bbdb-get-mail-aliases))
-            nil nil init) current-prefix-arg)))
-  (when (setq alias (bbdb-string-trim alias t))
-    (let ((aliases (bbdb-record-xfield-split record bbdb-mail-alias-field)))
-      (if delete
-          (setq aliases (delete alias aliases))
-        ;; Add alias only if it is not there yet
-        (add-to-list 'aliases alias))
-      (setq aliases (bbdb-concat bbdb-mail-alias-field aliases))
-      (bbdb-record-set-xfield record bbdb-mail-alias-field aliases))
-    (bbdb-change-record record)
-    ;; Rebuilt mail aliases
-    (setq bbdb-mail-aliases-need-rebuilt
+(defsubst bbdb-mail-alias-list (alias)
+  (if (stringp alias)
+      (bbdb-split bbdb-mail-alias-field alias)
+    alias))
+
+(defun bbdb-add-mail-alias (records &optional alias delete)
+  "Add ALIAS to RECORDS.
+If prefix DELETE is non-nil, remove ALIAS from RECORDS.
+Interactively, use BBDB prefix \
+\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
+Arg ALIAS is ignored if list RECORDS contains more than one record.
+Instead read ALIAS interactively for each record in RECORDS.
+If the function `bbdb-init-mail-alias' is defined, it is called with
+one arg RECORD to define the default value for ALIAS of RECORD."
+  (interactive (list (bbdb-do-records) nil current-prefix-arg))
+  (bbdb-editable)
+  (setq records (bbdb-record-list records))
+  (if (< 1 (length records)) (setq alias nil))
+  (let* ((tmp (intern-soft
+               (concat "bbdb-init-" (symbol-name bbdb-mail-alias-field))))
+         (init-f (if (functionp tmp) tmp)))
+    (dolist (record records)
+      (let ((r-a-list (bbdb-record-xfield-split record bbdb-mail-alias-field))
+            (alias alias)
+            a-list)
+        (if alias
+            (setq a-list (bbdb-mail-alias-list alias))
+          (when init-f
+            (setq a-list (bbdb-mail-alias-list (funcall init-f record))
+                  alias (if a-list (bbdb-concat bbdb-mail-alias-field a-list))))
+          (let ((crm-separator
+                 (concat "[ \t\n]*"
+                         (cadr (assq bbdb-mail-alias-field bbdb-separator-alist))
+                         "[ \t\n]*"))
+                (crm-local-completion-map bbdb-crm-local-completion-map)
+                (prompt (format "%s mail alias:%s " (if delete "Remove" "Add")
+                                (if alias (format " (default %s)" alias) "")))
+                (collection (if delete
+                                (or r-a-list (error "Record has no alias"))
+                              (bbdb-get-mail-aliases))))
+            (setq a-list (if (string< "24.2" (substring emacs-version 0 4))
+                             (completing-read-multiple prompt collection nil
+                                                       delete nil nil alias)
+                          (bbdb-split bbdb-mail-alias-field
+                                      (completing-read prompt collection nil
+                                                       delete nil nil alias))))))
+        (dolist (a a-list)
           (if delete
-              'deleted
-            (if (bbdb-record-mail record)
-                'new)))))
+              (setq r-a-list (delete a r-a-list))
+            ;; Add alias only if it is not there yet
+            (add-to-list 'r-a-list a)))
+        ;; This also handles `bbdb-mail-aliases-need-rebuilt'
+        (bbdb-record-set-xfield record bbdb-mail-alias-field
+                                (bbdb-concat bbdb-mail-alias-field r-a-list))
+        (bbdb-change-record record)))))
 
 ;;; Dialing numbers from BBDB
 
