@@ -115,8 +115,8 @@ bbdb.elc: bbdb.el bbdb-site.elc
 bbdb-com.elc: bbdb-com.el bbdb.elc
 	$(emacs_compile) $(@:.elc=.el)
 bbdb-mua.elc: bbdb-mua.el bbdb-com.elc
-	$(emacs_compile) -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
-	$(@:.elc=.el)
+	$(emacs) -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path) (load "vm" t t))' \
+	 --funcall batch-byte-compile $(@:.elc=.el)
 bbdb-rmail.elc: bbdb-rmail.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
 bbdb-gnus.elc: bbdb-gnus.el bbdb-mua.elc
@@ -124,7 +124,7 @@ bbdb-gnus.elc: bbdb-gnus.el bbdb-mua.elc
 bbdb-mhe.elc: bbdb-mhe.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
 bbdb-vm.elc: bbdb-vm.el bbdb-mua.elc
-	$(emacs_compile) $(VM) $(@:.elc=.el)
+	$(emacs) $(VM) --funcall batch-byte-compile $(@:.elc=.el)
 bbdb-sc.elc: bbdb-sc.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
 
