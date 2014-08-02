@@ -2430,7 +2430,7 @@ one arg RECORD to define the default value for ALIAS of RECORD."
                 (collection (if delete
                                 (or r-a-list (error "Record has no alias"))
                               (bbdb-get-mail-aliases))))
-            (setq a-list (if (string< "24.2" (substring emacs-version 0 4))
+            (setq a-list (if (string< "24.3" (substring emacs-version 0 4))
                              (completing-read-multiple prompt collection nil
                                                        delete nil nil alias)
                           (bbdb-split bbdb-mail-alias-field
