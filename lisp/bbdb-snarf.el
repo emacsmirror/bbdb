@@ -295,7 +295,7 @@ See `bbdb-snarf-rule-alist' for details."
 
 ;;;###autoload
 (defun bbdb-snarf (string &optional rule)
-  "Snarf a BBDB record in STRING using RULE.  Return this record.
+  "Snarf a BBDB record in STRING using RULE.  Display and return this record.
 Interactively, STRING is the current region.
 RULE defaults to `bbdb-snarf-rule-default'.
 See `bbdb-snarf-rule-alist' for details."
@@ -318,12 +318,11 @@ See `bbdb-snarf-rule-alist' for details."
                                          (bbdb-record-firstname record)
                                          (bbdb-record-lastname record))
                             (car (bbdb-record-mail record))))))
-      (if old-record
-          (bbdb-merge-records old-record record)
-        ;; create new record
-        (bbdb-change-record record t t)
-        (bbdb-display-records (list record))
-        record))))
+      ;; Install RECORD after searching for OLD-RECORD
+      (bbdb-change-record record t t)
+      (if old-record (bbdb-merge-records old-record record)))
+    (bbdb-display-records (list record))
+    record))
 
 ;; Some test cases
 ;;

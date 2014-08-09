@@ -1,3 +1,7 @@
+2014-08-09  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-snarf.el (bbdb-snarf): Always install and display the
+	new record.
+
 2014-08-01  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-mail-alias-list): New function.
 	(bbdb-add-mail-alias): Handle multiple records via * prefix.
