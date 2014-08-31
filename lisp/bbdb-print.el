@@ -345,7 +345,7 @@ of the printout, notably the variables `bbdb-print-alist' and
   (interactive
    (list (bbdb-do-records)
          (read-file-name
-          (format "Print to file (default %s): "
+          (format "TeX file: (default %s) "
                   (abbreviate-file-name bbdb-print-file))
           (file-name-directory bbdb-print-file)
           bbdb-print-file)
@@ -397,7 +397,8 @@ of the printout, notably the variables `bbdb-print-alist' and
             (bbdb-print-record record current-letter
                                       brief pofl n-phones n-addresses)))
     (insert bbdb-print-epilog)
-    (goto-char (point-min))))
+    (goto-char (point-min)))
+  (message "Process this file with TeX (not LaTeX)"))
 
 (defun bbdb-print-record (record current-letter
                                  brief pofl n-phones n-addresses)

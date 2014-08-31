@@ -1,4 +1,8 @@
 2014-08-30  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-print.el (bbdb-print): Clarify prompt for file name.
+	Issue message on what to do with TeX file.
+
+2014-08-30  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-print.el (bbdb-print-record): Handle xfields the value
 	of which are sexps.
 
