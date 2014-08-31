@@ -514,13 +514,14 @@ The return value is the new CURRENT-LETTER."
       ;; xfields
       (dolist (xfield xfields)
         (when (bbdb-print-field-p (car xfield))
-          (if (eq 'notes (car xfield))
-              (insert (format "\\notes{%s}\n"
-                              (bbdb-print-tex-quote (cdr xfield))))
-            (insert (format "\\note{%s}{%s}\n"
-                            (bbdb-print-tex-quote (symbol-name (car xfield)))
-                            (bbdb-print-tex-quote (cdr xfield)))))))
-
+          ;; The value of the xfield may be a sexp.  Ideally, a sexp
+          ;; should be formatted by `pp-to-string' then printed verbatim.
+          (let ((value (bbdb-print-tex-quote (format "%s" (cdr xfield)))))
+            (insert (if (eq 'notes (car xfield))
+                        (format "\\notes{%s}\n" value)
+                      (format "\\note{%s}{%s}\n"
+                              (bbdb-print-tex-quote (symbol-name (car xfield)))
+                              value))))))
       ;; Mark end of the record.
       (insert "\\endrecord\n%\n")
       (setq current-letter first-letter)))

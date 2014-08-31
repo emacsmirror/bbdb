@@ -1,3 +1,7 @@
+2014-08-30  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-print.el (bbdb-print-record): Handle xfields the value
+	of which are sexps.
+
 2014-08-09  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-snarf.el (bbdb-snarf): Always install and display the
 	new record.
