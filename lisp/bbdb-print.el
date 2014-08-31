@@ -81,14 +81,15 @@ See also `bbdb-print-require'."
 
 (defcustom bbdb-print-require '(or address phone)
   "What fields are required for printing a record.
-This is evaluated for each record, and the record will be printed only
-if it returns non-nil.  The symbols name, organization, mail, phone,
-address, and notes will be set to appropriate values when this is
-evaluated; they will be nil if the field does not exist or is elided.
+This is a lisp expression and a record will be printed only if the evaluation
+of this expression yields a non-nil value for this records.
+The symbols name, organization, mail, phone, address, and notes will be set
+to appropriate values when this is evaluated; they will be nil if the field
+does not exist or is elided.
 
 The value of this variable can be any lisp expression, but typically
-it will be used for a boolean combination of the field variables, as
-in the following examples:
+it will be a boolean combination of the field variables, as in
+the following examples:
 
   Print only people whose phone numbers are known:
     (setq bbdb-print-require 'phone)
