@@ -1,4 +1,10 @@
 2015-05-22  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-redisplay-record): Display an undisplayed
+	record only if we do not want to delete it.
+	(bbdb-maybe-update-display): Only consider records that are
+	already displayed.  Improve docstring.
+
+2015-05-22  Roland Winkler  <winkler@gnu.org>
 	Update copyright year in all files.
 
 2014-08-30  Roland Winkler  <winkler@gnu.org>

@@ -4015,8 +4015,9 @@ The BBDB buffer must be current when this is called."
   ;; Ideally, `bbdb-redisplay-record' should put the point such that it
   ;; matches the previous value `bbdb-ident-point'.
   (let ((full-record (assq record bbdb-records)))
-    (if (null full-record) ; new record
-        (bbdb-display-records (list record) nil t)
+    (if (null full-record)
+        (unless delete-p
+          (bbdb-display-records (list record) nil t)) ; new record
       (let ((marker (nth 2 full-record))
             (end-marker (nth 2 (car (cdr (memq full-record bbdb-records)))))
             buffer-read-only record-number)
@@ -4050,12 +4051,12 @@ The BBDB buffer must be current when this is called."
           (run-hooks 'bbdb-display-hook))))))
 
 (defun bbdb-maybe-update-display (record &optional delete-p)
-  "If RECORD is currently displayed update display.
+  "Update display of RECORD in all BBDB buffers.
 If DELETE-P is nil RECORD is removed from the BBDB buffers."
   (dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (if (and (eq major-mode 'bbdb-mode)
-               (memq record (bbdb-records)))
+               (memq record (mapcar 'car bbdb-records)))
           (let ((window (get-buffer-window bbdb-buffer-name)))
             (if window
                 (with-selected-window window
