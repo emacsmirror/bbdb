@@ -1,7 +1,7 @@
 ;;; bbdb-sc.el --- BBDB interface to Supercite
 
 ;; Copyright (C) 1991, 1992 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2014 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2015 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 

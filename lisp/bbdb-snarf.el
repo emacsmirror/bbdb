@@ -1,7 +1,7 @@
 ;;; bbdb-snarf.el -- convert free-form text to BBDB records
 
 ;; Copyright (C) 1997 John Heidemann <johnh@isi.edu>
-;; Copyright (C) 2010-2014 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2015 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
