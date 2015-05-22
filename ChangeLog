@@ -1,4 +1,16 @@
 2015-05-22  Roland Winkler  <winkler@gnu.org>
+	Remove variables bbdb/MUA-update-records-p.
+	* lisp/bbdb-mua.el (bbdb-update-records): Rely only on arg
+	update-p.
+	* lisp/bbdb-gnus.el (bbdb/gnus-update-records-p): Remove.
+	* lisp/bbdb-message.el (bbdb/mail-update-records-p)
+	(bbdb/message-update-records-p): Remove.
+	* lisp/bbdb-mh.el (bbdb/mh-update-records-p): Remove.
+	* lisp/bbdb-rmail.el (bbdb/rmail-update-records-p): Remove.
+	* lisp/bbdb-vm.el (bbdb/vm-update-records-p): Remove.
+	* README, NEWS: Update accordingly.
+
+2015-05-22  Roland Winkler  <winkler@gnu.org>
 	Handle prefix command bbdb-do-all-records more robustly.
 	* lisp/bbdb.el (bbdb-do-all-records): New variable.
 	(bbdb-modeline-info): Add two new slots.

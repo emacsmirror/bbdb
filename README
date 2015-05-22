@@ -158,11 +158,8 @@ WITHOUT-PREFIX and WITH-PREFIX may take the values
  read         Read the value interactively.
 
 BBDB 2 also used MUA-specific variables bbdb/MUA-update-records-mode
-to control its interfaces with MUAs.  In BBDB 3 the variables
-bbdb/MUA-update-records-p are only used as fallback if the generic
-(MUA-independent) variables bbdb-mua-update-interactive-p,
-bbdb-update-records-p or bbdb-mua-auto-update-p result in a value of
-nil for the arg UPDATE-P of bbdb-update-records.
+to control its interfaces with MUAs.  Use function bbdb-mua to define
+your own function to get MUA-specific values.
 
 Noninteractive functions
 ------------------------

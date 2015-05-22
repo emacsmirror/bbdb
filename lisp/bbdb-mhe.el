@@ -32,46 +32,6 @@
     (require 'mh-comp))              ; For mh-e 4.x
 (require 'advice)
 
-(defcustom bbdb/mh-update-records-p
-  (lambda () (let ((bbdb-update-records-p 'query))
-               (bbdb-select-message)))
-  "How `bbdb-mua-update-records' processes mail addresses in MH-E.
-This MH-E-specific variable is normally not used.  It is a fallback
-if the generic (MUA-independent) variables `bbdb-mua-auto-update-p',
-`bbdb-update-records-p' or `bbdb-mua-update-interactive-p' result
-in a value of nil for the arg UPDATE-P of `bbdb-update-records'.
-
-Allowed values are:
- nil          Do nothing.
- search       Search for existing records.
- update       Search for existing records, update if necessary.
- query        Update existing records or query for creating new ones.
- create or t  Update existing records or create new ones.
- a function   This functions will be called with no arguments.
-                It should return one of the above values."
-  :group 'bbdb-mua-gnus
-  :type '(choice (const :tag "do nothing" nil)
-                 (const :tag "search for existing records"
-                        (lambda () (let ((bbdb-update-records-p 'search))
-                                     (bbdb-select-message))))
-                 (const :tag "update existing records"
-                        (lambda () (let ((bbdb-update-records-p 'update))
-                                     (bbdb-select-message))))
-                 (const :tag "query annotation of all messages"
-                        (lambda () (let ((bbdb-update-records-p 'query))
-                                     (bbdb-select-message))))
-                 (const :tag "annotate (query) only new messages"
-                        (if (equal "" (gnus-summary-article-mark
-                                       (gnus-summary-article-number)))
-                            (bbdb-select-message) 'search))
-                 (const :tag "annotate all messages"
-                        (lambda () (let ((bbdb-update-records-p 'create))
-                                     (bbdb-select-message))))
-                 (const :tag "accept messages" bbdb-accept-message)
-                 (const :tag "ignore messages" bbdb-ignore-message)
-                 (const :tag "select messages" bbdb-select-message)
-                 (sexp  :tag "user defined")))
-
 ;; A simplified `mail-fetch-field'.  We could use instead (like rmail):
 ;; (mail-header (intern-soft (downcase header)) (mail-header-extract))
 (defun bbdb/mh-header (header)

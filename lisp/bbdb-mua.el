@@ -212,11 +212,9 @@ UPDATE-P may take the following values:
                 query for creation of a new record if the record does not exist.
  create or t  Search for existing records matching ADDRESS;
                 create a new record if it does not yet exist.
+ nil          Do nothing.
  a function   This functions will be called with no arguments.
                 It should return one of the above values.
- nil          Take the MUA-specific variable `bbdb/MUA-update-records-p'
-                which may take one of the above values.
-                If this still gives nil, `bbdb-update-records' returns nil.
 
 If SORT is non-nil, sort records according to `bbdb-record-lessp'.
 Ottherwise, the records are ordered according to ADDRESS-LIST.
@@ -228,19 +226,10 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
   ;; We resolve UPDATE-P repeatedly.  This is needed, for example,
   ;; with the chain `bbdb-mua-auto-update-p' -> `bbdb-select-message'
   ;; -> `bbdb-update-records-p'.
-  (let (done fallback)
-    (while (not done)
-      (cond ((and (functionp update-p)
-                  ;; Bad! `search' is a function in `cl-seq.el'.
-                  (not (eq update-p 'search)))
-             (setq update-p (funcall update-p)))
-            ((not (or update-p fallback))
-             ;; The fallback is applied at most once.
-             (setq update-p (symbol-value
-                             (intern-soft (format "bbdb/%s-update-records-p"
-                                                  (bbdb-mua))))
-                   fallback t))
-            ((setq done t)))))
+  (while (and (functionp update-p)
+              ;; Bad! `search' is a function in `cl-seq.el'.
+              (not (eq update-p 'search)))
+    (setq update-p (funcall update-p)))
   (cond ((eq t update-p)
          (setq update-p 'create))
         ((not (memq update-p '(search update query create nil)))

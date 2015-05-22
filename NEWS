@@ -5,6 +5,19 @@ See the end of the file for license conditions.
 
 This file is about changes in BBDB version 3.
 
+* BBDB 3.2
+** Incompatible Changes in BBDB 3.2
+
+*** The variables bbdb/MUA-update-records-p have been removed.
+This includes the variables bbdb/gnus-update-records-p,
+bbdb/mail-update-records-p, bbdb/message-update-records-p,
+bbdb/mh-update-records-p, bbdb/rmail-update-records-p,
+bbdb/vm-update-records-p.
+
+These fall-back variables collided with the user variables
+bbdb-mua-update-interactive-p and bbdb-mua-auto-update-p.
+Use function bbdb-mua to define your own function to get
+MUA-specific values.
 
 * BBDB 3.1.2
 ** Bug fix release
