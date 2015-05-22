@@ -1,4 +1,18 @@
 2015-05-22  Roland Winkler  <winkler@gnu.org>
+	Add basic support for mu4e mailer.
+	* NEWS, README: Update accordingly.
+	* m4/emacs_mu4e.m4: New file.
+	* configure.ac: Use it.
+	* lisp/bbdb-mu4e.el: New file.
+	* lisp/Makefile.am, lisp/makefile-temp: Compile it.
+	* lisp/bbdb.el (bbdb-init-forms): Add entry for mu4e.
+	(bbdb-initialize): Update docstring.
+	* lisp/bbdb-mua.el: Define mu4e~view-buffer-name.
+	(bbdb-mua-mode-alist): Add element for mu4e.
+	(bbdb-mua): Update docstring.
+	(bbdb-mua-update-records, bbdb-mua-wrapper): Handle mu4e.
+
+2015-05-22  Roland Winkler  <winkler@gnu.org>
 	Remove variables bbdb/MUA-update-records-p.
 	* lisp/bbdb-mua.el (bbdb-update-records): Rely only on arg
 	update-p.

@@ -4,7 +4,7 @@ See the end of the file for license conditions.
 BBDB is the Insidious Big Brother Database for GNU Emacs.
 It provides an address book for email and snail mail addresses,
 phone numbers and the like.  It can be linked with various Emacs mail
-clients (Message and Mail mode, Rmail, Gnus, MH-E, and VM).
+clients (Message and Mail mode, Rmail, Gnus, MH-E, Mu4e, and VM).
 BBDB is fully customizable.
 
 BBDB is available at
@@ -36,6 +36,9 @@ To compile and install BBDB with `make':
    Makefiles accordingly.  You need at least GNU Emacs 23.
 
    The `configure' script comes with various options:
+
+   `--with-mu4e-dir=DIR' specifies the path where Mu4e can be found.
+     Without this option the resulting BBDB build does not support Mu4e.
 
    `--with-vm-dir=DIR' specifies the path where VM can be found.
      Without this option the resulting BBDB build does not support VM.
@@ -108,7 +111,7 @@ BBDB interface with mail user agents (MUAs)
 ===========================================
 
 BBDB can interface with various mail user agents (MUAs).
-These include Rmail, Gnus, VM, MH-E, Message and Mail mode.
+These include Rmail, Gnus, VM, MH-E, Mu4e, Message and Mail mode.
 This lets you
 
  - display the BBDB records for the sender and/or recipients of a

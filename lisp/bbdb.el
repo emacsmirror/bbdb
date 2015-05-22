@@ -1666,6 +1666,8 @@ See also `bbdb-silent'.")
             (add-hook 'mail-setup-hook 'bbdb-insinuate-mail)))
     (message                    ; the gnus mail user agent
      (add-hook 'message-setup-hook 'bbdb-insinuate-message))
+    (mu4e                       ; the mu4e user agent
+     (add-hook 'mu4e-main-mode-hook 'bbdb-insinuate-mu4e))
 
     (sc                         ; supercite
      (add-hook 'sc-load-hook 'bbdb-insinuate-sc))
@@ -4499,6 +4501,7 @@ List MUAS may include the following symbols to initialize the respective
 mail/news readers, composers, and miscellaneous packages:
   gnus       Gnus mail/news reader.
   mh-e       MH-E mail reader.
+  mu4e       Mu4e mail reader.
   rmail      Rmail mail reader.
   vm         VM mail reader.
   mail       Mail (M-x mail).

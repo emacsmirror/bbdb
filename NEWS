@@ -6,6 +6,8 @@ See the end of the file for license conditions.
 This file is about changes in BBDB version 3.
 
 * BBDB 3.2
+** Support for Mu4e has been added.
+
 ** Incompatible Changes in BBDB 3.2
 
 *** The variables bbdb/MUA-update-records-p have been removed.
