@@ -1680,6 +1680,9 @@ See also `bbdb-silent'.")
 (defvar bbdb-search-invert nil
   "Bind this variable to t in order to invert the result of `bbdb-search'.")
 
+(defvar bbdb-do-all-records nil
+  "Controls the behavior of the command `bbdb-do-all-records'.")
+
 (defvar bbdb-append-display nil
   "Controls the behavior of the command `bbdb-append-display'.")
 
@@ -1733,12 +1736,13 @@ and mail.  In elisp lingo, this is really an obarray.")
 (defvar bbdb-country-list nil
   "List of countries known to BBDB.")
 
-(defvar bbdb-modeline-info (make-vector 4 nil)
+(defvar bbdb-modeline-info (make-vector 6 nil)
   "Precalculated mode line info for BBDB commands.
-This is a vector [APPEND-M INVERT-M APPEND INVERT].
+This is a vector [APPEND-M APPEND INVERT-M INVERT ALL-M ALL].
 APPEND-M is the mode line info if `bbdb-append-display' is non-nil.
 INVERT-M is the mode line info if `bbdb-search-invert' is non-nil.
-APPEND and INVERT appear in the message area.")
+ALL-M is the mode line info if `bbdb-do-all-records' is non-nil.
+APPEND, INVERT, and ALL appear in the message area.")
 
 (defvar bbdb-update-unchanged-records nil
   "If non-nil update unchanged records in the database.
@@ -4250,7 +4254,8 @@ There are numerous hooks.  M-x apropos ^bbdb.*hook RET
                                 (length bbdb-records))))
               '(:eval (concat "  "
                               (bbdb-concat " " (elt bbdb-modeline-info 0)
-                                           (elt bbdb-modeline-info 1)))))
+                                           (elt bbdb-modeline-info 2)
+                                           (elt bbdb-modeline-info 4)))))
         mode-line-modified
         ;; For the mode-line we want to be fast. So we skip the checks
         ;; performed by `bbdb-with-db-buffer'.

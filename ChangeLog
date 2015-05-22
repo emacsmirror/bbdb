@@ -1,4 +1,16 @@
 2015-05-22  Roland Winkler  <winkler@gnu.org>
+	Handle prefix command bbdb-do-all-records more robustly.
+	* lisp/bbdb.el (bbdb-do-all-records): New variable.
+	(bbdb-modeline-info): Add two new slots.
+	(bbdb-mode): Use them.
+	* lisp/bbdb-com.el (bbdb-prefix-message): New function.
+	(bbdb-do-all-records, bbdb-do-records): Use variable
+	bbdb-do-all-records.
+	(bbdb-append-display-p): Update displayed message.
+	(bbdb-append-display): Use bbdb-prefix-message.
+	(bbdb-search-invert): Ditto.  Simplify.
+
+2015-05-22  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-redisplay-record): Display an undisplayed
 	record only if we do not want to delete it.
 	(bbdb-maybe-update-display): Only consider records that are

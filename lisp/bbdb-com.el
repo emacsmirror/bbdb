@@ -62,23 +62,33 @@ If FULL is non-nil, assume that RECORDS include display information."
         (if (vectorp records) (list records) records))))
 
 ;; Note about BBDB prefix commands:
-;; - `bbdb-do-all-records' behaves more like a proper prefix command
-;;   in the sense that it must immediately precede the main command.
-;;   YET: a simple M-x makes the prefix go away...
-;; - `bbdb-append-display' and `bbdb-search-invert' are fake prefix
-;;   commands. They need not precede the main commands.
-;;   Also, `bbdb-append-display' can act on multiple commands.
-;; FIXME: Make this more uniform and robust.
+;; `bbdb-do-all-records', `bbdb-append-display' and `bbdb-search-invert'
+;; are fake prefix commands. They need not precede the main commands.
+;; Also, `bbdb-append-display' can act on multiple commands.
+
+(defun bbdb-prefix-message ()
+  "Display a message about selected BBDB prefix commands."
+  (let ((msg (bbdb-concat " " (elt bbdb-modeline-info 1)
+                          (elt bbdb-modeline-info 3)
+                          (elt bbdb-modeline-info 5))))
+    (unless (string= "" msg) (message "%s" msg))))
 
 ;;;###autoload
-(defun bbdb-do-all-records ()
+(defun bbdb-do-all-records (&optional arg)
   "Command prefix for operating on all records currently displayed.
+With prefix ARG a positive number, operate on all records.
+With prefix ARG a negative number, operate on current record only.
 This only works for certain commands."
-  (interactive)
-  (message (substitute-command-keys
-            "\\<bbdb-mode-map>\\[bbdb-do-all-records]"))
-  (setq prefix-arg current-prefix-arg
-        last-command this-command))
+  (interactive "P")
+  (setq bbdb-do-all-records
+        (or (and (numberp arg) (< 0 arg))
+            (and (not (numberp arg)) (not bbdb-do-all-records))))
+  (aset bbdb-modeline-info 4 (if bbdb-do-all-records "all"))
+  (aset bbdb-modeline-info 5
+        (if bbdb-do-all-records
+            (substitute-command-keys
+             "\\<bbdb-mode-map>\\[bbdb-do-all-records]")))
+  (bbdb-prefix-message))
 
 ;;;###autoload
 (defun bbdb-do-records (&optional full)
@@ -87,8 +97,12 @@ Normally this list includes only the current record.
 It includes all currently displayed records if the command prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records] is used.
 If FULL is non-nil, the list of records includes display information."
-  (if (eq last-command 'bbdb-do-all-records)
-      (if full bbdb-records (mapcar 'car bbdb-records))
+  (if bbdb-do-all-records
+      (progn
+        (setq bbdb-do-all-records nil)
+        (aset bbdb-modeline-info 4 nil)
+        (aset bbdb-modeline-info 5 nil)
+        (if full bbdb-records (mapcar 'car bbdb-records)))
     (list (bbdb-current-record full))))
 
 ;;;###autoload
@@ -107,7 +121,8 @@ If FULL is non-nil, the list of records includes display information."
            (aset bbdb-modeline-info 0
                  (format "(add %dx)" bbdb-append-display)))
           ((not bbdb-append-display)
-           (aset bbdb-modeline-info 0 nil)))
+           (aset bbdb-modeline-info 0 nil)
+           (aset bbdb-modeline-info 1 nil)))
     job))
 
 ;;;###autoload
@@ -128,13 +143,11 @@ With ARG a negative number do not append."
               ((eq t bbdb-append-display) "Add")
               (bbdb-append-display "add")
               (t nil)))
-  (aset bbdb-modeline-info 2
+  (aset bbdb-modeline-info 1
         (if bbdb-append-display
             (substitute-command-keys
              "\\<bbdb-mode-map>\\[bbdb-append-display]")))
-  (let ((msg (bbdb-concat " " (elt bbdb-modeline-info 2)
-                          (elt bbdb-modeline-info 3))))
-    (unless (string= "" msg) (message "%s" msg))))
+  (bbdb-prefix-message))
 
 (defsubst bbdb-layout-prefix ()
   "Set the LAYOUT arg interactively using the prefix arg."
@@ -147,7 +160,7 @@ With ARG a negative number do not append."
 To set it again, use command `bbdb-search-invert'."
   (let ((result bbdb-search-invert))
     (setq bbdb-search-invert nil)
-    (aset bbdb-modeline-info 1 nil)
+    (aset bbdb-modeline-info 2 nil)
     (aset bbdb-modeline-info 3 nil)
     result))
 
@@ -157,18 +170,14 @@ To set it again, use command `bbdb-search-invert'."
 With prefix ARG a positive number, invert next search.
 With prefix ARG a negative number, do not invert next search."
   (interactive "P")
-  (if (setq bbdb-search-invert
-            (or (and (numberp arg) (< 0 arg))
-                (and (not (numberp arg)) (not bbdb-search-invert))))
-      (progn
-        (aset bbdb-modeline-info 1 "inv")
-        (aset bbdb-modeline-info 3
-              (substitute-command-keys
-               "\\<bbdb-mode-map>\\[bbdb-search-invert]")))
-    (aset bbdb-modeline-info 1 nil)
-    (aset bbdb-modeline-info 3 nil))
-  (message "%s" (bbdb-concat " " (elt bbdb-modeline-info 2)
-                             (elt bbdb-modeline-info 3))))
+  (setq bbdb-search-invert
+        (or (and (numberp arg) (< 0 arg))
+            (and (not (numberp arg)) (not bbdb-search-invert))))
+  (aset bbdb-modeline-info 2 (if bbdb-search-invert "inv"))
+  (aset bbdb-modeline-info 3 (if bbdb-search-invert
+                                 (substitute-command-keys
+                                  "\\<bbdb-mode-map>\\[bbdb-search-invert]")))
+  (bbdb-prefix-message))
 
 (defmacro bbdb-search (records &optional name-re org-re mail-re xfield-re
                                phone-re address-re)
