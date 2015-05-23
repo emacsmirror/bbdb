@@ -2837,7 +2837,7 @@ See also `bbdb-record-field'."
                                                    value 'equal)))
            (if check (bbdb-check-type value (bbdb-record-phone record-type) t))
            (dolist (phone value)
-             (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone) nil 'eq))
+             (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone)))
            (bbdb-record-set-phone record value))
 
           ;; Address
@@ -2846,7 +2846,7 @@ See also `bbdb-record-field'."
                                                    value 'equal)))
            (if check (bbdb-check-type value (bbdb-record-address record-type) t))
            (dolist (address value)
-             (add-to-list 'bbdb-address-label-list (bbdb-address-label address) nil 'eq)
+             (add-to-list 'bbdb-address-label-list (bbdb-address-label address))
              (mapc (lambda (street) (bbdb-add-to-list 'bbdb-street-list street))
                    (bbdb-address-streets address))
              (bbdb-add-to-list 'bbdb-city-list (bbdb-address-city address))
@@ -3269,9 +3269,9 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
 
           ;; Set the completion lists
           (dolist (phone (bbdb-record-phone record))
-            (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone) nil 'eq))
+            (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone)))
           (dolist (address (bbdb-record-address record))
-            (add-to-list 'bbdb-address-label-list (bbdb-address-label address) nil 'eq)
+            (add-to-list 'bbdb-address-label-list (bbdb-address-label address))
             (mapc (lambda (street) (bbdb-add-to-list 'bbdb-street-list street))
                   (bbdb-address-streets address))
             (bbdb-add-to-list 'bbdb-city-list (bbdb-address-city address))

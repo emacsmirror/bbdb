@@ -1,3 +1,7 @@
+2015-05-23  Eric Abrahamsen <eric@ericabrahamsen.net>
+	* lisp/bbdb.el (bbdb-record-set-field, bbdb-parse-records): Use
+	equal for comparison when populating lists of labels.
+
 2015-05-22  Roland Winkler  <winkler@gnu.org>
 	Add basic support for mu4e mailer.
 	* NEWS, README: Update accordingly.
