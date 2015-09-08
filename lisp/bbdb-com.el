@@ -2549,11 +2549,11 @@ Default is the first URL."
 
 ;;;###autoload
 (defun bbdb-copy-records-as-kill (records)
-  "Copy displayed RECORDS to kill ring.
+  "Copy RECORDS to kill ring.
 Interactively, use BBDB prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'."
   (interactive (list (bbdb-do-records t)))
-  (let (drec marker)
+  (let (drec)
     (dolist (record (bbdb-record-list records t))
       (push (buffer-substring (nth 2 record)
                               (or (nth 2 (car (cdr (memq record bbdb-records))))
