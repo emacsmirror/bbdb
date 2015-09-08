@@ -2563,6 +2563,56 @@ Interactively, use BBDB prefix \
                "[ \t\n]*\\'" "\n"
                (mapconcat 'identity (nreverse drec) "")))))
 
+;;;###autoload
+(defun bbdb-copy-fields-as-kill (records field &optional num)
+  "For RECORDS copy values of FIELD at point to kill ring.
+If FIELD is an address or phone with a label, copy only field values
+with the same label.  With numeric prefix NUM, if the value of FIELD
+is a list, copy only the NUMth list element.
+Interactively, use BBDB prefix \
+\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'."
+  (interactive
+   (list (bbdb-do-records t) (bbdb-current-field)
+         (and current-prefix-arg
+              (prefix-numeric-value current-prefix-arg))))
+  (unless field (error "Not a field"))
+  (let* ((type (if (eq (car field) 'xfields)
+                   (car (nth 1 field))
+                 (car field)))
+         (label (if (memq type '(phone address))
+                    (aref (cadr field) 0)))
+	 (ident (and (< 1 (length records))
+                     (not (eq type 'name))))
+	 val-list)
+    (dolist (record (bbdb-record-list records))
+      (let ((raw-val (bbdb-record-field (car record) type))
+            value)
+        (if raw-val
+            (cond ((eq type 'phone)
+                   (dolist (elt raw-val)
+                     (if (equal label (aref elt 0))
+                         (push (bbdb-phone-string elt) value)))
+                   (setq value (bbdb-concat 'phone (nreverse value))))
+                  ((eq type 'address)
+                   (dolist (elt raw-val)
+                     (if (equal label (aref elt 0))
+                         (push (bbdb-format-address
+                                elt (if (eq (nth 1 record) 'one-line) 3 2))
+                               value)))
+                   (setq value (bbdb-concat 'address (nreverse value))))
+                  ((consp raw-val)
+                   (setq value (if num (nth num raw-val)
+                                 (bbdb-concat type raw-val))))
+                  (t (setq value raw-val))))
+        (if value
+            (push (if ident
+                      (bbdb-concat 'name-field
+                                   (bbdb-record-name (car record)) value)
+                    value) val-list))))
+    (let ((str (bbdb-concat 'record (nreverse val-list))))
+      (kill-new str)
+      (message "%s" str))))
+
 ;;; Help and documentation
 
 ;;;###autoload

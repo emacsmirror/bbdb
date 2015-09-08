@@ -1,3 +1,8 @@
+2015-09-07  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-copy-fields-as-kill): New command.
+	* lisp/bbdb.el (bbdb-separator-alist, bbdb-mode-map): Update
+	accordingly.
+
 2015-05-23  Eric Abrahamsen <eric@ericabrahamsen.net>
 	* lisp/bbdb.el (bbdb-record-set-field, bbdb-parse-records): Use
 	equal for comparison when populating lists of labels.

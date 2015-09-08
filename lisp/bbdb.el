@@ -533,7 +533,9 @@ This is used for fields which do not have an entry in `bbdb-separator-alist'."
   :type '(list regexp string))
 
 (defcustom bbdb-separator-alist
-  '((name-first-last "[ ,;]" " ") (name-last-first "[ ,;]" ", ")
+  '((record "\n" "\n")
+    (name-first-last "[ ,;]" " ") (name-last-first "[ ,;]" ", ")
+    (name-field ":\n" ":\n") (phone "[,;]" ", ") (address ";\n" ";\n")
     (organization "[,;]" ", ") (affix "[,;]"  ", ") (aka "[,;]" ", ")
     (mail "[,;]" ", ") (mail-alias "[,;]" ", ") (vm-folder "[,;]" ", ")
     (birthday "\n" "\n") (wedding "\n" "\n") (anniversary "\n" "\n")
@@ -1784,7 +1786,8 @@ if you want to call `bbdb-change-hook' and update the record unconditionally.")
     (define-key km "?"          'bbdb-help)
     ;; (define-key km "q"       'quit-window) ; part of `special-mode' bindings
     (define-key km "\C-x\C-t"   'bbdb-transpose-fields)
-    (define-key km "C"          'bbdb-copy-records-as-kill)
+    (define-key km "Cr"         'bbdb-copy-records-as-kill)
+    (define-key km "Cf"         'bbdb-copy-fields-as-kill)
     (define-key km "u"          'bbdb-browse-url)
     ;; (define-key km "P"       'bbdb-print)
     (define-key km "="          'delete-other-windows)
@@ -1867,6 +1870,7 @@ This is a child of `special-mode-map'.")
      ["Dial phone number" bbdb-dial t]
      ["Browse URL" bbdb-browse-url t]
      ["Copy records as kill" bbdb-copy-records-as-kill t]
+     ["Copy fields as kill" bbdb-copy-fields-as-kill t]
      "--"
      ["Print records" bbdb-print t])
     ("Manipulate database"
