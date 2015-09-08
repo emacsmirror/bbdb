@@ -1,4 +1,7 @@
 2015-09-07  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-search-changed): Fix docstring.
+
+2015-09-07  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-delete-field-or-record): Use delete for
 	phone and address fields.
 

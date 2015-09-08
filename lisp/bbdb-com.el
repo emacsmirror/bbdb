@@ -362,8 +362,9 @@ in either the name(s), organization, address, phone, mail, or xfields."
 
 ;;;###autoload
 (defun bbdb-search-changed (&optional layout)
-  "Display all records in the bbdb database which have changed since
-the database was last saved."
+  ;; FIXME: "changes" in BBDB lingo are often called "modifications"
+  ;; in Emacs lingo
+  "Display records which have been changed since BBDB was last saved."
   (interactive (list (bbdb-layout-prefix)))
   (if (bbdb-search-invert-p)
       (let (unchanged-records)
