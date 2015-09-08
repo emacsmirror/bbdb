@@ -1369,8 +1369,11 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
           (cond ((memq type '(phone address))
                  (bbdb-record-set-field
                   record type
-                  (delq (nth 1 field)
-                        (bbdb-record-field record type))))
+                  ;; We use `delete' which deletes all phone and address
+                  ;; fields equal to the current one.  This works for
+                  ;; multiple records.
+                  (delete (nth 1 field)
+                          (bbdb-record-field record type))))
                 ((memq type '(affix organization mail aka))
                  (bbdb-record-set-field record type nil))
                 ((eq type 'xfields)

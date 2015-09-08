@@ -1,4 +1,8 @@
 2015-09-07  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-delete-field-or-record): Use delete for
+	phone and address fields.
+
+2015-09-07  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-copy-records-as-kill): Fix docstring.
 	Delete unused local variable marker.
 
