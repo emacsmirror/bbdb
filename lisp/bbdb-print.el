@@ -1,4 +1,4 @@
-;;; bbdb-print.el -- for printing BBDB databases using TeX.
+;;; bbdb-print.el --- for printing BBDB databases using TeX.
 
 ;; Copyright (C) 1993 Boris Goldowsky
 ;; Copyright (C) 2010-2015 Roland Winkler <winkler@gnu.org>
@@ -541,4 +541,4 @@ Omit-area-code is one of the allowed symbols in `bbdb-print-alist'."
 
 (provide 'bbdb-print)
 
-;;; bbdb-print ends here.
+;;; bbdb-print ends here

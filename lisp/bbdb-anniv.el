@@ -34,6 +34,8 @@
 ;;
 ;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'diary-lib)
@@ -167,3 +169,5 @@ To enable this feature, put the following into your .emacs:
                      ""))))))))))
 
 (provide 'bbdb-anniv)
+
+;;; bbdb-anniv.el ends here

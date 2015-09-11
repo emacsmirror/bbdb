@@ -33,6 +33,8 @@
 ;;;
 ;;; Read the docstrings; read the texinfo file.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'bbdb-com)
 
@@ -1049,3 +1051,5 @@ if this xfield is in the poster's record, and `bbdb-mua-summary-mark' otherwise.
         " "))))
 
 (provide 'bbdb-mua)
+
+;;; bbdb-mua.el ends here

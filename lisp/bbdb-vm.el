@@ -22,6 +22,8 @@
 ;;; This file contains the BBDB interface to VM.
 ;;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-mua)
@@ -315,3 +317,5 @@ Do not call this in your init file.  Use `bbdb-initialize'."
             (lambda (m) (bbdb-mua-summary-mark (vm-su-from m))))))
 
 (provide 'bbdb-vm)
+
+;;; bbdb-vm.el ends here

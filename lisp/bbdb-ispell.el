@@ -124,3 +124,5 @@ Allowed elements are as in the return value of `ispell-valid-dictionary-list'."
         ((sequencep field) (mapc 'bbdb-ispell-collect-words field))))
 
 (provide 'bbdb-ispell)
+
+;;; bbdb-ispell.el ends here

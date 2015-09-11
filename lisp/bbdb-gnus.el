@@ -22,6 +22,8 @@
 ;;; This file contains the BBDB interface to Gnus.
 ;;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-mua)
@@ -392,3 +394,5 @@ Do not call this in your init file.  Use `bbdb-initialize'."
   ;;    'bbdb/gnus-score))
 
 (provide 'bbdb-gnus)
+
+;;; bbdb-gnus.el ends here

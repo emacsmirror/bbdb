@@ -22,6 +22,8 @@
 ;;; This file contains the BBDB interface to Rmail.
 ;;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-mua)
@@ -57,3 +59,5 @@ Do not call this in your init file.  Use `bbdb-initialize'."
   (define-key rmail-summary-mode-map ";" 'bbdb-mua-edit-field-sender))
 
 (provide 'bbdb-rmail)
+
+;;; bbdb-rmail.el ends here

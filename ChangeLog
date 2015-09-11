@@ -1,4 +1,14 @@
 2015-09-10  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el, lisp/bbdb-mu4e.el, lisp/bbdb-print.el:
+	* lisp/bbdb-snarf.el, lisp/bbdb-com.el, lisp/bbdb-message.el:
+	* lisp/bbdb-mua.el, lisp/bbdb-rmail.el, lisp/bbdb-gnus.el:
+	* lisp/bbdb-mhe.el, lisp/bbdb-pgp.el, lisp/bbdb-sc.el:
+	* lisp/bbdb-vm.el, lisp/bbdb-ispell.el, lisp/bbdb-migrate.el:
+	* lisp/bbdb-site.el.in, lisp/bbdb.el: Conform to Emacs Lisp
+	package format convention.
+	(Bug#45910)
+
+2015-09-10  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-separator-alist): Use two newline characters
 	to separate records.
 

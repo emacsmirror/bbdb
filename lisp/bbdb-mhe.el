@@ -24,6 +24,8 @@
 ;;; This file contains the BBDB interface to mh-e.
 ;;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-mua)
@@ -96,3 +98,5 @@ Do not call this in your init file.  Use `bbdb-initialize'."
       (define-key mh-letter-mode-map "\e\t" 'bbdb-complete-mail)))
 
 (provide 'bbdb-mhe)
+
+;;; bbdb-mhe.el ends here

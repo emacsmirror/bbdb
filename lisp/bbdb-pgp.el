@@ -236,3 +236,5 @@ to call the command `bbdb-pgp' manually, then call `mml-preview'."
                          (setq ranked-actions nil)))))))))))
 
 (provide 'bbdb-pgp)
+
+;;; bbdb-pgp.el ends here

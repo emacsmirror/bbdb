@@ -33,3 +33,5 @@
   :type '(repeat (directory :tag "Directory")))
 
 (provide 'bbdb-site)
+
+;;; bbdb-site.el.in ends here

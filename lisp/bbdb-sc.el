@@ -65,6 +65,8 @@
 ;;                                          (bbdb-sc-update-from)
 ;;                                          (setq sc-mail-headers-end (point))))))
 
+;;; Code:
+
 (require 'bbdb-com)
 (require 'bbdb-mua)
 (require 'supercite)
@@ -191,4 +193,4 @@ BBDB into Supercite."
 
 (provide 'bbdb-sc)
 
-;;; end of bbdb-sc.el
+;;; bbdb-sc.el ends here

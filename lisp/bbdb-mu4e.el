@@ -22,6 +22,8 @@
 ;;; This file contains the BBDB interface to mu4e.
 ;;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'mu4e-view)
 
@@ -37,3 +39,5 @@ Do not call this in your init file.  Use `bbdb-initialize'."
   (define-key mu4e-view-mode-map ";" 'bbdb-mua-edit-field-sender))
 
 (provide 'bbdb-mu4e)
+
+;;; bbdb-mu4e.el ends here

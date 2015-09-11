@@ -22,6 +22,8 @@
 ;;; This file contains most of the user-level interactive commands for BBDB.
 ;;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'mailabbrev)
 
@@ -2635,3 +2637,5 @@ mode help: \\[describe-mode]; \
 info: \\[bbdb-info]")))
 
 (provide 'bbdb-com)
+
+;;; bbdb-com.el ends here

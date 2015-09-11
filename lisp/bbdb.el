@@ -33,6 +33,8 @@
 ;;; |  version of BBDB you have.                                            |
 ;;;  -----------------------------------------------------------------------
 
+;;; Code:
+
 (require 'timezone)
 (require 'bbdb-site)
 
@@ -4539,3 +4541,5 @@ for example only for outgoing messages."
 
 
 (provide 'bbdb)
+
+;;; bbdb.el ends here

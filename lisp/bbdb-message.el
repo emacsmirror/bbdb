@@ -21,6 +21,8 @@
 ;;; This file contains the BBDB interface to Mail Composition Packages.
 ;;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 (require 'message)
 (require 'sendmail)
@@ -50,3 +52,5 @@ Do not call this in your init file.  Use `bbdb-initialize'."
       (define-key mail-mode-map "\M-\t" 'bbdb-complete-mail)))
 
 (provide 'bbdb-message)
+
+;;; bbdb-message.el ends here

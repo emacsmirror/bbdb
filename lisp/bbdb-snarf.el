@@ -1,4 +1,4 @@
-;;; bbdb-snarf.el -- convert free-form text to BBDB records
+;;; bbdb-snarf.el --- convert free-form text to BBDB records
 
 ;; Copyright (C) 1997 John Heidemann <johnh@isi.edu>
 ;; Copyright (C) 2010-2015 Roland Winkler <winkler@gnu.org>
@@ -35,6 +35,8 @@
 ;;; RW: `bbdb-snarf' is an interesting proof of concept.  Yet I find
 ;;; its snarfing algorithms too simplistic to be useful in real life.
 ;;; How can this possibly be improved?  Suggestions welcome.
+
+;;; Code:
 
 (require 'bbdb-com)
 
@@ -354,3 +356,5 @@ See `bbdb-snarf-rule-alist' for details."
 ;; test@person.net
 
 (provide 'bbdb-snarf)
+
+;;; bbdb-snarf.el ends here

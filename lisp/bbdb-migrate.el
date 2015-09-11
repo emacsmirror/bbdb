@@ -22,6 +22,8 @@
 ;;; This file contains the migration functions for BBDB.
 ;;; See the BBDB info manual for documentation.
 
+;;; Code:
+
 (require 'bbdb)
 
 ;;; Migrating the BBDB
@@ -290,3 +292,5 @@ for outdated BBDB variables that are set via your personal `custom-file'."
     list))
 
 (provide 'bbdb-migrate)
+
+;;; bbdb-migrate.el ends here
