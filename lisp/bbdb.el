@@ -533,9 +533,10 @@ This is used for fields which do not have an entry in `bbdb-separator-alist'."
   :type '(list regexp string))
 
 (defcustom bbdb-separator-alist
-  '((record "\n" "\n")
+  '((record "\n\n" "\n\n") ; used by `bbdb-copy-fields-as-kill'
     (name-first-last "[ ,;]" " ") (name-last-first "[ ,;]" ", ")
-    (name-field ":\n" ":\n") (phone "[,;]" ", ") (address ";\n" ";\n")
+    (name-field ":\n" ":\n") ; used by `bbdb-copy-fields-as-kill'
+    (phone "[,;]" ", ") (address ";\n" ";\n") ; ditto
     (organization "[,;]" ", ") (affix "[,;]"  ", ") (aka "[,;]" ", ")
     (mail "[,;]" ", ") (mail-alias "[,;]" ", ") (vm-folder "[,;]" ", ")
     (birthday "\n" "\n") (wedding "\n" "\n") (anniversary "\n" "\n")

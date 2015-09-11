@@ -1,3 +1,7 @@
+2015-09-10  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-separator-alist): Use two newline characters
+	to separate records.
+
 2015-09-07  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-search-changed): Fix docstring.
 
