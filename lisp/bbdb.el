@@ -1644,9 +1644,6 @@ You really should not disable debugging.  But it will speed things up."))
 (defvar bbdb-mail-aliases-need-rebuilt nil
   "Non-nil if mail aliases need to be rebuilt.")
 
-(defvar bbdb-need-to-sort nil
-  "Non-nil if records require sorting after editing.")
-
 (defvar bbdb-buffer nil "Buffer visiting `bbdb-file'.")
 
 (defvar bbdb-buffer-name "*BBDB*" "Name of the BBDB buffer.")
@@ -2010,6 +2007,9 @@ COLLECTION and REQUIRE-MATCH have the same meaning as in `completing-read'."
   "Add ELEMENT to the value of LIST-VAR if it isn't there yet and non-nil.
 The test for presence of ELEMENT is done with `equal'.
 The return value is the new value of LIST-VAR."
+  ;; Unlike `add-to-list' this ignores ELEMENT if it is nil.
+  ;; TO DO: turn this into a faster macro so that we can abandon calls
+  ;; of add-to-list.
   (if (or (not element)
           (member element (symbol-value list-var)))
       (symbol-value list-var)
@@ -2359,6 +2359,8 @@ It is the caller's responsibility to make the new record known to BBDB."
 ;; When an existing record is modified, the code that modifies the record
 ;; needs to update the hash table, too.  This includes removing the outdated
 ;; associations between KEYs and record as well as adding the new associations.
+;; This is one reason to modify records by calling `bbdb-record-set-field'
+;; which properly updates the hash table.
 ;; The hash table can be accessed via `bbdb-gethash'
 ;; and via functions like `completing-read'.
 
@@ -2492,8 +2494,7 @@ is generated and stored."
 (defun bbdb-record-set-name (record first last)
   "Record cache function: For RECORD set full name based on FIRST and LAST.
 If FIRST or LAST are t use respective existing entries of RECORD.
-Set full name in cache and hash. Also set `bbdb-need-to-sort'.
-Return first-last name."
+Set full name in cache and hash.  Return first-last name."
   (let* ((cache (bbdb-record-cache record))
          (fl-name (bbdb-cache-fl-name cache))
          (lf-name (bbdb-cache-lf-name cache)))
@@ -2501,15 +2502,9 @@ Return first-last name."
     (if lf-name (bbdb-remhash lf-name record)))
   (if (eq t first)
       (setq first (bbdb-record-firstname record))
-    (setq bbdb-need-to-sort
-          (or bbdb-need-to-sort
-              (not (equal first (bbdb-record-firstname record)))))
     (bbdb-record-set-firstname record first))
   (if (eq t last)
       (setq last (bbdb-record-lastname record))
-    (setq bbdb-need-to-sort
-          (or bbdb-need-to-sort
-              (not (equal last (bbdb-record-lastname record)))))
     (bbdb-record-set-lastname record last))
   (let ((fl-name (bbdb-concat 'name-first-last first last))
         (lf-name (bbdb-concat 'name-last-first last first))
@@ -2525,17 +2520,18 @@ Return first-last name."
 
 (defun bbdb-record-sortkey (record)
   "Record cache function: Return the sortkey for RECORD.
-Build and store it if necessary."
+Set and store it if necessary."
   (or (bbdb-cache-sortkey (bbdb-record-cache record))
-      (bbdb-cache-set-sortkey (bbdb-record-cache record)
-        (downcase
-         (bbdb-concat "" (bbdb-record-lastname record)
-                      (bbdb-record-firstname record)
-                      (bbdb-record-organization record))))))
+      (bbdb-record-set-sortkey record)))
 
-(defsubst bbdb-record-set-sortkey (record sortkey)
-  "Record cache function: Set and return RECORD's SORTKEY."
-  (bbdb-cache-set-sortkey (bbdb-record-cache record) sortkey))
+(defun bbdb-record-set-sortkey (record)
+  "Record cache function: Set and return RECORD's sortkey."
+  (bbdb-cache-set-sortkey
+   (bbdb-record-cache record)
+   (downcase
+    (bbdb-concat "" (bbdb-record-lastname record)
+                 (bbdb-record-firstname record)
+                 (bbdb-record-organization record)))))
 
 (defsubst bbdb-record-marker (record)
   "Record cache function: Return the marker for RECORD."
@@ -3356,11 +3352,11 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
       (if (eq major-mode 'bbdb-mode)
           (set-buffer-modified-p nil)))))
 
-(defun bbdb-change-record (record &optional need-to-sort new)
+(defun bbdb-change-record (record &optional ignored new)
   "Update the database after a change of RECORD.
 Return RECORD if RECORD got changed compared with the database,
 return nil otherwise.
-NEED-TO-SORT is t when the name has changed.
+IGNORED is ignored.  It is present only for backward compatibility.
 If NEW is t treat RECORD as new.  New records are hashed.
 If RECORD is not new, it is redisplayed.  Yet it is then the caller's
 responsibility to update the hash-table for RECORD."
@@ -3375,7 +3371,7 @@ responsibility to update the hash-table for RECORD."
   ;; record on disk that got edited, so that the user can merge the edited
   ;; record with what is now on disk (or do whatever with these two records).
   ;; This implies, first of all, that *here* we make sure that UUIDs are
-  ;; always unique inside BBDB.  Should we maintain a second cache for that?
+  ;; always unique inside BBDB.  For this, include UUIDs in the hash table.
   ;; If a new record happens to have the same UUID as an exisiting record,
   ;; this should also throw an error / branch appropriately.  So the arg NEW
   ;; will really not be needed anymore and all these things will have a natural
@@ -3402,17 +3398,18 @@ responsibility to update the hash-table for RECORD."
                                               (prin1-to-string record))
                                        (bbdb-record-set-cache record cache))))))
              (run-hook-with-args 'bbdb-change-hook record)
-             (if (not need-to-sort) ;; If we do not need to sort, overwrite RECORD.
-                 (bbdb-overwrite-record-internal record)
-               ;; Since we need to sort, delete then insert RECORD.
-               ;; Do not mess with the hash table here.
-               ;; We assume it got updated by the caller.
-               (bbdb-delete-record-internal record)
-               (bbdb-insert-record-internal record))
-             (add-to-list 'bbdb-changed-records record nil 'eq)
-             (run-hook-with-args 'bbdb-after-change-hook record)
-             ;; If RECORD is currently displayed update display.
-             (bbdb-maybe-update-display record)
+             (let ((sort (not (equal (bbdb-cache-sortkey (bbdb-record-cache record))
+                                     (bbdb-record-set-sortkey record)))))
+               (if (not sort) ;; If we do not need to sort, overwrite RECORD.
+                   (bbdb-overwrite-record-internal record)
+                 ;; Since we need to sort, delete then insert RECORD.
+                 ;; Do not mess with the hash table here.
+                 ;; We assume it got updated by the caller.
+                 (bbdb-delete-record-internal record)
+                 (bbdb-insert-record-internal record))
+               (add-to-list 'bbdb-changed-records record nil 'eq)
+               (run-hook-with-args 'bbdb-after-change-hook record)
+               (bbdb-redisplay-record-globally record sort))
              record))
           (new ;; Record is new and not yet in database, so add it.
            (run-hook-with-args 'bbdb-create-hook record)
@@ -3429,7 +3426,7 @@ responsibility to update the hash-table for RECORD."
 With COMPLETELY non-nil, also undisplay RECORD and remove it
 from the hash table."
   (unless (bbdb-record-marker record) (error "BBDB: marker absent"))
-  (if completely (bbdb-maybe-update-display record t))
+  (if completely (bbdb-redisplay-record-globally record nil t))
   (bbdb-with-db-buffer
     (let ((tail (memq record bbdb-records))
           (inhibit-quit t))
@@ -3447,8 +3444,7 @@ from the hash table."
         (dolist (mail (bbdb-record-mail-canon record))
           (bbdb-remhash mail record))
         (dolist (aka (bbdb-record-field record 'aka-all))
-          (bbdb-remhash aka record))))
-    (bbdb-record-set-sortkey record nil)))
+          (bbdb-remhash aka record))))))
 
 (defun bbdb-insert-record-internal (record)
   "Insert RECORD into the database file.  Return RECORD.
@@ -3457,9 +3453,6 @@ that calls the hooks, too."
   (unless (bbdb-record-marker record)
     (bbdb-record-set-marker record (make-marker)))
   (bbdb-with-db-buffer
-    ;; Set the sortkey to nil so that it will automatically be recalculated
-    ;; up-to-date for sorting
-    (bbdb-record-set-sortkey record nil)
     ;; splice record into `bbdb-records'
     (bbdb-debug (if (memq record bbdb-records)
                     (error "BBDB record not unique: - %s" record)))
@@ -3931,7 +3924,7 @@ SELECT and HORIZ-P have the same meaning as in `bbdb-pop-up-window'."
   (interactive (list (bbdb-completing-read-records "Display records: ")
                      (bbdb-layout-prefix)))
   (if (bbdb-append-display-p) (setq append t))
-  ;; `bbdb-redisplay-records' calls `bbdb-display-records'
+  ;; `bbdb-redisplay-record' calls `bbdb-display-records'
   ;; with display information already amended to RECORDS.
   (unless (or (null records)
               (consp (car records)))
@@ -3997,8 +3990,9 @@ SELECT and HORIZ-P have the same meaning as in `bbdb-pop-up-window'."
       (set-buffer-modified-p nil)
 
       (bbdb-pop-up-window select horiz-p)
-      ;; Put point on first new record in *BBDB* buffer.
-      (when first-new
+      (if (not first-new)
+          (goto-char (point-min))
+        ;; Put point on first new record in *BBDB* buffer.
         (goto-char (nth 2 (assq first-new bbdb-records)))
         (set-window-start (get-buffer-window (current-buffer)) (point))))))
 
@@ -4015,22 +4009,27 @@ If ALL-BUFFERS is non-nil undisplay records in all BBDB buffers."
         (setq bbdb-records nil)
         (set-buffer-modified-p nil)))))
 
-(defun bbdb-redisplay-record (record &optional delete-p)
-  "Redisplay RECORD.
-If DELETE-P is non-nil RECORD is removed from the BBDB buffer.
-The BBDB buffer must be current when this is called."
+(defun bbdb-redisplay-record (record &optional sort delete-p)
+  "Redisplay RECORD in current BBDB buffer.
+If SORT is t, usually because RECORD has a new sortkey, re-sort
+the displayed records.
+If DELETE-P is non-nil RECORD is removed from the BBDB buffer."
   ;; For deletion in the *BBDB* buffer we use the full information
   ;; about the record in the database. Therefore, we need to delete
   ;; the record in the *BBDB* buffer before deleting the record in
   ;; the database.
   ;; FIXME: If point is initially inside RECORD, `bbdb-redisplay-record'
   ;; puts point at the beginning of the redisplayed RECORD.
-  ;; Ideally, `bbdb-redisplay-record' should put the point such that it
+  ;; Ideally, `bbdb-redisplay-record' should put point such that it
   ;; matches the previous value `bbdb-ident-point'.
   (let ((full-record (assq record bbdb-records)))
-    (if (null full-record)
-        (unless delete-p
-          (bbdb-display-records (list record) nil t)) ; new record
+    (unless full-record
+      (error "Record `%s' not displayed" (bbdb-record-name record)))
+    (if (and sort (not delete-p))
+        ;; FIXME: For records requiring re-sorting it may be more efficient
+        ;; to insert these records in their proper location instead of
+        ;; re-displaying all records.
+        (bbdb-display-records (list record) nil t)
       (let ((marker (nth 2 full-record))
             (end-marker (nth 2 (car (cdr (memq full-record bbdb-records)))))
             buffer-read-only record-number)
@@ -4063,9 +4062,11 @@ The BBDB buffer must be current when this is called."
             (setq bbdb-records (delq full-record bbdb-records)))
           (run-hooks 'bbdb-display-hook))))))
 
-(defun bbdb-maybe-update-display (record &optional delete-p)
-  "Update display of RECORD in all BBDB buffers.
-If DELETE-P is nil RECORD is removed from the BBDB buffers."
+(defun bbdb-redisplay-record-globally (record &optional sort delete-p)
+  "Redisplay RECORD in all BBDB buffers.
+If SORT is t, usually because RECORD has a new sortkey, re-sort
+the displayed records.
+If DELETE-P is non-nil RECORD is removed from the BBDB buffers."
   (dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (if (and (eq major-mode 'bbdb-mode)
@@ -4073,9 +4074,10 @@ If DELETE-P is nil RECORD is removed from the BBDB buffers."
           (let ((window (get-buffer-window bbdb-buffer-name)))
             (if window
                 (with-selected-window window
-                  (bbdb-redisplay-record record delete-p))
-              (bbdb-redisplay-record record delete-p)))))))
-
+                  (bbdb-redisplay-record record sort delete-p))
+              (bbdb-redisplay-record record sort delete-p)))))))
+(define-obsolete-function-alias 'bbdb-maybe-update-display
+  'bbdb-redisplay-record-globally)
 
 
 ;;; window configuration hackery
@@ -4480,7 +4482,7 @@ however, after having used other programs to add records to the BBDB."
     (bbdb-with-db-buffer
       (setq bbdb-records (sort bbdb-records 'bbdb-record-lessp))
       (if (equal records bbdb-records)
-          (message "BBDB need not be sorted")
+          (message "BBDB already sorted properly")
         (message "BBDB was mis-sorted; fixing...")
         (bbdb-goto-first-record)
         (delete-region (point) bbdb-end-marker)
@@ -4497,6 +4499,11 @@ however, after having used other programs to add records to the BBDB."
             (bbdb-with-print-loadably (prin1 record buf))
             (bbdb-record-set-cache record cache)
             (insert ?\n)))
+        (dolist (buffer (buffer-list))
+          (with-current-buffer buffer
+            (if (eq major-mode 'bbdb-mode)
+                ; Redisplay all records
+                (bbdb-display-records nil nil t))))
         (message "BBDB was mis-sorted; fixing...done")))))
 
 

@@ -510,7 +510,8 @@ Interactively, use BBDB prefix \
     (bbdb-record-set-field record 'organization (bbdb-record-organization record))
     (bbdb-record-set-field record 'aka (bbdb-record-aka record))
     (bbdb-record-set-field record 'mail (bbdb-record-mail record))
-    (bbdb-change-record record)))
+    (bbdb-change-record record))
+  (bbdb-sort-records))
 
 (defun bbdb-touch-records (records)
   "Touch RECORDS by calling `bbdb-change-hook' unconditionally.
@@ -765,7 +766,7 @@ Return cons with first and last name."
 When called interactively read all relevant info.
 Do not call this from a program; call `bbdb-create-internal' instead."
   (interactive (list (bbdb-read-record current-prefix-arg)))
-  (bbdb-change-record record t t)
+  (bbdb-change-record record nil t)
   (bbdb-display-records (list record)))
 
 (defun bbdb-create-internal (&optional name affix aka organization mail
@@ -815,7 +816,7 @@ If CHECK is non-nil throw an error if an argument is not syntactically correct."
      (vector firstname lastname affix aka organization phone
              address mail xfields
              (make-vector bbdb-cache-length nil))
-     t t)))
+     nil t)))
 
 ;;;###autoload
 (defun bbdb-insert-field (record field value)
@@ -969,8 +970,7 @@ a phone number or address with VALUE being nil.
                  field ; not an xfield
                (elt value 0)) ; xfield
              value current-prefix-arg))))
-  ;; Some editing commands require re-sorting records
-  (let (bbdb-need-to-sort edit-str)
+  (let (edit-str)
     (cond ((memq field '(firstname lastname xfields))
            ;; FIXME: We could also edit first and last names.
            (error "Field `%s' not editable this way." field))
@@ -1011,9 +1011,9 @@ a phone number or address with VALUE being nil.
           (t ; xfield
            (bbdb-record-set-xfield
             record field
-            (bbdb-read-xfield field (bbdb-record-xfield record field) flag))))
-    (unless (bbdb-change-record record bbdb-need-to-sort)
-      (message "Record unchanged"))))
+            (bbdb-read-xfield field (bbdb-record-xfield record field) flag)))))
+  (unless (bbdb-change-record record)
+    (message "Record unchanged")))
 
 (defun bbdb-edit-foo (record field &optional nvalue)
   "For RECORD edit some FIELD (mostly interactively).
@@ -1305,7 +1305,7 @@ irrespective of the value of ARG."
   (bbdb-editable)
   (let* ((ident (bbdb-ident-point))
          (record (and (car ident) (car (nth (car ident) bbdb-records))))
-         num1 num2 need-to-sort)
+         num1 num2)
     (cond ((not (car ident))
            (error "Point not in BBDB record"))
           ((not (nth 1 ident))
@@ -1313,8 +1313,7 @@ irrespective of the value of ARG."
           ((eq 'name (nth 1 ident))
            ;; Transpose firstname and lastname
            (bbdb-record-set-name record (bbdb-record-lastname record)
-                                 (bbdb-record-firstname record))
-           (setq need-to-sort t))
+                                 (bbdb-record-firstname record)))
           ((not (integerp arg))
            (error "Arg `%s' not an integer" arg))
           ((not (nth 2 ident))
@@ -1339,7 +1338,7 @@ irrespective of the value of ARG."
             record (nth 1 ident)
             (bbdb-list-transpose (bbdb-record-field record (nth 1 ident))
                                  num1 num2))))
-    (bbdb-change-record record need-to-sort)))
+    (bbdb-change-record record)))
 
 ;;;###autoload
 (defun bbdb-delete-field-or-record (records field &optional noprompt)
@@ -1592,7 +1591,7 @@ With prefix arg NEW-RECORD defaults to the first record with the same name."
                          (bbdb-record-xfields old-record) t)
 
   (bbdb-delete-records (list old-record) 'noprompt)
-  (bbdb-change-record new-record t)
+  (bbdb-change-record new-record)
   new-record)
 
 ;; The following sorting functions are also intended for use

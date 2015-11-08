@@ -441,7 +441,7 @@ Return the records matching ADDRESS or nil."
                       record 'aka (cons old-name (bbdb-record-aka record)))
                    (bbdb-remhash old-name record)))
                (bbdb-record-set-field record 'name (cons fname lname))
-               (setq change-p 'sort))
+               (setq change-p 'name))
 
               ;; make new name an AKA?
               ((and old-name
@@ -451,7 +451,7 @@ Return the records matching ADDRESS or nil."
                                             name old-name)))
                (bbdb-record-set-field
                 record 'aka (cons name (bbdb-record-aka record)))
-               (setq change-p 'sort)))
+               (setq change-p 'name)))
 
         ;; Is MAIL redundant compared with the mail addresses
         ;; that are already known for RECORD?
@@ -548,18 +548,18 @@ Return the records matching ADDRESS or nil."
                      (message "created %s's record with address \"%s\""
                               (bbdb-record-name record) mail)
                    (message "created record with naked address \"%s\"" mail)))
-               (bbdb-change-record record t t))
+               (bbdb-change-record record nil t))
 
               (change-p
                (unless bbdb-silent
-                 (cond ((eq change-p 'sort)
+                 (cond ((eq change-p 'name)
                         (message "noticed \"%s\"" (bbdb-record-name record)))
                        ((bbdb-record-name record)
                         (message "noticed %s's address \"%s\""
                                  (bbdb-record-name record) mail))
                        (t
                         (message "noticed naked address \"%s\"" mail))))
-               (bbdb-change-record record (eq change-p 'sort))))
+               (bbdb-change-record record)))
 
         (run-hook-with-args 'bbdb-notice-mail-hook record)
         (push record new-records)))

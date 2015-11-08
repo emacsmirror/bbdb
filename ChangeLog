@@ -1,3 +1,28 @@
+2015-11-08  Roland Winkler  <winkler@gnu.org>
+	Simplify re-sorting of records when a record has been changed.
+	Re-display re-sorted records.
+	* lisp/bbdb.el (bbdb-need-to-sort): Removed.
+	(bbdb-record-set-name): Simplify accordingly.
+	(bbdb-record-set-sortkey): Always evaluate new sortkey.
+	(bbdb-record-sortkey): Simplify accordingly.
+	(bbdb-change-record): Sort records if we have a new sort key.
+	(bbdb-redisplay-record-globally): Rename from
+	bbdb-maybe-update-display.  New optional arg sort.
+	(bbdb-delete-record-internal, bbdb-insert-record-internal): Do not
+	unset sort key.
+	(bbdb-display-records): Put point at beginning of buffer.
+	(bbdb-redisplay-record): New optional arg sort.  Throw error if
+	record was not displayed previously.
+	(bbdb-sort-records): Clarify status message.  Redisplay sorted
+	records.
+	* lisp/bbdb-com.el (bbdb-fix-records): Sort records.
+	(bbdb-create, bbdb-create-internal, bbdb-merge-records): Use nil
+	for unused second arg of bbdb-change-record.
+	(bbdb-edit-field, bbdb-transpose-fields): Do not worry about
+	re-sorting records.
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Use nil
+	for unused second arg of bbdb-change-record.
+
 2015-09-10  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-anniv.el, lisp/bbdb-mu4e.el, lisp/bbdb-print.el:
 	* lisp/bbdb-snarf.el, lisp/bbdb-com.el, lisp/bbdb-message.el:
