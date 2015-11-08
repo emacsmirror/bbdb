@@ -25,15 +25,14 @@
 ;;; out of a (buffer) string.  Things are recognized by context (e.g., URLs
 ;;; start with http:// or www.).  See `bbdb-snarf-rule-alist' for details.
 ;;;
-;;; Currently this code is much biased towards the US.  Hopefully,
-;;; the concept of customizable rules allows you to develop new rules
-;;; suitable for other parts of the world, too.  Please let me know
-;;; if you get such rules working.
-;;; `mail' is a simple rule that can pick a single address from, say,
-;;; a long list of mail addresses in a message.
+;;; The rule `eu' should work out of the box for many continental
+;;; European countries.  It can be further customized by defining
+;;; a suitable postcode regexp passed to `bbdb-snarf-address-eu'.
+;;; `mail' is a simple rule that can pick a single mail address from,
+;;; say, a long list of mail addresses in a message.
 ;;;
 ;;; RW: `bbdb-snarf' is an interesting proof of concept.  Yet I find
-;;; its snarfing algorithms too simplistic to be useful in real life.
+;;; its snarfing algorithms often too simplistic to be useful in real life.
 ;;; How can this possibly be improved?  Suggestions welcome.
 
 ;;; Code:
@@ -41,17 +40,33 @@
 (require 'bbdb-com)
 
 (defcustom bbdb-snarf-rule-alist
-  '((us bbdb-snarf-surrounding-space bbdb-snarf-phone-nanp
-        bbdb-snarf-url bbdb-snarf-mail bbdb-snarf-empty-lines
-        bbdb-snarf-name bbdb-snarf-address-us bbdb-snarf-empty-lines
-        bbdb-snarf-notes bbdb-snarf-name-mail)
-    (mail bbdb-snarf-mail-address))
+  '((us bbdb-snarf-surrounding-space
+        bbdb-snarf-phone-nanp
+        bbdb-snarf-url
+        bbdb-snarf-mail
+        bbdb-snarf-empty-lines
+        bbdb-snarf-name
+        bbdb-snarf-address-us
+        bbdb-snarf-empty-lines
+        bbdb-snarf-notes
+        bbdb-snarf-name-mail) ; currently useless
+    (eu bbdb-snarf-surrounding-space
+        bbdb-snarf-phone-eu
+        bbdb-snarf-url
+        bbdb-snarf-mail
+        bbdb-snarf-empty-lines
+        bbdb-snarf-name
+        bbdb-snarf-address-eu
+        bbdb-snarf-empty-lines
+        bbdb-snarf-notes
+        bbdb-snarf-name-mail) ; currently useless
+   (mail bbdb-snarf-mail-address))
   "Alist of rules for snarfing.
 Each rule is of the form (KEY FUNCTION FUNCTION ...).
 The symbol KEY identifies the rule, see also `bbdb-snarf-rule-default'.
 
-Snarfing is a cumulative process.  The text is copied to a snarf buffer
-that becomes current during snarfing.
+Snarfing is a cumulative process.  The text is copied to a temporary
+snarf buffer that becomes current during snarfing.
 Each FUNCTION is called with one arg, the RECORD we are snarfing,
 and with point at the beginning of the snarf buffer.  FUNCTION should populate
 the fields of RECORD.  It may delete the part of the snarf buffer
@@ -70,28 +85,66 @@ hash table for RECORD which is done at the end by `bbdb-snarf'."
   :type 'symbol)
 
 (defcustom bbdb-snarf-name-regexp
-   "^[ \t'\"]*\\([- .,[:word:]]*[[:word:]]\\)"
+  "^[ \t'\"]*\\([- .,[:word:]]*[[:word:]]\\)"
   "Regexp matching a name.  Case is ignored.
 The first subexpression becomes the name."
   :group 'bbdb-utilities-snarf
   :type 'regexp)
 
+(defcustom bbdb-snarf-mail-regexp
+  (concat "\\(?:\\(?:mailto:\\|e?mail:?\\)[ \t]*\\)?"
+          "<?\\([^ \t\n<]+@[^ \t\n>]+\\)>?")
+  "Regexp matching a mail address.  Case is ignored.
+The first subexpression becomes the mail address."
+  :group 'bbdb-utilities-snarf
+  :type 'regexp)
+
 (defcustom bbdb-snarf-phone-nanp-regexp
-  (concat "\\(([2-9][0-9][0-9])[-. ]?\\|[2-9][0-9][0-9][-. ]\\)?"
+  (concat "\\(?:phone:?[ \t]*\\)?"
+          "\\(\\(?:([2-9][0-9][0-9])[-. ]?\\|[2-9][0-9][0-9][-. ]\\)?"
           "[0-9][0-9][0-9][-. ][0-9][0-9][0-9][0-9]"
-          "\\( *\\(x\\|ext\\.?\\) *[0-9]+\\)?")
+          "\\(?: *\\(?:x\\|ext\\.?\\) *[0-9]+\\)?\\)")
   "Regexp matching a NANP phone number.  Case is ignored.
-NANP is the North American Numbering Plan used in North and Central America."
+NANP is the North American Numbering Plan used in North and Central America.
+The first subexpression becomes the phone number."
+  :group 'bbdb-utilities-snarf
+  :type 'regexp)
+
+(defcustom bbdb-snarf-phone-eu-regexp
+  (concat "\\(?:phone?:?[ \t]*\\)?"
+          "\\(\\(?:\\+[1-9]\\|(\\)[-0-9()\s]+\\)")
+  "Regexp matching a European phone number.
+The first subexpression becomes the phone number."
   :group 'bbdb-utilities-snarf
   :type 'regexp)
 
 (defcustom bbdb-snarf-postcode-us-regexp
-  (concat "\\<[0-9][0-9][0-9][0-9][0-9]"
+  ;; US postcode appears at end of line
+  (concat "\\(\\<[0-9][0-9][0-9][0-9][0-9]"
           "\\(-[0-9][0-9][0-9][0-9]\\)?"
-          "\\>$")
-  "Regexp matching US postcodes."
+          "\\>\\)$")
+  "Regexp matching US postcodes.
+The first subexpression becomes the postcode."
   :group 'bbdb-utilities-snarf
   :type 'regexp)
+
+(defcustom bbdb-snarf-address-us-country nil
+  "Country to use for US addresses.  If nil leave country blank."
+  :group 'bbdb-utilities-snarf
+  :type 'string)
+
+(defcustom bbdb-snarf-postcode-eu-regexp
+  "^\\([0-9][0-9][0-9][0-9][0-9]?\\)" ; four or five digits
+  "Regexp matching many European postcodes.
+`bbdb-snarf-address-eu' assumes that the address appears at the beginning
+of a line followed by the name of the city."
+  :group 'bbdb-utilities-snarf
+  :type 'regexp)
+
+(defcustom bbdb-snarf-address-eu-country nil
+  "Country to use for EU addresses.  If nil leave country blank."
+  :group 'bbdb-utilities-snarf
+  :type 'string)
 
 (defcustom bbdb-snarf-default-label-alist
   '((phone . "work") (address . "work"))
@@ -108,8 +161,9 @@ The string LABEL denotes the default label for FIELD."
   :group 'bbdb-utilities-snarf
   :type 'symbol)
 
-(defcustom bbdb-snarf-url-regexp  "\\(http://\\|www\.\\)[^ \t\n]+"
-  "Regexp matching a URL.  Case is ignored."
+(defcustom bbdb-snarf-url-regexp "\\(\\(?:http://\\|www\.\\)[^ \t\n]+\\)"
+  "Regexp matching a URL.  Case is ignored.
+The first subexpression becomes the URL."
   :group 'bbdb-utilities-snarf
   :type 'regexp)
 
@@ -139,6 +193,8 @@ The string LABEL denotes the default label for FIELD."
 
 (defun bbdb-snarf-name-mail (record)
   "Snarf name from mail address for RECORD."
+  ;; Fixme: This is currently useless because `bbdb-snarf-mail-regexp'
+  ;; cannot handle names in RFC 5322-like addresses "John Smith <foo@bar.com>".
   (let ((name (bbdb-record-lastname record)))
     (when (and (not name)
                (bbdb-record-mail record)
@@ -160,37 +216,55 @@ The string LABEL denotes the default label for FIELD."
     (bbdb-record-set-mail record (list (cadr data)))
     (delete-region (point-min) (point-max))))
 
-(defun bbdb-snarf-label (field)
-  "Extract the label before point, or return default label for FIELD."
-  (if (looking-back "[\n,:]\\([^\n,:]+\\):[ \t]*")
-      (prog1 (match-string 1)
-        (delete-region (match-beginning 1) (match-end 0)))
-    (cdr (assq field bbdb-snarf-default-label-alist))))
-
-(defun bbdb-snarf-phone-nanp (record)
-  "Snarf NANP Phone Numbers for RECORD.
-NANP is the North American Numbering Plan used in North and Central America."
-  (let ((case-fold-search t) phones)
-    (while (re-search-forward bbdb-snarf-phone-nanp-regexp nil t)
-      (let ((begin (match-beginning 0))
-            (end (match-end 0)))
-        (goto-char begin)
-        (forward-char -1)
-        (if (looking-at "[0-9A-Z]") ;; not really a phone number
-            (goto-char end)
-          (let ((number (bbdb-parse-phone (buffer-substring begin end))))
-            (delete-region begin end)
-            (push (vconcat (list (bbdb-snarf-label 'phone)) number)
-                  phones)))))
-    (bbdb-record-set-phone record (nconc (bbdb-record-phone record) phones))))
-
 (defun bbdb-snarf-mail (record)
-  "Snarf mail addresses for RECORD."
-  (let (mails)
-    (while (re-search-forward "[^ \t\n<]+@[^ \t\n>]+" nil t)
-      (push (match-string 0) mails)
+  "Snarf mail addresses for RECORD.
+This uses the first subexpresion of `bbdb-snarf-mail-regexp'."
+  (let ((case-fold-search t) mails)
+    (while (re-search-forward bbdb-snarf-mail-regexp nil t)
+      (push (match-string 1) mails)
       (replace-match ""))
     (bbdb-record-set-mail record (nconc (bbdb-record-mail record) mails))))
+
+(defun bbdb-snarf-label (field)
+  "Extract the label before point, or return default label for FIELD."
+  (save-match-data
+    (if (looking-back "[\n,:]\\([^\n,:]+\\):[ \t]*")
+        (prog1 (match-string 1)
+          (delete-region (match-beginning 1) (match-end 0)))
+      (cdr (assq field bbdb-snarf-default-label-alist)))))
+
+(defun bbdb-snarf-phone-nanp (record)
+  "Snarf NANP phone numbers for RECORD.
+NANP is the North American Numbering Plan used in North and Central America.
+This uses the first subexpresion of `bbdb-snarf-phone-nanp-regexp'."
+  (let ((case-fold-search t) phones)
+    (while (re-search-forward bbdb-snarf-phone-nanp-regexp nil t)
+      (goto-char (match-beginning 0))
+      (if (save-match-data
+            (looking-back "[0-9A-Z]")) ;; not really an NANP phone number
+          (goto-char (match-end 0))
+        (push (vconcat (list (bbdb-snarf-label 'phone))
+                       (save-match-data
+                         (bbdb-parse-phone (match-string 1))))
+              phones)
+        (replace-match "")))
+    (bbdb-record-set-phone record (nconc (bbdb-record-phone record)
+                                         (nreverse phones)))))
+
+(defun bbdb-snarf-phone-eu (record &optional phone-regexp)
+  "Snarf European phone numbers for RECORD.
+PHONE-REGEXP is the regexp to match a phone number.
+It defaults to `bbdb-snarf-phone-eu-regexp'."
+  (let ((case-fold-search t) phones)
+    (while (re-search-forward (or phone-regexp
+                                  bbdb-snarf-phone-eu-regexp) nil t)
+      (goto-char (match-beginning 0))
+      (push (vector (bbdb-snarf-label 'phone)
+                    (match-string 1))
+            phones)
+      (replace-match ""))
+    (bbdb-record-set-phone record (nconc (bbdb-record-phone record)
+                                         (nreverse phones)))))
 
 (defun bbdb-snarf-streets (address)
   "Snarf streets for ADDRESS.  This assumes a narrowed region."
@@ -207,7 +281,7 @@ NANP is the North American Numbering Plan used in North and Central America."
              ;; Postcode
              (goto-char (match-beginning 0))
              (bbdb-address-set-postcode address
-              (bbdb-parse-postcode (match-string 0)))
+              (bbdb-parse-postcode (match-string 1)))
              ;; State
              (skip-chars-backward " \t")
              (let ((pos (point)))
@@ -234,22 +308,56 @@ NANP is the North American Numbering Plan used in North and Central America."
              (narrow-to-region (point-min) (match-beginning 0))
              (goto-char (point-min))
              (bbdb-snarf-streets address))))
-    ;; Fixme: There are no labels anymore.  `bbdb-snarf-streets' snarfed
-    ;; everything that was left!
-    (bbdb-address-set-label address (bbdb-snarf-label 'address))
-    (bbdb-record-set-address record
-                             (nconc (bbdb-record-address record)
-                                    (list address)))))
+    (when (bbdb-address-city address)
+      (if bbdb-snarf-address-us-country
+          (bbdb-address-set-country address bbdb-snarf-address-us-country))
+      ;; Fixme: There are no labels anymore.  `bbdb-snarf-streets' snarfed
+      ;; everything that was left!
+      (bbdb-address-set-label address (bbdb-snarf-label 'address))
+      (bbdb-record-set-address record
+                               (nconc (bbdb-record-address record)
+                                      (list address))))))
+
+(defun bbdb-snarf-address-eu (record &optional postcode-regexp country)
+  "Snarf a European address for RECORD.
+POSTCODE-REGEXP is a regexp matching the postcode assumed to appear
+at the beginning of a line followed by the name of the city.  This format
+is used in many continental European countries.
+POSTCODE-REGEXP defaults to `bbdb-snarf-postcode-eu-regexp'.
+COUNTRY is the country to use.  It defaults to `bbdb-snarf-address-eu-country'."
+  (when (re-search-forward (or postcode-regexp
+                               bbdb-snarf-postcode-eu-regexp) nil t)
+    (let ((address (make-vector bbdb-address-length nil)))
+      (save-restriction
+        (goto-char (match-end 0))
+        (narrow-to-region (point-min) (line-end-position))
+        ;; Postcode
+        (bbdb-address-set-postcode address (match-string 1))
+        ;; City
+        (skip-chars-forward " \t")
+        (bbdb-address-set-city address (buffer-substring (point) (point-max)))
+        ;; Toss it
+        (delete-region (match-beginning 0) (point-max))
+        ;; Streets
+        (goto-char (point-min))
+        (bbdb-snarf-streets address))
+      (unless country (setq country bbdb-snarf-address-eu-country))
+      (if country (bbdb-address-set-country address country))
+      (bbdb-address-set-label address (bbdb-snarf-label 'address))
+      (bbdb-record-set-address record
+                               (nconc (bbdb-record-address record)
+                                      (list address))))))
 
 (defun bbdb-snarf-url (record)
-  "Snarf URL for RECORD."
+  "Snarf URL for RECORD.
+This uses the first subexpresion of `bbdb-snarf-url-regexp'."
   (when (and bbdb-snarf-url
              (let ((case-fold-search t))
                (re-search-forward bbdb-snarf-url-regexp nil t)))
     (bbdb-record-set-xfields
      record
      (nconc (bbdb-record-xfields record)
-            (list (cons bbdb-snarf-url (match-string 0)))))
+            (list (cons bbdb-snarf-url (match-string 1)))))
     (replace-match "")))
 
 (defun bbdb-snarf-notes (record)
@@ -321,12 +429,14 @@ See `bbdb-snarf-rule-alist' for details."
                                          (bbdb-record-lastname record))
                             (car (bbdb-record-mail record))))))
       ;; Install RECORD after searching for OLD-RECORD
-      (bbdb-change-record record t t)
+      (bbdb-change-record record nil t)
       (if old-record (bbdb-merge-records old-record record)))
     (bbdb-display-records (list record))
     record))
 
 ;; Some test cases
+;;
+;; US:
 ;;
 ;; another test person
 ;; 1234 Gridley St.
@@ -340,7 +450,7 @@ See `bbdb-snarf-rule-alist' for details."
 ;; 1234 Gridley St.
 ;; St. Los Angeles, CA 91342-1234
 ;; 555-1212
-;; test@person.net
+;; <test@person.net>
 ;;
 ;; x test person
 ;; 1234 Gridley St.
@@ -354,6 +464,22 @@ See `bbdb-snarf-rule-alist' for details."
 ;; Los Angeles, CA
 ;; 555-1212
 ;; test@person.net
+;;
+;; z test person
+;; 555-1212
+;; test@person.net
+;;
+;; EU:
+;;
+;; Maja Musterfrau
+;; Strasse 15
+;; 12345 Ort
+;; +49 12345
+;; phon: (110) 123 456
+;; mobile: (123) 456 789
+;; xxx.xxx@xxxx.xxx
+;; http://www.xxx.xx
+;; notes bla bla bla
 
 (provide 'bbdb-snarf)
 

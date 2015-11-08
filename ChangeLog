@@ -1,4 +1,22 @@
 2015-11-08  Roland Winkler  <winkler@gnu.org>
+	Add new snarfing rule eu for many continental European countries.
+	Improve snarfing algorithm.
+	* lisp/bbdb-snarf.el (bbdb-snarf-rule-alist): Add new rule eu.
+	(bbdb-snarf-phone-nanp-regexp, bbdb-snarf-postcode-us-regexp)
+	(bbdb-snarf-url-regexp): Improve regexp.  Use first subexpression.
+	(bbdb-snarf-mail-regexp): New variable.
+	(bbdb-snarf-mail): Use it.
+	(bbdb-snarf-address-us-country): New variable.
+	(bbdb-snarf-address-us): Use it.  Check whether we actually
+	snarfed an address.
+	(bbdb-snarf-phone-eu-regexp, bbdb-snarf-postcode-eu-regexp)
+	(bbdb-snarf-address-eu-country): New variables.
+	(bbdb-snarf-label): Use save-match-data.
+	(bbdb-snarf-phone-nanp): Use save-match-data.  Reverse order of
+	snarfed phone numbers.
+	(bbdb-snarf-phone-eu, bbdb-snarf-address-eu): New functions.
+
+2015-11-08  Roland Winkler  <winkler@gnu.org>
 	Simplify re-sorting of records when a record has been changed.
 	Re-display re-sorted records.
 	* lisp/bbdb.el (bbdb-need-to-sort): Removed.
