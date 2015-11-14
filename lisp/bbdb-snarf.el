@@ -131,7 +131,8 @@ The first subexpression becomes the postcode."
 (defcustom bbdb-snarf-address-us-country nil
   "Country to use for US addresses.  If nil leave country blank."
   :group 'bbdb-utilities-snarf
-  :type 'string)
+  :type '(choice (const :tag "Leave blank" nil)
+                 (string :tag "Country")))
 
 (defcustom bbdb-snarf-postcode-eu-regexp
   "^\\([0-9][0-9][0-9][0-9][0-9]?\\)" ; four or five digits
@@ -144,7 +145,8 @@ of a line followed by the name of the city."
 (defcustom bbdb-snarf-address-eu-country nil
   "Country to use for EU addresses.  If nil leave country blank."
   :group 'bbdb-utilities-snarf
-  :type 'string)
+  :type '(choice (const :tag "Leave blank" nil)
+                 (string :tag "Country")))
 
 (defcustom bbdb-snarf-default-label-alist
   '((phone . "work") (address . "work"))

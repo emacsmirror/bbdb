@@ -96,9 +96,9 @@ Allowed values include
  query  Query before creating or modifying the attribution field.
  t      Create or modify the attribution field."
  :group 'bbdb-utilities-sc
- :type '(choice (const "Do nothing" nil)
-                (const "Query before updating the attribution field" query)
-                (const "Update the attribution field" t)))
+ :type '(choice (const :tag "Do nothing" nil)
+                (const :tag "Query before updating the attribution field" query)
+                (const :tag "Update the attribution field" t)))
 
 ;;; Internal variables
 (defvar bbdb-sc-last-attrib ""

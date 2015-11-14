@@ -102,7 +102,8 @@ The order in this list is the order how matching will be performed."
   "Real folders used for defining virtual folders.
 If nil use `vm-primary-inbox'."
   :group 'bbdb-mua-vm
-  :type 'symbol)
+  :type '(choice (const :tag "Use vm-primary-inbox" nil)
+                 (repeat (string :tag "Real folder"))))
 
 ;;;###autoload
 (defun bbdb/vm-auto-folder ()

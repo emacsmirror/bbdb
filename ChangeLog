@@ -1,3 +1,17 @@
+2015-11-14  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-auto-revert, bbdb-dedicated-window)
+	(bbdb-default-domain, bbdb-mua-pop-up)
+	(bbdb-horiz-pop-up-window-size, bbdb-xfields-sort-order)
+	(bbdb-mua-summary-unification-list, bbdb-mail-avoid-redundancy)
+	* lisp/bbdb-snarf.el (bbdb-snarf-address-us-country)
+	(bbdb-snarf-address-eu-country)
+	* lisp/bbdb-anniv.el (bbdb-anniv-alist)
+	* lisp/bbdb-vm.el (bbdb/vm-virtual-real-folders)
+	* lisp/bbdb-gnus.el (bbdb/gnus-score-default)
+	(bbdb/gnus-split-myaddr-regexp, bbdb/gnus-split-private-field)
+	(bbdb/gnus-split-public-field)
+	* lisp/bbdb-sc.el (bbdb-sc-update-attrib-p): Fix defcustom.
+
 2015-11-08  Roland Winkler  <winkler@gnu.org>
 	Add new snarfing rule eu for many continental European countries.
 	Improve snarfing algorithm.

@@ -189,7 +189,7 @@ If nil or the database has been changed inside Emacs, always query
 before reverting."
   :group 'bbdb
   :type '(choice (const :tag "Revert unchanged database without querying" t)
-                 (const :tag "Ask before reverting database")))
+                 (const :tag "Ask before reverting database" nil)))
 
 (defcustom bbdb-check-auto-save-file nil
   "If t BBDB will check its auto-save file.
@@ -310,7 +310,7 @@ Allowed values include nil (not dedicated) 'bbdb (weakly dedicated)
 and t (strongly dedicated)."
   :group 'bbdb-record-display
   :type '(choice (const :tag "BBDB window not dedicated" nil)
-                 (const :tag "BBDB window weakly dedicated" 'bbdb)
+                 (const :tag "BBDB window weakly dedicated" bbdb)
                  (const :tag "BBDB window strongly dedicated" t)))
 
 (defcustom bbdb-layout-alist
@@ -655,7 +655,7 @@ The address is not altered if `bbdb-default-domain' is nil
 or if a prefix argument is given to the command `bbdb-insert-field'."
   :group 'bbdb-record-edit
   :type '(choice (const :tag "none" nil)
-                 (string :tag "Default Domain" :value nil)))
+                 (string :tag "Default Domain")))
 
 (defcustom bbdb-phone-style 'nanp
   "Phone numbering plan assumed by BBDB.
@@ -935,8 +935,8 @@ If t accept all messages.  If nil do not accept any messages.
 See also `bbdb-ignore-message-alist', which has the opposite effect."
   :group 'bbdb-mua
   :type '(repeat (cons
-          (string :tag "Header name")
-          (regexp :tag "Regexp to match on header value"))))
+                  (string :tag "Header name")
+                  (regexp :tag "Regexp to match on header value"))))
 
 (defcustom bbdb-ignore-message-alist nil
   "Alist describing which messages not to automatically create BBDB records for.
@@ -952,8 +952,8 @@ If t ignore all messages.  If nil do not ignore any messages.
 See also `bbdb-accept-message-alist', which has the opposite effect."
   :group 'bbdb-mua
   :type '(repeat (cons
-          (string :tag "Header name")
-          (regexp :tag "Regexp to match on header value"))))
+                  (string :tag "Header name")
+                  (regexp :tag "Regexp to match on header value"))))
 
 (defcustom bbdb-user-mail-address-re
   (and (stringp user-mail-address)
@@ -1269,8 +1269,8 @@ The elements may have the following values:
 See also `bbdb-auto-notes-ignore-headers'."
   :group 'bbdb-mua
   :type '(repeat (cons
-          (string :tag "Header name")
-          (regexp :tag "Regexp to match on header value"))))
+                  (string :tag "Header name")
+                  (regexp :tag "Regexp to match on header value"))))
 
 (defcustom bbdb-auto-notes-ignore-headers nil
   "Alist of headers and regexps to ignore in `bbdb-auto-notes'.
@@ -1287,8 +1287,8 @@ gatewayed to gnu.* newsgroups.
 See also `bbdb-auto-notes-ignore-messages'."
   :group 'bbdb-mua
   :type '(repeat (cons
-          (string :tag "Header name")
-          (regexp :tag "Regexp to match on header value"))))
+                  (string :tag "Header name")
+                  (regexp :tag "Regexp to match on header value"))))
 
 (defcustom bbdb-mua-pop-up t
   "If non-nil, display an auto-updated BBDB window while using a MUA.
@@ -1298,7 +1298,7 @@ If this is nil, BBDB is updated silently.
 See also `bbdb-mua-pop-up-window-size' and `bbdb-horiz-pop-up-window-size'."
   :group 'bbdb-mua
   :type '(choice (const :tag "MUA BBDB window stacked vertically" t)
-                 (const :tag "MUA BBDB window stacked horizontally" 'horiz)
+                 (const :tag "MUA BBDB window stacked horizontally" horiz)
                  (const :tag "No MUA BBDB window" nil)))
 (define-obsolete-variable-alias 'bbdb-message-pop-up 'bbdb-mua-pop-up)
 
@@ -1322,7 +1322,8 @@ If it is an integer number, it is the number of columns used by BBDB.
 If it is a fraction between 0 and 1, it is the fraction of the
 window width that BBDB will take over."
   :group 'bbdb-mua
-  :type '(cons (number) (number)))
+  :type '(cons (number :tag "Total number of columns")
+               (number :tag "Horizontal size of BBDB window")))
 
 
 ;;; xfields processing
@@ -1334,7 +1335,9 @@ If an xfield is not in the alist, it is assigned weight 100, so all xfields
 with weights less then 100 will be in the beginning, and all xfields with
 weights more than 100 will be in the end."
   :group 'bbdb-mua
-  :type 'list)
+  :type '(repeat (cons
+                  (symbol :tag "xfield")
+                  (number :tag "Weight"))))
 (define-obsolete-variable-alias 'bbdb-notes-sort-order 'bbdb-xfields-sort-order)
 
 (defcustom bbdb-merge-xfield-function-alist
@@ -1363,7 +1366,7 @@ In addition, this list may also include the following elements:
 These provide a fallback if a message does not have a matching RECORD
 or if some FIELD of RECORD is empty."
   :group 'bbdb-mua
-  :type 'list)
+  :type '(repeat (symbol :tag "Field")))
 
 (defcustom bbdb-mua-summary-mark-field 'mark-char
   "BBDB xfield whose value is used to mark message addresses known to BBDB.
@@ -1477,7 +1480,7 @@ If non-nil do not use full name in mail address when same as mail.
 If value is mail-only never use full name."
   :group 'bbdb-sendmail
   :type '(choice (const :tag "Allow redundancy" nil)
-                 (const :tag "Never use full name" 'mail-only)
+                 (const :tag "Never use full name" mail-only)
                  (const :tag "Avoid redundancy" t)))
 
 (defcustom bbdb-complete-mail t

@@ -56,7 +56,7 @@ If FORM is nil, use the text following the date string in field LABEL
 as format string."
   :type '(repeat (cons :tag "Rule"
                        (symbol :tag "Label")
-                       (choice (regexp)
+                       (choice (string)
                                (const nil))))
   :group 'bbdb-utilities-anniv)
 
