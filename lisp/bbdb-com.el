@@ -1499,7 +1499,7 @@ With prefix N, omit the next N records.  If negative, omit backwards."
       (setq n (min (- n) num))
       (bbdb-prev-record n))
     (dotimes (i n)
-      (bbdb-redisplay-record (bbdb-current-record) t))))
+      (bbdb-redisplay-record (bbdb-current-record) nil t))))
 
 ;;; Fixing up bogus records
 

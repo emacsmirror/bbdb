@@ -1,3 +1,7 @@
+2016-07-20 Marco Wahl <marcowahlsoft@gmail.com>
+	* lisp/bbdb-com.el (bbdb-omit-record): Fix arg list of
+	bbdb-redisplay-record.
+
 2016-07-20  Roland Winkler  <winkler@gnu.org>
 	Make bbdb-hashtable a proper hash table.
 	* lisp/bbdb.el (bbdb-hashtable): Use make-hash-table.
