@@ -1,3 +1,19 @@
+2016-07-20  Roland Winkler  <winkler@gnu.org>
+	* m4/emacs_wl.m4: New file
+	* configure.ac: Use it.
+	* NEWS, README: Document support for Wanderlust
+
+2016-07-20  David Maus  <dmaus@dmaus.name>
+	Add basic support for Wanderlust.
+	* lisp/Makefile.am, lisp/makefile-temp: Support Wanderlust.
+	* lisp/bbdb-mua.el (bbdb-mua-mode-alist, bbdb-mua)
+	(bbdb-message-header, bbdb-mua-update-records, bbdb-mua-wrapper):
+	Add support for Wanderlust.
+	(bbdb-mua-auto-update-init): Add wanderlust to list of auto-update
+	muas.
+	* lisp/bbdb.el (bbdb-init-forms): Add support for Wanderlust.
+	* lisp/bbdb-wl.el: New file.
+
 2016-07-20 Marco Wahl <marcowahlsoft@gmail.com>
 	* lisp/bbdb-com.el (bbdb-omit-record): Fix arg list of
 	bbdb-redisplay-record.

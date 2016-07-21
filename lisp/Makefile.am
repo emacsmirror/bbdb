@@ -52,6 +52,12 @@ dist_lisp_LISP += bbdb-mu4e.el
 # in the Emacs load path when compiling BBDB with Mu4e support.
 endif
 
+if WL
+dist_lisp_LISP += bbdb-wl.el
+# We use the Automake variable AM_ELCFLAGS to include the WL lisp directory
+# in the Emacs load path when compiling BBDB with WL support.
+endif
+
 lisp_DATA = bbdb-loaddefs.el
 
 MOSTLYCLEANFILES = bbdb-loaddefs.el

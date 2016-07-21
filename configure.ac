@@ -41,6 +41,7 @@ AS_IF([test "$EMACS" = no], [AC_MSG_ERROR([cannot find Emacs])])
 # Checks for libraries.
 EMACS_VM
 EMACS_MU4E
+EMACS_WL
 AC_SUBST([AM_ELCFLAGS])
 
 # Generate lisp/bbdb-site.el via lisp/Makefile as pkgdatadir is only known

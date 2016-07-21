@@ -1681,7 +1681,9 @@ See also `bbdb-silent'.")
     (pgp                        ; pgp-mail
      (progn
        (add-hook 'message-send-hook 'bbdb-pgp)
-       (add-hook 'mail-send-hook 'bbdb-pgp))))
+       (add-hook 'mail-send-hook 'bbdb-pgp)))
+    (wl
+     (add-hook 'wl-init-hook 'bbdb-insinuate-wl)))
   "Alist mapping features to insinuation forms.")
 
 (defvar bbdb-search-invert nil
@@ -4542,6 +4544,7 @@ mail/news readers, composers, and miscellaneous packages:
   vm         VM mail reader.
   mail       Mail (M-x mail).
   message    Message mode.
+  wl         Wanderlust mail reader.
 
   anniv      Anniversaries in Emacs diary.
 
