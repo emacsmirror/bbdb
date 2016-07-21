@@ -1,4 +1,11 @@
 2016-07-20  Roland Winkler  <winkler@gnu.org>
+	Make bbdb-hashtable a proper hash table.
+	* lisp/bbdb.el (bbdb-hashtable): Use make-hash-table.
+	(bbdb-puthash, bbdb-gethash, bbdb-remhash, bbdb-buffer)
+	* lisp/bbdb-com.el (bbdb-completion-predicate)
+	(bbdb-completing-read-records, bbdb-complete-mail): Use it.
+
+2016-07-20  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-add-to-list): Remove.
 	(bbdb-pushnew, bbdb-pushnewq, bbdb-pushnewt): New macros.
 	(bbdb-record-set-xfield, bbdb-record-set-field)

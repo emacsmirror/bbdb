@@ -1840,21 +1840,18 @@ The primary mail of each of the records currently listed in the
 ;;; completion
 
 ;;;###autoload
-(defun bbdb-completion-predicate (symbol)
+(defun bbdb-completion-predicate (key records)
   "For use as the third argument to `completing-read'.
 Obey `bbdb-completion-list'."
   (cond ((null bbdb-completion-list)
          nil)
         ((eq t bbdb-completion-list)
          t)
-        ((not (boundp symbol))
-         nil) ; deleted (unhashed) record
         (t
-         (let ((key (symbol-name symbol)))
-           (catch 'bbdb-hash-ok
-             (dolist (record (symbol-value symbol))
-               (bbdb-hash-p key record bbdb-completion-list))
-             nil)))))
+         (catch 'bbdb-hash-ok
+           (dolist (record records)
+             (bbdb-hash-p key record bbdb-completion-list))
+           nil))))
 
 (defun bbdb-completing-read-records (prompt &optional omit-records)
   "Read and return list of records from the bbdb.
@@ -1862,15 +1859,13 @@ Completion is done according to `bbdb-completion-list'.  If the user
 just hits return, nil is returned.  Otherwise, a valid response is forced."
   (let* ((completion-ignore-case t)
          (string (completing-read prompt bbdb-hashtable
-                                  'bbdb-completion-predicate t))
-         symbol ret)
-  (unless (string= "" string)
-    (setq symbol (intern-soft string bbdb-hashtable))
-    (if (and (boundp symbol) (symbol-value symbol))
-        (dolist (record (symbol-value symbol) (delete-dups ret))
+                                  'bbdb-completion-predicate t)))
+    (unless (string= "" string)
+      (let (records)
+        (dolist (record (gethash string bbdb-hashtable))
           (if (not (memq record omit-records))
-              (push record ret)))
-      (error "Selecting deleted (unhashed) record \"%s\"" symbol)))))
+              (push record records)))
+        (delete-dups records)))))
 
 (defun bbdb-completing-read-record (prompt &optional omit-records)
   "Prompt for and return a single record from the bbdb;
@@ -1998,17 +1993,14 @@ as part of the MUA insinuation."
                (string-match "," completion))
           (setq completion (substring completion 0 (match-beginning 0))))
 
-      ;; We cannot use the return value of the function `all-completions'
-      ;; to set the variable `all-completions' because this function
-      ;; converts all symbols into strings
-      (all-completions orig bbdb-hashtable
-                       (lambda (sym)
-                         (if (bbdb-completion-predicate sym)
-                             (push sym all-completions))))
+      (setq all-completions (all-completions orig bbdb-hashtable
+                                             'bbdb-completion-predicate))
       ;; Resolve the records matching ORIG:
       ;; Multiple completions may match the same record
       (let ((records (delete-dups
-                      (apply 'append (mapcar 'symbol-value all-completions)))))
+                      (apply 'append (mapcar (lambda (compl)
+                                               (gethash compl bbdb-hashtable))
+                                             all-completions)))))
         ;; Is there only one matching record?
         (setq one-record (and (not (cdr records))
                               (car records))))
@@ -2083,38 +2075,36 @@ as part of the MUA insinuation."
        (completion
         (let ((completion-list (if (eq t bbdb-completion-list)
                                    '(fl-name lf-name mail aka organization)
-                                 bbdb-completion-list))
-              sname)
+                                 bbdb-completion-list)))
           ;; Now collect all the dwim-addresses for each completion.
           ;; Add it if the mail is part of the completions
-          (dolist (sym all-completions)
-            (setq sname (symbol-name sym))
-            (dolist (record (symbol-value sym))
+          (dolist (key all-completions)
+            (dolist (record (gethash key bbdb-hashtable))
               (let ((mails (bbdb-record-mail record))
                     accept)
                 (when mails
                   (dolist (field completion-list)
                     (cond ((eq field 'fl-name)
-                           (if (bbdb-string= sname (bbdb-record-name record))
+                           (if (bbdb-string= key (bbdb-record-name record))
                                (push (car mails) accept)))
                           ((eq field 'lf-name)
-                           (if (bbdb-string= sname (bbdb-cache-lf-name
-                                                    (bbdb-record-cache record)))
+                           (if (bbdb-string= key (bbdb-cache-lf-name
+                                                  (bbdb-record-cache record)))
                                (push (car mails) accept)))
                           ((eq field 'aka)
-                           (if (member-ignore-case sname (bbdb-record-field
-                                                          record 'aka-all))
+                           (if (member-ignore-case key (bbdb-record-field
+                                                        record 'aka-all))
                                (push (car mails) accept)))
                           ((eq field 'organization)
-                           (if (member-ignore-case sname (bbdb-record-organization
-                                                          record))
+                           (if (member-ignore-case key (bbdb-record-organization
+                                                        record))
                                (push (car mails) accept)))
                           ((eq field 'primary)
-                           (if (bbdb-string= sname (car mails))
+                           (if (bbdb-string= key (car mails))
                                (push (car mails) accept)))
                           ((eq field 'mail)
                            (dolist (mail mails)
-                             (if (bbdb-string= sname mail)
+                             (if (bbdb-string= key mail)
                                  (push mail accept))))))
                   (dolist (mail (delete-dups accept))
                     (push (bbdb-dwim-mail record mail) dwim-completions))))))

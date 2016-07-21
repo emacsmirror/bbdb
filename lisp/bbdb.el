@@ -1500,7 +1500,7 @@ If a list of symbols, it specifies which fields to complete.  Symbols include
 If t, completion is done for all of the above.
 If nil, no completion is offered."
   ;; These symbols match the fields for which BBDB provides entries in
-  ;; `bbdb-hash-table'.
+  ;; `bbdb-hashtable'.
   :group 'bbdb-sendmail
   :type '(choice (const :tag "No Completion" nil)
                  (const :tag "Complete across all fields" t)
@@ -1715,12 +1715,9 @@ Use `bbdb-search-changed' to display these records.")
 (defvar bbdb-end-marker nil
   "Marker holding the buffer position of the end of the last record.")
 
-;; The value 127 is an arbitrary prime number.
-;; see elisp:Creating Symbols
-(defvar bbdb-hashtable (make-vector 127 0)
+(defvar bbdb-hashtable (make-hash-table :test 'equal)
   "Hash table for BBDB records.
-Hashes the fields first-last-name, last-first-name, organization, aka,
-and mail.  In elisp lingo, this is really an obarray.")
+Hashes the fields first-last-name, last-first-name, organization, aka, and mail.")
 
 (defvar bbdb-xfield-label-list nil
   "List of labels for xfields.")
@@ -2391,10 +2388,11 @@ It is the caller's responsibility to make the new record known to BBDB."
   "Associate RECORD with KEY in `bbdb-hashtable'.
 KEY must be a string or nil.  Empty strings and nil are ignored."
   (if (and key (not (string= "" key))) ; do not hash empty strings
-      (let ((sym (intern (downcase key) bbdb-hashtable)))
-        (if (boundp sym)
-            (add-to-list sym record nil 'eq)
-          (set sym (list record))))))
+      (let* ((key (downcase key))
+             (records (gethash key bbdb-hashtable)))
+        (puthash key (if records (bbdb-pushnewq record records)
+                       (list record))
+                 bbdb-hashtable))))
 
 (defun bbdb-gethash (key &optional predicate)
   "Return list of records associated with KEY in `bbdb-hashtable'.
@@ -2402,7 +2400,7 @@ KEY must be a string or nil.  Empty strings and nil are ignored.
 PREDICATE may take the same values as `bbdb-completion-list'."
   (when (and key (not (string= "" key)))
     (let* ((key (downcase key))
-           (all-records (symbol-value (intern-soft key bbdb-hashtable)))
+           (all-records (gethash key bbdb-hashtable))
            records)
       (if (or (not predicate) (eq t predicate))
           all-records
@@ -2442,12 +2440,13 @@ PREDICATE may take the same values as the elements of `bbdb-completion-list'."
   "Remove RECORD from list of records associated with KEY.
 KEY must be a string or nil.  Empty strings and nil are ignored."
   (if (and key (not (string= "" key)))
-      (let ((sym (intern-soft (downcase key) bbdb-hashtable)))
-        (if sym
-            (let ((val (delq record (symbol-value sym))))
-              (if val
-                  (set sym val)
-                (unintern sym bbdb-hashtable)))))))
+      (let* ((key (downcase key))
+             (records (gethash key bbdb-hashtable)))
+        (when records
+          (setq records (delq record records))
+          (if records
+              (puthash key records bbdb-hashtable)
+            (remhash key bbdb-hashtable))))))
 
 (defun bbdb-hash-record (record)
   "Insert RECORD in `bbdb-hashtable'.
@@ -3108,7 +3107,7 @@ copy it to `bbdb-file'."
       (dolist (hook (cons 'bbdb-after-save bbdb-after-save-hook))
         (add-hook 'after-save-hook hook nil t))
 
-      (fillarray bbdb-hashtable 0)
+      (clrhash bbdb-hashtable)
 
       (if (/= (point-min) (point-max))
           (bbdb-parse-records) ; normal case: nonempty db
