@@ -68,7 +68,7 @@
     (gnus gnus-summary-mode gnus-article-mode gnus-tree-mode)
     (rmail rmail-mode rmail-summary-mode)
     (mh mhe-mode mhe-summary-mode mh-folder-mode)
-    (message message-mode)
+    (message message-mode mu4e-compose-mode notmuch-message-mode)
     (mail mail-mode)
     (mu4e mu4e-view-mode)  ; Tackle `mu4e-headers-mode' later
     (wl wl-summary-mode wl-draft-mode))

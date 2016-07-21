@@ -1,4 +1,9 @@
 2016-07-20  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-mode-alist): Add support for
+	mu4e-compose-mode and notmuch-message-mode which are derived from
+	message-mode.
+
+2016-07-20  Roland Winkler  <winkler@gnu.org>
 	* m4/emacs_wl.m4: New file
 	* configure.ac: Use it.
 	* NEWS, README: Document support for Wanderlust
