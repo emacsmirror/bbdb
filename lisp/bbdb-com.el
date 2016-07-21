@@ -2347,7 +2347,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
                    (setq alias (format "%s%s" aliasstem count))))
             (setq count (1+ count))
 
-            (add-to-list 'mail-aliases (cons alias expansion))
+            (bbdb-pushnew (cons alias expansion) mail-aliases)
 
             (define-mail-abbrev alias expansion)
             (unless (setq f-alias (intern-soft (downcase alias) mail-abbrevs))
@@ -2399,9 +2399,10 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
   (let ((records (bbdb-search (bbdb-records) nil nil nil
                               (cons bbdb-mail-alias-field ".")))
         result)
-    (dolist (record records result)
+    (dolist (record records)
       (dolist (alias (bbdb-record-xfield-split record bbdb-mail-alias-field))
-        (add-to-list 'result alias)))))
+        (bbdb-pushnew alias result)))
+    result))
 
 ;;;###autoload
 (defsubst bbdb-mail-alias-list (alias)
@@ -2454,7 +2455,7 @@ one arg RECORD to define the default value for ALIAS of RECORD."
           (if delete
               (setq r-a-list (delete a r-a-list))
             ;; Add alias only if it is not there yet
-            (add-to-list 'r-a-list a)))
+            (bbdb-pushnew a r-a-list)))
         ;; This also handles `bbdb-mail-aliases-need-rebuilt'
         (bbdb-record-set-xfield record bbdb-mail-alias-field
                                 (bbdb-concat bbdb-mail-alias-field r-a-list))

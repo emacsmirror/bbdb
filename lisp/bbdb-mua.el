@@ -279,8 +279,7 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
                  (setq address-list nil))
                 ((not (eq task 'next))
                  (dolist (hit (delq nil (nreverse hits)))
-                   ;; people should be listed only once so we use `add-to-list'
-                   (add-to-list 'records hit))))
+                   (bbdb-pushnew hit records))))
           (if (and records (not bbdb-message-all-addresses))
               (setq address-list nil))))
       (setq records

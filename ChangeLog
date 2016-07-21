@@ -1,3 +1,13 @@
+2016-07-20  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-add-to-list): Remove.
+	(bbdb-pushnew, bbdb-pushnewq, bbdb-pushnewt): New macros.
+	(bbdb-record-set-xfield, bbdb-record-set-field)
+	(bbdb-merge-concat-remove-duplicates, bbdb-parse-records)
+	(bbdb-change-record)
+	* lisp/bbdb-com.el (bbdb-mail-aliases, bbdb-get-mail-aliases)
+	(bbdb-add-mail-alias)
+	* lisp/bbdb-mua.el (bbdb-update-records): Use them.
+
 2015-11-14  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-auto-revert, bbdb-dedicated-window)
 	(bbdb-default-domain, bbdb-mua-pop-up)

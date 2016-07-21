@@ -2006,17 +2006,37 @@ COLLECTION and REQUIRE-MATCH have the same meaning as in `completing-read'."
          (completing-read prompt collection nil require-match init))
      (read-string prompt init))))
 
-(defun bbdb-add-to-list (list-var element)
-  "Add ELEMENT to the value of LIST-VAR if it isn't there yet and non-nil.
+;; The following macros implement variants of `pushnew' (till emacs 24.2)
+;; or `cl-pushnew' (since emacs 24.3).  To be compatible with older and newer
+;; versions of emacs we use our own macros.  We call these macros often.
+;; So we keep them simple.  Nothing fancy is needed here.
+(defmacro bbdb-pushnew (element listname)
+  "Add ELEMENT to the value of LISTNAME if it isn't there yet.
 The test for presence of ELEMENT is done with `equal'.
-The return value is the new value of LIST-VAR."
-  ;; Unlike `add-to-list' this ignores ELEMENT if it is nil.
-  ;; TO DO: turn this into a faster macro so that we can abandon calls
-  ;; of add-to-list.
-  (if (or (not element)
-          (member element (symbol-value list-var)))
-      (symbol-value list-var)
-    (set list-var (cons element (symbol-value list-var)))))
+The return value is the new value of LISTNAME."
+  `(let ((elt ,element))
+     (if (member elt ,listname)
+         ,listname
+       (setq ,listname (cons elt ,listname)))))
+
+(defmacro bbdb-pushnewq (element listname)
+  "Add ELEMENT to the value of LISTNAME if it isn't there yet.
+The test for presence of ELEMENT is done with `eq'.
+The return value is the new value of LISTNAME."
+  `(let ((elt ,element))
+     (if (memq elt ,listname)
+         ,listname
+       (setq ,listname (cons elt ,listname)))))
+
+(defmacro bbdb-pushnewt (element listname)
+  "Add ELEMENT to the value of LISTNAME if it isn't there yet and non-nil.
+The test for presence of ELEMENT is done with `equal'.
+The return value is the new value of LISTNAME."
+  `(let ((elt ,element))
+     (if (or (not elt)
+             (member elt ,listname))
+         ,listname
+       (setq ,listname (cons elt ,listname)))))
 
 (defun bbdb-current-record (&optional full)
   "Return the record point is at.
@@ -2591,7 +2611,7 @@ Return VALUE."
     (cond ((and old-xfield value) ; update
            (setcdr old-xfield value))
           (value ; new xfield
-           (add-to-list 'bbdb-xfield-label-list label nil 'eq)
+           (bbdb-pushnewq label bbdb-xfield-label-list)
            (bbdb-record-set-xfields record
                                     (append (bbdb-record-xfields record)
                                             (list (cons label value)))))
@@ -2802,7 +2822,7 @@ See also `bbdb-record-field'."
            (setq value (bbdb-list-strings value))
            (bbdb-hash-update record (bbdb-record-organization record) value)
            (dolist (organization value)
-             (add-to-list 'bbdb-organization-list organization))
+             (bbdb-pushnew organization bbdb-organization-list))
            (bbdb-record-set-organization record value))
 
           ;; AKA
@@ -2843,7 +2863,7 @@ See also `bbdb-record-field'."
                                                    value 'equal)))
            (if check (bbdb-check-type value (bbdb-record-phone record-type) t))
            (dolist (phone value)
-             (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone)))
+             (bbdb-pushnew (bbdb-phone-label phone) bbdb-phone-label-list))
            (bbdb-record-set-phone record value))
 
           ;; Address
@@ -2852,13 +2872,13 @@ See also `bbdb-record-field'."
                                                    value 'equal)))
            (if check (bbdb-check-type value (bbdb-record-address record-type) t))
            (dolist (address value)
-             (add-to-list 'bbdb-address-label-list (bbdb-address-label address))
-             (mapc (lambda (street) (bbdb-add-to-list 'bbdb-street-list street))
+             (bbdb-pushnew (bbdb-address-label address) bbdb-address-label-list)
+             (mapc (lambda (street) (bbdb-pushnewt street bbdb-street-list))
                    (bbdb-address-streets address))
-             (bbdb-add-to-list 'bbdb-city-list (bbdb-address-city address))
-             (bbdb-add-to-list 'bbdb-state-list (bbdb-address-state address))
-             (bbdb-add-to-list 'bbdb-postcode-list (bbdb-address-postcode address))
-             (bbdb-add-to-list 'bbdb-country-list (bbdb-address-country address)))
+             (bbdb-pushnewt (bbdb-address-city address) bbdb-city-list)
+             (bbdb-pushnewt (bbdb-address-state address) bbdb-state-list)
+             (bbdb-pushnewt (bbdb-address-postcode address) bbdb-postcode-list)
+             (bbdb-pushnewt (bbdb-address-country address) bbdb-country-list))
            (bbdb-record-set-address record value))
 
           ;; all xfields
@@ -2874,7 +2894,7 @@ See also `bbdb-record-field'."
                ;; Ignore junk
                (when (and (cdr xfield) (not (equal "" (cdr xfield))))
                  (push xfield new-xfields)
-                 (add-to-list 'bbdb-xfield-label-list (car xfield) nil 'eq)))
+                 (bbdb-pushnewq (car xfield) bbdb-xfield-label-list)))
              (bbdb-record-set-xfields record new-xfields)))
 
           ;; Single xfield
@@ -2900,7 +2920,7 @@ SEPARATOR defaults to \"\\n\"."
   "Concatenate STRING1 and STRING2, but remove duplicate lines."
   (let ((lines (split-string string1 "\n")))
     (dolist (line (split-string string2 "\n"))
-      (add-to-list 'lines line))
+      (bbdb-pushnew line lines))
     (bbdb-concat "\n" lines)))
 
 (defun bbdb-merge-string-least (string1 string2)
@@ -3275,19 +3295,19 @@ If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
 
           ;; Set the completion lists
           (dolist (phone (bbdb-record-phone record))
-            (add-to-list 'bbdb-phone-label-list (bbdb-phone-label phone)))
+            (bbdb-pushnew (bbdb-phone-label phone) bbdb-phone-label-list))
           (dolist (address (bbdb-record-address record))
-            (add-to-list 'bbdb-address-label-list (bbdb-address-label address))
-            (mapc (lambda (street) (bbdb-add-to-list 'bbdb-street-list street))
+            (bbdb-pushnew (bbdb-address-label address) bbdb-address-label-list)
+            (mapc (lambda (street) (bbdb-pushnewt street bbdb-street-list))
                   (bbdb-address-streets address))
-            (bbdb-add-to-list 'bbdb-city-list (bbdb-address-city address))
-            (bbdb-add-to-list 'bbdb-state-list (bbdb-address-state address))
-            (bbdb-add-to-list 'bbdb-postcode-list (bbdb-address-postcode address))
-            (bbdb-add-to-list 'bbdb-country-list (bbdb-address-country address)))
+            (bbdb-pushnewt (bbdb-address-city address) bbdb-city-list)
+            (bbdb-pushnewt (bbdb-address-state address) bbdb-state-list)
+            (bbdb-pushnewt (bbdb-address-postcode address) bbdb-postcode-list)
+            (bbdb-pushnewt (bbdb-address-country address) bbdb-country-list))
           (dolist (xfield (bbdb-record-xfields record))
-            (add-to-list 'bbdb-xfield-label-list (car xfield) nil 'eq))
+            (bbdb-pushnewq (car xfield) bbdb-xfield-label-list))
           (dolist (organization (bbdb-record-organization record))
-            (add-to-list 'bbdb-organization-list organization))
+            (bbdb-pushnew organization bbdb-organization-list))
 
           (let ((name (bbdb-concat 'name-first-last
                                    (bbdb-record-firstname record)
@@ -3375,7 +3395,7 @@ responsibility to update the hash-table for RECORD."
   ;; record with what is now on disk (or do whatever with these two records).
   ;; This implies, first of all, that *here* we make sure that UUIDs are
   ;; always unique inside BBDB.  For this, include UUIDs in the hash table.
-  ;; If a new record happens to have the same UUID as an exisiting record,
+  ;; If a new record happens to have the same UUID as an existing record,
   ;; this should also throw an error / branch appropriately.  So the arg NEW
   ;; will really not be needed anymore and all these things will have a natural
   ;; solution.
@@ -3410,7 +3430,7 @@ responsibility to update the hash-table for RECORD."
                  ;; We assume it got updated by the caller.
                  (bbdb-delete-record-internal record)
                  (bbdb-insert-record-internal record))
-               (add-to-list 'bbdb-changed-records record nil 'eq)
+               (bbdb-pushnewq record bbdb-changed-records)
                (run-hook-with-args 'bbdb-after-change-hook record)
                (bbdb-redisplay-record-globally record sort))
              record))
@@ -3419,10 +3439,10 @@ responsibility to update the hash-table for RECORD."
            (run-hook-with-args 'bbdb-change-hook record)
            (bbdb-insert-record-internal record)
            (bbdb-hash-record record)
-           (add-to-list 'bbdb-changed-records record nil 'eq)
+           (bbdb-pushnewq record bbdb-changed-records)
            (run-hook-with-args 'bbdb-after-change-hook record)
            record)
-          (t (error "Changes are lost.")))))
+          (t (error "Changes are lost")))))
 
 (defun bbdb-delete-record-internal (record &optional completely)
   "Delete RECORD in the database file.
