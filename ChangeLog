@@ -1,3 +1,6 @@
+2015-07-20  Roland Winkler  <winkler@gnu.org>
+	Update copyright year in all files.
+
 2016-07-20  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-mode-alist): Add support for
 	mu4e-compose-mode and notmuch-message-mode which are derived from
@@ -2133,7 +2136,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010-2015 Roland Winkler <winkler@gnu.org>
+  Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 

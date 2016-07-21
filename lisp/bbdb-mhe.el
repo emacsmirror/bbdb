@@ -3,7 +3,7 @@
 ;; Copyright (C) 1991 Todd Kaufmann <toad@cs.cmu.edu>
 ;; Modified: 28-Jul-94 by Fritz Knabe <knabe@ecrc.de>
 ;;                        Jack Repenning <jackr@dblues.wpd.sgi.com>
-;; Copyright (C) 2010-2015 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 

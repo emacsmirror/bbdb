@@ -1,6 +1,6 @@
 ### emacs_mu4e.m4
 
-## Copyright (C) 2015 Roland Winkler <winkler@gnu.org>
+## Copyright (C) 2015-2016 Roland Winkler <winkler@gnu.org>
 ##
 ## This file is part of the Insidious Big Brother Database (aka BBDB),
 ##

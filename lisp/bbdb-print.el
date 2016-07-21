@@ -1,7 +1,7 @@
 ;;; bbdb-print.el --- for printing BBDB databases using TeX.
 
 ;; Copyright (C) 1993 Boris Goldowsky
-;; Copyright (C) 2010-2015 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
 
 ;; Authors: Boris Goldowsky <boris@cs.rochester.edu>
 ;;          Dirk Grunwald <grunwald@cs.colorado.edu>
