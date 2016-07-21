@@ -230,7 +230,8 @@ This uses the first subexpresion of `bbdb-snarf-mail-regexp'."
 (defun bbdb-snarf-label (field)
   "Extract the label before point, or return default label for FIELD."
   (save-match-data
-    (if (looking-back "[\n,:]\\([^\n,:]+\\):[ \t]*")
+    (if (looking-back "\\(?:^\\|[,:]\\)\\([^\n,:]+\\):[ \t]*"
+                      (line-beginning-position))
         (prog1 (match-string 1)
           (delete-region (match-beginning 1) (match-end 0)))
       (cdr (assq field bbdb-snarf-default-label-alist)))))
@@ -243,7 +244,7 @@ This uses the first subexpresion of `bbdb-snarf-phone-nanp-regexp'."
     (while (re-search-forward bbdb-snarf-phone-nanp-regexp nil t)
       (goto-char (match-beginning 0))
       (if (save-match-data
-            (looking-back "[0-9A-Z]")) ;; not really an NANP phone number
+            (looking-back "[0-9A-Z]" nil)) ;; not really an NANP phone number
           (goto-char (match-end 0))
         (push (vconcat (list (bbdb-snarf-label 'phone))
                        (save-match-data

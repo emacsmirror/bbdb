@@ -3800,7 +3800,7 @@ FIELD-LIST is the list of actually displayed FIELDS."
                             "; ")
                     `(xfields ,xfield)))))))
     ;; delete the trailing "; "
-    (if (looking-back "; ")
+    (if (looking-back "; " nil)
         (backward-delete-char 2))
     (insert "\n")))
 

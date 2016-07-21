@@ -1,4 +1,9 @@
-2015-07-20  Roland Winkler  <winkler@gnu.org>
+2016-07-20  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-display-record-one-line)
+	* lisp/bbdb-snarf.el (bbdb-snarf-label, bbdb-snarf-phone-nanp):
+	Use 2nd arg of looking-back.
+
+2016-07-20  Roland Winkler  <winkler@gnu.org>
 	Update copyright year in all files.
 
 2016-07-20  Roland Winkler  <winkler@gnu.org>
