@@ -1,4 +1,4 @@
-;;; bbdb-gnus.el --- BBDB interface to Gnus
+;;; bbdb-gnus.el --- BBDB interface to Gnus -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
@@ -28,6 +28,9 @@
 (require 'bbdb-com)
 (require 'bbdb-mua)
 (require 'gnus)
+
+(eval-and-compile
+  (autoload 'message-make-domain "message"))
 
 ;; Scoring
 
@@ -81,7 +84,7 @@ addresses better than the traditionally static global scorefile."
                   (ding) (sit-for 2)
                   nil)))))
 
-(defun bbdb/gnus-score-as-text (group)
+(defun bbdb/gnus-score-as-text (_group)
   "Returns a SCORE file format string built from the BBDB."
   (cond ((or (cond ((/= (or bbdb/gnus-score-default 0)
                         (or bbdb/gnus-score-default-internal 0))

@@ -1,4 +1,4 @@
-;;; bbdb-mua.el --- various MUA functionality for BBDB
+;;; bbdb-mua.el --- various MUA functionality for BBDB -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
@@ -58,20 +58,20 @@
 
   (defvar mu4e~view-buffer-name)
 
-  (autoload 'message-field-value "message")
-  (autoload 'mail-decode-encoded-word-string "mail-parse")
+  (autoload 'bbdb/wl-header "bbdb-wl")
 
-  (autoload 'bbdb/wl-header "bbdb-wl"))
+  (autoload 'message-field-value "message")
+  (autoload 'mail-decode-encoded-word-string "mail-parse"))
 
 (defconst bbdb-mua-mode-alist
   '((vm vm-mode vm-virtual-mode vm-summary-mode vm-presentation-mode)
     (gnus gnus-summary-mode gnus-article-mode gnus-tree-mode)
     (rmail rmail-mode rmail-summary-mode)
     (mh mhe-mode mhe-summary-mode mh-folder-mode)
-    (message message-mode mu4e-compose-mode notmuch-message-mode)
-    (mail mail-mode)
     (mu4e mu4e-view-mode)  ; Tackle `mu4e-headers-mode' later
-    (wl wl-summary-mode wl-draft-mode))
+    (wl wl-summary-mode wl-draft-mode)
+    (message message-mode mu4e-compose-mode notmuch-message-mode)
+    (mail mail-mode))
   "Alist of MUA modes supported by BBDB.
 Each element is of the form (MUA MODE MODE ...), where MODEs are used by MUA.")
 
@@ -82,9 +82,9 @@ Return values include
   rmail     Reading Mail in Emacs
   vm        Viewmail
   mh        Emacs interface to the MH mail system (aka MH-E)
-  message   Mail and News composition mode that goes with Gnus
   mu4e      Mu4e
   wl        Wanderlust
+  message   Mail and News composition mode that goes with Gnus
   mail      Emacs Mail Mode."
   (let ((mm-alist bbdb-mua-mode-alist)
         elt mua)
@@ -181,7 +181,7 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
                            bbdb-message-headers))
         (mua (bbdb-mua))
         (ignore-address (or ignore-address bbdb-user-mail-address-re))
-        address-list address name mail mail-list content)
+        address-list name mail mail-list content)
     (dolist (headers message-headers)
       (dolist (header (cdr headers))
         (when (setq content (bbdb-message-header header))

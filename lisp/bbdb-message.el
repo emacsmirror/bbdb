@@ -1,4 +1,4 @@
-;;; bbdb-message.el --- BBDB interface to Mail Composition Packages.
+;;; bbdb-message.el --- BBDB interface to Mail Composition Packages. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
 

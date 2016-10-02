@@ -1,4 +1,4 @@
-;;; bbdb-migrate.el --- migration functions for BBDB
+;;; bbdb-migrate.el --- migration functions for BBDB -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
@@ -287,7 +287,7 @@ for outdated BBDB variables that are set via your personal `custom-file'."
     (if message
         (if list
             (apply 'message (concat "Undocumented variables: "
-                                    (mapconcat (lambda (m) "%s") list " ")) list)
+                                    (mapconcat (lambda (_m) "%s") list " ")) list)
           (message "No undocumented variables `%s...'" name-space)))
     list))
 

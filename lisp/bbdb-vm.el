@@ -1,4 +1,4 @@
-;;; bbdb-vm.el --- BBDB interface to VM
+;;; bbdb-vm.el --- BBDB interface to VM -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>

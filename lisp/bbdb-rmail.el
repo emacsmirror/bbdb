@@ -1,4 +1,4 @@
-;;; bbdb-rmail.el --- BBDB interface to Rmail
+;;; bbdb-rmail.el --- BBDB interface to Rmail -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992 Jamie Zawinski <jwz@netscape.com>.
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>

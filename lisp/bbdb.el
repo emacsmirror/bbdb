@@ -1,4 +1,4 @@
-;;; bbdb.el --- core of BBDB
+;;; bbdb.el --- core of BBDB -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
@@ -1140,9 +1140,9 @@ Hook is run with one argument, the record."
 (define-widget 'bbdb-alist-with-header 'group
   "My group"
   :match 'bbdb-alist-with-header-match
-  :value-to-internal (lambda (widget value)
+  :value-to-internal (lambda (_widget value)
                        (if value (list (car value) (cdr value))))
-  :value-to-external (lambda (widget value)
+  :value-to-external (lambda (_widget value)
                        (if value (append (list (car value)) (cadr value)))))
 
 (defun bbdb-alist-with-header-match (widget value)
@@ -3814,12 +3814,12 @@ FIELD-LIST is the list of actually displayed FIELDS."
          ;; The format string FMT adds three extra characters.
          ;; So we subtract those from the value of INDENT.
          (fmt (format " %%%ds: " (- indent 3)))
-         start field formatfun)
+         start formatfun)
     (dolist (field field-list)
       (setq start (point))
       (cond (;; customized formatting
              (setq formatfun (intern-soft (format "bbdb-display-%s-multi-line" field)))
-             (funcall formatfun record))
+             (funcall formatfun record indent))
             ;; phone
             ((eq field 'phone)
              (dolist (phone (bbdb-record-phone record))
@@ -3997,13 +3997,13 @@ SELECT and HORIZ-P have the same meaning as in `bbdb-pop-up-window'."
       (unless (or bbdb-silent-internal bbdb-silent)
         (message "Formatting BBDB..."))
       (let ((record-number 0)
-            buffer-read-only all-records start)
+            buffer-read-only all-records)
         (erase-buffer)
         (bbdb-debug (setq all-records (bbdb-records)))
         (dolist (record records)
           (bbdb-debug (unless (memq (car record) all-records)
                         (error "Record %s does not exist" (car record))))
-          (setq start (set-marker (nth 2 record) (point)))
+          (set-marker (nth 2 record) (point))
           (bbdb-display-record (nth 0 record) (nth 1 record) record-number)
           (setq record-number (1+ record-number)))
 

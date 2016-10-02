@@ -1,3 +1,26 @@
+2016-10-02  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el, lisp/bbdb-gnus.el, lisp/bbdb-ispell.el:
+	* lisp/bbdb-message.el, lisp/bbdb-mhe.el, lisp/bbdb-migrate.el:
+	* lisp/bbdb-mu4e.el, lisp/bbdb-mua.el, lisp/bbdb-pgp.el:
+	* lisp/bbdb-print.el, lisp/bbdb-rmail.el, lisp/bbdb-sc.el:
+	* lisp/bbdb-site.el.in, lisp/bbdb-snarf.el, lisp/bbdb-vm.el:
+	* lisp/bbdb-wl.el, lisp/bbdb.el: Use lexical binding.
+
+	* lisp/bbdb.el (bbdb-alist-with-header): Start name of unused
+	variables with underscore.
+	(bbdb-display-record-multi-line, bbdb-display-records): Remove
+	unused variable.
+	* lisp/bbdb-com.el (bbdb-omit-record):
+	* lisp/bbdb-snarf.el (bbdb-snarf-surrounding-space)
+	(bbdb-snarf-empty-lines):
+	* lisp/bbdb-migrate.el (bbdb-undocumented-variables): Start name
+	of unused variables with underscore.
+	* lisp/bbdb-mua.el (bbdb-get-address-components):
+	* lisp/bbdb-print.el (bbdb-print-record): Remove unused variable.
+	* lisp/bbdb-gnus.el: Autoload message-make-domain.
+	(bbdb/gnus-score-as-text): Start name of unused variables with
+	underscore.
+
 2016-07-20  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-display-record-one-line)
 	* lisp/bbdb-snarf.el (bbdb-snarf-label, bbdb-snarf-phone-nanp):

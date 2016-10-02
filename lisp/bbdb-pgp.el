@@ -1,4 +1,4 @@
-;;; bbdb-pgp.el --- use BBDB to handle PGP preferences
+;;; bbdb-pgp.el --- use BBDB to handle PGP preferences -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1997,1999 Kevin Davidson
 ;; Copyright (C) 2013 Gijs Hillenius

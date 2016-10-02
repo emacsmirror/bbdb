@@ -1,4 +1,4 @@
-;;; bbdb-mhe.el --- BBDB interface to mh-e
+;;; bbdb-mhe.el --- BBDB interface to mh-e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991 Todd Kaufmann <toad@cs.cmu.edu>
 ;; Modified: 28-Jul-94 by Fritz Knabe <knabe@ecrc.de>

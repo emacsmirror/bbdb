@@ -1,4 +1,4 @@
-;;; bbdb-site.el.in --- site-specific variables for BBDB
+;;; bbdb-site.el.in --- site-specific variables for BBDB -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2013-2016 Roland Winkler <winkler@gnu.org>
 

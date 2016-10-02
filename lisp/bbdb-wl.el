@@ -1,4 +1,4 @@
-;;; bbdb-wl.el --- BBDB interface to Wanderlust
+;;; bbdb-wl.el --- BBDB interface to Wanderlust -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2015 David Maus <dmaus@dmaus.name>
 ;; Copyright (C) 2015-2016 Roland Winkler <winkler@gnu.org>

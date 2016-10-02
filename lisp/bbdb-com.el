@@ -1,4 +1,4 @@
-;;; bbdb-com.el --- user-level commands of BBDB
+;;; bbdb-com.el --- user-level commands of BBDB -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
@@ -1498,7 +1498,7 @@ With prefix N, omit the next N records.  If negative, omit backwards."
         (setq n (min n (- (length bbdb-records) num)))
       (setq n (min (- n) num))
       (bbdb-prev-record n))
-    (dotimes (i n)
+    (dotimes (_i n)
       (bbdb-redisplay-record (bbdb-current-record) nil t))))
 
 ;;; Fixing up bogus records

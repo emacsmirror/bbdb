@@ -33,6 +33,9 @@
 ;; call `bbdb-initialize' with arg `anniv'.
 ;;
 ;; See the BBDB info manual for documentation.
+;;
+;;; FIXME: As we rely on `diary-date-forms', this is not compatible
+;;; with lexical binding for this file.
 
 ;;; Code:
 

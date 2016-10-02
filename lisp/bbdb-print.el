@@ -1,4 +1,4 @@
-;;; bbdb-print.el --- for printing BBDB databases using TeX.
+;;; bbdb-print.el --- for printing BBDB databases using TeX. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1993 Boris Goldowsky
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
@@ -430,7 +430,7 @@ The return value is the new CURRENT-LETTER."
                     (t
                      (bbdb-print-tex-quote (bbdb-record-name-lf record)))))
         (organization (bbdb-record-organization record))
-        (affix   (bbdb-record-affix record))
+        ; (affix   (bbdb-record-affix record))
         (mail    (bbdb-record-mail record))
         (phone   (bbdb-record-phone record))
         (address (bbdb-record-address record))

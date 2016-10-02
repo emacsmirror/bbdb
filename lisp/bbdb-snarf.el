@@ -1,4 +1,4 @@
-;;; bbdb-snarf.el --- convert free-form text to BBDB records
+;;; bbdb-snarf.el --- convert free-form text to BBDB records -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1997 John Heidemann <johnh@isi.edu>
 ;; Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
@@ -169,7 +169,7 @@ The first subexpression becomes the URL."
   :group 'bbdb-utilities-snarf
   :type 'regexp)
 
-(defun bbdb-snarf-surrounding-space (record)
+(defun bbdb-snarf-surrounding-space (_record)
   "Discard beginning and trailing space when snarfing RECORD."
   (while (re-search-forward "^[ \t]+" nil t)
     (replace-match ""))
@@ -177,7 +177,7 @@ The first subexpression becomes the URL."
   (while (re-search-forward "\\s-+$" nil t)
     (replace-match "")))
 
-(defun bbdb-snarf-empty-lines (record)
+(defun bbdb-snarf-empty-lines (_record)
   "Discard empty lines when snarfing RECORD."
   (while (re-search-forward "^[ \t]*\n" nil t)
     (replace-match "")))
