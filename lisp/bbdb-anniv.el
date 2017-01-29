@@ -1,6 +1,6 @@
 ;;; bbdb-anniv.el --- get anniversaries from BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2011-2016 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -150,22 +150,61 @@ To enable this feature, put the following into your .emacs:
                           text (replace-regexp-in-string "\\`[ \t]+" "" text)
                           text (replace-regexp-in-string "[ \t]+\\'" "" text))
                     (if (cdr rule)
-                        (setq text (replace-regexp-in-string "%t" text (cdr rule))))))
-                ;; Add the anniversaries to `diary-entries-list'.
-                (if (and yr (> yr 0) (< 0 (length text)))
-                    (diary-add-to-list
-                     date
-                     (format
-                      ;; Text substitution similar to `diary-anniversary'.
-                      (replace-regexp-in-string "%n" (bbdb-record-name record) text)
-                      yr (diary-ordinal-suffix yr))
-                     ;; It would be nice to have a SPECIFIER that allowed us to jump
-                     ;; from the diary display buffer to the respective BBDB record.
-                     ;; Yet it seems that diary-lib does not support this for us.
-                     ;; So we use instead an empty string.  When clicking on the
-                     ;; anniversary entry in the diary display buffer, this give us
-                     ;; the message "Unable to locate this diary entry".
-                     ""))))))))))
+                        (setq text (replace-regexp-in-string "%t" text (cdr rule))))
+                    ;; Add the anniversaries to `diary-entries-list'.
+                    (if (and (numberp yr) (< 0 (length text)))
+                        (diary-add-to-list
+                         date
+                         ;; `diary-add-to-list' expects an arg SPECIFIER for being
+                         ;; able to jump to the location of the entry in the diary
+                         ;; file.  Here we only have BBDB records.  So we use
+                         ;; an empty string for SPECIFIER, but instead we `propertize'
+                         ;; the STRING passed to `diary-add-to-list'.
+                         (propertize
+                          (format
+                           ;; Text substitution similar to `diary-anniversary'.
+                           (replace-regexp-in-string "%n" (bbdb-record-name record) text)
+                           yr (diary-ordinal-suffix yr))
+                          'diary-goto-entry (list 'bbdb-display-records (list record)))
+                         ""))))))))))))
+
+;; based on `diary-goto-entry'
+(defun bbdb-anniv-goto-entry (button)
+  "Jump to the diary entry for the BUTTON at point.
+The character at point may have a text property `diary-goto-entry'
+which should be a list (FUNCTION ARG1 ARG2 ...).  Then call FUNCTION
+with args ARG1, ARG2, ... to locate the entry.  Otherwise follow
+the rules used by `diary-goto-entry'."
+  (let* ((fun-call (get-text-property (overlay-start button)
+                                      'diary-goto-entry))
+         (locator (button-get button 'locator))
+         (marker (car locator))
+         markbuf file)
+    (cond (fun-call
+           (apply (car fun-call) (cdr fun-call)))
+          ;; If marker pointing to diary location is valid, use that.
+          ((and marker (setq markbuf (marker-buffer marker)))
+           (pop-to-buffer markbuf)
+           (goto-char (marker-position marker)))
+          ;; Marker is invalid (eg buffer has been killed).
+          ((and (setq file (cadr locator))
+                (file-exists-p file)
+                (find-file-other-window file))
+           (when (eq major-mode (default-value 'major-mode)) (diary-mode))
+           (goto-char (point-min))
+           (if (re-search-forward (format "%s.*\\(%s\\)"
+                                          (regexp-quote (nth 2 locator))
+                                          (regexp-quote (nth 3 locator)))
+                                  nil t)
+               (goto-char (match-beginning 1))))
+          (t
+           (message "Unable to locate this diary entry")))))
+
+;; `diary-goto-entry-function' is rather inflexible if multiple packages
+;; want to use it for its purposes: this variable can be hijacked
+;; only once.  Here our function `bbdb-anniv-goto-entry' should work
+;; for other packages, too.
+(setq diary-goto-entry-function 'bbdb-anniv-goto-entry)
 
 (provide 'bbdb-anniv)
 

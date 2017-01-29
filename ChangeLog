@@ -1,4 +1,10 @@
 2017-01-28  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el (bbdb-anniv-diary-entries): Propertize the
+	strings passed to diary-add-to-list.
+	(bbdb-anniv-goto-entry): New function used as
+	diary-goto-entry-function.
+
+2017-01-28  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-anniv.el (bbdb-anniv-diary-entries): Use cl-flet.
 
 2017-01-28  Roland Winkler  <winkler@gnu.org>
