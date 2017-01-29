@@ -1,4 +1,10 @@
 2017-01-28  Roland Winkler  <winkler@gnu.org>
+	Discontinue support for old GNU Emacs 23.
+	* README, lisp/bbdb-site.el:
+	* lisp/bbdb.el (bbdb-buffer, bbdb-revert):
+	* lisp/bbdb-com.el (bbdb-complete-mail): Update accordingly.
+
+2017-01-28  Roland Winkler  <winkler@gnu.org>
 	Update copyright year in all files.
 
 2016-10-02  Roland Winkler  <winkler@gnu.org>

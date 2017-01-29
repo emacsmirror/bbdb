@@ -3075,7 +3075,7 @@ copy it to `bbdb-file'."
 
   ;; Make sure `bbdb-buffer' is not out of sync with disk.
   (with-current-buffer bbdb-buffer
-    (cond ((verify-visited-file-modtime bbdb-buffer)) ; arg for Emacs 23
+    (cond ((verify-visited-file-modtime))
           ((bbdb-revert-buffer))
           ;; This is the case where `bbdb-file' has changed; the buffer
           ;; has changed as well; and the user has answered "no" to the
@@ -3192,7 +3192,7 @@ Return nil otherwise."
              (set-buffer-modified-p nil)
              (bbdb-undisplay-records t)))
           ;; If nothing has changed do nothing, return t.
-          ((and (verify-visited-file-modtime bbdb-buffer) ; arg for Emacs 23
+          ((and (verify-visited-file-modtime)
                 (not (buffer-modified-p))))
           ((or (and (not (verify-visited-file-modtime bbdb-buffer))
                     ;; File changed on disk

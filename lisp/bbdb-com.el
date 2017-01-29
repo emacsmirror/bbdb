@@ -1058,7 +1058,6 @@ of FIELD is the cdr of this variable."
                                 (completion-extra-properties
                                  '(:annotation-function
                                    (lambda (s) (format "  (%s)" (cdr (assoc s collection)))))))
-                                ; (completion-annotate-function (cadr completion-extra-properties))) ; Emacs 23
                            (if (< 0 (length phones))
                                (completing-read "Phone field: " collection nil t)
                              "new")))
@@ -1071,7 +1070,6 @@ of FIELD is the cdr of this variable."
                                 (completion-extra-properties
                                  '(:annotation-function
                                    (lambda (s) (format "  (%s)" (cdr (assoc s collection)))))))
-                                ; (completion-annotate-function (cadr completion-extra-properties))) ; Emacs 23
                            (if (< 0 (length addresses))
                                (completing-read "Address field: " collection nil t)
                              "new"))))))
@@ -2183,32 +2181,24 @@ as part of the MUA insinuation."
 
     (when (member done '(choose cycle-choose))
       ;; Pop up a completions window using DWIM-COMPLETIONS.
-      ;; Too bad: The following requires at least GNU Emacs 23.2
-      ;; which introduced the variable `completion-base-position'.
-      ;; For an older Emacs there is really no satisfactory workaround
-      ;; (see GNU Emacs bug #4699), unless we use something radical like
-      ;; advicing `choose-completion-string' (used by BBDB v2).
-      (if (string< (substring emacs-version 0 4) "23.2")
-          (message "*Completions* buffer requires at least GNU Emacs 23.2")
-        ;; `completion-in-region' does not work here as `dwim-completions'
-        ;; is not a collection for completion in the usual sense, but it
-        ;; is really a list of replacements.
-        (let ((status (not (eq (selected-window) (minibuffer-window))))
-              (completion-base-position (list beg end))
-              ;; If we even have `completion-list-insert-choice-function'
-              ;; (introduced in GNU Emacs 24.1) that is yet better.
-              ;; Then we first call the default value of this variable
-              ;; before performing our own stuff.
-              (completion-list-insert-choice-function
-               `(lambda (beg end text)
-                  ,(if (boundp 'completion-list-insert-choice-function)
+      ;; `completion-in-region' does not work here as DWIM-COMPLETIONS
+      ;; is not a collection for completion in the usual sense, but it
+      ;; is really a list of replacements.
+      (let ((status (not (eq (selected-window) (minibuffer-window))))
+            (completion-base-position (list beg end))
+            ;; We first call the default value of
+            ;; `completion-list-insert-choice-function'
+            ;; before performing our own stuff.
+            (completion-list-insert-choice-function
+             `(lambda (beg end text)
+                ,(if (boundp 'completion-list-insert-choice-function)
                      `(funcall ',completion-list-insert-choice-function
                                beg end text))
-                 (bbdb-complete-mail-cleanup text beg))))
-          (if status (message "Making completion list..."))
-          (with-output-to-temp-buffer "*Completions*"
-            (display-completion-list dwim-completions))
-          (if status (message "Making completion list...done")))))
+                (bbdb-complete-mail-cleanup text beg))))
+        (if status (message "Making completion list..."))
+        (with-output-to-temp-buffer "*Completions*"
+          (display-completion-list dwim-completions))
+        (if status (message "Making completion list...done"))))
 
     ;; If DONE is `nothing' return nil so that possibly some other code
     ;; can take over.
