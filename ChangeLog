@@ -1,3 +1,6 @@
+2017-01-28  Roland Winkler  <winkler@gnu.org>
+	Update copyright year in all files.
+
 2016-10-02  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el, lisp/bbdb-gnus.el, lisp/bbdb-ispell.el:
 	* lisp/bbdb-message.el, lisp/bbdb-mhe.el, lisp/bbdb-migrate.el:
@@ -2164,7 +2167,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010-2016 Roland Winkler <winkler@gnu.org>
+  Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 

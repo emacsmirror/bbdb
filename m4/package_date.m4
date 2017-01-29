@@ -1,6 +1,6 @@
 ### package_date.m4
 
-## Copyright (C) 2013-2016 Roland Winkler <winkler@gnu.org>
+## Copyright (C) 2013-2017 Roland Winkler <winkler@gnu.org>
 ##
 ## This file is part of the Insidious Big Brother Database (aka BBDB),
 ##

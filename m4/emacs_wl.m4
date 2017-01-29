@@ -1,6 +1,6 @@
 ### emacs_wl.m4
 
-## Copyright (C) 2016 Roland Winkler <winkler@gnu.org>
+## Copyright (C) 2016-2017 Roland Winkler <winkler@gnu.org>
 ##
 ## This file is part of the Insidious Big Brother Database (aka BBDB),
 ##

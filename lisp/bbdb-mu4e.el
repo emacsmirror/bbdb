@@ -1,7 +1,7 @@
 ;;; bbdb-mu4e.el --- BBDB interface to mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2015 David Sterratt <david@sterratt.me.uk>
-;; Copyright (C) 2015-2016 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2015-2017 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
