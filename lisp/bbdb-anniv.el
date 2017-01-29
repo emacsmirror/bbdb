@@ -39,6 +39,8 @@
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'diary-lib)
+(eval-when-compile
+  (require 'cl-lib))
 
 (defcustom bbdb-anniv-alist
   '((birthday . "%n's %d%s birthday")
@@ -100,31 +102,25 @@ To enable this feature, put the following into your .emacs:
                           (regexp-quote diary-nonmarking-symbol)))
              date-forms)
 
-        (dolist (date-form diary-date-forms)
-          (push (cons (format fmt
-                              (mapconcat (lambda (form) (eval form lex-env))
-                                         (if (eq (car date-form) 'backup)
-                                             (cdr date-form) date-form)
-                                         "\\)\\(?:"))
-                      (eq (car date-form) 'backup))
-                date-forms))
+        (cl-flet ((fun (date-form)
+                       (push (cons (format fmt
+                                           (mapconcat (lambda (form) (eval form lex-env))
+                                                      (if (eq (car date-form) 'backup)
+                                                          (cdr date-form) date-form)
+                                                      "\\)\\(?:"))
+                                   (eq (car date-form) 'backup))
+                             date-forms)))
+          (mapc #'fun diary-date-forms)
 
-        ;; The anniversary of February 29 is considered to be March 1
-        ;; in non-leap years.  So we search for February 29, too.
-        (when (and (= mm 3) (= dd 1)
-                   (not (calendar-leap-year-p yy)))
-          (setq lex-env `((day . "0*29") (month . "0*2") (year . ,year)
-                          (dayname . ,dayname)
-                          (monthname . ,(format "%s\\|%s" (calendar-month-name 2)
-                                                (calendar-month-name 2 'abbrev)))))
-          (dolist (date-form diary-date-forms)
-            (push (cons (format fmt
-                                (mapconcat (lambda (form) (eval form lex-env))
-                                           (if (eq (car date-form) 'backup)
-                                               (cdr date-form) date-form)
-                                           "\\)\\(?:"))
-                        (eq (car date-form) 'backup))
-                  date-forms)))
+          ;; The anniversary of February 29 is considered to be March 1
+          ;; in non-leap years.  So we search for February 29, too.
+          (when (and (= mm 3) (= dd 1)
+                     (not (calendar-leap-year-p yy)))
+            (setq lex-env `((day . "0*29") (month . "0*2") (year . ,year)
+                            (dayname . ,dayname)
+                            (monthname . ,(format "%s\\|%s" (calendar-month-name 2)
+                                                  (calendar-month-name 2 'abbrev)))))
+            (mapc #'fun diary-date-forms)))
 
         (dolist (record (bbdb-records))
           (dolist (rule bbdb-anniv-alist)

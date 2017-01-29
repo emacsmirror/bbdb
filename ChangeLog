@@ -1,4 +1,7 @@
 2017-01-28  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el (bbdb-anniv-diary-entries): Use cl-flet.
+
+2017-01-28  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-anniv.el: Use lexical binding.
 	* lisp/bbdb-anniv.el (bbdb-anniv-diary-entries): Use lexical
 	environment for eval.
