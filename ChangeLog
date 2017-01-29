@@ -1,4 +1,9 @@
 2017-01-28  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-anniv.el: Use lexical binding.
+	* lisp/bbdb-anniv.el (bbdb-anniv-diary-entries): Use lexical
+	environment for eval.
+
+2017-01-28  Roland Winkler  <winkler@gnu.org>
 	Discontinue support for old GNU Emacs 23.
 	* README, lisp/bbdb-site.el:
 	* lisp/bbdb.el (bbdb-buffer, bbdb-revert):

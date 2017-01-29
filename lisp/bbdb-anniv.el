@@ -1,4 +1,4 @@
-;;; bbdb-anniv.el --- get anniversaries from BBDB
+;;; bbdb-anniv.el --- get anniversaries from BBDB -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2017 Roland Winkler <winkler@gnu.org>
 
@@ -33,9 +33,6 @@
 ;; call `bbdb-initialize' with arg `anniv'.
 ;;
 ;; See the BBDB info manual for documentation.
-;;
-;;; FIXME: As we rely on `diary-date-forms', this is not compatible
-;;; with lexical binding for this file.
 
 ;;; Code:
 
@@ -84,48 +81,50 @@ To enable this feature, put the following into your .emacs:
          (end-date (+ num-date number)))
     (while (<= (setq num-date (1+ num-date)) end-date)
       (let* ((date (calendar-gregorian-from-absolute num-date))
-             ;; The following variables may be used by `diary-date-forms'.
-             (day (calendar-extract-day date))
-             (month (calendar-extract-month date))
-             (current-year (calendar-extract-year date))
-             (non-leap (and (= month 3) (= day 1)
-                            (not (calendar-leap-year-p current-year))))
+             (dd (calendar-extract-day date))
+             (mm (calendar-extract-month date))
+             (yy (calendar-extract-year date))
+             ;; We construct a regexp that only uses shy groups,
+             ;; except for the part of the regexp matching the year.
+             ;; This way we can grab the year from the date string.
+             (year "\\([0-9]+\\)\\|\\*")
              (dayname (format "%s\\|%s\\.?" (calendar-day-name date)
                               (calendar-day-name date 'abbrev)))
-             (monthname (format "%s\\|%s" (calendar-month-name month)
-                                (calendar-month-name month 'abbrev)))
-             (day (format "0*%d" day))
-             (month (format "0*%d" month))
-             ;; We could use an explicitly numbered group to match the year.
-             ;; This requires emacs 23.
-             (year "\\([0-9]+\\)\\|\\*")
+             (lex-env `((day . ,(format "0*%d" dd))
+                        (month . ,(format "0*%d" mm)) (year . ,year)
+                        (dayname . ,dayname)
+                        (monthname . ,(format "%s\\|%s" (calendar-month-name mm)
+                                              (calendar-month-name mm 'abbrev)))))
+             ;; Require that the matched date is at the beginning of the string.
+             (fmt (format "\\`%s?\\(?:%%s\\)"
+                          (regexp-quote diary-nonmarking-symbol)))
              date-forms)
 
         (dolist (date-form diary-date-forms)
-          ;; Require that the matched date is at the beginning of the string.
-          ;; Use shy groups so that we can grab the year more easily.
-          (push (cons (format "\\`%s?\\(?:%s\\)"
-                              (regexp-quote diary-nonmarking-symbol)
-                              (mapconcat 'eval (if (eq (car date-form) 'backup)
-                                                   (cdr date-form) date-form)
+          (push (cons (format fmt
+                              (mapconcat (lambda (form) (eval form lex-env))
+                                         (if (eq (car date-form) 'backup)
+                                             (cdr date-form) date-form)
                                          "\\)\\(?:"))
                       (eq (car date-form) 'backup))
                 date-forms))
 
         ;; The anniversary of February 29 is considered to be March 1
         ;; in non-leap years.  So we search for February 29, too.
-        (when non-leap
-          (let* ((day "0*29") (month "0*2")
-                 (monthname (format "%s\\|%s" (calendar-month-name 2)
-                                    (calendar-month-name 2 'abbrev))))
-            (dolist (date-form diary-date-forms)
-              (push (cons (format "\\`%s?\\(?:%s\\)"
-                                  (regexp-quote diary-nonmarking-symbol)
-                                  (mapconcat 'eval (if (eq (car date-form) 'backup)
-                                                       (cdr date-form) date-form)
-                                             "\\)\\(?:"))
-                          (eq (car date-form) 'backup))
-                    date-forms))))
+        (when (and (= mm 3) (= dd 1)
+                   (not (calendar-leap-year-p yy)))
+          (setq lex-env `((day . "0*29") (month . "0*2") (year . ,year)
+                          (dayname . ,dayname)
+                          (monthname . ,(format "%s\\|%s" (calendar-month-name 2)
+                                                (calendar-month-name 2 'abbrev)))))
+          (dolist (date-form diary-date-forms)
+            (push (cons (format fmt
+                                (mapconcat (lambda (form) (eval form lex-env))
+                                           (if (eq (car date-form) 'backup)
+                                               (cdr date-form) date-form)
+                                           "\\)\\(?:"))
+                        (eq (car date-form) 'backup))
+                  date-forms)))
 
         (dolist (record (bbdb-records))
           (dolist (rule bbdb-anniv-alist)
@@ -133,13 +132,13 @@ To enable this feature, put the following into your .emacs:
               (let ((date-forms date-forms)
                     (anniv-string (concat anniv " X")) ; for backup forms
                     (case-fold-search t)
-                    form yy text)
+                    form yr text)
                 (while (setq form (pop date-forms))
                   (when (string-match (car form) anniv-string)
                     (setq date-forms nil
-                          yy (match-string 1 anniv-string)
-                          yy (if (and yy (string-match-p "[0-9]+" yy))
-                                 (- current-year (string-to-number yy))
+                          yr (match-string 1 anniv-string)
+                          yr (if (and yr (string-match-p "[0-9]+" yr))
+                                 (- yy (string-to-number yr))
                                100) ; as in `diary-anniversary'
                           ;; For backup forms we should search backward in
                           ;; anniv-string from (match-end 0) for "\\<".
@@ -150,19 +149,20 @@ To enable this feature, put the following into your .emacs:
                           ;; Then we may simply step backward by one character.
                           text (substring anniv-string (if (cdr form) ; backup
                                                            (1- (match-end 0))
-                                                         (match-end 0)) -1)
+                                                         (match-end 0))
+                                          -1)
                           text (replace-regexp-in-string "\\`[ \t]+" "" text)
                           text (replace-regexp-in-string "[ \t]+\\'" "" text))
                     (if (cdr rule)
                         (setq text (replace-regexp-in-string "%t" text (cdr rule))))))
                 ;; Add the anniversaries to `diary-entries-list'.
-                (if (and yy (> yy 0) (< 0 (length text)))
+                (if (and yr (> yr 0) (< 0 (length text)))
                     (diary-add-to-list
                      date
                      (format
                       ;; Text substitution similar to `diary-anniversary'.
                       (replace-regexp-in-string "%n" (bbdb-record-name record) text)
-                      yy (diary-ordinal-suffix yy))
+                      yr (diary-ordinal-suffix yr))
                      ;; It would be nice to have a SPECIFIER that allowed us to jump
                      ;; from the diary display buffer to the respective BBDB record.
                      ;; Yet it seems that diary-lib does not support this for us.
