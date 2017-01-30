@@ -33,7 +33,7 @@ To compile and install BBDB with `make':
 
    Run the `configure' script in the top directory of the BBDB code.
    This performs a number of checks on your system and generates the
-   Makefiles accordingly.  You need at least GNU Emacs 23.
+   Makefiles accordingly.  You need at least GNU Emacs 24.
 
    The `configure' script comes with various options:
 

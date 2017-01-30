@@ -21,8 +21,8 @@
 
 (defconst bbdb-version "@PACKAGE_VERSION@" "Version of BBDB.")
 
-(if (< emacs-major-version 23)
-  (error "BBDB %s requires GNU Emacs 23 or later" bbdb-version))
+(if (< emacs-major-version 24)
+  (error "BBDB %s requires GNU Emacs 24 or later" bbdb-version))
 
 (defconst bbdb-version-date "@PACKAGE_DATE@"
   "Version date of BBDB.")
