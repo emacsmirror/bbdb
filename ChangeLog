@@ -1,3 +1,6 @@
+2017-01-30  Barak A. Pearlmutter <barak@pearlmutter.net>
+	* README: Add pointer to emacs wiki upgrade page.
+
 2017-01-30  Roland Winkler  <winkler@gnu.org>
 	* README, lisp/bbdb-site.el.in: Discontinue support for GNU Emacs
 	23.

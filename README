@@ -99,9 +99,11 @@ As compared with BBDB 2.xx, many variables, functions, and commands
 have changed in BBDB 3.  Most likely you will have to review your
 customizations carefully.  You may want to call bbdb-undocumented-variables
 to identify outdated (i.e., now usually undocumented) variables in
-your init file.  All user variables for the core of BBDB 3 are listed
-at the beginning of bbdb.el.  Some extensions of BBDB 3 define their
-user variables at the beginning of the respective files.
+your init file.  Those upgrading from BBDB 2.xx may also find this
+Emacs wiki page helpful: https://www.emacswiki.org/emacs/UpgradeBBDB
+All user variables for the core of BBDB 3 are listed at the beginning
+of bbdb.el.  Some extensions of BBDB 3 define their user variables
+at the beginning of the respective files.
 
 Generally the default values for user variables are chosen such that they make
 BBDB the least aggressive.  You can customize this behavior in many ways.
