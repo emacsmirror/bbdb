@@ -6,6 +6,9 @@ See the end of the file for license conditions.
 This file is about changes in BBDB version 3.
 
 * BBDB 3.2
+** BBDB 3.2 requires GNU Emacs 24 or newer.
+Support for GNU Emacs 23 has been discontinued.
+
 ** Support for Mu4e and Wanderlust has been added.
 
 ** Incompatible Changes in BBDB 3.2

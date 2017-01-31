@@ -87,8 +87,11 @@ To compile and install BBDB with `make':
 ===============================================================================
 Usage notes
 
-BBDB 3.1 is the first release of BBDB after a long time.
-It requires GNU Emacs 23 or newer.  Its code is still under development.
+BBDB 3 is the first release of BBDB after a long time.
+Up to BBDB 3.1.2 it requires GNU Emacs 23 or newer.
+More recent versions require GNU Emacs 24 or newer.
+
+The code of BBDB 3 is still under development.
 While it should work reliably, users of previous versions of BBDB
 are advised that the format of the BBDB database file has changed.
 Migration to the new format should happen automatically.

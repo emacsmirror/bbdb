@@ -1,3 +1,6 @@
+2017-01-31  Roland Winkler  <winkler@gnu.org>
+	* README: Really discontinue support for GNU Emacs 23.
+
 2017-01-30  Barak A. Pearlmutter <barak@pearlmutter.net>
 	* TODO: Extend feature wishlist.
 
