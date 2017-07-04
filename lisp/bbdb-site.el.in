@@ -27,10 +27,13 @@
 (defconst bbdb-version-date "@PACKAGE_DATE@"
   "Version date of BBDB.")
 
-(defcustom bbdb-print-tex-path '("@pkgdatadir@")
-  "List of directories with the BBDB tex files."
+(defcustom bbdb-tex-path '("@pkgdatadir@")
+  "List of directories with the BBDB TeX files.
+If this is t assume that these files reside in directories
+that are part of the regular TeX search path"
   :group 'bbdb-utilities-print
-  :type '(repeat (directory :tag "Directory")))
+  :type '(choice (const :tag "Files in TeX path" t)
+                 (repeat (directory :tag "Directory"))))
 
 (provide 'bbdb-site)
 

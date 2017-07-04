@@ -1,7 +1,7 @@
 # tex/Makefile.am for BBDB
 #
 # Copyright (C) 2013 Christian Egli <christian.egli@sbs.ch>
-# Copyright (C) 2013-2015 Roland Winkler <winkler@gnu.org>
+# Copyright (C) 2013-2017 Roland Winkler <winkler@gnu.org>
 # 
 # This file is part of the Insidious Big Brother Database (aka BBDB),
 # 
@@ -19,6 +19,4 @@
 # along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 dist_pkgdata_DATA = 				\
-	bbdb-cols.tex 				\
-	bbdb-print-brief.tex 			\
-	bbdb-print.tex
+	bbdb.sty

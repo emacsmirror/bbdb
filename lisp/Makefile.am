@@ -34,7 +34,7 @@ dist_lisp_LISP = 				\
 	bbdb-migrate.el				\
 	bbdb-mua.el				\
 	bbdb-pgp.el				\
-	bbdb-print.el				\
+	bbdb-tex.el				\
 	bbdb-rmail.el				\
 	bbdb-sc.el				\
 	bbdb-snarf.el				\

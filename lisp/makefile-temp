@@ -65,7 +65,7 @@ WL = -eval '(unless (string= "$(WLDIR)" "") (push "$(WLDIR)" load-path))'
 
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
-SRCS =	bbdb.el bbdb-site.el bbdb-com.el bbdb-print.el bbdb-anniv.el \
+SRCS =	bbdb.el bbdb-site.el bbdb-com.el bbdb-tex.el bbdb-anniv.el \
 	bbdb-migrate.el bbdb-snarf.el \
 	bbdb-mua.el bbdb-message.el bbdb-rmail.el \
 	bbdb-gnus.el bbdb-mhe.el bbdb-mu4e.el bbdb-vm.el bbdb-pgp.el \
@@ -73,7 +73,7 @@ SRCS =	bbdb.el bbdb-site.el bbdb-com.el bbdb-print.el bbdb-anniv.el \
 	bbdb-ispell.el bbdb-pkg.el
 
 # ELC =	$(patsubst %.el,%.elc,$(SRCS)) # GNU Make
-ELC =	bbdb.elc bbdb-site.elc bbdb-com.elc bbdb-print.elc bbdb-anniv.elc \
+ELC =	bbdb.elc bbdb-site.elc bbdb-com.elc bbdb-tex.elc bbdb-anniv.elc \
 	bbdb-migrate.elc bbdb-snarf.elc \
 	bbdb-mua.elc bbdb-message.elc bbdb-rmail.elc \
 	bbdb-gnus.elc bbdb-mhe.elc bbdb-pgp.elc bbdb-sc.elc \
@@ -146,7 +146,7 @@ bbdb-vm.elc: bbdb-vm.el bbdb-mua.elc
 bbdb-sc.elc: bbdb-sc.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
 
-bbdb-print.elc: bbdb-print.el bbdb-com.elc
+bbdb-tex.elc: bbdb-tex.el bbdb-com.elc
 	$(emacs_compile) $(@:.elc=.el)
 bbdb-migrate.elc: bbdb-migrate.el bbdb.elc
 	$(emacs_compile) $(@:.elc=.el)

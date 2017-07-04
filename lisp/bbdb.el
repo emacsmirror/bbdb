@@ -112,10 +112,10 @@
   "BBDB Customizations for phone number dialing"
   :group 'bbdb)
 
-(defgroup bbdb-utilities-print nil
-  "Customizations for printing the BBDB."
+(defgroup bbdb-utilities-tex nil
+  "Customizations for TeXing BBDB."
   :group 'bbdb)
-(put 'bbdb-utilities-print 'custom-loads '(bbdb-print))
+(put 'bbdb-utilities-tex 'custom-loads '(bbdb-tex))
 
 (defgroup bbdb-utilities-anniv nil
   "Customizations for BBDB Anniversaries"
@@ -507,7 +507,7 @@ Each formatting element may contain one of the following format specifiers:
 A formatting element will be applied only if the corresponding part
 of the address is a non-empty string.
 
-See also `bbdb-print-address-format-list'."
+See also `bbdb-tex-address-format-list'."
   :group 'bbdb-record-display
   :type '(repeat (list (choice (const :tag "Default" t)
                                (function :tag "Function")
@@ -530,7 +530,8 @@ and SE-132 54."
 
 (defcustom bbdb-default-separator '("[,;]" ", ")
   "The default field separator.  It is a list (SPLIT-RE JOIN).
-This is used for fields which do not have an entry in `bbdb-separator-alist'."
+This is used for fields which do not have an entry in `bbdb-separator-alist'.
+Whitespace surrounding SPLIT-RE is ignored."
   :group 'bbdb-record-display
   :type '(list regexp string))
 
@@ -542,9 +543,10 @@ This is used for fields which do not have an entry in `bbdb-separator-alist'."
     (organization "[,;]" ", ") (affix "[,;]"  ", ") (aka "[,;]" ", ")
     (mail "[,;]" ", ") (mail-alias "[,;]" ", ") (vm-folder "[,;]" ", ")
     (birthday "\n" "\n") (wedding "\n" "\n") (anniversary "\n" "\n")
-    (notes "\n" "\n"))
+    (notes "\n" "\n") (tex-name "#" " # "))
   "Alist of field separators.
 Each element is of the form (FIELD SPLIT-RE JOIN).
+Whitespace surrounding SPLIT-RE is ignored.
 For fields lacking an entry here `bbdb-default-separator' is used instead."
   :group 'bbdb-record-display
   :type '(repeat (list symbol regexp string)))
@@ -1791,7 +1793,7 @@ if you want to call `bbdb-change-hook' and update the record unconditionally.")
     (define-key km "Cr"         'bbdb-copy-records-as-kill)
     (define-key km "Cf"         'bbdb-copy-fields-as-kill)
     (define-key km "u"          'bbdb-browse-url)
-    ;; (define-key km "P"       'bbdb-print)
+    (define-key km "\C-c\C-t"   'bbdb-tex)
     (define-key km "="          'delete-other-windows)
 
     ;; Search keys
@@ -1874,7 +1876,7 @@ This is a child of `special-mode-map'.")
      ["Copy records as kill" bbdb-copy-records-as-kill t]
      ["Copy fields as kill" bbdb-copy-fields-as-kill t]
      "--"
-     ["Print records" bbdb-print t])
+     ["TeX records" bbdb-tex t])
     ("Manipulate database"
      ["Prefix: do all records" bbdb-do-all-records t]
      "--"
@@ -3566,7 +3568,7 @@ that calls the hooks, too."
 This is done by comparing the postcode to `bbdb-continental-postcode-regexp'.
 
 This is a possible identifying function for
-`bbdb-address-format-list' and `bbdb-print-address-format-list'."
+`bbdb-address-format-list' and `bbdb-tex-address-format-list'."
   (string-match bbdb-continental-postcode-regexp
                 (bbdb-address-postcode address)))
 
@@ -4237,10 +4239,9 @@ current record.
 \\[bbdb-do-all-records]\\[bbdb-mail]\t Compose mail \
 to everyone whose record is displayed.
 \\[bbdb-save]\t Save the BBDB file to disk.
-\\[bbdb-print]\t Create a TeX file containing a pretty-printed version \
-of all the\n\t records in the database.
-\\[bbdb-do-all-records]\\[bbdb-print]\t Do that for the \
-displayed records only.
+\\[bbdb-tex]\t Create a TeX listing of the current record.
+\\[bbdb-do-all-records]\\[bbdb-tex]\t Do that for all \
+displayed record.
 \\[other-window]\t Move to another window.
 \\[bbdb-info]\t Read the Info documentation for BBDB.
 \\[bbdb-help]\t Display a one line command summary in the echo area.
@@ -4248,7 +4249,7 @@ displayed records only.
 record.
 
 For address completion using the names and mail addresses in the database:
-\t in Sendmail mode, type \\<mail-mode-map>\\[bbdb-complete-mail].
+\t in Mail mode, type \\<mail-mode-map>\\[bbdb-complete-mail].
 \t in Message mode, type \\<message-mode-map>\\[bbdb-complete-mail].
 
 Important variables:

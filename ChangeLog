@@ -1,3 +1,17 @@
+2017-07-03  Roland Winkler  <winkler@gnu.org>
+	Use LaTeX for TeXing BBDB.
+	* lisp/bbdb-tex.el: Replacement for lisp/bbdb-print.el.
+	* lisp/bbdb-site.el.in (bbdb-tex-path): Renamed from
+	bbdb-print-tex-path.  Allow new value t.
+	* lisp/bbdb.el (bbdb-utilities-tex): Renamed from
+	bbdb-utilities-print.
+	(bbdb-separator-alist): New element tex-name.  Fix docstring.
+	* lisp/makefile-temp, lisp/Makefile.am: Use bbdb-tex.
+	* tex/bbdb-print-brief.tex, tex/bbdb-cols.tex, tex/bbdb-print.tex:
+	Removed.
+	* tex/bbdb.sty: New file.
+	* tex/Makefile.am: Update accordingly.
+
 2017-01-31  Roland Winkler  <winkler@gnu.org>
 	* README: Really discontinue support for GNU Emacs 23.
 
