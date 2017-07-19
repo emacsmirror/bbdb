@@ -51,11 +51,15 @@
 ;; allows you to specify an arbitrary number of rules that may use different
 ;; style files for the above TeX macros.
 ;;
-;; `bbdb-tex' understands one new BBDB xfield: tex-name,
-;; see also `bbdb-tex-name'.  If this xfield is defined for a record,
+;; The field values of a record are massaged by `bbdb-tex-field' that
+;; passes these values by default to `bbdb-tex-replace'.  Instead the user
+;; may also define functions `bbdb-tex-output-...' that take precedence.
+;;
+;; `bbdb-tex' understands one new BBDB xfield: tex-name, see also
+;; `bbdb-tex-name'.  If this xfield is defined for a record,
 ;; this will be used for the TeXed listing instead of the name field
 ;; of that record.  The value of the xfield tex-name is used verbatim,
-;; it does not use `bbdb-tex-replace-list'.
+;; it does not see `bbdb-tex-field' and `bbdb-tex-replace-list'.
 ;;
 ;; This program was adapted for BBDB by Boris Goldowsky
 ;; <boris@cs.rochester.edu> and Dirk Grunwald
@@ -134,6 +138,7 @@ using `bbdb-separator-alist'.  The separator defaults to \"#\"."
                       "\\end{multicols}\n\\end{document}"))
      (options (bbdb-tex-linebreak "\\\\\\\\\n")
               (bbdb-tex-address-layout 2))))
+
   "Alist of rules for passing BBDB to LaTeX.
 Each rule has the form (RULE LIST1 LIST2 ...).
 The symbol RULE identifies the rule.
@@ -143,10 +148,10 @@ The remainder are lists LIST that should have one of these forms:
 
   Here FORM is a lisp expression.  A record will be TeXed only
   if evaluating FORM yields a non-nil value for this record.
-  The symbols name, affix, organization, mail, phone, address,
-  and xfields will be set to the corresponding values when this
-  is evaluated; these symbols will be nil if the field does not
-  exist for this record.
+  When FORM is evaluated, the symbols name, affix, organization, mail,
+  phone, address, and xfields are set to the corresponding values
+  of this record; these symbols are nil if the respective field
+  does not exist for this record.
 
  (prolog STRING)
 
@@ -166,11 +171,13 @@ The remainder are lists LIST that should have one of these forms:
 
   If ELT is affix, organization, or aka, ELT expands to \"\\ELT{value}\".
     Here the elements of ELT are concatenated to get one value.
+
   If ELT is the key of an xfield, ELT expands to \"\\xfield{ELT}{value}\".
 
   If ELT is a string, this is inserted \"as is\" in the TeX buffer.
 
-  ELT may also be a loop (FLD COUNT [SEPARATOR] [OPT...]).
+  ELT may also be a loop (FLD COUNT [SEPARATOR] [OPT...])
+  looping over the values of FLD.
 
   If FLD is mail, this expands to \"\\mail{short}{long}\",
     such as \"\\mail{foo@bar.com}{Smith <foo@bar.com>}\",
@@ -190,13 +197,13 @@ The remainder are lists LIST that should have one of these forms:
 
   If FLD is mail, phone, address, or xfields,
   OPT may be a list (admit KEY ...) or (omit KEY ...).
-  Then a value is admitted or omitted if its key is listed here.
+  Then a value is admitted or omitted if its key KEY is listed here.
 
  (separator STRING)
 
-  When the first letter of the records' sortkey increases,
-  the new letter is formatted using the format string STRING
-  to generate a separator macro.
+  When the first letter of the records' sortkey increases compared with
+  the previous record in the TeX listing, the new letter is formatted
+  using the format string STRING to generate a separator macro.
 
  (epilog STRING)
 

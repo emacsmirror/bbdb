@@ -1,3 +1,6 @@
+2017-07-19  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-tex.el (bbdb-tex-alist): Improve docstring.
+
 2017-07-03  Roland Winkler  <winkler@gnu.org>
 	Use LaTeX for TeXing BBDB.
 	* lisp/bbdb-tex.el: Replacement for lisp/bbdb-print.el.
