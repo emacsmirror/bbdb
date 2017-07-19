@@ -1,4 +1,8 @@
 2017-07-19  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-tex.el (bbdb-tex): Allow empty space when calling
+	\usepackage.
+
+2017-07-19  Roland Winkler  <winkler@gnu.org>
 	* tex/bbdb.sty: Use \RequirePackage.
 
 2017-07-19  Roland Winkler  <winkler@gnu.org>

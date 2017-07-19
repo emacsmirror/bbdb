@@ -375,8 +375,13 @@ RULE should be an element of `bbdb-tex-alist'."
         (when prolog
           (insert prolog)
           (when (consp bbdb-tex-path)
+            ;; We provide this inlining mechanism so that we can ship
+            ;; and install BBDB without worrying about the tricky question
+            ;; where to (auto-) install a LaTeX style file for BBDB so that
+            ;; TeX finds it.  It is certainly better to install this style
+            ;; file in a directory where TeX finds it.
             (goto-char (point-min))
-            (while (re-search-forward "\\\\usepackage{\\([^}]+\\)}" nil t)
+            (while (re-search-forward "\\\\usepackage[ \t\n]*{\\([^}]+\\)}" nil t)
               (let ((sty (locate-file (match-string 1) bbdb-tex-path '(".sty"))))
                 (when sty
                   (replace-match (format "\n\\\\makeatletter\n%% begin %s\n%% end %s\n\\\\makeatother\n" sty sty))
