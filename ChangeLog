@@ -1,3 +1,7 @@
+2017-07-21  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-split): Use arg TRIM of split-string with
+	emacs-version >= 24.4.
+
 2017-07-19  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-tex.el (bbdb-tex): Allow empty space when calling
 	\usepackage.

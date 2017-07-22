@@ -1949,10 +1949,12 @@ Almost the inverse function of `bbdb-concat'."
   (if (symbolp separator)
       (setq separator (car (or (cdr (assq separator bbdb-separator-alist))
                                bbdb-default-separator))))
-  (unless (string-match separator " \t\n")
-    (setq separator (concat "[ \t\n]*" separator "[ \t\n]*")))
-  ;; `split-string' applied to an empty STRING gives nil.
-  (split-string (bbdb-string-trim string) separator t))
+  (if (<= 24.4 (string-to-number emacs-version))
+      (split-string string separator t "[ \t\n]*")
+    (unless (string-match separator " \t\n")
+      (setq separator (concat "[ \t\n]*" separator "[ \t\n]*")))
+    ;; `split-string' applied to an empty STRING gives nil.
+    (split-string (bbdb-string-trim string) separator t)))
 
 (defun bbdb-concat (separator &rest strings)
   "Concatenate STRINGS to a string sticking in SEPARATOR.
