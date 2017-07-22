@@ -1950,10 +1950,11 @@ Almost the inverse function of `bbdb-concat'."
       (setq separator (car (or (cdr (assq separator bbdb-separator-alist))
                                bbdb-default-separator))))
   (if (<= 24.4 (string-to-number emacs-version))
-      (split-string string separator t "[ \t\n]*")
+      ;; `split-string' applied to an empty STRING gives nil.
+      (split-string string separator t
+                    (unless (string-match separator " \t\n") "[ \t\n]*"))
     (unless (string-match separator " \t\n")
       (setq separator (concat "[ \t\n]*" separator "[ \t\n]*")))
-    ;; `split-string' applied to an empty STRING gives nil.
     (split-string (bbdb-string-trim string) separator t)))
 
 (defun bbdb-concat (separator &rest strings)

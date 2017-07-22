@@ -1,4 +1,7 @@
 2017-07-21  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-split): Fix previous patch.
+
+2017-07-21  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-split): Use arg TRIM of split-string with
 	emacs-version >= 24.4.
 
