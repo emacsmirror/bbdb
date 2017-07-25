@@ -42,24 +42,58 @@
 ;; Each macro may appear multiple times.
 ;;
 ;; The detailed grammar of the output is defined in `bbdb-tex-alist'.
-;; Generally, lisp customizations in bbdb-tex are intended to provide control
-;; of what appears in the TeX listing.  But there are no lisp customization
+;; The output starts with a prolog where you can specify LaTeX packages
+;; and other customizations in the usual way.  The above macros should get
+;; defined, too. By default, this happens in the style file bbdb.sty that
+;; is shipped with BBDB.
+;;
+;; The body of the output contains the BBDB records.  Usually, the records
+;; are placed inside some "bbdb" environment.  You can customize which fields
+;; of each record should appear in the listing and in which order.
+;; Also, you can put separators between individual fields.  A separator macro
+;; can also separate records when the first character of the last name differs
+;; from the first character of the last name of the previous record.
+;; The listing ends with an epilog.
+
+;; A few notes on "advanced usage" of `bbdb-tex':
+;;
+;; It should be possible to use `bbdb-tex' with all bells and whistles
+;; of LaTeX by loading the appropriate LaTeX style files and packages or
+;; embedding the output of `bbdb-tex' into more complex LaTeX documents.
+;; For this you can customize the rules in `bbdb-tex-alist' and use
+;; customized style files for interpreting the TeX macros used by `bbdb-tex'.
+;;
+;; Generally, lisp customizations for `bbdb-tex' are intended to provide control
+;; of *what* appears in the TeX listing.  But there are no lisp customization
 ;; options to control the actual layout that should be handled by LaTeX.
 ;; BBDB is shipped with one basic LaTeX style file bbdb.sty to handle
 ;; the TeX macros listed above.  You should customize this LaTeX style file
 ;; to match your taste and / or your needs.  Note also that `bbdb-tex-alist'
 ;; allows you to specify an arbitrary number of rules that may use different
 ;; style files for the above TeX macros.
+
+;; Generally, it will be advantageous to make all relevant style files
+;; and packages known to LaTeX by putting them in the appropriate directories
+;; of your TeX installation.  Likely, the user variable `bbdb-tex-path'
+;; should not be used in such advanced cases.  The main purpose of the
+;; inlining mechanism provided via `bbdb-tex-path' is that we can ship
+;; and install BBDB without worrying about the tricky question where to
+;; (auto-) install the basic style file bbdb.sty shipped with BBDB so that
+;; TeX finds it.  Most often, it will be best to manually install even bbdb.sty
+;; in a directory where TeX finds it and bind `bbdb-tex-path' to t to fully
+;; suppress the inlining.
 ;;
-;; The field values of a record are massaged by `bbdb-tex-field' that
-;; passes these values by default to `bbdb-tex-replace'.  Instead the user
-;; may also define functions `bbdb-tex-output-...' that take precedence.
+;; Before generating the TeX output, the field values of a record are massaged
+;; by `bbdb-tex-field' that passes these values by default to `bbdb-tex-replace',
+;; see also `bbdb-tex-replace-list'.  Instead the user may also define functions
+;; `bbdb-tex-output-...' that take precedence, see `bbdb-tex-field'.
 ;;
 ;; `bbdb-tex' understands one new BBDB xfield: tex-name, see also
 ;; `bbdb-tex-name'.  If this xfield is defined for a record,
 ;; this will be used for the TeXed listing instead of the name field
 ;; of that record.  The value of the xfield tex-name is used verbatim,
 ;; it does not see `bbdb-tex-field' and `bbdb-tex-replace-list'.
+;;
 ;;
 ;; This program was adapted for BBDB by Boris Goldowsky
 ;; <boris@cs.rochester.edu> and Dirk Grunwald
@@ -375,11 +409,6 @@ RULE should be an element of `bbdb-tex-alist'."
         (when prolog
           (insert prolog)
           (when (consp bbdb-tex-path)
-            ;; We provide this inlining mechanism so that we can ship
-            ;; and install BBDB without worrying about the tricky question
-            ;; where to (auto-) install a LaTeX style file for BBDB so that
-            ;; TeX finds it.  It is certainly better to install this style
-            ;; file in a directory where TeX finds it.
             (goto-char (point-min))
             (while (re-search-forward "\\\\usepackage[ \t\n]*{\\([^}]+\\)}" nil t)
               (let ((sty (locate-file (match-string 1) bbdb-tex-path '(".sty"))))
