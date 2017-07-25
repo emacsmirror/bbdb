@@ -1,4 +1,7 @@
 2017-07-25  Roland Winkler  <winkler@gnu.org>
+	* Makefile.am: Fix rule BBDB_ELPA_FILES. (Bug#51563)
+
+2017-07-25  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-tex.el: Improve documentation.
 
 2017-07-25  Roland Winkler  <winkler@gnu.org>

@@ -24,7 +24,7 @@ doc_DATA = COPYING ChangeLog AUTHORS NEWS README TODO
 
 EXTRA_DIST = autogen.sh
 
-BBDB_ELPA_FILES = README COPYING lisp/*.el doc/bbdb.info doc/dir tex/*.tex
+BBDB_ELPA_FILES = README COPYING lisp/*.el doc/*.info doc/dir tex/*.sty
 BBDB_ELPA_PACKAGE = bbdb-$(PACKAGE_VERSION).tar
 
 # doc/dir is needed for the ELPA package
