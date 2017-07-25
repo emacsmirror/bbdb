@@ -436,9 +436,9 @@ RULE should be an element of `bbdb-tex-alist'."
                            (fmt "\\name{%s}{%s}\n"))
                        (if tex-name
                            (let ((first-last (bbdb-split bbdb-tex-name tex-name)))
-                             (cond ((eq 2 (length tex-name))
+                             (cond ((eq 2 (length first-last))
                                     (insert (format fmt (car first-last) (cadr first-last))))
-                                   ((eq 1 (length tex-name))
+                                   ((eq 1 (length first-last))
                                     (insert (format fmt "" (car first-last))))
                                    (t (error "TeX name %s cannot be split" tex-name))))
                          (insert (format fmt
