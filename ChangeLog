@@ -1,3 +1,55 @@
+2017-08-09  Roland Winkler  <winkler@gnu.org>
+	New field uuid.  Make creation-date and timestamp immutable.
+	* lisp/bbdb.el (bbdb-create-hook, bbdb-change-hook): Use
+	defcustom.
+	(bbdb-merge-records-function): New variable.
+	(bbdb-layout-alist): Omit uuid.
+	(bbdb-xfields-sort-order, bbdb-merge-xfield-function-alist):
+	Ignore creation-date and timestamp.
+	(bbdb-file-format): Bump to 9.
+	(bbdb-record-type): Include uuid, creation-date and timestamp.
+	(bbdb-uuid-table): New variable.
+	(bbdb-timestamp, bbdb-creation-date): Declare obsolete.
+	(bbdb-uuid): New function.
+	(bbdb-hash-record): Hash uuid.
+	(bbdb-record-field, bbdb-record-set-field, bbdb-buffer)
+	(bbdb-display-record-one-line, bbdb-display-record-multi-line)
+	(bbdb-display-record): Handle uuid, creation-date and timestamp.
+	(bbdb-change-record): Use uuid.
+	* lisp/bbdb-com.el (bbdb-search): Use keywords for args.  Handle
+	uuid, creation-date and timestamp.  New option :bool.
+	(bbdb, bbdb-search-name, bbdb-search-organization)
+	(bbdb-search-address, bbdb-search-mail, bbdb-search-phone)
+	(bbdb-search-xfields, bbdb-mail-aliases, bbdb-get-mail-aliases):
+	Change accordingly.
+	(bbdb-compare-records): Compare any fields.
+	(bbdb-timestamp-older, bbdb-timestamp-newer, bbdb-creation-older)
+	(bbdb-creation-newer): Fix interactive spec.
+	(bbdb-creation-no-change): Use bbdb-record-timestamp.
+	(bbdb-read-record): Use bbdb-empty-record.
+	(bbdb-create): Fix call of bbdb-change-record.
+	(bbdb-split-maybe): New function.
+	(bbdb-create-internal): Use keywords for args.
+	(bbdb-edit-field, bbdb-edit-foo, bbdb-merge-records): Handle uuid,
+	creation-date and timestamp.
+	(bbdb-delete-records): Ignore records not known to BBDB.
+	* lisp/bbdb-snarf.el (bbdb-snarf)
+	* lisp/bbdb-mua.el (bbdb-annotate-message): Fix call of
+	bbdb-change-record.
+	* lisp/bbdb-migrate.el (bbdb-migration-features): Remove.
+	(bbdb-peel-the-onion): Merge with bbdb-migrate.
+	(bbdb-migrate): Handle format 9.
+	(bbdb-migrate-alist): Rename from bbdb-migration-spec.
+	(bbdb-migrate-record-lambda): Merge with bbdb-migrate-lambda.
+	(bbdb-migrate-lambda): Rename from bbdb-migrate-versions-lambda.
+	(bbdb-migrate-postcode-to-string): Rename from
+	bbdb-migrate-postcodes-to-strings.  Simplify.
+	(bbdb-migrate-dates): Rename from bbdb-migrate-change-dates.
+	Simplify.
+	(bbdb-migrate-add-country): Rename from
+	bbdb-migrate-add-country-field.
+	(bbdb-undocumented-variables): Handle byte-obsolete-variable.
+
 2017-07-25  Roland Winkler  <winkler@gnu.org>
 	* Makefile.am: Fix rule BBDB_ELPA_FILES. (Bug#51563)
 

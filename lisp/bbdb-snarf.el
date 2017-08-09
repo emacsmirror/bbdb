@@ -432,7 +432,7 @@ See `bbdb-snarf-rule-alist' for details."
                                          (bbdb-record-lastname record))
                             (car (bbdb-record-mail record))))))
       ;; Install RECORD after searching for OLD-RECORD
-      (bbdb-change-record record nil t)
+      (bbdb-change-record record)
       (if old-record (bbdb-merge-records old-record record)))
     (bbdb-display-records (list record))
     record))

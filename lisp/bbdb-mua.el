@@ -552,7 +552,7 @@ Return the records matching ADDRESS or nil."
                      (message "created %s's record with address \"%s\""
                               (bbdb-record-name record) mail)
                    (message "created record with naked address \"%s\"" mail)))
-               (bbdb-change-record record nil t))
+               (bbdb-change-record record))
 
               (change-p
                (unless bbdb-silent

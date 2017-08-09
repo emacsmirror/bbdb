@@ -57,7 +57,7 @@
 
 ;; A few notes on "advanced usage" of `bbdb-tex':
 ;;
-;; It should be possible to use `bbdb-tex' with all bells and whistles
+;; It should be possible to use `bbdb-tex' with all the bells and whistles
 ;; of LaTeX by loading the appropriate LaTeX style files and packages or
 ;; embedding the output of `bbdb-tex' into more complex LaTeX documents.
 ;; For this you can customize the rules in `bbdb-tex-alist' and use

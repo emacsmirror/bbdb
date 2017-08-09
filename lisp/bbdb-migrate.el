@@ -22,228 +22,211 @@
 ;;; This file contains the migration functions for BBDB.
 ;;; See the BBDB info manual for documentation.
 
+;; Changes in `bbdb-file-format':
+;;   3  Date format for `creation-date' and `timestamp' changed
+;;      from "dd mmm yy" (ex: 25 Sep 97) to "yyyy-mm-dd" (ex: 1997-09-25).
+;;   4  Country field added.
+;;   5  Streets are lists.
+;;   6  Postcodes are plain strings.
+;;   7  New field `affix'.  Organizations are a list.
+;;      Xfields is always a list.
+;;  (8  Skipped format in "official BBDB": Some BBDB users introduced
+;;      an xfield uuid in their format 8.  To bring them back, we jump
+;;      straight from 7 to 9.)
+;;   9  New field uuid.  Make `creation-date' and `timestamp' immutable fields.
+
+
 ;;; Code:
 
 (require 'bbdb)
 
 ;;; Migrating the BBDB
 
-;; Unused
-(defconst bbdb-migration-features
-  '((3 . "* Date format for `creation-date' and `timestamp' has changed,
-  from \"dd mmm yy\" (ex: 25 Sep 97) to \"yyyy-mm-dd\" (ex: 1997-09-25).")
-    (4 . "* Country field added.")
-    (5 . "* More flexible street address.")
-    (6 . "* postcodes are stored as plain strings.")
-    (7 . "* Xfields is always a list.  Organizations are stored as list.
-  New field `affix'."))
-  "BBDB Features that have changed in various database revisions.
-Format ((VERSION . DIFFERENCES) ... ).")
-
-(defun bbdb-peel-the-onion (lis)
-  "Remove outer layers of parens around singleton lists.
-This is done until we get a list which is either not a singleton list
-or does not contain a list.  This is a utility function used in recovering
-slightly munged old BBDB files."
-  (while (and (consp lis)
-	      (null (cdr lis))
-	      (listp (car lis)))
-    (setq lis (car lis)))
-  lis)
-
 ;;;###autoload
-(defun bbdb-migrate (records old-format)
-  "Migrate the BBDB from the version on disk to the current version
-\(in `bbdb-file-format')."
+(defun bbdb-migrate (records old)
+  "Migrate RECORDS from format OLD to `bbdb-file-format'."
   ;; Some BBDB files were corrupted by random outer layers of
   ;; parentheses surrounding the actual correct data.  We attempt to
   ;; compensate for this.
-  (setq records (bbdb-peel-the-onion records))
+  (while (and (consp records)
+	      (listp (car records))
+	      (null (cdr records)))
+    (setq records (car records)))
 
-  ;; Add new field `affix'.
-  (if (< old-format 7)
-      (let ((temp records) record)
-        (while (setq record (car temp))
-          (setcar temp (vector (elt record 0) (elt record 1) nil
-                               (elt record 2) (elt record 3) (elt record 4)
-                               (elt record 5) (elt record 6) (elt record 7)
-                               (elt record 8)))
-          (setq temp (cdr temp)))))
-  (mapc (bbdb-migrate-versions-lambda old-format) records)
+  ;; `bbdb-migrate-lambda' uses the usual functions to access and set
+  ;; the fields of a record.  So if a new record format changes
+  ;; the set of fields, we need to make these changes first.
+
+  ;; Format 7: Add new field `affix'.
+  (if (< old 7)
+      (let (new-records)
+        (dolist (record records)
+          (push (vector (elt record 0) (elt record 1) nil
+                        (elt record 2) (elt record 3) (elt record 4)
+                        (elt record 5) (elt record 6) (elt record 7)
+                        (elt record 8))
+                new-records))
+        (setq records (nreverse new-records))))
+
+  ;; Format 9: New field `uuid'.
+  ;; Make `creation-date' and `timestamp' immutable fields.
+  (if (< old 9)
+      (let (new-records)
+        (dolist (record records)
+          (let ((uuid (or (cdr (assq 'uuid (elt record 8)))
+                          (bbdb-uuid)))
+                (creation-date (or (cdr (assq 'creation-date (elt record 8)))
+                                   (format-time-string bbdb-time-stamp-format nil t)))
+                (timestamp (or (cdr (assq 'timestamp (elt record 8)))
+                               (format-time-string bbdb-time-stamp-format nil t))))
+            (push (vector (elt record 0) (elt record 1) (elt record 2)
+                          (elt record 3) (elt record 4) (elt record 5)
+                          (elt record 6) (elt record 7)
+                          (let ((xfields (elt record 8)))
+                            (dolist (elt '(uuid creation-date timestamp))
+                              (setq xfields (assq-delete-all elt xfields)))
+                            xfields)
+                          uuid creation-date timestamp
+                          (elt record 9))
+                  new-records)))
+        (setq records (nreverse new-records))))
+
+  (mapc (bbdb-migrate-lambda old) records)
   records)
 
-(defconst bbdb-migration-spec
-  '((2 (bbdb-record-xfields bbdb-record-set-xfields
-        bbdb-migrate-change-dates))
-    (3 (bbdb-record-address bbdb-record-set-address
-        bbdb-migrate-add-country-field))
+(defconst bbdb-migrate-alist
+  '((3 (bbdb-record-xfields bbdb-record-set-xfields
+        bbdb-migrate-dates))
     (4 (bbdb-record-address bbdb-record-set-address
-        bbdb-migrate-streets-to-list))
+        bbdb-migrate-add-country))
     (5 (bbdb-record-address bbdb-record-set-address
-        bbdb-migrate-postcodes-to-strings))
-    (6 (bbdb-record-xfields bbdb-record-set-xfields
+        bbdb-migrate-streets-to-list))
+    (6 (bbdb-record-address bbdb-record-set-address
+        bbdb-migrate-postcode-to-string))
+    (7 (bbdb-record-xfields bbdb-record-set-xfields
         bbdb-migrate-xfields-to-list)
        (bbdb-record-organization bbdb-record-set-organization
         bbdb-migrate-organization-to-list)))
-  "The alist of (version . migration-spec-list).
-See `bbdb-migrate-record-lambda' for details.")
+  ;; Formats 8 and 9: do nothing
+  "Alist (VERSION . CHANGES).
+CHANGES is a list with elements (GET SET FUNCTION) that expands
+to action (SET record (FUNCTION (GET record))).")
 
-(defun bbdb-migrate-record-lambda (changes)
-  "Return a function which will migrate a single record.
-CHANGES is a `migration-spec-list' containing entries of the form
-
-        (GET SET FUNCTION)
-
-where GET is the function to be used to retrieve the field to be
-modified, and SET is the function to be used to set the field to be
-modified.  FUNCTION will be applied to the result of GET, and its
-results will be saved with SET."
-  (byte-compile `(lambda (record)
-                  ,@(mapcar (lambda (ch)
-                              `(,(cadr ch) record
-                                (,(car (cddr ch))
-                                 (,(car ch) record))))
-                            changes)
-                  record)))
-
-(defun bbdb-migrate-versions-lambda (v0)
-  "Return the function to migrate from V0 to `bbdb-file-format'."
+(defun bbdb-migrate-lambda (old)
+  "Return the function to migrate from OLD to `bbdb-file-format'.
+The manipulations are defined by `bbdb-migrate-alist'."
   (let (spec)
-    (while (< v0 bbdb-file-format)
-      (setq spec (append spec (cdr (assoc v0 bbdb-migration-spec)))
-            v0 (1+ v0)))
-    (bbdb-migrate-record-lambda spec)))
+    (while (<= old bbdb-file-format)
+      (setq spec (append spec (cdr (assoc old bbdb-migrate-alist)))
+            old (1+ old)))
+    `(lambda (record)
+       ,@(mapcar (lambda (change)
+                   ;; (SET record (FUNCTION (GET record)))
+                   `(,(nth 1 change) record ; SET
+                     (,(nth 2 change) ; FUNCTION
+                      (,(nth 0 change) record)))) ; GET
+                 spec)
+       record)))
 
-(defun bbdb-migrate-postcodes-to-strings (addresses)
+(defun bbdb-migrate-postcode-to-string (addresses)
   "Make all postcodes plain strings.
 This uses the code that used to be in `bbdb-address-postcode'."
   ;; apply the function to all addresses in the list and return a
   ;; modified list of addresses
   (mapcar (lambda (address)
-            (let ((postcode (if (stringp (bbdb-address-postcode address))
-                                (bbdb-address-postcode address)
-                              ;; if not a string, make it a string...
-                              (if (consp (bbdb-address-postcode address))
-                                  ;; if a cons cell with two strings
-                                  (if (and (stringp (car (bbdb-address-postcode address)))
-                                           (stringp (car (cdr (bbdb-address-postcode address)))))
-                                      ;; if the second string starts with 4 digits
-                                      (if (string-match "^[0-9][0-9][0-9][0-9]"
-                                                        (car (cdr (bbdb-address-postcode address))))
-                                          (concat (car (bbdb-address-postcode address))
-                                                  "-"
-                                                  (car (cdr (bbdb-address-postcode address))))
-                                        ;; if ("abc" "efg")
-                                        (concat (car (bbdb-address-postcode address))
-                                                " "
-                                                (car (cdr (bbdb-address-postcode address)))))
-                                    ;; if ("SE" (123 45))
-                                    (if (and (stringp (nth 0 (bbdb-address-postcode address)))
-                                             (consp (nth 1 (bbdb-address-postcode address)))
-                                             (integerp (nth 0 (nth 1 (bbdb-address-postcode address))))
-                                             (integerp (nth 1 (nth 1 (bbdb-address-postcode address)))))
-                                        (format "%s-%d %d"
-                                                (nth 0 (bbdb-address-postcode address))
-                                                (nth 0 (nth 1 (bbdb-address-postcode address)))
-                                                (nth 1 (nth 1 (bbdb-address-postcode address))))
-                                      ;; if a cons cell with two numbers
-                                      (if (and (integerp (car (bbdb-address-postcode address)))
-                                               (integerp (car (cdr (bbdb-address-postcode address)))))
-                                          (format "%05d-%04d" (car (bbdb-address-postcode address))
-                                                  (car (cdr (bbdb-address-postcode address))))
-                                        ;; else a cons cell with a string an a number (possible error
-                                        ;; if a cons cell with a number and a string -- note the
-                                        ;; order!)
-                                        (format "%s-%d" (car (bbdb-address-postcode address))
-                                                (car (cdr (bbdb-address-postcode address)))))))
-                                ;; if nil or zero
-                                (if (or (zerop (bbdb-address-postcode address))
-                                        (null (bbdb-address-postcode address)))
-                                    ""
-                                  ;; else a number, could be 3 to 5 digits (possible error: assuming
-                                  ;; no leading zeroes in postcodes)
-                                  (format "%d" (bbdb-address-postcode address)))))))
-              (bbdb-address-set-postcode address postcode))
+            (let ((postcode (bbdb-address-postcode address)))
+              (bbdb-address-set-postcode
+               address
+               (cond ((stringp postcode)
+                      postcode)
+                     ;; nil or zero
+                     ((or (zerop postcode)
+                          (null postcode))
+                      "")
+                     ;; a number
+                     ((numberp postcode)
+                      (format "%d" postcode))
+                     ;; list with two strings
+                     ((and (stringp (nth 0 postcode))
+                           (stringp (nth 1 postcode)))
+                      ;; the second string starts with 4 digits
+                      (if (string-match "^[0-9][0-9][0-9][0-9]"
+                                        (nth 1 postcode))
+                          (format "%s-%s" (nth 0 postcode) (nth 1 postcode))
+                        ;; ("abc" "efg")
+                        (format "%s %s" (nth 0 postcode) (nth 1 postcode))))
+                     ;; list with two numbers
+                     ((and (integerp (nth 0 postcode))
+                           (integerp (nth 1 postcode)))
+                      (format "%05d-%04d" (nth 0 postcode) (nth 1 postcode)))
+                     ;; list with a string and a number
+                     ((and (stringp (nth 0 postcode))
+                           (integerp (nth 1 postcode)))
+                      (format "%s-%d" (nth 0 postcode) (nth 1 postcode)))
+                     ;; ("SE" (123 45))
+                     ((and (stringp (nth 0 postcode))
+                           (integerp (nth 0 (nth 1 postcode)))
+                           (integerp (nth 1 (nth 1 postcode))))
+                      (format "%s-%d %d" (nth 0 postcode) (nth 0 (nth 1 postcode))
+                              (nth 1 (nth 1 postcode))))
+                     ;; last possibility
+                     (t (format "%s" postcode)))))
             address)
           addresses))
 
-(defun bbdb-migrate-change-dates (record)
+(defun bbdb-migrate-dates (xfields)
   "Change date formats.
 Formats are changed in timestamp and creation-date fields from
 \"dd mmm yy\" to \"yyyy-mm-dd\"."
-  (unless (stringp record)
-    (mapc (lambda (rr)
-                 (when (memq (car rr) '(creation-date timestamp))
-                   (bbdb-migrate-change-dates-change-field rr)))
-               record)
-    record))
+  (unless (stringp xfields)
+    (mapc (lambda (xfield)
+            (when (memq (car xfield) '(creation-date timestamp))
+              (bbdb-migrate-date xfield)))
+          xfields)
+    xfields))
 
-(defun bbdb-migrate-change-dates-change-field (field)
-  "Migrate the date field (the cdr of FIELD) from \"dd mmm yy\" to
-\"yyyy-mm-dd\"."
-  (let ((date (cdr field))
-    parsed)
-    ;; Verify and extract - this is fairly hideous
-    (and (equal (setq parsed (timezone-parse-date (concat date " 00:00:00")))
-        ["0" "0" "0" "0" nil])
-     (equal (setq parsed (timezone-parse-date date))
-        ["0" "0" "0" "0" nil])
-     (cond ((string-match
-         "^\\([0-9]\\{4\\}\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)" date)
-        (setq parsed (vector (string-to-number (match-string 1 date))
-                     (string-to-number (match-string 2 date))
-                     (string-to-number (match-string 3 date))))
-        ;; This should be fairly loud for GNU Emacs users
-        (bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
-               (car field) (cdr field)
-               (upcase-initials
-                (downcase (car (rassoc (aref parsed 1)
-                           timezone-months-assoc))))
-               (aref parsed 2) (aref parsed 0)))
-           ((string-match
-         "^\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([0-9]\\{4\\}\\)" date)
-        (setq parsed (vector (string-to-number (match-string 3 date))
-                     (string-to-number (match-string 1 date))
-                     (string-to-number (match-string 2 date))))
-        ;; This should be fairly loud for GNU Emacs users
-        (bbdb-warn "BBDB is treating %s field value %s as %s %d %d"
-               (car field) (cdr field)
-               (upcase-initials
-                (downcase (car (rassoc (aref parsed 1)
-                           timezone-months-assoc))))
-               (aref parsed 2) (aref parsed 0)))
-           (t ["0" "0" "0" "0" nil])))
+(defun bbdb-migrate-date (field)
+  "Convert date field FIELD from \"dd mmm yy\" to \"yyyy-mm-dd\"."
+  (let* ((date (cdr field))
+         (parsed (timezone-parse-date (concat date " 00:00:00"))))
+    ;; If `timezone-parse-date' cannot make sense of its arg DATE
+    ;; it returns ["0" "0" "0" "0" nil].
+    (if (equal parsed ["0" "0" "0" "0" nil])
+        (setq parsed (timezone-parse-date date)))
+    (when (equal parsed ["0" "0" "0" "0" nil])
+      (cond ((string-match
+              "^\\([0-9]\\{4\\}\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)" date)
+             (setq parsed (vector (match-string 1 date) (match-string 2 date)
+                                  (match-string 3 date))))
+            ((string-match
+              "^\\([ 0-9]?[0-9]\\)[-/]\\([ 0-9]?[0-9]\\)[-/]\\([0-9]\\{4\\}\\)" date)
+             (setq parsed (vector (match-string 3 date) (match-string 1 date)
+                                  (match-string 2 date))))))
 
-    ;; I like numbers
-    (and (stringp (aref parsed 0))
-     (aset parsed 0 (string-to-number (aref parsed 0))))
-    (and (stringp (aref parsed 1))
-     (aset parsed 1 (string-to-number (aref parsed 1))))
-    (and (stringp (aref parsed 2))
-     (aset parsed 2 (string-to-number (aref parsed 2))))
+    ;; We need numbers for the following sanity check
+    (dotimes (i 3)
+      (if (stringp (aref parsed i))
+          (aset parsed i (string-to-number (aref parsed i)))))
 
     ;; Sanity check
-    (cond ((and (< 0 (aref parsed 0))
-        (< 0 (aref parsed 1)) (>= 12 (aref parsed 1))
-        (< 0 (aref parsed 2))
-        (>= (timezone-last-day-of-month (aref parsed 1)
-                        (aref parsed 0))
-            (aref parsed 2)))
-       (setcdr field (format "%04d-%02d-%02d" (aref parsed 0)
-                 (aref parsed 1) (aref parsed 2)))
-       field)
-      (t
-       (error "BBDB cannot parse %s header value %S for upgrade"
-          field date)))))
+    (if (and (< 0 (aref parsed 0))
+             (< 0 (aref parsed 1)) (< (aref parsed 1) 13)
+             (< 0 (aref parsed 2))
+             (<= (aref parsed 2)
+                 (timezone-last-day-of-month (aref parsed 1) (aref parsed 0))))
+        (setcdr field (format "%04d-%02d-%02d" (aref parsed 0)
+                              (aref parsed 1) (aref parsed 2)))
+      (error "BBDB cannot parse %s header value %S for upgrade"
+             field date))))
 
-(defun bbdb-migrate-add-country-field (addrl)
+(defun bbdb-migrate-add-country (addrl)
   "Add a country field to each address in the address list."
-  (mapcar (lambda (address) (vconcat address [""])) addrl))
+  (mapcar (lambda (address) (vconcat address [bbdb-default-country])) addrl))
 
 (defun bbdb-migrate-streets-to-list (addrl)
   "Convert the streets to a list."
   (mapcar (lambda (address)
-            (vector (aref address 0) ; tag
+            (vector (aref address 0) ; key
                     (delq nil (delete "" ; nuke empties
                                       (list (aref address 1) ; street1
                                             (aref address 2) ; street2
@@ -257,7 +240,7 @@ Formats are changed in timestamp and creation-date fields from
 (defun bbdb-migrate-xfields-to-list (xfields)
   "Migrate XFIELDS to list."
   (if (stringp xfields)
-      (list (cons 'notes xfields))
+      `((notes . ,xfields))
     xfields))
 
 (defun bbdb-migrate-organization-to-list (organization)
@@ -282,7 +265,8 @@ for outdated BBDB variables that are set via your personal `custom-file'."
     (mapatoms (lambda (vv)
                 (if (and (boundp vv)
                          (string-match re (symbol-name vv))
-                         (not (get vv 'variable-documentation)))
+                         (not (get vv 'variable-documentation))
+                         (not (get vv 'byte-obsolete-variable)))
                     (push vv list))))
     (if message
         (if list
