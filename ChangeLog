@@ -1,4 +1,7 @@
 2017-08-09  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-migrate.el (bbdb-migrate-uuid-xfield): New variable.
+
+2017-08-09  Roland Winkler  <winkler@gnu.org>
 	New field uuid.  Make creation-date and timestamp immutable.
 	* lisp/bbdb.el (bbdb-create-hook, bbdb-change-hook): Use
 	defcustom.

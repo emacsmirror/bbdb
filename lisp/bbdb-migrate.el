@@ -42,6 +42,9 @@
 
 ;;; Migrating the BBDB
 
+(defvar bbdb-migrate-uuid-xfield 'uuid
+  "Xfield holding a uuid in file format 8.")
+
 ;;;###autoload
 (defun bbdb-migrate (records old)
   "Migrate RECORDS from format OLD to `bbdb-file-format'."
@@ -73,7 +76,7 @@
   (if (< old 9)
       (let (new-records)
         (dolist (record records)
-          (let ((uuid (or (cdr (assq 'uuid (elt record 8)))
+          (let ((uuid (or (cdr (assq bbdb-migrate-uuid-xfield (elt record 8)))
                           (bbdb-uuid)))
                 (creation-date (or (cdr (assq 'creation-date (elt record 8)))
                                    (format-time-string bbdb-time-stamp-format nil t)))
