@@ -13,9 +13,9 @@ To check it out, use
 git clone git://git.savannah.nongnu.org/bbdb.git
 
 Questions, comments, suggestions, and bug reports may be directed to
-the BBDB mailing list at bbdb-info@lists.sourceforge.net.
-To subscribe, send mail to bbdb-info-request@lists.sourceforge.net,
-with 'subscribe' as the subject.
+the BBDB mailing list at bbdb-user@nongnu.org.
+To subscribe to this list, go to
+https://lists.nongnu.org/mailman/listinfo/bbdb-user.
 
 ==================================================================
 Installation:   (see also the generic file INSTALL)
