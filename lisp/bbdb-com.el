@@ -182,7 +182,7 @@ With prefix ARG a negative number, do not invert next search."
   (bbdb-prefix-message))
 
 (defmacro bbdb-search (records &rest spec)
-  "Generate code to search RECORDS for fields matching SPEC.
+  "Search RECORDS for fields matching SPEC.
 The following keywords are supported in SPEC to search fields in RECORDS
 matching the regexps RE:
 
@@ -805,15 +805,15 @@ but does ensure that there will not be name collisions."
       (bbdb-error-retry
        (setq name (bbdb-read-name first-and-last))
        (bbdb-check-name (car name) (cdr name)))
-      (bbdb-record-set-firstname (car name) record)
-      (bbdb-record-set-lastname (cdr name) record))
+      (bbdb-record-set-firstname record (car name))
+      (bbdb-record-set-lastname record (cdr name)))
 
     ;; organization
-    (bbdb-record-set-organization (bbdb-read-organization) record)
+    (bbdb-record-set-organization record (bbdb-read-organization))
 
     ;; mail
-    (bbdb-record-set-mail (bbdb-split 'mail (bbdb-read-string "E-Mail Addresses: "))
-                          record)
+    (bbdb-record-set-mail
+     record (bbdb-split 'mail (bbdb-read-string "E-Mail Addresses: ")))
     ;; address
     (let (addresses label address)
       (while (not (string= ""
@@ -825,7 +825,7 @@ but does ensure that there will not be name collisions."
         (setq address (make-vector bbdb-address-length nil))
         (bbdb-record-edit-address address label t)
         (push address addresses))
-      (bbdb-record-set-address (nreverse addresses) record))
+      (bbdb-record-set-address record (nreverse addresses)))
 
     ;; phones
     (let (phones phone-list label)
@@ -842,12 +842,13 @@ but does ensure that there will not be name collisions."
                                   (format "(%03d) "
                                           bbdb-default-area-code))))))
         (push (apply 'vector label phone-list) phones))
-      (bbdb-record-set-phone (nreverse phones) record))
+      (bbdb-record-set-phone record (nreverse phones)))
 
     ;; `bbdb-default-xfield'
     (let ((xfield (bbdb-read-xfield bbdb-default-xfield)))
       (unless (string= "" xfield)
-        (bbdb-record-set-xfields (list (cons bbdb-default-xfield xfield)))))
+        (bbdb-record-set-xfields
+         record (list (cons bbdb-default-xfield xfield)))))
 
     record))
 
@@ -895,7 +896,8 @@ Do not call this from a program; call `bbdb-create-internal' instead."
 
 (defsubst bbdb-split-maybe (separator string)
   "Split STRING into list of substrings bounded by matches for SEPARATORS.
-If STRING is not a string, return STRING"
+If STRING is a list, return STRING.  Throw error if STRING is neither a string
+nor a list."
   (cond ((stringp string)
          (bbdb-split separator string))
         ((listp string) string)

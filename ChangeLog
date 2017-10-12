@@ -1,3 +1,7 @@
+2017-10-11  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-search, bbdb-split-maybe): Fix docstring.
+	(bbdb-read-record): Fix calling sequence for calls to set record.
+
 2017-08-09  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-migrate.el (bbdb-migrate-uuid-xfield): New variable.
 
