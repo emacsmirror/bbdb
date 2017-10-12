@@ -1,4 +1,10 @@
 2017-10-11  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-parse-records): Query before migrating BBDB
+	to new format.
+	(bbdb-delete-record-internal, bbdb-insert-record-internal)
+	(bbdb-overwrite-record-internal): Barf if buffer is read-only.
+
+2017-10-11  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-com.el (bbdb-search, bbdb-split-maybe): Fix docstring.
 	(bbdb-read-record): Fix calling sequence for calls to set record.
 

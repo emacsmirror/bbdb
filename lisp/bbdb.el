@@ -3295,144 +3295,159 @@ Return nil otherwise."
 
 (defun bbdb-parse-records ()
   "Parse BBDB records and initialize various internal variables.
-If `bbdb-file' uses an outdated format, it is migrated to `bbdb-file-format'."
-  (unless bbdb-silent (message "Parsing BBDB..."))
+If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
   (save-excursion
     (save-restriction
       (widen)
       (bbdb-goto-first-record)
-      ;; look backwards for file-format, and convert if necessary.
-      (let ((file-format (save-excursion
-                           (if (re-search-backward
-                                "^;+[ \t]*file-\\(format\\|version\\):[ \t]*\\([0-9]+\\)[ \t]*$" nil t)
-                               (string-to-number (match-string 2)))))
-            migrate records)
-        (unless file-format ; current file-format, but no file-format: line.
-          (error "BBDB corrupted: no file-format line"))
+      (let* ((file (abbreviate-file-name buffer-file-name))
+             (file-format (save-excursion
+                            (if (re-search-backward
+                                 "^;+[ \t]*file-\\(format\\|version\\):[ \t]*\\([0-9]+\\)[ \t]*$" nil t)
+                                (string-to-number (match-string 2))
+                              ;; No file-format line.
+                              (error "BBDB corrupted: no file-format line"))))
+             (migrate (< file-format bbdb-file-format))
+             records)
         (if (> file-format bbdb-file-format)
             (error "BBDB version %s understands file format %s but not %s."
-                   bbdb-version bbdb-file-format file-format)
-          (setq migrate (< file-format bbdb-file-format)))
+                   bbdb-version bbdb-file-format file-format))
 
-        (or (eobp) (looking-at "\\[")
-            (error "BBDB corrupted: no following bracket"))
+        (if (and migrate
+                 (not (yes-or-no-p
+                       (format (concat "Migrate `%s' to BBDB file format %s "
+                                       "(back-up recommended)? ")
+                               file bbdb-file-format))))
+            (progn
+              (message "Abort loading %s" file)
+              (sleep-for 2)
+              (setq bbdb-records nil
+                    ;; Avoid unexpected surprises
+                    buffer-read-only t)
+              'abort)
 
-        ;; narrow the buffer to skip over the rubbish before the first record.
-        (narrow-to-region (point) (point-max))
-        (let ((modp (buffer-modified-p))
-              ;; Make sure those parens get cleaned up.
-              ;; This code had better stay simple!
-              (inhibit-quit t)
-              (buffer-undo-list t)
-              buffer-read-only)
-          (goto-char (point-min)) (insert "(\n")
-          (goto-char (point-max)) (insert "\n)")
-          (goto-char (point-min))
-          (unwind-protect
-              (setq records (read (current-buffer)))
-            (goto-char (point-min)) (delete-char 2)
-            (goto-char (point-max)) (delete-char -2)
-            (set-buffer-modified-p modp)))
-        (widen)
+          (or (eobp) (looking-at "\\[")
+              (error "BBDB corrupted: no following bracket"))
 
-        ;; Migrate if `bbdb-file' is outdated.
-        (if migrate (setq records (bbdb-migrate records file-format)))
+          (unless bbdb-silent (message "Parsing BBDB file `%s'..." file))
 
-        ;; We could first set `bbdb-phone-label-list' and
-        ;; `bbdb-address-label-list' to their customized values.  Bother?
-        (setq bbdb-records records
-              bbdb-xfield-label-list nil
-              bbdb-organization-list nil
-              bbdb-street-list nil
-              bbdb-city-list nil
-              bbdb-state-list nil
-              bbdb-postcode-list nil
-              bbdb-country-list nil)
+          ;; narrow the buffer to skip over the rubbish before the first record.
+          (narrow-to-region (point) (point-max))
+          (let ((modp (buffer-modified-p))
+                ;; Make sure those parens get cleaned up.
+                ;; This code had better stay simple!
+                (inhibit-quit t)
+                (buffer-undo-list t)
+                buffer-read-only)
+            (goto-char (point-min)) (insert "(\n")
+            (goto-char (point-max)) (insert "\n)")
+            (goto-char (point-min))
+            (unwind-protect
+                (setq records (read (current-buffer)))
+              (goto-char (point-min)) (delete-char 2)
+              (goto-char (point-max)) (delete-char -2)
+              (set-buffer-modified-p modp)))
+          (widen)
 
-        (bbdb-goto-first-record)
-        (dolist (record records)
-          ;; We assume that the markers for each record need to go at each
-          ;; newline.  If this is not the case, things can go *very* wrong.
-          (bbdb-debug
-            (unless (looking-at "\\[")
-              (error "BBDB corrupted: junk between records at %s" (point))))
+          ;; Migrate if `bbdb-file' is outdated.
+          (if migrate (setq records (bbdb-migrate records file-format)))
 
-          (bbdb-cache-set-marker
-           (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
-           (point-marker))
-          (forward-line 1)
+          ;; We could first set `bbdb-phone-label-list' and
+          ;; `bbdb-address-label-list' to their customized values.  Bother?
+          (setq bbdb-records records
+                bbdb-xfield-label-list nil
+                bbdb-organization-list nil
+                bbdb-street-list nil
+                bbdb-city-list nil
+                bbdb-state-list nil
+                bbdb-postcode-list nil
+                bbdb-country-list nil)
 
-          ;; Every record must have a unique uuid in `bbdb-uuid-table'.
-          (if (gethash (bbdb-record-uuid record) bbdb-uuid-table)
-              ;; Is there a more useful action than throwing an error?
-              ;; We are just loading BBDB, so we are not yet ready
-              ;; for sophisticated solutions.
-              (error "Duplicate UUID %s" (bbdb-record-uuid record)))
+          (bbdb-goto-first-record)
+          (dolist (record records)
+            ;; We assume that the markers for each record need to go at each
+            ;; newline.  If this is not the case, things can go *very* wrong.
+            (bbdb-debug
+              (unless (looking-at "\\[")
+                (error "BBDB corrupted: junk between records at %s" (point))))
 
-          ;; If `bbdb-allow-duplicates' is non-nil, we allow that two records
-          ;; (with different uuids) refer to the same person (same name etc.).
-          ;; Such duplicate records are always hashed.
-          ;; Otherwise, an unhashed record would not be available for things
-          ;; like completion (and we would not know which record to keeep
-          ;; and which one to hide).  We trust the user she knows what
-          ;; she wants if she keeps duplicate records in the database though
-          ;; `bbdb-allow-duplicates' is nil.
-          (bbdb-hash-record record)
+            (bbdb-cache-set-marker
+             (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
+             (point-marker))
+            (forward-line 1)
 
-          ;; Set the completion lists
-          (dolist (phone (bbdb-record-phone record))
-            (bbdb-pushnew (bbdb-phone-label phone) bbdb-phone-label-list))
-          (dolist (address (bbdb-record-address record))
-            (bbdb-pushnew (bbdb-address-label address) bbdb-address-label-list)
-            (mapc (lambda (street) (bbdb-pushnewt street bbdb-street-list))
-                  (bbdb-address-streets address))
-            (bbdb-pushnewt (bbdb-address-city address) bbdb-city-list)
-            (bbdb-pushnewt (bbdb-address-state address) bbdb-state-list)
-            (bbdb-pushnewt (bbdb-address-postcode address) bbdb-postcode-list)
-            (bbdb-pushnewt (bbdb-address-country address) bbdb-country-list))
-          (dolist (xfield (bbdb-record-xfields record))
-            (bbdb-pushnewq (car xfield) bbdb-xfield-label-list))
-          (dolist (organization (bbdb-record-organization record))
-            (bbdb-pushnew organization bbdb-organization-list))
+            ;; Every record must have a unique uuid in `bbdb-uuid-table'.
+            (if (gethash (bbdb-record-uuid record) bbdb-uuid-table)
+                ;; Is there a more useful action than throwing an error?
+                ;; We are just loading BBDB, so we are not yet ready
+                ;; for sophisticated solutions.
+                (error "Duplicate UUID %s" (bbdb-record-uuid record)))
 
-          (let ((name (bbdb-concat 'name-first-last
-                                   (bbdb-record-firstname record)
-                                   (bbdb-record-lastname record))))
-            (when (and (not bbdb-allow-duplicates)
-                       (bbdb-gethash name '(fl-name aka)))
-              ;; This does not check for duplicate mail fields.
-              ;; Yet under normal circumstances, this should really
-              ;; not be necessary each time BBDB is loaded as BBDB checks
-              ;; whether creating a new record or modifying an existing one
-              ;; results in duplicates.
-              ;; Alternatively, you can use `bbdb-search-duplicates'.
-              (message "Duplicate BBDB record encountered: %s" name)
-              (sit-for 1))))
+            ;; If `bbdb-allow-duplicates' is non-nil, we allow that two records
+            ;; (with different uuids) refer to the same person (same name etc.).
+            ;; Such duplicate records are always hashed.
+            ;; Otherwise, an unhashed record would not be available for things
+            ;; like completion (and we would not know which record to keeep
+            ;; and which one to hide).  We trust the user she knows what
+            ;; she wants if she keeps duplicate records in the database though
+            ;; `bbdb-allow-duplicates' is nil.
+            (bbdb-hash-record record)
 
-        ;; Note that `bbdb-xfield-label-list' serves two purposes:
-        ;;  - check whether an xfield is new to BBDB
-        ;;  - list of known xfields for minibuffer completion
-        ;; Only in the latter case, we might want to exclude
-        ;; those xfields that are handled automatically.
-        ;; So the following is not a satisfactory solution.
+            ;; Set the completion lists
+            (dolist (phone (bbdb-record-phone record))
+              (bbdb-pushnew (bbdb-phone-label phone) bbdb-phone-label-list))
+            (dolist (address (bbdb-record-address record))
+              (bbdb-pushnew (bbdb-address-label address) bbdb-address-label-list)
+              (mapc (lambda (street) (bbdb-pushnewt street bbdb-street-list))
+                    (bbdb-address-streets address))
+              (bbdb-pushnewt (bbdb-address-city address) bbdb-city-list)
+              (bbdb-pushnewt (bbdb-address-state address) bbdb-state-list)
+              (bbdb-pushnewt (bbdb-address-postcode address) bbdb-postcode-list)
+              (bbdb-pushnewt (bbdb-address-country address) bbdb-country-list))
+            (dolist (xfield (bbdb-record-xfields record))
+              (bbdb-pushnewq (car xfield) bbdb-xfield-label-list))
+            (dolist (organization (bbdb-record-organization record))
+              (bbdb-pushnew organization bbdb-organization-list))
 
-        ;; (dolist (label (bbdb-layout-get-option 'multi-line 'omit))
-        ;;   (setq bbdb-xfield-label-list (delq label bbdb-xfield-label-list)))
+            (let ((name (bbdb-concat 'name-first-last
+                                     (bbdb-record-firstname record)
+                                     (bbdb-record-lastname record))))
+              (when (and (not bbdb-allow-duplicates)
+                         (bbdb-gethash name '(fl-name aka)))
+                ;; This does not check for duplicate mail fields.
+                ;; Yet under normal circumstances, this should really
+                ;; not be necessary each time BBDB is loaded as BBDB checks
+                ;; whether creating a new record or modifying an existing one
+                ;; results in duplicates.
+                ;; Alternatively, you can use `bbdb-search-duplicates'.
+                (message "Duplicate BBDB record encountered: %s" name)
+                (sit-for 1))))
 
-        ;; `bbdb-end-marker' allows to put comments at the end of `bbdb-file'
-        ;; that are ignored.
-        (setq bbdb-end-marker (point-marker))
+          ;; Note that `bbdb-xfield-label-list' serves two purposes:
+          ;;  - check whether an xfield is new to BBDB
+          ;;  - list of known xfields for minibuffer completion
+          ;; Only in the latter case, we might want to exclude
+          ;; those xfields that are handled automatically.
+          ;; So the following is not a satisfactory solution.
 
-        (when migrate
-          (dolist (record bbdb-records)
-            (bbdb-overwrite-record-internal record))
-          ;; update file format
-          (goto-char (point-min))
-          (if (re-search-forward (format "^;;; file-\\(version\\|format\\): %d$"
-                                         file-format) nil t)
-              (replace-match (format ";;; file-format: %d" bbdb-file-format)))))))
+          ;; (dolist (label (bbdb-layout-get-option 'multi-line 'omit))
+          ;;   (setq bbdb-xfield-label-list (delq label bbdb-xfield-label-list)))
 
-  (unless bbdb-silent (message "Parsing BBDB...done")))
+          ;; `bbdb-end-marker' allows to put comments at the end of `bbdb-file'
+          ;; that are ignored.
+          (setq bbdb-end-marker (point-marker))
+
+          (when migrate
+            (dolist (record bbdb-records)
+              (bbdb-overwrite-record-internal record))
+            ;; update file format
+            (goto-char (point-min))
+            (if (re-search-forward (format "^;;; file-\\(version\\|format\\): %d$"
+                                           file-format) nil t)
+                (replace-match (format ";;; file-format: %d" bbdb-file-format))))
+
+          (unless bbdb-silent (message "Parsing BBDB file `%s'...done" file))
+          bbdb-records)))))
 
 (defun bbdb-before-save ()
   "Run before saving `bbdb-file' as buffer-local part of `before-save-hook'."
@@ -3547,6 +3562,7 @@ from the hash table."
   (unless (bbdb-record-marker record) (error "BBDB: marker absent"))
   (if completely (bbdb-redisplay-record-globally record nil t))
   (bbdb-with-db-buffer
+    (barf-if-buffer-read-only)
     (let ((tail (memq record bbdb-records))
           (inhibit-quit t))
       (unless tail (error "BBDB record absent: %s" record))
@@ -3572,6 +3588,7 @@ that calls the hooks, too."
   (unless (bbdb-record-marker record)
     (bbdb-record-set-marker record (make-marker)))
   (bbdb-with-db-buffer
+    (barf-if-buffer-read-only)
     ;; splice record into `bbdb-records'
     (bbdb-debug (if (memq record bbdb-records)
                     (error "BBDB record not unique: - %s" record)))
@@ -3612,6 +3629,7 @@ that calls the hooks, too."
 Do not call this function directly, call instead `bbdb-change-record'
 that calls the hooks, too."
   (bbdb-with-db-buffer
+    (barf-if-buffer-read-only)
     (let* ((tail (memq record bbdb-records))
            (_ (unless tail (error "BBDB record absent: %s" record)))
            (cache (bbdb-record-cache record))
