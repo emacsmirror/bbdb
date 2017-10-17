@@ -1,3 +1,7 @@
+2017-10-17  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el (bbdb-parse-records): Bug fix, hash record after
+	checking for duplicates.
+
 2017-10-11  Roland Winkler  <winkler@gnu.org>
 	* configure.ac: Use it.
 	* lisp/bbdb.el: Mention new mailing list bbdb-user@nongnu.org.

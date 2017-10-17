@@ -3381,16 +3381,6 @@ If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
                 ;; for sophisticated solutions.
                 (error "Duplicate UUID %s" (bbdb-record-uuid record)))
 
-            ;; If `bbdb-allow-duplicates' is non-nil, we allow that two records
-            ;; (with different uuids) refer to the same person (same name etc.).
-            ;; Such duplicate records are always hashed.
-            ;; Otherwise, an unhashed record would not be available for things
-            ;; like completion (and we would not know which record to keeep
-            ;; and which one to hide).  We trust the user she knows what
-            ;; she wants if she keeps duplicate records in the database though
-            ;; `bbdb-allow-duplicates' is nil.
-            (bbdb-hash-record record)
-
             ;; Set the completion lists
             (dolist (phone (bbdb-record-phone record))
               (bbdb-pushnew (bbdb-phone-label phone) bbdb-phone-label-list))
@@ -3419,7 +3409,17 @@ If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
                 ;; results in duplicates.
                 ;; Alternatively, you can use `bbdb-search-duplicates'.
                 (message "Duplicate BBDB record encountered: %s" name)
-                (sit-for 1))))
+                (sit-for 1)))
+
+            ;; If `bbdb-allow-duplicates' is non-nil, we allow that two records
+            ;; (with different uuids) refer to the same person (same name etc.).
+            ;; Such duplicate records are always hashed.
+            ;; Otherwise, an unhashed record would not be available for things
+            ;; like completion (and we would not know which record to keeep
+            ;; and which one to hide).  We trust the user she knows what
+            ;; she wants if she keeps duplicate records in the database though
+            ;; `bbdb-allow-duplicates' is nil.
+            (bbdb-hash-record record))
 
           ;; Note that `bbdb-xfield-label-list' serves two purposes:
           ;;  - check whether an xfield is new to BBDB
