@@ -1,3 +1,21 @@
+2017-11-17  Stefan Monnier <monnier@iro.umontreal.ca>
+	Prepare BBDB for elpa.git.
+	* lisp/bbdb-anniv.el, lisp/bbdb-com.el, lisp/bbdb-ispell.el:
+	* lisp/bbdb-message.el, lisp/bbdb-mhe.el, lisp/bbdb-migrate.el:
+	* lisp/bbdb-mu4e.el, lisp/bbdb-mua.el, lisp/bbdb-pgp.el:
+	* lisp/bbdb-rmail.el, lisp/bbdb-site.el.in, lisp/bbdb-snarf.el:
+	* lisp/bbdb-tex.el, lisp/bbdb-wl.el, lisp/bbdb.el: Update
+	copyright notice.  Follow conventions for comments.  Use
+	declare-function.  Provide arg WHEN for
+	define-obsolete-function-alias and define-obsolete-variable-alias.
+	* lisp/bbdb-site.el.in (bbdb-version-date): Remove.
+	(bbdb-tex-path): Use more flexible default.
+	* lisp/bbdb.el (bbdb-parse-records): Use function bbdb-version.
+	(bbdb-version): Use version header if variable bbdb-version is not
+	set sensibly.
+	* README, NEWS, TODO, tex/bbdb.sty, doc/bbdb.texi: Update
+	copyright notice.
+
 2017-10-17  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-parse-records): Bug fix, hash record after
 	checking for duplicates.
@@ -2312,7 +2330,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+  Copyright (C) 2010-2017 Free Software Foundation, Inc.
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 

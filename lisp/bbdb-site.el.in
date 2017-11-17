@@ -1,6 +1,6 @@
 ;;; bbdb-site.el.in --- site-specific variables for BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -24,14 +24,20 @@
 (if (< emacs-major-version 24)
   (error "BBDB %s requires GNU Emacs 24 or later" bbdb-version))
 
-(defconst bbdb-version-date "@PACKAGE_DATE@"
-  "Version date of BBDB.")
-
-(defcustom bbdb-tex-path '("@pkgdatadir@")
+(defcustom bbdb-tex-path
+  (let* ((default "@pkgdatadir@")
+         (dir (cond ((file-accessible-directory-p default)
+                     default)
+                    (load-file-name
+                     (expand-file-name "tex/" (file-name-directory load-file-name)))
+                    (t
+                     (let ((f (locate-file "tex/bbdb.sty" load-path)))
+                       (if f (file-name-directory f)))))))
+    (if dir (list dir)))
   "List of directories with the BBDB TeX files.
 If this is t assume that these files reside in directories
-that are part of the regular TeX search path"
-  :group 'bbdb-utilities-print
+that are part of the regular TeX search path."
+  :group 'bbdb-utilities-tex
   :type '(choice (const :tag "Files in TeX path" t)
                  (repeat (directory :tag "Directory"))))
 

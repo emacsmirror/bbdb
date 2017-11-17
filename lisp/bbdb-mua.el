@@ -1,7 +1,6 @@
 ;;; bbdb-mua.el --- various MUA functionality for BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -19,19 +18,19 @@
 ;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;; This file provides various additional functionality for BBDB
-;;; See the BBDB info manual for documentation.
+;; This file provides various additional functionality for BBDB
+;; See the BBDB info manual for documentation.
 
-;;; This file lets you do stuff like
-;;;
-;;; o  automatically add some string to some field(s) based on the
-;;;    contents of header fields of the current message
-;;; o  only automatically create records when certain header fields
-;;;    are matched
-;;; o  do not automatically create records when certain header fields
-;;;    are matched
-;;;
-;;; Read the docstrings; read the texinfo file.
+;; This file lets you do stuff like
+;;
+;; o  automatically add some string to some field(s) based on the
+;;    contents of header fields of the current message
+;; o  only automatically create records when certain header fields
+;;    are matched
+;; o  do not automatically create records when certain header fields
+;;    are matched
+;;
+;; Read the docstrings; read the texinfo file.
 
 ;;; Code:
 

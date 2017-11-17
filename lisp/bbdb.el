@@ -1,7 +1,9 @@
 ;;; bbdb.el --- core of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 1991, 1992, 1993, 1994 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+
+;; Version: 3.2
+;; Package-Requires: ((emacs "24"))
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -19,17 +21,18 @@
 ;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;; This file is the core of the Insidious Big Brother Database (aka BBDB),
-;;; See the BBDB info manual for documentation.
-;;;
-;;;  -----------------------------------------------------------------------
-;;; |  There is a mailing list for discussion of BBDB:                      |
-;;; |         bbdb-user@nongnu.org                                          |
-;;; |  To join, go to https://lists.nongnu.org/mailman/listinfo/bbdb-user   |
-;;; |                                                                       |
-;;; |  When joining this list or reporting bugs, please mention which       |
-;;; |  version of BBDB you have.                                            |
-;;;  -----------------------------------------------------------------------
+
+;; This file is the core of the Insidious Big Brother Database (aka BBDB),
+;; See the BBDB info manual for documentation.
+;;
+;;  -----------------------------------------------------------------------
+;; |  There is a mailing list for discussion of BBDB:                      |
+;; |         bbdb-user@nongnu.org                                          |
+;; |  To join, go to https://lists.nongnu.org/mailman/listinfo/bbdb-user   |
+;; |                                                                       |
+;; |  When joining this list or reporting bugs, please mention which       |
+;; |  version of BBDB you have.                                            |
+;;  -----------------------------------------------------------------------
 
 ;;; Code:
 
@@ -37,23 +40,22 @@
 (require 'bbdb-site)
 
 ;; When running BBDB, we have (require 'bbdb-autoloads)
-(eval-when-compile              ; pacify the compiler.
-  (autoload 'widget-group-match "wid-edit")
-  (autoload 'bbdb-migrate "bbdb-migrate")
-  (autoload 'bbdb-do-records "bbdb-com")
-  (autoload 'bbdb-append-display-p "bbdb-com")
-  (autoload 'bbdb-toggle-records-layout "bbdb-com")
-  (autoload 'bbdb-dwim-mail "bbdb-com")
-  (autoload 'bbdb-layout-prefix "bbdb-com")
-  (autoload 'bbdb-completing-read-records "bbdb-com")
-  (autoload 'bbdb-merge-records "bbdb-com")
-  (autoload 'mail-position-on-field "sendmail")
-  (autoload 'vm-select-folder-buffer "vm-folder")
+(declare-function widget-group-match "wid-edit")
+(declare-function bbdb-migrate "bbdb-migrate")
+(declare-function bbdb-do-records "bbdb-com")
+(declare-function bbdb-append-display-p "bbdb-com")
+(declare-function bbdb-toggle-records-layout "bbdb-com")
+(declare-function bbdb-dwim-mail "bbdb-com")
+(declare-function bbdb-layout-prefix "bbdb-com")
+(declare-function bbdb-completing-read-records "bbdb-com")
+(declare-function bbdb-merge-records "bbdb-com")
+(declare-function mail-position-on-field "sendmail")
+(declare-function vm-select-folder-buffer "vm-folder")
 
-  ;; cannot use autoload for variables...
-  (defvar message-mode-map) ;; message.el
-  (defvar mail-mode-map) ;; sendmail.el
-  (defvar gnus-article-buffer)) ;; gnus-art.el
+;; cannot use autoload for variables...
+(defvar message-mode-map) ;; message.el
+(defvar mail-mode-map) ;; sendmail.el
+(defvar gnus-article-buffer) ;; gnus-art.el
 
 ;; Custom groups
 
@@ -1086,7 +1088,7 @@ See also `bbdb-add-mails' and `bbdb-canonicalize-mail-function'."
                  (function :tag "Function for handling redundant mail addresses")
                  (regexp :tag "If the new address matches this regexp never ignore it.")))
 (define-obsolete-variable-alias 'bbdb-canonicalize-redundant-mails
-  'bbdb-ignore-redundant-mails)
+  'bbdb-ignore-redundant-mails "3.0")
 
 (defcustom bbdb-message-clean-name-function 'bbdb-message-clean-name-default
   "Function to clean up the name in the header of a message.
@@ -1293,7 +1295,7 @@ See also `bbdb-mua-pop-up-window-size' and `bbdb-horiz-pop-up-window-size'."
   :type '(choice (const :tag "MUA BBDB window stacked vertically" t)
                  (const :tag "MUA BBDB window stacked horizontally" horiz)
                  (const :tag "No MUA BBDB window" nil)))
-(define-obsolete-variable-alias 'bbdb-message-pop-up 'bbdb-mua-pop-up)
+(define-obsolete-variable-alias 'bbdb-message-pop-up 'bbdb-mua-pop-up "3.0")
 
 (defcustom bbdb-mua-pop-up-window-size bbdb-pop-up-window-size
   "Vertical size of MUA pop-up BBDB window (vertical split).
@@ -1331,7 +1333,7 @@ weights more than 100 will be in the end."
   :type '(repeat (cons
                   (symbol :tag "xfield")
                   (number :tag "Weight"))))
-(define-obsolete-variable-alias 'bbdb-notes-sort-order 'bbdb-xfields-sort-order)
+(define-obsolete-variable-alias 'bbdb-notes-sort-order 'bbdb-xfields-sort-order "3.0")
 
 (defcustom bbdb-merge-xfield-function-alist nil
   "Alist defining merging functions for particular xfields.
@@ -1342,7 +1344,7 @@ For merging xfield LABEL, this will use MERGE-FUN."
                   (symbol :tag "xfield")
                   (function :tag "merge function"))))
 (define-obsolete-variable-alias 'bbdb-merge-notes-function-alist
-  'bbdb-merge-xfield-function-alist)
+  'bbdb-merge-xfield-function-alist "3.0")
 
 (defcustom bbdb-mua-summary-unification-list
   '(name mail message-name message-mail message-address)
@@ -2790,7 +2792,7 @@ See also `bbdb-record-set-field'."
         ;; Return xfield FIELD (e.g., `notes') or nil if FIELD is not defined.
         ((symbolp field) (bbdb-record-xfield record field))
         (t (error "Unknown field type `%s'" field))))
-(define-obsolete-function-alias 'bbdb-record-get-field 'bbdb-record-field)
+(define-obsolete-function-alias 'bbdb-record-get-field 'bbdb-record-field "3.0")
 
 (defun bbdb-record-set-field (record field value &optional merge check)
   "For RECORD set FIELD to VALUE.  Return VALUE.
@@ -3308,8 +3310,8 @@ If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
              (migrate (< file-format bbdb-file-format))
              records)
         (if (> file-format bbdb-file-format)
-            (error "BBDB version %s understands file format %s but not %s."
-                   bbdb-version bbdb-file-format file-format))
+            (error "%s understands file format %s but not %s."
+                   (bbdb-version) bbdb-file-format file-format))
 
         (if (and migrate
                  (not (yes-or-no-p
@@ -3441,7 +3443,8 @@ If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
             ;; update file format
             (goto-char (point-min))
             (if (re-search-forward (format "^;;; file-\\(version\\|format\\): %d$"
-                                           file-format) nil t)
+                                           file-format)
+                                   nil t)
                 (replace-match (format ";;; file-format: %d" bbdb-file-format))))
 
           (unless bbdb-silent (message "Parsing BBDB file `%s'...done" file))
@@ -3751,7 +3754,7 @@ The formatting rules are defined in `bbdb-address-format-list'."
     string))
 
 ;;; Record display:
-;;; This inserts formatted (pieces of) records into the BBDB buffer.
+;; This inserts formatted (pieces of) records into the BBDB buffer.
 
 (defsubst bbdb-field-property (start field)
   "Set text property bbdb-field of text between START and point to FIELD."
@@ -4243,7 +4246,7 @@ If DELETE-P is non-nil RECORD is removed from the BBDB buffers."
                   (bbdb-redisplay-record record sort delete-p))
               (bbdb-redisplay-record record sort delete-p)))))))
 (define-obsolete-function-alias 'bbdb-maybe-update-display
-  'bbdb-redisplay-record-globally)
+  'bbdb-redisplay-record-globally "3.0")
 
 
 ;;; window configuration hackery
@@ -4630,8 +4633,20 @@ If NOISY is non-nil as in interactive calls issue status messages."
   "Return string describing the version of BBDB.
 With prefix ARG, insert string at point."
   (interactive (list (or (and current-prefix-arg 1) t)))
-  (let ((version-string (format "BBDB version %s (%s)"
-                                bbdb-version bbdb-version-date)))
+  (let* ((version
+          (if (string-match "\\`[ \t\n]*[1-9]" bbdb-version)
+              bbdb-version
+            (let ((source (find-function-noselect 'bbdb-version)))
+              (if source
+                  (with-current-buffer (car source)
+                    (prog1 (save-excursion
+                             (goto-char (point-min))
+                             (when (re-search-forward
+                                    "^;;+ *Version: \\(.*\\)" nil t)
+                               (match-string-no-properties 1)))
+                      (unless (get-buffer-window nil t)
+                        (kill-buffer (current-buffer)))))))))
+         (version-string (format "BBDB version %s" (or version "<unknown>"))))
     (cond ((numberp arg) (insert (message version-string)))
           ((eq t arg) (message version-string))
           (t version-string))))

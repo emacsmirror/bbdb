@@ -1,6 +1,6 @@
 BBDB NEWS -- history of user-visible changes.
 
-Copyright (C) 2013-2017 Roland Winkler <winkler@gnu.org>
+Copyright (C) 2013-2017 Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 This file is about changes in BBDB version 3.
@@ -40,6 +40,8 @@ Initial release
 
 
 ----------------------------------------------------------------------
+Copyright (C) 2013-2017 Free Software Foundation, Inc.
+
 This file is part of the Insidious Big Brother Database (aka BBDB),
 
 BBDB is free software: you can redistribute it and/or modify

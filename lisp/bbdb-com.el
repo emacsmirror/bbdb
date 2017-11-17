@@ -1,7 +1,6 @@
 ;;; bbdb-com.el --- user-level commands of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -19,8 +18,8 @@
 ;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;; This file contains most of the user-level interactive commands for BBDB.
-;;; See the BBDB info manual for documentation.
+;; This file contains most of the user-level interactive commands for BBDB.
+;; See the BBDB info manual for documentation.
 
 ;;; Code:
 
@@ -476,7 +475,7 @@ in either the name(s), organization, address, phone, mail, or xfields."
            (bbdb-layout-prefix))))
   (bbdb-display-records (bbdb-search (bbdb-records) :xfield (cons field regexp))
                         layout))
-(define-obsolete-function-alias 'bbdb-search-notes 'bbdb-search-xfields)
+(define-obsolete-function-alias 'bbdb-search-notes 'bbdb-search-xfields "3.0")
 
 ;;;###autoload
 (defun bbdb-search-changed (&optional layout)
@@ -501,9 +500,9 @@ the record to be displayed or nil otherwise."
 
 ;; clean-up functions
 
-;;; Sometimes one gets mail from foo@bar.baz.com, and then later gets mail
-;;; from foo@baz.com.  At this point, one would like to delete the bar.baz.com
-;;; address, since the baz.com address is obviously superior.
+;; Sometimes one gets mail from foo@bar.baz.com, and then later gets mail
+;; from foo@baz.com.  At this point, one would like to delete the bar.baz.com
+;; address, since the baz.com address is obviously superior.
 
 (defun bbdb-mail-redundant-re (mail)
   "Return a regexp matching redundant variants of email address MAIL.
@@ -565,7 +564,7 @@ which is probably more suited for your needs."
           (when update
             (bbdb-change-record record)))))))
 (define-obsolete-function-alias 'bbdb-delete-duplicate-mails
-  'bbdb-delete-redundant-mails)
+  'bbdb-delete-redundant-mails "3.0")
 
 (defun bbdb-search-duplicates (&optional fields)
   "Search all records that have duplicate entries for FIELDS.
@@ -697,10 +696,10 @@ DATE must be in yyyy-mm-dd format."
    layout))
 
 ;;; Parsing phone numbers
-;;; XXX this needs expansion to handle international prefixes properly
-;;; i.e. +353-number without discarding the +353 part. Problem being
-;;; that this will necessitate yet another change in the database
-;;; format for people who are using north american numbers.
+;; XXX this needs expansion to handle international prefixes properly
+;; i.e. +353-number without discarding the +353 part. Problem being
+;; that this will necessitate yet another change in the database
+;; format for people who are using north american numbers.
 
 (defsubst bbdb-subint (string num)
   "Used for parsing phone numbers."
@@ -1855,7 +1854,7 @@ in `bbdb-change-hook')."
                        (or (cdr (assq (car b) bbdb-xfields-sort-order)) 100)))))
     (if update
         (bbdb-change-record record))))
-(define-obsolete-function-alias 'bbdb-sort-notes 'bbdb-sort-xfields)
+(define-obsolete-function-alias 'bbdb-sort-notes 'bbdb-sort-xfields "3.0")
 
 ;;; Send-Mail interface
 
@@ -2041,7 +2040,7 @@ The primary mail of each of the records currently listed in the
       (insert (car addresses))
       (when (cdr addresses) (insert ",\n") (indent-relative))
       (setq addresses (cdr addresses)))))
-(define-obsolete-function-alias 'bbdb-yank-addresses 'bbdb-mail-yank)
+(define-obsolete-function-alias 'bbdb-yank-addresses 'bbdb-mail-yank "3.0")
 
 ;;; completion
 
@@ -2414,7 +2413,7 @@ as part of the MUA insinuation."
       done)))
 
 ;;;###autoload
-(define-obsolete-function-alias 'bbdb-complete-name 'bbdb-complete-mail)
+(define-obsolete-function-alias 'bbdb-complete-name 'bbdb-complete-mail "3.0")
 
 (defun bbdb-complete-mail-cleanup (mail beg)
   "Clean up after inserting MAIL at position BEG.

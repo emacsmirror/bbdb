@@ -1,7 +1,6 @@
 ;;; bbdb-snarf.el --- convert free-form text to BBDB records -*- lexical-binding: t -*-
 
-;; Copyright (C) 1997 John Heidemann <johnh@isi.edu>
-;; Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -20,20 +19,20 @@
 
 ;;; Commentary:
 
-;;; The commands `bbdb-snarf', `bbdb-snarf-yank' and `bbdb-snarf-paragraph'
-;;; create BBDB records by picking the name, addresses, phones, etc.
-;;; out of a (buffer) string.  Things are recognized by context (e.g., URLs
-;;; start with http:// or www.).  See `bbdb-snarf-rule-alist' for details.
-;;;
-;;; The rule `eu' should work out of the box for many continental
-;;; European countries.  It can be further customized by defining
-;;; a suitable postcode regexp passed to `bbdb-snarf-address-eu'.
-;;; `mail' is a simple rule that can pick a single mail address from,
-;;; say, a long list of mail addresses in a message.
-;;;
-;;; RW: `bbdb-snarf' is an interesting proof of concept.  Yet I find
-;;; its snarfing algorithms often too simplistic to be useful in real life.
-;;; How can this possibly be improved?  Suggestions welcome.
+;; The commands `bbdb-snarf', `bbdb-snarf-yank' and `bbdb-snarf-paragraph'
+;; create BBDB records by picking the name, addresses, phones, etc.
+;; out of a (buffer) string.  Things are recognized by context (e.g., URLs
+;; start with http:// or www.).  See `bbdb-snarf-rule-alist' for details.
+;;
+;; The rule `eu' should work out of the box for many continental
+;; European countries.  It can be further customized by defining
+;; a suitable postcode regexp passed to `bbdb-snarf-address-eu'.
+;; `mail' is a simple rule that can pick a single mail address from,
+;; say, a long list of mail addresses in a message.
+;;
+;; RW: `bbdb-snarf' is an interesting proof of concept.  Yet I find
+;; its snarfing algorithms often too simplistic to be useful in real life.
+;; How can this possibly be improved?  Suggestions welcome.
 
 ;;; Code:
 
@@ -163,7 +162,7 @@ The string LABEL denotes the default label for FIELD."
   :group 'bbdb-utilities-snarf
   :type 'symbol)
 
-(defcustom bbdb-snarf-url-regexp "\\(\\(?:http://\\|www\.\\)[^ \t\n]+\\)"
+(defcustom bbdb-snarf-url-regexp "\\(\\(?:http://\\|www\\.\\)[^ \t\n]+\\)"
   "Regexp matching a URL.  Case is ignored.
 The first subexpression becomes the URL."
   :group 'bbdb-utilities-snarf

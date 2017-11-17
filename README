@@ -1,4 +1,4 @@
-Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+Copyright (C) 2010-2017 Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 BBDB is the Insidious Big Brother Database for GNU Emacs.
@@ -214,7 +214,7 @@ sequence of calls is
 
 ==================================================================
 
-Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+Copyright (C) 2010-2017 Free Software Foundation, Inc.
 
 This file is part of the Insidious Big Brother Database (aka BBDB),
 

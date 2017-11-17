@@ -1,7 +1,6 @@
 ;;; bbdb-tex.el --- feed BBDB into LaTeX  -*- lexical-binding: t -*-
 
-;; Copyright (C) 1993 Boris Goldowsky
-;; Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
 
 ;; Authors: Boris Goldowsky <boris@cs.rochester.edu>
 ;;          Dirk Grunwald <grunwald@cs.colorado.edu>

@@ -1,7 +1,6 @@
 ;;; bbdb-mu4e.el --- BBDB interface to mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015 David Sterratt <david@sterratt.me.uk>
-;; Copyright (C) 2015-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2015-2017  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -19,13 +18,15 @@
 ;; along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;; This file contains the BBDB interface to mu4e.
-;;; See the BBDB info manual for documentation.
+;; This file contains the BBDB interface to mu4e.
+;; See the BBDB info manual for documentation.
 
 ;;; Code:
 
 (require 'bbdb)
-(require 'mu4e-view)
+(if t (require 'mu4e-view))
+
+(defvar mu4e-view-mode-map)
 
 ;;;###autoload
 (defun bbdb-insinuate-mu4e ()
