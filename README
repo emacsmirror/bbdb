@@ -8,6 +8,11 @@ clients (Message and Mail mode, Rmail, Gnus, MH-E, Mu4e, VM, and
 Wanderlust).  BBDB is fully customizable.
 
 BBDB is available at
+http://elpa.gnu.org/packages/bbdb.html
+To install this package, run in Emacs:
+M-x package-install RET bbdb RET
+
+BBDB is also available at
 http://savannah.nongnu.org/projects/bbdb/
 To check it out, use
 git clone git://git.savannah.nongnu.org/bbdb.git
@@ -18,9 +23,14 @@ To subscribe to this list, go to
 https://lists.nongnu.org/mailman/listinfo/bbdb-user.
 
 ==================================================================
-Installation:   (see also the generic file INSTALL)
+Installation:
 
-To compile and install BBDB with `make':
+To install this package from GNU ELPA, run in Emacs:
+
+   M-x package-install RET bbdb RET
+
+To compile and install BBDB from Savannah with `make'
+(see also the generic file INSTALL):
 
 0) (BBDB development version only)
 
@@ -64,24 +74,24 @@ To compile and install BBDB with `make':
    You can override these defaults via respective options
    for the configure script.
 
-   The TeX files in the tex directories are installed in ${datadir}
+   The TeX files in the ./tex directory are installed in ${datadir}
    which defaults to /usr/local/share/bbdb/.  These files are only
-   used by BBDB.  They need not be made known to your local TeX
-   installation.  See the user variable bbdb-print-tex-path below.
+   used by BBDB.  They need not be known to your local TeX installation.
+   See the user variable bbdb-tex-path below.
 
    `make install' is not required to run BBDB.
 
 4) Activate BBDB:
 
    i)   If the BBDB lisp files are in a directory
-        "/path/to/bbdb/lisp" you can use in your emacs init file
+        "/path/to/bbdb/lisp" you can use in your Emacs init file
 
         (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
 
         This adds "/path/to/bbdb/lisp" to the load-path; so it is all
-        you need to make BBDB known to your Emacs.
+        you need to make BBDB known to Emacs.
 
-   ii)  The user variable bbdb-print-tex-path should point to the directory
+   ii)  The user variable bbdb-tex-path should point to the directory
         where the BBDB TeX files reside (default /usr/local/share/bbdb).
 
 ===============================================================================
@@ -146,13 +156,16 @@ MUA commands include
  bbdb-mua-edit-field, bbdb-mua-edit-field-sender, bbdb-mua-edit-field-recipients
 
 These MUA commands operate either on existing records only.  Or they
-can create new records.
+can also create new records.
 
-They are all controlled by bbdb-mua-update-interactive-p.
+All these commands are controlled by bbdb-mua-update-interactive-p.
 This is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
 The car is used if the command is called without a prefix.
 The cdr is used if the command is called with a prefix (and if the prefix
         is not used for another purpose).
+The underlying idea is that the car can provide a less aggressive default
+such as `search' or `update' (see below), whereas the cdr can provide more
+aggressive behavior such as `create'.
 
 WITHOUT-PREFIX and WITH-PREFIX may take the values
 (here ADDRESS is an email address found in a message):
@@ -169,8 +182,9 @@ WITHOUT-PREFIX and WITH-PREFIX may take the values
  read         Read the value interactively.
 
 BBDB 2 also used MUA-specific variables bbdb/MUA-update-records-mode
-to control its interfaces with MUAs.  Use function bbdb-mua to define
-your own function to get MUA-specific values.
+to control its interfaces with MUAs.  If you liked this feature, use
+the function bbdb-mua to define your own function to get MUA-specific
+values for WITHOUT-PREFIX and WITH-PREFIX.
 
 Noninteractive functions
 ------------------------

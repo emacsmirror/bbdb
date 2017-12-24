@@ -1,3 +1,6 @@
+2017-12-24  Roland Winkler  <winkler@gnu.org>
+	* README: Update for elpa.git.
+
 2017-11-17  Stefan Monnier <monnier@iro.umontreal.ca>
 	Prepare BBDB for elpa.git.
 	* lisp/bbdb-anniv.el, lisp/bbdb-com.el, lisp/bbdb-ispell.el:
