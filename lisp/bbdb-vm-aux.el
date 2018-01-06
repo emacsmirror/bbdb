@@ -27,15 +27,31 @@
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-mua)
-(require 'vm-autoloads)
-(require 'vm)
-(require 'vm-motion)
-(require 'vm-summary)
-(require 'vm-mime)
-(require 'vm-vars)
-(require 'vm-macro)
-(require 'vm-message)
-(require 'vm-misc)
+
+(when t     ;Don't require during compilation, since VM might not be installed!
+  (require 'vm-autoloads)
+  (require 'vm)
+  (require 'vm-motion)
+  (require 'vm-summary)
+  (require 'vm-mime)
+  (require 'vm-vars)
+  (require 'vm-macro)
+  (require 'vm-message)
+  (require 'vm-misc))
+
+(declare-function vm-su-from "vm-summary" (m))
+(declare-function vm-su-to "vm-summary" (m))
+(declare-function vm-su-to-names "vm-summary" (m))
+(declare-function vm-su-full-name "vm-summary" (m))
+(declare-function vm-add-message-labels "vm-undo" (string count))
+(declare-function vm-decode-mime-encoded-words-in-string "vm-mime" (string))
+
+(defvar vm-summary-uninteresting-senders)          ;In vm-vars
+(defvar vm-summary-uninteresting-senders-arrow)    ;In vm-vars
+(defvar vm-auto-folder-alist)                      ;In vm-vars
+(defvar vm-virtual-folder-alist)                   ;In vm-vars
+(defvar vm-folder-directory)                       ;In vm-vars
+(defvar vm-primary-inbox)                          ;In vm-vars
 
 ;; By Alastair Burt <burt@dfki.uni-kl.de>
 ;; vm 5.40 and newer support a new summary format, %U<letter>, to call

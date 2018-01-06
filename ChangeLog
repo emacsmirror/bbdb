@@ -1,3 +1,6 @@
+2018-01-06  Roland Winkler  <winkler@gnu.org>
+	* bbdb-vm-aux.el: Don't require VM when compiled.
+
 2018-01-06  Stefan Monnier <monnier@iro.umontreal.ca>
 	* bbdb-vm.el: Don't require VM when compiled.
 
