@@ -51,17 +51,17 @@ Do not call this in your init file.  Use `bbdb-initialize'."
   ;; Set up user field for use in `gnus-summary-line-format'
   ;; (1) Big solution: use whole name
   (if bbdb-mua-summary-unify-format-letter
-      (fset (intern (concat "gnus-user-format-function-"
-                            bbdb-mua-summary-unify-format-letter))
-            (lambda (header)
-              (bbdb-mua-summary-unify (mail-header-from header)))))
+      (defalias (intern (concat "gnus-user-format-function-"
+                                bbdb-mua-summary-unify-format-letter))
+        (lambda (header)
+          (bbdb-mua-summary-unify (mail-header-from header)))))
 
-  ;; (2) Small solution: a mark for messages whos sender is in BBDB.
+  ;; (2) Small solution: a mark for messages whose sender is in BBDB.
   (if bbdb-mua-summary-mark-format-letter
-      (fset (intern (concat "gnus-user-format-function-"
-                            bbdb-mua-summary-mark-format-letter))
-            (lambda (header)
-              (bbdb-mua-summary-mark (mail-header-from header))))))
+      (defalias (intern (concat "gnus-user-format-function-"
+                                bbdb-mua-summary-mark-format-letter))
+        (lambda (header)
+          (bbdb-mua-summary-mark (mail-header-from header))))))
 
 (provide 'bbdb-gnus)
 

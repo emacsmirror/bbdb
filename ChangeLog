@@ -1,3 +1,11 @@
+2018-01-06  Stefan Monnier <monnier@iro.umontreal.ca>
+	* bbdb-vm.el: Don't require VM when compiled.
+
+	Trim the list of required packages from VM.
+
+	* bbdb-gnus.el (bbdb-insinuate-gnus):
+	* bbdb-vm.el (bbdb-insinuate-vm): Use defalias.
+
 2018-01-06  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-gnus.el, lisp/bbdb-gnus-aux.el: Split from
 	lisp/bbdb-gnus.el.
