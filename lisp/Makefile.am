@@ -28,6 +28,7 @@ dist_lisp_LISP = 				\
 	bbdb-anniv.el				\
 	bbdb-com.el				\
 	bbdb-gnus.el				\
+	bbdb-gnus-aux.el			\
 	bbdb-ispell.el				\
 	bbdb-message.el				\
 	bbdb-mhe.el				\
@@ -42,6 +43,7 @@ dist_lisp_LISP = 				\
 
 if VM
 dist_lisp_LISP += bbdb-vm.el
+dist_lisp_LISP += bbdb-vm-aux.el
 # We use the Automake variable AM_ELCFLAGS to include the VM lisp directory
 # in the Emacs load path when compiling BBDB with VM support.
 endif
@@ -100,7 +102,6 @@ bbdb-loaddefs.el: $(dist_lisp_LISP)
 bbdb-site.el: $(top_builddir)/config.status bbdb-site.el.in
 	sed -e "s=[@]pkgdatadir[@]=$(pkgdatadir)=" \
 	    -e "s=[@]PACKAGE_VERSION[@]=$(PACKAGE_VERSION)=" \
-	    -e "s=[@]PACKAGE_DATE[@]=$(PACKAGE_DATE)=" \
 	    < $@.in > $@
 
 # Be sure bbdb-site.el exists early for "(require 'bbdb-site)"

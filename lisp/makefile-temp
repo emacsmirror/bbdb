@@ -68,7 +68,8 @@ WL = -eval '(unless (string= "$(WLDIR)" "") (push "$(WLDIR)" load-path))'
 SRCS =	bbdb.el bbdb-site.el bbdb-com.el bbdb-tex.el bbdb-anniv.el \
 	bbdb-migrate.el bbdb-snarf.el \
 	bbdb-mua.el bbdb-message.el bbdb-rmail.el \
-	bbdb-gnus.el bbdb-mhe.el bbdb-mu4e.el bbdb-vm.el bbdb-pgp.el \
+	bbdb-gnus.el bbdb-gnus-aux.el bbdb-mhe.el bbdb-mu4e.el \
+	bbdb-vm.el bbdb-vm-aux.el bbdb-pgp.el \
 	bbdb-sc.el bbdb-wl.el \
 	bbdb-ispell.el bbdb-pkg.el
 
@@ -76,14 +77,14 @@ SRCS =	bbdb.el bbdb-site.el bbdb-com.el bbdb-tex.el bbdb-anniv.el \
 ELC =	bbdb.elc bbdb-site.elc bbdb-com.elc bbdb-tex.elc bbdb-anniv.elc \
 	bbdb-migrate.elc bbdb-snarf.elc \
 	bbdb-mua.elc bbdb-message.elc bbdb-rmail.elc \
-	bbdb-gnus.elc bbdb-mhe.elc bbdb-pgp.elc bbdb-sc.elc \
+	bbdb-gnus.elc bbdb-gnus-aux.elc bbdb-mhe.elc bbdb-pgp.elc bbdb-sc.elc \
 	bbdb-ispell.elc bbdb-wl.elc # bbdb-pkg.elc
 
 all: bbdb
 
 bbdb:	bbdb-loaddefs.el $(ELC)
 mu4e:	bbdb-mu4e.elc
-vm:	bbdb-vm.elc
+vm:	bbdb-vm.elc bbdb-vm-aux.elc
 wl:	bbdb-wl.elc
 
 bbdb-loaddefs.el: $(SRCS)
@@ -135,6 +136,8 @@ bbdb-rmail.elc: bbdb-rmail.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
 bbdb-gnus.elc: bbdb-gnus.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
+bbdb-gnus-aux.elc: bbdb-gnus-aux.el bbdb-mua.elc
+	$(emacs_compile) $(@:.elc=.el)
 bbdb-mhe.elc: bbdb-mhe.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
 bbdb-mu4e.elc: bbdb-mu4e.el bbdb-mua.elc
@@ -142,6 +145,8 @@ bbdb-mu4e.elc: bbdb-mu4e.el bbdb-mua.elc
 bbdb-wl.elc: bbdb-wl.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
 bbdb-vm.elc: bbdb-vm.el bbdb-mua.elc
+	$(emacs) $(VM) --funcall batch-byte-compile $(@:.elc=.el)
+bbdb-vm-aux.elc: bbdb-vm-aux.el bbdb-mua.elc
 	$(emacs) $(VM) --funcall batch-byte-compile $(@:.elc=.el)
 bbdb-sc.elc: bbdb-sc.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
