@@ -1,7 +1,8 @@
 ;;; bbdb.el --- core of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2018  Free Software Foundation, Inc.
 
+;; Maintainer: Roland Winkler <winkler@gnu.org>
 ;; Version: 3.2
 ;; Package-Requires: ((emacs "24"))
 
