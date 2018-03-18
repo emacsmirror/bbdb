@@ -1,3 +1,7 @@
+2018-03-17  Roland Winkler  <winkler@gnu.org>
+	* bbdb-com.el (bbdb-create-internal): Bug fix.  Support old
+	calling sequence with warning.
+
 2018-03-02  Stefan Monnier <monnier@iro.umontreal.ca>
 	* bbdb.el: Add missing "Maintainer:" header
 

@@ -1,6 +1,6 @@
 ;;; bbdb-com.el --- user-level commands of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2018  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -918,7 +918,7 @@ The following keywords are supported in SPEC:
                    An error is thrown if a mail address in MAIL is already
                    in use and `bbdb-allow-duplicates' is nil.
 :phone VAL         List of phone-number objects.  A phone-number is a vector
-                   [\"label\" areacode prefix suffix extension-or-nil]
+                   [\"label\" area-code prefix suffix extension-or-nil]
                    or [\"label\" \"phone-number\"]
 :address VAL       List of addresses.  An address is a vector of the form
                    \[\"label\" (\"line1\" \"line2\" ... ) \"City\"
@@ -929,6 +929,22 @@ The following keywords are supported in SPEC:
 :check             If present, throw an error if a field value is not
                    syntactically correct."
   (bbdb-editable)
+
+  (when (not (keywordp (car spec)))
+    ;; Old format for backward compatibility (BBDB version < 3.2)
+    (unless (get 'bbdb-create-internal 'bbdb-outdated)
+      (put 'bbdb-create-internal 'bbdb-outdated t)
+      (message "Outdated usage of `bbdb-create-internal'")
+      (sit-for 2))
+    (let (newspec val)
+      (dolist (key '(:name :affix :aka :organization :mail :phone :address
+                           :xfields))
+        (if (setq val (pop spec))
+            (push (list key val) newspec)))
+      (if (setq val (pop spec))
+          (push (list :check) newspec))
+      (setq spec (apply 'append newspec))))
+
   (let ((record (bbdb-empty-record))
         (record-type (cdr bbdb-record-type))
         (check (prog1 (memq :check spec)
@@ -980,7 +996,7 @@ The following keywords are supported in SPEC:
         (`:phone
          (let ((phone (pop spec)))
            (if check (bbdb-check-type phone (bbdb-record-phone record-type) t))
-           (bbdb-record-set-phone phone record)))
+           (bbdb-record-set-phone record phone)))
 
         (`:address
          (let ((address (pop spec)))
