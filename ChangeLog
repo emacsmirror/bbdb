@@ -1,4 +1,9 @@
 2018-03-17  Roland Winkler  <winkler@gnu.org>
+	* bbdb.el (bbdb-register-record): New function renamed from
+	bbdb-hash-record.
+	(bbdb-parse-records, bbdb-change-record): Use it.
+
+2018-03-17  Roland Winkler  <winkler@gnu.org>
 	* bbdb-com.el (bbdb-create-internal): Bug fix.  Support old
 	calling sequence with warning.
 

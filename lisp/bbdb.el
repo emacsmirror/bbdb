@@ -2405,8 +2405,8 @@ It is the caller's responsibility to make the new record known to BBDB."
 ;; `bbdb-hashtable' associates with each KEY a list of matching records.
 ;; KEY includes fl-name, lf-name, organizations, AKAs and email addresses.
 ;; When loading the database the hash table is initialized by calling
-;; `bbdb-hash-record' for each record.  This function is also called
-;; when new records are added to the database.
+;; `bbdb-register-record' for each record.  This function is also called
+;; when adding new records to the database.
 ;; `bbdb-delete-record-internal' with arg REMHASH non-nil removes a record
 ;; from the hash table (besides deleting the record from the database).
 ;; When an existing record is modified, the code that modifies the record
@@ -2480,19 +2480,6 @@ KEY must be a string or nil.  Empty strings and nil are ignored."
           (if records
               (puthash key records bbdb-hashtable)
             (remhash key bbdb-hashtable))))))
-
-(defun bbdb-hash-record (record)
-  "Insert RECORD in `bbdb-hashtable'.
-This performs all initializations required for a new record.
-Do not call this for existing records that require updating."
-  (bbdb-puthash (bbdb-record-name record) record)
-  (bbdb-puthash (bbdb-record-name-lf record) record)
-  (dolist (organization (bbdb-record-organization record))
-    (bbdb-puthash organization record))
-  (dolist (aka (bbdb-record-aka record))
-    (bbdb-puthash aka record))
-  (bbdb-puthash-mail record)
-  (puthash (bbdb-record-uuid record) record bbdb-uuid-table))
 
 (defun bbdb-puthash-mail (record)
   "For RECORD put mail into `bbdb-hashtable'."
@@ -3383,46 +3370,7 @@ If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
                 ;; We are just loading BBDB, so we are not yet ready
                 ;; for sophisticated solutions.
                 (error "Duplicate UUID %s" (bbdb-record-uuid record)))
-
-            ;; Set the completion lists
-            (dolist (phone (bbdb-record-phone record))
-              (bbdb-pushnew (bbdb-phone-label phone) bbdb-phone-label-list))
-            (dolist (address (bbdb-record-address record))
-              (bbdb-pushnew (bbdb-address-label address) bbdb-address-label-list)
-              (mapc (lambda (street) (bbdb-pushnewt street bbdb-street-list))
-                    (bbdb-address-streets address))
-              (bbdb-pushnewt (bbdb-address-city address) bbdb-city-list)
-              (bbdb-pushnewt (bbdb-address-state address) bbdb-state-list)
-              (bbdb-pushnewt (bbdb-address-postcode address) bbdb-postcode-list)
-              (bbdb-pushnewt (bbdb-address-country address) bbdb-country-list))
-            (dolist (xfield (bbdb-record-xfields record))
-              (bbdb-pushnewq (car xfield) bbdb-xfield-label-list))
-            (dolist (organization (bbdb-record-organization record))
-              (bbdb-pushnew organization bbdb-organization-list))
-
-            (let ((name (bbdb-concat 'name-first-last
-                                     (bbdb-record-firstname record)
-                                     (bbdb-record-lastname record))))
-              (when (and (not bbdb-allow-duplicates)
-                         (bbdb-gethash name '(fl-name aka)))
-                ;; This does not check for duplicate mail fields.
-                ;; Yet under normal circumstances, this should really
-                ;; not be necessary each time BBDB is loaded as BBDB checks
-                ;; whether creating a new record or modifying an existing one
-                ;; results in duplicates.
-                ;; Alternatively, you can use `bbdb-search-duplicates'.
-                (message "Duplicate BBDB record encountered: %s" name)
-                (sit-for 1)))
-
-            ;; If `bbdb-allow-duplicates' is non-nil, we allow that two records
-            ;; (with different uuids) refer to the same person (same name etc.).
-            ;; Such duplicate records are always hashed.
-            ;; Otherwise, an unhashed record would not be available for things
-            ;; like completion (and we would not know which record to keeep
-            ;; and which one to hide).  We trust the user she knows what
-            ;; she wants if she keeps duplicate records in the database though
-            ;; `bbdb-allow-duplicates' is nil.
-            (bbdb-hash-record record))
+            (bbdb-register-record record))
 
           ;; Note that `bbdb-xfield-label-list' serves two purposes:
           ;;  - check whether an xfield is new to BBDB
@@ -3451,6 +3399,58 @@ If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
           (unless bbdb-silent (message "Parsing BBDB file `%s'...done" file))
           bbdb-records)))))
 
+(defun bbdb-register-record (record)
+  "Register RECORD with BBDB.
+This performs the registration required both for records that are loaded
+from the database and for new records added to BBDB.
+Do not call this function directly.  Call instead `bbdb-change-record'."
+  (unless bbdb-allow-duplicates
+    (let ((name (bbdb-concat 'name-first-last
+                             (bbdb-record-firstname record)
+                             (bbdb-record-lastname record))))
+      (when (bbdb-gethash name '(fl-name aka))
+        ;; This does not check for duplicate mail fields.
+        ;; Yet under normal circumstances, this should really
+        ;; not be necessary each time BBDB is loaded as BBDB checks
+        ;; whether creating a new record or modifying an existing one
+        ;; results in duplicates.
+        ;; Alternatively, you can use `bbdb-search-duplicates'.
+        (message "Duplicate BBDB record encountered: %s" name)
+        (sit-for 1))))
+
+  ;; If `bbdb-allow-duplicates' is non-nil, we allow that two records
+  ;; (with different uuids) refer to the same person (same name etc.).
+  ;; Such duplicate records are always hashed.
+  ;; Otherwise, an unhashed record would not be available for things
+  ;; like completion (and we would not know which record to keeep
+  ;; and which one to hide).  We trust the user she knows what
+  ;; she wants if she keeps duplicate records in the database though
+  ;; `bbdb-allow-duplicates' is nil.
+  (bbdb-puthash (bbdb-record-name record) record)
+  (bbdb-puthash (bbdb-record-name-lf record) record)
+  (dolist (organization (bbdb-record-organization record))
+    (bbdb-puthash organization record))
+  (dolist (aka (bbdb-record-aka record))
+    (bbdb-puthash aka record))
+  (bbdb-puthash-mail record)
+  (puthash (bbdb-record-uuid record) record bbdb-uuid-table)
+
+  ;; Update the completion lists
+  (dolist (phone (bbdb-record-phone record))
+    (bbdb-pushnew (bbdb-phone-label phone) bbdb-phone-label-list))
+  (dolist (address (bbdb-record-address record))
+    (bbdb-pushnew (bbdb-address-label address) bbdb-address-label-list)
+    (mapc (lambda (street) (bbdb-pushnewt street bbdb-street-list))
+          (bbdb-address-streets address))
+    (bbdb-pushnewt (bbdb-address-city address) bbdb-city-list)
+    (bbdb-pushnewt (bbdb-address-state address) bbdb-state-list)
+    (bbdb-pushnewt (bbdb-address-postcode address) bbdb-postcode-list)
+    (bbdb-pushnewt (bbdb-address-country address) bbdb-country-list))
+  (dolist (xfield (bbdb-record-xfields record))
+    (bbdb-pushnewq (car xfield) bbdb-xfield-label-list))
+  (dolist (organization (bbdb-record-organization record))
+    (bbdb-pushnew organization bbdb-organization-list)))
+
 (defun bbdb-before-save ()
   "Run before saving `bbdb-file' as buffer-local part of `before-save-hook'."
   (when (and bbdb-file-remote
@@ -3473,7 +3473,7 @@ If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
   "Update the database after a change of RECORD.
 Return RECORD if RECORD got changed compared with the database,
 return nil otherwise.
-Hash RECORD if it is new.  If RECORD is not new, it is the the caller's
+Hash RECORD if it is new.  If RECORD is not new, it is the caller's
 responsibility to update the hashtables for RECORD.  (Up-to-date hashtables are
 ensured if the fields are modified by calling `bbdb-record-set-field'.)
 Redisplay RECORD if it is not new.
@@ -3551,8 +3551,8 @@ They are present only for backward compatibility."
           (bbdb-record-set-timestamp
            record (format-time-string bbdb-time-stamp-format nil t))
           (run-hook-with-args 'bbdb-change-hook record)
+          (bbdb-register-record record) ; Call this earlier?
           (bbdb-insert-record-internal record)
-          (bbdb-hash-record record)
           (bbdb-pushnewq record bbdb-changed-records)
           (run-hook-with-args 'bbdb-after-change-hook record)
           record)))))
