@@ -87,9 +87,14 @@ bbdb-loaddefs.el: $(dist_lisp_LISP)
 	@echo "" >> $@;
 #	Generated autoload-file must have an absolute path,
 #	$srcdir can be relative.
+#
+#       The equivalent command line with bash $(...) construct is:
+#       abs_target=$$($(CYGPATH_W) $(abs_builddir)/$@ | sed 's/\\/\\\\/g');
+#       See http://lists.nongnu.org/archive/html/bbdb-user/2018-02/msg00000.html
+	abs_target=`$(CYGPATH_W) $(abs_builddir)/$@ | sed 's/\\\\/\\\\\\\\/g'`; \
 	$(EMACS) --batch $(AM_ELCFLAGS) $(ELCFLAGS) \
 		--load autoload \
-		--eval '(setq generated-autoload-file "'$(abs_builddir)/$@'")' \
+		--eval '(setq generated-autoload-file "'"$$abs_target"'")' \
 		--eval '(setq make-backup-files nil)' \
 		--funcall batch-update-autoloads $(srcdir)
 
