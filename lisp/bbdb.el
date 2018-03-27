@@ -3408,7 +3408,7 @@ Do not call this function directly.  Call instead `bbdb-change-record'."
     (let ((name (bbdb-concat 'name-first-last
                              (bbdb-record-firstname record)
                              (bbdb-record-lastname record))))
-      (when (bbdb-gethash name '(fl-name aka))
+      (when (remq record (bbdb-gethash name '(fl-name aka)))
         ;; This does not check for duplicate mail fields.
         ;; Yet under normal circumstances, this should really
         ;; not be necessary each time BBDB is loaded as BBDB checks

@@ -1,3 +1,7 @@
+2018-03-26  Roland Winkler  <winkler@gnu.org>
+	* bbdb.el (bbdb-register-record): Don't be fooled by existing
+	records.
+
 2018-03-17  Vincent Belaïche  <vincentb1@users.sourceforge.net>
 	* lisp/Makefile.am (abs_target): Make absolute path for
 	bbdb-loaddefs.el MSWindows aware.
