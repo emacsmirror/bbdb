@@ -803,7 +803,7 @@ but does ensure that there will not be name collisions."
     (let (name)
       (bbdb-error-retry
        (setq name (bbdb-read-name first-and-last))
-       (bbdb-check-name (car name) (cdr name)))
+       (bbdb-check-name name))
       (bbdb-record-set-firstname record (car name))
       (bbdb-record-set-lastname record (cdr name)))
 
@@ -811,36 +811,31 @@ but does ensure that there will not be name collisions."
     (bbdb-record-set-organization record (bbdb-read-organization))
 
     ;; mail
-    (bbdb-record-set-mail
-     record (bbdb-split 'mail (bbdb-read-string "E-Mail Addresses: ")))
+    (let (mail)
+      (bbdb-error-retry
+       (setq mail (bbdb-split 'mail (bbdb-read-string "E-Mail Addresses: ")))
+       (bbdb-check-mail mail))
+      (bbdb-record-set-mail record mail))
+
     ;; address
-    (let (addresses label address)
+    (let (addresses label)
       (while (not (string= ""
                            (setq label
                                  (bbdb-read-string
                                   "Snail Mail Address Label [RET when done]: "
-                                  nil
-                                  bbdb-address-label-list))))
-        (setq address (make-vector bbdb-address-length nil))
-        (bbdb-record-edit-address address label t)
-        (push address addresses))
+                                  nil bbdb-address-label-list))))
+        ;; Here we could also already update the completion lists.  Bother?
+        (push (bbdb-record-edit-address nil label) addresses))
       (bbdb-record-set-address record (nreverse addresses)))
 
     ;; phones
-    (let (phones phone-list label)
+    (let (phones label)
       (while (not (string= ""
                            (setq label
                                  (bbdb-read-string
-                                  "Phone Label [RET when done]: " nil
-                                  bbdb-phone-label-list))))
-        (setq phone-list
-              (bbdb-error-retry
-               (bbdb-parse-phone
-                (read-string "Phone: "
-                             (and (integerp bbdb-default-area-code)
-                                  (format "(%03d) "
-                                          bbdb-default-area-code))))))
-        (push (apply 'vector label phone-list) phones))
+                                  "Phone Label [RET when done]: "
+                                  nil bbdb-phone-label-list))))
+        (push (bbdb-record-edit-phone nil label) phones))
       (bbdb-record-set-phone record (nreverse phones)))
 
     ;; `bbdb-default-xfield'
@@ -912,10 +907,12 @@ The following keywords are supported in SPEC:
                    and `bbdb-allow-duplicates' is nil.
 :affix VAL         List of strings.
 :aka VAL           List of strings.
+                   An error is thrown if an aka in VAL is already in use
+                   and `bbdb-allow-duplicates' is nil.
 :organization VAL  List of strings.
 :mail VAL          String with comma-separated mail address
                    or a list of strings.
-                   An error is thrown if a mail address in MAIL is already
+                   An error is thrown if a mail address in VAL is already
                    in use and `bbdb-allow-duplicates' is nil.
 :phone VAL         List of phone-number objects.  A phone-number is a vector
                    [\"label\" area-code prefix suffix extension-or-nil]
@@ -962,11 +959,9 @@ The following keywords are supported in SPEC:
                  (check (bbdb-check-type name '(or (const nil)
                                                    (cons string string))
                                          t)))
-           (let ((firstname (car name))
-                 (lastname (cdr name)))
-             (bbdb-check-name firstname lastname) ; check for duplicates
-             (bbdb-record-set-firstname record firstname)
-             (bbdb-record-set-lastname record lastname))))
+           (bbdb-check-name name) ; check for duplicates
+           (bbdb-record-set-firstname record (car name))
+           (bbdb-record-set-lastname record (cdr name))))
 
         (`:affix
          (let ((affix (bbdb-split-maybe 'affix (pop spec))))
@@ -982,15 +977,13 @@ The following keywords are supported in SPEC:
         (`:aka
          (let ((aka (bbdb-split-maybe 'aka (pop spec))))
            (if check (bbdb-check-type aka (bbdb-record-aka record-type) t))
+           (bbdb-check-name aka)
            (bbdb-record-set-aka record aka)))
 
         (`:mail
          (let ((mail (bbdb-split-maybe 'mail (pop spec))))
            (if check (bbdb-check-type mail (bbdb-record-mail record-type) t))
-           (unless bbdb-allow-duplicates
-             (dolist (elt mail)
-               (if (bbdb-gethash elt '(mail))
-                   (error "%s is already in the database" elt))))
+           (bbdb-check-mail mail)
            (bbdb-record-set-mail record mail)))
 
         (`:phone
@@ -1128,19 +1121,10 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
            (let ((bbdb-phone-style
                   (if flag (if (eq bbdb-phone-style 'nanp) nil 'nanp)
                     bbdb-phone-style)))
-             (apply 'vector
-                    (bbdb-read-string "Label: " nil bbdb-phone-label-list)
-                    (bbdb-error-retry
-                     (bbdb-parse-phone
-                      (read-string "Phone: "
-                                   (and (integerp bbdb-default-area-code)
-                                        (format "(%03d) "
-                                                bbdb-default-area-code))))))))
+             (bbdb-record-edit-phone)))
           ;; Address
           ((eq field 'address)
-           (let ((address (make-vector bbdb-address-length nil)))
-             (bbdb-record-edit-address address nil t)
-             address))
+           (bbdb-record-edit-address))
           ;; xfield
           ((or (memq field bbdb-xfield-label-list)
                ;; New xfield
@@ -1197,10 +1181,17 @@ a phone number or address with VALUE being nil.
 
           ((eq field 'phone)
            (unless value (error "No phone specified"))
-           (bbdb-record-edit-phone (bbdb-record-phone record) value))
+           (bbdb-record-set-field
+            record field
+            ;; Splice new phone value into list of phones.
+            (let ((phones (bbdb-record-phone record)))
+              (setcar (memq value phones)
+                      (bbdb-record-edit-phone value))
+              phones)))
           ((eq field 'address)
            (unless value (error "No address specified"))
-           (bbdb-record-edit-address value nil flag))
+           (bbdb-record-edit-address value nil flag)
+           (bbdb-record-set-field record field (bbdb-record-address record)))
           ((eq field 'organization)
            (bbdb-record-set-field
             record field
@@ -1218,8 +1209,9 @@ a phone number or address with VALUE being nil.
            (bbdb-record-set-field
             record 'uuid (bbdb-read-string "uuid (edit at your own risk): " (bbdb-record-uuid record))))
           ((eq field 'creation-date)
-           (bbdb-record-set-creation-date
-            record (bbdb-read-string "creation-date: " (bbdb-record-creation-date record))))
+           (bbdb-record-set-field
+            record 'creation-date
+            (bbdb-read-string "creation-date: " (bbdb-record-creation-date record))))
           ;; The timestamp is set automatically whenever we save a modified record.
           ;; So any editing gets overwritten.
           ((eq field 'timestamp)) ; do nothing
@@ -1338,12 +1330,15 @@ This calls bbdb-read-xfield-FIELD if it exists."
                                   nil nil init))
     (bbdb-split 'organization (bbdb-read-string "Organizations: " init))))
 
-(defun bbdb-record-edit-address (address &optional label ignore-country)
-  "Edit ADDRESS.
+;; The name `bbdb-read-address' might fit better.
+(defun bbdb-record-edit-address (&optional address label ignore-country)
+  "Edit and return ADDRESS.
 If LABEL is nil, edit the label sub-field of the address as well.
 If the country field of ADDRESS is nonempty and IGNORE-COUNTRY is nil,
 use the rule from `bbdb-address-format-list' matching this country.
 Otherwise, use the default rule according to `bbdb-address-format-list'."
+  (unless address
+    (setq address (make-vector bbdb-address-length nil)))
   (unless label
     (setq label (bbdb-read-string "Label: "
                                   (bbdb-address-label address)
@@ -1403,7 +1398,8 @@ Otherwise, use the default rule according to `bbdb-address-format-list'."
         ;; The following is a temporary fix.  Ideally, we would simply discard
         ;; the entire address, but that requires bigger hacking.
         (bbdb-address-set-country address "Emacs")
-      (bbdb-address-set-country address (elt new-addr 4)))))
+      (bbdb-address-set-country address (elt new-addr 4)))
+    address))
 
 (defun bbdb-edit-address-street (streets)
   "Edit list STREETS."
@@ -1416,10 +1412,13 @@ Otherwise, use the default rule according to `bbdb-address-format-list'."
       (setq n (1+ n)))
     (reverse list)))
 
-;; This function can provide some guidance for writing
-;; your own address editing function
+;; This function can provide some guidance for writing your own
+;; address editing function for `bbdb-address-format-list'.
+;; Such a function should return a list or vector with five elements,
+;; a list of streets, city, state, postcode, country.
+;; These elements should be strings or nil.
 (defun bbdb-edit-address-default (address)
-  "Function to use for address editing.
+  "Function for editing ADDRESS to be used by `bbdb-address-format-list'.
 The sub-fields and the prompts used are:
 Street, line n:  (nth n street)
 City:            city
@@ -1438,21 +1437,26 @@ Country:         country"
                                           bbdb-default-country)
                           bbdb-country-list)))
 
-(defun bbdb-record-edit-phone (phones phone)
-  "For list PHONES edit PHONE number."
+;; The name `bbdb-read-phone' might fit better.
+(defun bbdb-record-edit-phone (&optional phone label)
+  "Edit and return PHONE.
+If LABEL is nil, edit the label sub-field of PHONE as well."
   ;; Phone numbers are special.  They are vectors with either
   ;; two or four elements.  We do not know whether after editing PHONE
   ;; we still have a number requiring the same format as PHONE.
-  ;; So we take all numbers PHONES of the record so that we can
-  ;; replace the element PHONE in PHONES.
-  (setcar (memq phone phones)
-          (apply 'vector
-                 (bbdb-read-string "Label: "
-                                   (bbdb-phone-label phone)
-                                   bbdb-phone-label-list)
-                 (bbdb-error-retry
-                  (bbdb-parse-phone
-                   (read-string "Phone: " (bbdb-phone-string phone)))))))
+  ;; So we throw away the argument PHONE and return a new vector.
+  (apply 'vector
+         (or label
+             (bbdb-read-string "Label: "
+                               (and phone (bbdb-phone-label phone))
+                               bbdb-phone-label-list))
+         (bbdb-error-retry
+          (bbdb-parse-phone
+           (read-string "Phone: "
+                        (or (and phone (bbdb-phone-string phone))
+                            (and (integerp bbdb-default-area-code)
+                                 (format "(%03d) "
+                                         bbdb-default-area-code))))))))
 
 ;; (bbdb-list-transpose '(a b c d) 1 3)
 (defun bbdb-list-transpose (list i j)

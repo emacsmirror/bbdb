@@ -1,3 +1,24 @@
+2018-03-30  Roland Winkler  <winkler@gnu.org>
+	Unify the handling of new records, new fields and modified fields.
+
+	* bbdb.el (bbdb-check-name): Handle both names and akas.  New
+	optional arg warn.
+	(bbdb-check-mail): New function.
+	(bbdb-register-record): Use bbdb-check-name and bbdb-check-mail.
+	New optional arg warn.
+	(bbdb-change-record): Fix docstring.
+
+	* bbdb.el (bbdb-record-set-field):
+	* bbdb-com.el (bbdb-read-record, bbdb-create-internal):
+	Use bbdb-check-name and bbdb-check-mail.
+
+	* bbdb-com.el (bbdb-record-edit-address): Allow arg address be nil
+	for new addresses.
+	(bbdb-record-edit-phone): Operate only on the phone number that we
+	change.
+	(bbdb-read-record, bbdb-read-field): Use bbdb-record-edit-phone.
+	Always use bbdb-record-set-field.
+
 2018-03-26  Roland Winkler  <winkler@gnu.org>
 	* bbdb.el (bbdb-register-record): Don't be fooled by existing
 	records.
