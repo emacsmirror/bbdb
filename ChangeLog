@@ -1,3 +1,7 @@
+2018-05-02  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-message-header): Use rmail-get-header.
+	* lisp/bbdb-rmail.el (bbdb/rmail-header): Remove.
+
 2018-03-30  Roland Winkler  <winkler@gnu.org>
 	Unify the handling of new records, new fields and modified fields.
 

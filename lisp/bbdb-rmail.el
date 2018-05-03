@@ -1,6 +1,6 @@
 ;;; bbdb-rmail.el --- BBDB interface to Rmail -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2018  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -26,18 +26,7 @@
 (require 'bbdb)
 (require 'bbdb-com)
 (require 'bbdb-mua)
-(require 'rmail)
 (require 'rmailsum)
-(require 'mailheader)
-
-;;;###autoload
-(defun bbdb/rmail-header (header)
-  "Pull HEADER out of Rmail header."
-  (with-current-buffer rmail-buffer
-    (save-restriction
-      (with-no-warnings (rmail-narrow-to-non-pruned-header))
-      (mail-header (intern-soft (downcase header))
-                   (mail-header-extract)))))
 
 ;;;###autoload
 (defun bbdb-insinuate-rmail ()

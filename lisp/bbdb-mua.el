@@ -1,6 +1,6 @@
 ;;; bbdb-mua.el --- various MUA functionality for BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2018  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -48,7 +48,7 @@
   (autoload 'vm-check-for-killed-summary "vm-misc")
   (autoload 'vm-error-if-folder-empty "vm-misc")
 
-  (autoload 'bbdb/rmail-header "bbdb-rmail")
+  (autoload 'rmail-get-header "rmail")
   (defvar rmail-buffer)
 
   (autoload 'bbdb/mh-header "bbdb-mhe")
@@ -115,7 +115,9 @@ MIME encoded headers are decoded.  Return nil if HEADER does not exist."
                      ;; See http://permalink.gmane.org/gmane.emacs.gnus.general/78741
                      (eq mua 'gnus) (gnus-fetch-original-field header))
                     ((eq mua 'vm) (bbdb/vm-header header))
-                    ((eq mua 'rmail) (bbdb/rmail-header header))
+                    ((eq mua 'rmail)
+                     (with-current-buffer rmail-buffer
+                       (rmail-get-header header)))
                     ((eq mua 'mh) (bbdb/mh-header header))
                     ((eq mua 'mu4e) (message-field-value header))
                     ((eq mua 'wl) (bbdb/wl-header header))
