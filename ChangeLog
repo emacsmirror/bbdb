@@ -1,3 +1,8 @@
+2018-09-06  Roland Winkler  <winkler@gnu.org>
+	Fix support for Wanderlust.
+	* lisp/bbdb-mua.el (bbdb-mua-mode-alist): Include mime-view-mode.
+	* lisp/bbdb-wl.el (bbdb/wl-header): Use with-current-buffer.
+
 2018-05-02  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-message-header): Use rmail-get-header.
 	* lisp/bbdb-rmail.el (bbdb/rmail-header): Remove.

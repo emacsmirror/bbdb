@@ -1,6 +1,6 @@
 ;;; bbdb-wl.el --- BBDB interface to Wanderlust -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2015-2018  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -28,6 +28,7 @@
 
 (defvar wl-summary-mode-map)
 (defvar wl-draft-mode-map)
+(defvar wl-summary-buffer-name)
 (defvar wl-summary-buffer-elmo-folder)
 (eval-and-compile
   (autoload 'wl-summary-message-number "wl-summary")
@@ -36,10 +37,12 @@
 
 ;;;###autoload
 (defun bbdb/wl-header (header)
-  (elmo-message-entity-field
-   (elmo-message-entity wl-summary-buffer-elmo-folder
-                        (wl-summary-message-number))
-   (intern (downcase header)) 'string))
+  (with-current-buffer wl-summary-buffer-name
+    (elmo-message-entity-field
+     (elmo-message-entity wl-summary-buffer-elmo-folder
+                          (wl-summary-message-number))
+     (intern (downcase header))
+     'string)))
 
 ;;;###autoload
 (defun bbdb-insinuate-wl ()
