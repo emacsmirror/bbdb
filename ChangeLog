@@ -1,3 +1,19 @@
+2019-03-09  Stefan Monnier <monnier@iro.umontreal.ca>
+	* bbdb-com.el, bbdb.el: Fix some warnings; plus cosmetic changes
+
+	* bbdb-com.el, bbdb.el: Use #' to quote functions.
+	* bbdb-com.el (bbdb-dial): Clarify backslash escaping in regexp.
+	(bbdb-mail-aliases): η-reduce.
+	(bbdb-mail-aliases): Use abbrev-symbol.
+	(bbdb-dial-number): Use bbdb--dial-default.
+
+	* bbdb.el: Move variable aliases before their target's definition.
+	(bbdb-merge-records-function, bbdb-dial-function):
+	(bbdb-canonicalize-mail-function): Use a non-nil default.
+	(bbdb--dial-default): New function.
+	(bbdb-init-forms): Use functions rather than "forms".
+	(bbdb-initialize): Adjust accordingly.
+
 2018-09-06  Roland Winkler  <winkler@gnu.org>
 	Fix support for Wanderlust.
 	* lisp/bbdb-mua.el (bbdb-mua-mode-alist): Include mime-view-mode.

@@ -1,6 +1,6 @@
 ;;; bbdb-com.el --- user-level commands of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2018  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2019  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -103,7 +103,7 @@ If FULL is non-nil, the list of records includes display information."
         (setq bbdb-do-all-records nil)
         (aset bbdb-modeline-info 4 nil)
         (aset bbdb-modeline-info 5 nil)
-        (if full bbdb-records (mapcar 'car bbdb-records)))
+        (if full bbdb-records (mapcar #'car bbdb-records)))
     (list (bbdb-current-record full))))
 
 ;;;###autoload
@@ -226,7 +226,7 @@ This usage is discouraged."
       (dolist (key '(:all-names :organization :mail :xfield :phone :address))
         (if (setq val (pop spec))
             (push (list key val) newspec)))
-      (setq spec (apply 'append newspec))))
+      (setq spec (apply #'append newspec))))
 
   (let* ((count 0)
          (sym-list (mapcar (lambda (_)
@@ -467,7 +467,7 @@ in either the name(s), organization, address, phone, mail, or xfields."
   "Display all BBDB records for which xfield FIELD matches REGEXP."
   (interactive
    (let ((field (completing-read "Xfield to search (RET for all): "
-                                 (mapcar 'list bbdb-xfield-label-list) nil t)))
+                                 (mapcar #'list bbdb-xfield-label-list) nil t)))
      (list (if (string= field "") '* (intern field))
            (bbdb-search-read (if (string= field "")
                                    "any xfield"
@@ -475,7 +475,7 @@ in either the name(s), organization, address, phone, mail, or xfields."
            (bbdb-layout-prefix))))
   (bbdb-display-records (bbdb-search (bbdb-records) :xfield (cons field regexp))
                         layout))
-(define-obsolete-function-alias 'bbdb-search-notes 'bbdb-search-xfields "3.0")
+(define-obsolete-function-alias 'bbdb-search-notes #'bbdb-search-xfields "3.0")
 
 ;;;###autoload
 (defun bbdb-search-changed (&optional layout)
@@ -543,11 +543,11 @@ which is probably more suited for your needs."
         (if (assoc-string mail mails t) ; duplicate mail address
             (push mail redundant)
           (push mail mails)))
-      (let ((mail-re (delq nil (mapcar 'bbdb-mail-redundant-re mails)))
+      (let ((mail-re (delq nil (mapcar #'bbdb-mail-redundant-re mails)))
             (case-fold-search t))
         (if (not (cdr mail-re)) ; at most one mail-re address to consider
             (setq okay (nreverse mails))
-          (setq mail-re (concat "\\`\\(?:" (mapconcat 'identity mail-re "\\|")
+          (setq mail-re (concat "\\`\\(?:" (mapconcat #'identity mail-re "\\|")
                                 "\\)\\'"))
           (dolist (mail mails)
             (if (string-match mail-re mail) ; redundant mail address
@@ -564,7 +564,7 @@ which is probably more suited for your needs."
           (when update
             (bbdb-change-record record)))))))
 (define-obsolete-function-alias 'bbdb-delete-duplicate-mails
-  'bbdb-delete-redundant-mails "3.0")
+  #'bbdb-delete-redundant-mails "3.0")
 
 (defun bbdb-search-duplicates (&optional fields)
   "Search all records that have duplicate entries for FIELDS.
@@ -940,7 +940,7 @@ The following keywords are supported in SPEC:
             (push (list key val) newspec)))
       (if (setq val (pop spec))
           (push (list :check) newspec))
-      (setq spec (apply 'append newspec))))
+      (setq spec (apply #'append newspec))))
 
   (let ((record (bbdb-empty-record))
         (record-type (cdr bbdb-record-type))
@@ -1029,14 +1029,14 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
                         '(affix organization aka phone address mail)))
           (field "")
           (completion-ignore-case t)
-          (present (mapcar 'car (bbdb-record-xfields record))))
+          (present (mapcar #'car (bbdb-record-xfields record))))
      (if (bbdb-record-affix record) (push 'affix present))
      (if (bbdb-record-organization record) (push 'organization present))
      (if (bbdb-record-mail record) (push 'mail present))
      (if (bbdb-record-aka record) (push 'aka present))
      (dolist (field present)
        (setq list (remq field list)))
-     (setq list (mapcar 'symbol-name list))
+     (setq list (mapcar #'symbol-name list))
      (while (string= field "")
        (setq field (downcase (completing-read "Insert Field: " list))))
      (setq field (intern field))
@@ -1242,17 +1242,18 @@ to select the field."
           (field (if (memq tmp '(current-fields all-fields))
                      ;; Do not require match so that we can define new xfields.
                      (intern (completing-read
-                              "Edit field: " (mapcar 'list (if (eq tmp 'all-fields)
-                                                               (append '(name affix organization aka mail phone address uuid creation-date)
-                                                                       bbdb-xfield-label-list)
-                                                             (append (if (bbdb-record-affix record) '(affix))
-                                                                     (if (bbdb-record-organization record) '(organization))
-                                                                     (if (bbdb-record-aka record) '(aka))
-                                                                     (if (bbdb-record-mail record) '(mail))
-                                                                     (if (bbdb-record-phone record) '(phone))
-                                                                     (if (bbdb-record-address record) '(address))
-                                                                     (mapcar 'car (bbdb-record-xfields record))
-                                                                     '(name uuid creation-date))))))
+                              "Edit field: "
+                              (mapcar #'list (if (eq tmp 'all-fields)
+                                                 (append '(name affix organization aka mail phone address uuid creation-date)
+                                                         bbdb-xfield-label-list)
+                                               (append (if (bbdb-record-affix record) '(affix))
+                                                       (if (bbdb-record-organization record) '(organization))
+                                                       (if (bbdb-record-aka record) '(aka))
+                                                       (if (bbdb-record-mail record) '(mail))
+                                                       (if (bbdb-record-phone record) '(phone))
+                                                       (if (bbdb-record-address record) '(address))
+                                                       (mapcar #'car (bbdb-record-xfields record))
+                                                       '(name uuid creation-date))))))
                    tmp))
           ;; Multiple phone and address fields may use the same label.
           ;; So we cannot use these labels to uniquely identify
@@ -1445,7 +1446,7 @@ If LABEL is nil, edit the label sub-field of PHONE as well."
   ;; two or four elements.  We do not know whether after editing PHONE
   ;; we still have a number requiring the same format as PHONE.
   ;; So we throw away the argument PHONE and return a new vector.
-  (apply 'vector
+  (apply #'vector
          (or label
              (bbdb-read-string "Label: "
                                (and phone (bbdb-phone-label phone))
@@ -1500,7 +1501,7 @@ If any of these terms is not defined at POINT, the respective value is nil."
              ;; can be anything.  (xfields are unique within a record.)
              (if (eq 'xfields (car field))
                  (setq val (car val)
-                       fields (mapcar 'car fields)))
+                       fields (mapcar #'car fields)))
              (while (and (not done) (setq elt (pop fields)))
                (if (eq val elt)
                    (setq done t)
@@ -1874,7 +1875,7 @@ in `bbdb-change-hook')."
                        (or (cdr (assq (car b) bbdb-xfields-sort-order)) 100)))))
     (if update
         (bbdb-change-record record))))
-(define-obsolete-function-alias 'bbdb-sort-notes 'bbdb-sort-xfields "3.0")
+(define-obsolete-function-alias 'bbdb-sort-notes #'bbdb-sort-xfields "3.0")
 
 ;;; Send-Mail interface
 
@@ -1955,7 +1956,7 @@ If MAIL is nil use the first mail address of RECORD."
 Use `bbdb-mail-user-agent' or (if nil) use `mail-user-agent'.
 ARGS are passed to `compose-mail'."
   (let ((mail-user-agent (or bbdb-mail-user-agent mail-user-agent)))
-    (apply 'compose-mail args)))
+    (apply #'compose-mail args)))
 
 ;;;###autoload
 (defun bbdb-mail (records &optional subject n verbose)
@@ -2011,7 +2012,7 @@ to kill ring.  If VERBOSE is non-nil (as in interactive calls) be verbose."
                                                        (car mails)))))))))
       (when (and bad verbose)
         (message "No mail addresses for %s."
-                 (mapconcat 'bbdb-record-name (nreverse bad) ", "))
+                 (mapconcat #'bbdb-record-name (nreverse bad) ", "))
         (unless (string= "" good) (sit-for 2)))
       (when (and kill-ring-save (not (string= good "")))
         (kill-new good)
@@ -2060,7 +2061,7 @@ The primary mail of each of the records currently listed in the
       (insert (car addresses))
       (when (cdr addresses) (insert ",\n") (indent-relative))
       (setq addresses (cdr addresses)))))
-(define-obsolete-function-alias 'bbdb-yank-addresses 'bbdb-mail-yank "3.0")
+(define-obsolete-function-alias 'bbdb-yank-addresses #'bbdb-mail-yank "3.0")
 
 ;;; completion
 
@@ -2106,7 +2107,7 @@ completion with."
            (let* ((count (length records))
                   (result (completing-read
                            (format "Which record (1-%s): " count)
-                           (mapcar 'number-to-string (number-sequence 1 count))
+                           (mapcar #'number-to-string (number-sequence 1 count))
                            nil t)))
              (nth (1- (string-to-number result)) records))))))
 
@@ -2223,9 +2224,9 @@ as part of the MUA insinuation."
       ;; Resolve the records matching ORIG:
       ;; Multiple completions may match the same record
       (let ((records (delete-dups
-                      (apply 'append (mapcar (lambda (compl)
-                                               (gethash compl bbdb-hashtable))
-                                             all-completions)))))
+                      (apply #'append (mapcar (lambda (compl)
+                                                (gethash compl bbdb-hashtable))
+                                              all-completions)))))
         ;; Is there only one matching record?
         (setq one-record (and (not (cdr records))
                               (car records))))
@@ -2417,6 +2418,7 @@ as part of the MUA insinuation."
             ;; `completion-list-insert-choice-function'
             ;; before performing our own stuff.
             (completion-list-insert-choice-function
+             ;; FIXME: Use closure instead of backquoted lambda!
              `(lambda (beg end text)
                 ,(if (boundp 'completion-list-insert-choice-function)
                      `(funcall ',completion-list-insert-choice-function
@@ -2433,7 +2435,7 @@ as part of the MUA insinuation."
       done)))
 
 ;;;###autoload
-(define-obsolete-function-alias 'bbdb-complete-name 'bbdb-complete-mail "3.0")
+(define-obsolete-function-alias 'bbdb-complete-name #'bbdb-complete-mail "3.0")
 
 (defun bbdb-complete-mail-cleanup (mail beg)
   "Clean up after inserting MAIL at position BEG.
@@ -2457,6 +2459,8 @@ If we are past `fill-column', wrap at the previous comma."
               ;; FIXME: This pops up *BBDB* before removing *Completions*
               (bbdb-display-records records nil t)))
         ;; `bbdb-complete-mail-hook' may access MAIL, ADDRESS, and RECORDS.
+        ;; FIXME: Now that we use lexical-binding, these vars can't be accessed
+        ;; any more.  Maybe we should just change the doc!?
         (run-hooks 'bbdb-complete-mail-hook))))
 
 ;;; interface to mail-abbrevs.el.
@@ -2516,7 +2520,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
                 (if (cddr result)
                     ;; for group aliases we just take all the primary mails
                     ;; and define only one expansion!
-                    (list (mapconcat (lambda (record) (bbdb-dwim-mail record))
+                    (list (mapconcat #'bbdb-dwim-mail
                                      (cdr result) mail-alias-separator-string))
                   ;; this is an alias for a single person so deal with it
                   ;; according to `bbdb-mail-alias'
@@ -2556,13 +2560,15 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
             (bbdb-pushnew (cons alias expansion) mail-aliases)
 
             (define-mail-abbrev alias expansion)
-            (unless (setq f-alias (intern-soft (downcase alias) mail-abbrevs))
+            
+            (unless (setq f-alias (abbrev-symbol alias mail-abbrevs))
               (error "Cannot find the alias"))
 
             ;; `define-mail-abbrev' initializes f-alias to be
             ;; `mail-abbrev-expand-hook'. We replace this by
             ;; `bbdb-mail-abbrev-expand-hook'
-            (unless (eq (symbol-function f-alias) 'mail-abbrev-expand-hook)
+            ;; FIXME: Use proper accessor instead of `symbol-function'.
+            (unless (eq (symbol-function f-alias) #'mail-abbrev-expand-hook)
               (error "mail-aliases contains unexpected hook %s"
                      (symbol-function f-alias)))
             ;; `bbdb-mail-abbrev-hook' is called with mail addresses instead of
@@ -2582,6 +2588,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
             ;; EXPANSION to the mail addresses it contains (which is tricky
             ;; because mail addresses in the database can be shortcuts for
             ;; the addresses in EXPANSION).
+            ;; FIXME: Use a closure rather than a backquoted lambda!
             (fset f-alias `(lambda ()
                              (bbdb-mail-abbrev-expand-hook
                               ,alias
@@ -2596,7 +2603,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
   (when bbdb-completion-display-record
     (let ((bbdb-silent-internal t))
       (bbdb-display-records
-       (apply 'append
+       (apply #'append
               (mapcar (lambda (mail) (bbdb-message-search nil mail)) mails))
        nil t))))
 
@@ -2673,9 +2680,7 @@ one arg RECORD to define the default value for ALIAS of RECORD."
 This uses the tel URI syntax passed to `browse-url' to make the call.
 If `bbdb-dial-function' is non-nil then that is called to make the phone call."
   (interactive "sDial number: ")
-  (if bbdb-dial-function
-      (funcall bbdb-dial-function phone-string)
-    (browse-url (concat "tel:" phone-string))))
+  (funcall (or bbdb-dial-function #'bbdb--dial-default) phone-string))
 
 ;;;###autoload
 (defun bbdb-dial (phone force-area-code)
@@ -2700,7 +2705,7 @@ is non-nil.  Do not dial the extension."
     (unless force-area-code
       (let ((alist bbdb-dial-local-prefix-alist) prefix)
         (while (setq prefix (pop alist))
-          (if (string-match (concat "^" (eval (car prefix))) number)
+          (if (string-match (concat "^" (eval (car prefix) t)) number)
               (setq shortnumber (concat (cdr prefix)
                                         (substring number (match-end 0)))
                     alist nil)))))
@@ -2716,7 +2721,7 @@ is non-nil.  Do not dial the extension."
 
       ;; Leading + => long distance/international number
       (if (and bbdb-dial-long-distance-prefix
-               (string-match "^\+" number))
+               (string-match "^\\+" number))
           (setq number (concat bbdb-dial-long-distance-prefix " "
                                (substring number 1)))))
 
@@ -2772,7 +2777,7 @@ Interactively, use BBDB prefix \
             drec))
     (kill-new (replace-regexp-in-string
                "[ \t\n]*\\'" "\n"
-               (mapconcat 'identity (nreverse drec) "")))))
+               (mapconcat #'identity (nreverse drec) "")))))
 
 ;;;###autoload
 (defun bbdb-copy-fields-as-kill (records field &optional num)
