@@ -410,10 +410,19 @@ This usage is discouraged."
        (nreverse ,matches))))
 
 (defun bbdb-search-read (&optional field)
-  "Read regexp to search FIELD values of records."
-  (read-string (format "Search records%s %smatching regexp: "
-                       (if field (concat " with " field) "")
-                       (if bbdb-search-invert "not " ""))))
+  "Read regexp to search FIELD values of records.
+When region is active make it the default string to match."
+  (let ((default (if (and (region-active-p)
+                          (< (region-beginning) (region-end)))
+                     (regexp-quote
+                      (buffer-substring-no-properties
+                       (region-beginning) (region-end))))))
+    (prog1 (read-string (format "Search records%s %smatching regexp: %s"
+                                (if field (concat " with " field) "")
+                                (if bbdb-search-invert "not " "")
+                                (if default (format "(default %s) " default) ""))
+                        nil nil default)
+      (if default (deactivate-mark)))))
 
 ;;;###autoload
 (defun bbdb (regexp &optional layout)
@@ -570,7 +579,9 @@ which is probably more suited for your needs."
   "Search all records that have duplicate entries for FIELDS.
 The list FIELDS may contain the symbols `name', `mail', and `aka'.
 If FIELDS is nil use all these fields.  With prefix, query for FIELDS.
-The search results are displayed in the BBDB buffer."
+The search results are displayed in the BBDB buffer.
+The command `bbdb-merge-records' may come handy for merging duplicate
+records."
   (interactive (list (if current-prefix-arg
                          (list (intern (completing-read "Field: "
                                                         '("name" "mail" "aka")

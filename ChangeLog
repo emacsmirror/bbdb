@@ -1,3 +1,7 @@
+2019-06-08  Roland Winkler  <winkler@gnu.org>
+	* bbdb-com.el (bbdb-search-read): When region is active make it
+	the default string to match.
+
 2019-03-09  Stefan Monnier <monnier@iro.umontreal.ca>
 	* bbdb-com.el, bbdb.el: Fix some warnings; plus cosmetic changes
 
