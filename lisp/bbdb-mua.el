@@ -908,7 +908,7 @@ See `bbdb-mua-auto-update' for details about the auto update feature."
                  (gnus . gnus-article-prepare-hook)
                  (mh . mh-show-hook)
                  (vm . vm-select-message-hook)
-                 (wl . wl-message-redisplay-hook)))
+                 (wl . wl-summary-redisplay-hook)))
     (if (memq (car mua) muas)
         (add-hook (cdr mua) 'bbdb-mua-auto-update)
       (remove-hook (cdr mua) 'bbdb-mua-auto-update))))

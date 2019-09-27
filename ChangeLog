@@ -1,3 +1,7 @@
+2019-09-27  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-auto-update-init): Use
+	wl-summary-redisplay-hook for wanderlust.
+
 2019-06-08  Roland Winkler  <winkler@gnu.org>
 	* bbdb-com.el (bbdb-search-read): When region is active make it
 	the default string to match.
