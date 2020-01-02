@@ -1654,7 +1654,21 @@ You really should not disable debugging.  But it will speed things up."))
   "Bind this to t to quiet things down - do not set it.
 See also `bbdb-silent'.")
 
-(defvar bbdb-init-forms
+(declare-function bbdb-insinuate-gnus "bbdb-gnus" ())
+(declare-function bbdb-insinuate-mh "bbdb-mhe" ())
+(declare-function bbdb-insinuate-rmail "bbdb-rmail" ())
+(declare-function bbdb-insinuate-vm "bbdb-vm" ())
+(declare-function bbdb-insinuate-mail "bbdb-message" ())
+(declare-function bbdb-insinuate-message "bbdb-message" ())
+(declare-function bbdb-insinuate-mu4e "bbdb-m4e" ())
+(declare-function bbdb-insinuate-sc "bbdb-sc" ())
+(declare-function bbdb-pgp "bbdb-pgp" ())
+(declare-function bbdb-insinuate-wl "bbdb-wl" ())
+(declare-function bbdb-anniv-diary-entries "bbdb-anniv" ())
+
+(define-obsolete-variable-alias 'bbdb-init-forms
+  'bbdb-init-functions "3.0")
+(defvar bbdb-init-functions
   `((gnus                       ; gnus 3.15 or newer
      ,(lambda () (add-hook 'gnus-startup-hook #'bbdb-insinuate-gnus)))
     (mh-e                       ; MH-E
@@ -4751,7 +4765,7 @@ See also `bbdb-mua-auto-update-init'.  The latter is a separate function
 as this allows one to initialize the auto update feature for some MUAs only,
 for example only for outgoing messages."
   (dolist (mua muas)
-    (let ((init (cadr (assq mua bbdb-init-forms))))
+    (let ((init (cadr (assq mua bbdb-init-functions))))
       ;; Should we make sure that each insinuation happens only once?
       (cond
        ((functionp init) (funcall init))

@@ -1,3 +1,7 @@
+2020-01-01  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el: Declare functions used for insinuation.
+	(bbdb-init-functions): Renamed from bbdb-init-forms.
+
 2019-09-27  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-auto-update-init): Use
 	wl-summary-redisplay-hook for wanderlust.
