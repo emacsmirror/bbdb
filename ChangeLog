@@ -1,4 +1,8 @@
 2020-01-01  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-com.el (bbdb-search): New keywords :invert and
+	:case-fold.  Allow arbitrary functions for keyword :bool.
+
+2020-01-01  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el (bbdb-mode): Bind buffer-undo-list to t.
 
 2020-01-01  Roland Winkler  <winkler@gnu.org>

@@ -202,11 +202,16 @@ matching the regexps RE:
 Each of these keywords may appear multiple times.
 Other keywords:
 
-:bool BOOL        Combine the search for multiple fields using BOOL.
-                  BOOL may be either `or' (match either field)
-                  or `and' (match all fields) with default `or'.
+:bool FUN         Combine the search for multiple fields using FUN.
+                  FUN must be a function that takes as many arguments
+                  as there are search keywords in SPEC, for example
+                  `or' (match either field, the default)
+                  or `and' (match all fields).
+:invert VAL       Invert the search if VAL is non-nil.
+                  The default is the return value of `bbdb-search-invert-p'.
+:case-fold VAL    Searches ignore case if VAL is non-nil.
+                  The default is the value of `bbdb-case-fold-search'.
 
-To reverse the search, bind `bbdb-search-invert' to t.
 See also `bbdb-message-search' for fast searches using `bbdb-hashtable'
 but not allowing for regexps.
 
@@ -228,16 +233,18 @@ This usage is discouraged."
             (push (list key val) newspec)))
       (setq spec (apply #'append newspec))))
 
-  (let* ((count 0)
-         (sym-list (mapcar (lambda (_)
-                             (make-symbol
-                              (format "bbdb-re-%d" (setq count (1+ count)))))
-                           spec))
-         (bool (make-symbol "bool"))
-         (not-invert (make-symbol "not-invert"))
-         (matches (make-symbol "matches"))
-         keyw re-list clauses)
-    (set bool ''or) ; default
+  ;; The following defaults are motivated historically by the use
+  ;; of `bbdb-search' in interactive commands.
+  ;; Non-interactively these defaults may not always be useful.
+  (let ((bool 'or) ; default
+        (case-fold 'bbdb-case-fold-search) ; default
+        (invert '(bbdb-search-invert-p)) ; default
+        (sym-list (let ((count 0))
+                    (mapcar (lambda (_)
+                              (make-symbol
+                               (format "bbdb-re-%d" (setq count (1+ count)))))
+                            spec)))
+        keyw re-list clauses)
 
     ;; Check keys.
     (while (keywordp (setq keyw (car spec)))
@@ -336,7 +343,7 @@ This usage is discouraged."
          (let ((sym (pop sym-list)))
            (push `(,sym ,(pop spec)) re-list)
            (push `(let ((mails (bbdb-record-mail record))
-                        (bbdb-case-fold-search t) ; there is no case for mails
+                        (case-fold-search t) ; there is no case for mails
                         m done)
                     (if mails
                         (while (and (setq m (pop mails)) (not done))
@@ -383,31 +390,36 @@ This usage is discouraged."
                  clauses)))
 
         (`:bool
-         (set bool (pop spec)))
+         (setq bool (pop spec)))
+
+        (`:invert
+         (setq invert (pop spec)))
+
+        (`:case-fold
+         (setq case-fold (pop spec)))
 
         ;; Do we need other keywords?
 
-        (_ (error "Keyword `%s' undefines" keyw))))
+        (_ (error "Keyword `%s' undefined" keyw))))
 
-    `(let ((case-fold-search bbdb-case-fold-search)
-           (,not-invert (not (bbdb-search-invert-p)))
-           ,@re-list ,matches)
-       ;; Are there any use cases for `bbdb-search' where BOOL is only
-       ;; known at run time?  A smart byte compiler will hopefully
-       ;; simplify the code below if we know BOOL already at compile time.
-       ;; Alternatively, BOOL could also be a user function that
-       ;; defines more complicated boolian expressions.  Yet then we loose
-       ;; the efficiency of `and' and `or' that evaluate its arguments
-       ;; as needed.  We would need instead boolian macros that the compiler
-       ;; can analyze at compile time.
-       (if (eq 'and ,(symbol-value bool))
-           (dolist (record ,records)
-             (unless (eq ,not-invert (not (and ,@clauses)))
-                 (push record ,matches)))
+    ;; The clauses have the same order as the keywords.
+    (setq clauses (nreverse clauses))
+
+    ;; Silly me!  For the keyword :bool, we used to use double-quoted
+    ;; arguments like ":bool 'or".  Strip off one quote to preserve
+    ;; backward compatibility.
+    (if (eq 'quote (car-safe bool))
+        (setq bool (cadr bool)))
+
+    (let ((not-invert (make-symbol "not-invert"))
+          (matches (make-symbol "matches")))
+      `(let ((case-fold-search ,case-fold)
+             (,not-invert (not ,invert))
+             ,@re-list ,matches)
          (dolist (record ,records)
-           (unless (eq ,not-invert (not (or ,@clauses)))
-               (push record ,matches))))
-       (nreverse ,matches))))
+           (unless (eq ,not-invert (not (,bool ,@clauses)))
+             (push record ,matches)))
+         (nreverse ,matches)))))
 
 (defun bbdb-search-read (&optional field)
   "Read regexp to search FIELD values of records.
@@ -432,7 +444,7 @@ in either the name(s), organization, address, phone, mail, or xfields."
   (let ((records (bbdb-search (bbdb-records) :all-names regexp
                               :organization regexp :mail regexp
                               :xfield (cons '* regexp)
-                              :phone regexp :address regexp :bool 'or)))
+                              :phone regexp :address regexp :bool or)))
     (if records
         (bbdb-display-records records layout nil t)
       (message "No records matching '%s'" regexp))))
