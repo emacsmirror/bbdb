@@ -4462,7 +4462,8 @@ Important variables:
 There are numerous hooks.  M-x apropos ^bbdb.*hook RET
 
 \\{bbdb-mode-map}"
-  (setq truncate-lines t
+  (setq buffer-undo-list t ;; No need to keep an undo list in *BBDB* buffer
+        truncate-lines t
         default-directory (file-name-directory bbdb-file)
         mode-line-buffer-identification
         (list 24 (buffer-name) "  "
