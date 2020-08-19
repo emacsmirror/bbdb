@@ -31,6 +31,14 @@ AM_INIT_AUTOMAKE([1.13 -Wall gnu])
 
 AC_PACKAGE_DATE
 
+# Process options
+AC_MSG_CHECKING([enable_docs])
+AC_ARG_ENABLE([docs],
+       [AS_HELP_STRING([--enable-docs],[build and install LaTeX-format documentation (default=yes)])],,
+       [enable_docs=yes])
+AC_MSG_RESULT([$enable_docs])
+AM_CONDITIONAL([DOCS], [test x${enable_docs} = xyes])
+
 # Checks for programs.
 AC_PROG_INSTALL
 

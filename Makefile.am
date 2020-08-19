@@ -18,7 +18,11 @@
 # You should have received a copy of the GNU General Public License
 # along with BBDB.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = lisp doc tex
+SUBDIRS = lisp tex
+
+if DOCS
+SUBDIRS += doc
+endif
 
 doc_DATA = COPYING ChangeLog AUTHORS NEWS README TODO
 
