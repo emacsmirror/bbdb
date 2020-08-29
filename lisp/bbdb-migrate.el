@@ -1,6 +1,6 @@
-;;; bbdb-migrate.el --- migration functions for BBDB -*- lexical-binding: t -*-
+;;; bbdb-migrate.el --- migration functions for BBDB -*- lexical-binding:t -*-
 
-;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -97,22 +97,16 @@
   records)
 
 (defconst bbdb-migrate-alist
-  '((3 (bbdb-record-xfields bbdb-record-set-xfields
-        bbdb-migrate-dates))
-    (4 (bbdb-record-address bbdb-record-set-address
-        bbdb-migrate-add-country))
-    (5 (bbdb-record-address bbdb-record-set-address
-        bbdb-migrate-streets-to-list))
-    (6 (bbdb-record-address bbdb-record-set-address
-        bbdb-migrate-postcode-to-string))
-    (7 (bbdb-record-xfields bbdb-record-set-xfields
-        bbdb-migrate-xfields-to-list)
-       (bbdb-record-organization bbdb-record-set-organization
-        bbdb-migrate-organization-to-list)))
+  '((3 (bbdb-record-xfields bbdb-migrate-dates))
+    (4 (bbdb-record-address bbdb-migrate-add-country))
+    (5 (bbdb-record-address bbdb-migrate-streets-to-list))
+    (6 (bbdb-record-address bbdb-migrate-postcode-to-string))
+    (7 (bbdb-record-xfields bbdb-migrate-xfields-to-list)
+       (bbdb-record-organization bbdb-migrate-organization-to-list)))
   ;; Formats 8 and 9: do nothing
   "Alist (VERSION . CHANGES).
-CHANGES is a list with elements (GET SET FUNCTION) that expands
-to action (SET record (FUNCTION (GET record))).")
+CHANGES is a list with elements (GETTER FUNCTION) that expands
+to action (setf (GETTER record) (FUNCTION (GETTER record))).")
 
 (defun bbdb-migrate-lambda (old)
   "Return the function to migrate from OLD to `bbdb-file-format'.
@@ -121,60 +115,61 @@ The manipulations are defined by `bbdb-migrate-alist'."
     (while (<= old bbdb-file-format)
       (setq spec (append spec (cdr (assoc old bbdb-migrate-alist)))
             old (1+ old)))
-    `(lambda (record)
-       ,@(mapcar (lambda (change)
-                   ;; (SET record (FUNCTION (GET record)))
-                   `(,(nth 1 change) record ; SET
-                     (,(nth 2 change) ; FUNCTION
-                      (,(nth 0 change) record)))) ; GET
-                 spec)
-       record)))
+    (eval
+     `(lambda (record)
+        ,@(mapcar (lambda (change)
+                    (pcase-let ((`(,getter ,migrate-function) change))
+                      ;; (SET record (FUNCTION (GET record)))
+                      `(cl-callf ,migrate-function (,getter record))))
+                  spec)
+        record)
+     'lexical)))
 
 (defun bbdb-migrate-postcode-to-string (addresses)
   "Make all postcodes plain strings.
 This uses the code that used to be in `bbdb-address-postcode'."
   ;; apply the function to all addresses in the list and return a
   ;; modified list of addresses
-  (mapcar (lambda (address)
-            (let ((postcode (bbdb-address-postcode address)))
-              (bbdb-address-set-postcode
-               address
-               (cond ((stringp postcode)
-                      postcode)
-                     ;; nil or zero
-                     ((or (zerop postcode)
-                          (null postcode))
-                      "")
-                     ;; a number
-                     ((numberp postcode)
-                      (format "%d" postcode))
-                     ;; list with two strings
-                     ((and (stringp (nth 0 postcode))
-                           (stringp (nth 1 postcode)))
-                      ;; the second string starts with 4 digits
-                      (if (string-match "^[0-9][0-9][0-9][0-9]"
-                                        (nth 1 postcode))
-                          (format "%s-%s" (nth 0 postcode) (nth 1 postcode))
-                        ;; ("abc" "efg")
-                        (format "%s %s" (nth 0 postcode) (nth 1 postcode))))
-                     ;; list with two numbers
-                     ((and (integerp (nth 0 postcode))
-                           (integerp (nth 1 postcode)))
-                      (format "%05d-%04d" (nth 0 postcode) (nth 1 postcode)))
-                     ;; list with a string and a number
-                     ((and (stringp (nth 0 postcode))
-                           (integerp (nth 1 postcode)))
-                      (format "%s-%d" (nth 0 postcode) (nth 1 postcode)))
-                     ;; ("SE" (123 45))
-                     ((and (stringp (nth 0 postcode))
-                           (integerp (nth 0 (nth 1 postcode)))
-                           (integerp (nth 1 (nth 1 postcode))))
-                      (format "%s-%d %d" (nth 0 postcode) (nth 0 (nth 1 postcode))
-                              (nth 1 (nth 1 postcode))))
-                     ;; last possibility
-                     (t (format "%s" postcode)))))
-            address)
-          addresses))
+  (mapcar
+   (lambda (address)
+     (let ((postcode (bbdb-address-postcode address)))
+       (setf (bbdb-address-postcode address)
+             (cond ((stringp postcode)
+                    postcode)
+                   ;; nil or zero
+                   ((or (zerop postcode)
+                        (null postcode))
+                    "")
+                   ;; a number
+                   ((numberp postcode)
+                    (format "%d" postcode))
+                   ;; list with two strings
+                   ((and (stringp (nth 0 postcode))
+                         (stringp (nth 1 postcode)))
+                    ;; the second string starts with 4 digits
+                    (if (string-match "^[0-9][0-9][0-9][0-9]"
+                                      (nth 1 postcode))
+                        (format "%s-%s" (nth 0 postcode) (nth 1 postcode))
+                      ;; ("abc" "efg")
+                      (format "%s %s" (nth 0 postcode) (nth 1 postcode))))
+                   ;; list with two numbers
+                   ((and (integerp (nth 0 postcode))
+                         (integerp (nth 1 postcode)))
+                    (format "%05d-%04d" (nth 0 postcode) (nth 1 postcode)))
+                   ;; list with a string and a number
+                   ((and (stringp (nth 0 postcode))
+                         (integerp (nth 1 postcode)))
+                    (format "%s-%d" (nth 0 postcode) (nth 1 postcode)))
+                   ;; ("SE" (123 45))
+                   ((and (stringp (nth 0 postcode))
+                         (integerp (nth 0 (nth 1 postcode)))
+                         (integerp (nth 1 (nth 1 postcode))))
+                    (format "%s-%d %d" (nth 0 postcode) (nth 0 (nth 1 postcode))
+                            (nth 1 (nth 1 postcode))))
+                   ;; last possibility
+                   (t (format "%s" postcode)))))
+     address)
+   addresses))
 
 (defun bbdb-migrate-dates (xfields)
   "Change date formats.

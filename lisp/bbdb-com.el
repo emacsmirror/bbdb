@@ -1,6 +1,6 @@
 ;;; bbdb-com.el --- user-level commands of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -59,8 +59,8 @@ If RECORDS is a single record turn it into a list.
 If FULL is non-nil, assume that RECORDS include display information."
   (if records
       (if full
-          (if (vectorp (car records)) (list records) records)
-        (if (vectorp records) (list records) records))))
+          (if (bbdb-record-p (car records)) (list records) records)
+        (if (bbdb-record-p records) (list records) records))))
 
 ;; Note about BBDB prefix commands:
 ;; `bbdb-do-all-records', `bbdb-append-display' and `bbdb-search-invert'
@@ -761,7 +761,7 @@ Return a list containing four numbers or one string."
   ;; Is this always correct?  What about an extension zero?
   ;; Should we use nil instead of zeros?
   (unless style (setq style bbdb-phone-style))
-  (let ((area-regexp (concat "(?[ \t]*\\+?1?[ \t]*[-\(]?[ \t]*[-\(]?[ \t]*"
+  (let ((area-regexp (concat "(?[ \t]*\\+?1?[ \t]*[-(]?[ \t]*[-(]?[ \t]*"
                              "\\([2-9][0-9][0-9]\\)[ \t]*)?[-./ \t]*"))
         (main-regexp (concat "\\([1-9][0-9][0-9]\\)[ \t]*[-.]?[ \t]*"
                              "\\([0-9][0-9][0-9][0-9]\\)[ \t]*"))
@@ -827,18 +827,18 @@ but does ensure that there will not be name collisions."
       (bbdb-error-retry
        (setq name (bbdb-read-name first-and-last))
        (bbdb-check-name name))
-      (bbdb-record-set-firstname record (car name))
-      (bbdb-record-set-lastname record (cdr name)))
+      (setf (bbdb-record-firstname record) (car name))
+      (setf (bbdb-record-lastname record) (cdr name)))
 
     ;; organization
-    (bbdb-record-set-organization record (bbdb-read-organization))
+    (setf (bbdb-record-organization record) (bbdb-read-organization))
 
     ;; mail
     (let (mail)
       (bbdb-error-retry
        (setq mail (bbdb-split 'mail (bbdb-read-string "E-Mail Addresses: ")))
        (bbdb-check-mail mail))
-      (bbdb-record-set-mail record mail))
+      (setf (bbdb-record-mail record) mail))
 
     ;; address
     (let (addresses label)
@@ -849,7 +849,7 @@ but does ensure that there will not be name collisions."
                                   nil bbdb-address-label-list))))
         ;; Here we could also already update the completion lists.  Bother?
         (push (bbdb-record-edit-address nil label) addresses))
-      (bbdb-record-set-address record (nreverse addresses)))
+      (setf (bbdb-record-address record) (nreverse addresses)))
 
     ;; phones
     (let (phones label)
@@ -859,13 +859,13 @@ but does ensure that there will not be name collisions."
                                   "Phone Label [RET when done]: "
                                   nil bbdb-phone-label-list))))
         (push (bbdb-record-edit-phone nil label) phones))
-      (bbdb-record-set-phone record (nreverse phones)))
+      (setf (bbdb-record-phone record) (nreverse phones)))
 
     ;; `bbdb-default-xfield'
     (let ((xfield (bbdb-read-xfield bbdb-default-xfield)))
       (unless (string= "" xfield)
-        (bbdb-record-set-xfields
-         record (list (cons bbdb-default-xfield xfield)))))
+        (setf (bbdb-record-xfields record)
+              (list (cons bbdb-default-xfield xfield)))))
 
     record))
 
@@ -966,7 +966,8 @@ The following keywords are supported in SPEC:
       (setq spec (apply #'append newspec))))
 
   (let ((record (bbdb-empty-record))
-        (record-type (cdr bbdb-record-type))
+        ;; FIXME: Use something like `bbdb-record--make' i.s.o `vector'.
+        (record-type (apply #'vector (cdr bbdb-record-type)))
         (check (prog1 (memq :check spec)
                  (setq spec (delq :check spec))))
         keyw)
@@ -983,57 +984,57 @@ The following keywords are supported in SPEC:
                                                    (cons string string))
                                          t)))
            (bbdb-check-name name) ; check for duplicates
-           (bbdb-record-set-firstname record (car name))
-           (bbdb-record-set-lastname record (cdr name))))
+           (setf (bbdb-record-firstname record) (car name))
+           (setf (bbdb-record-lastname record) (cdr name))))
 
         (`:affix
          (let ((affix (bbdb-split-maybe 'affix (pop spec))))
            (if check (bbdb-check-type affix (bbdb-record-affix record-type) t))
-           (bbdb-record-set-affix record affix)))
+           (setf (bbdb-record-affix record) affix)))
 
         (`:organization
          (let ((organization (bbdb-split-maybe 'organization (pop spec))))
            (if check (bbdb-check-type
                       organization (bbdb-record-organization record-type) t))
-           (bbdb-record-set-organization record organization)))
+           (setf (bbdb-record-organization record) organization)))
 
         (`:aka
          (let ((aka (bbdb-split-maybe 'aka (pop spec))))
            (if check (bbdb-check-type aka (bbdb-record-aka record-type) t))
            (bbdb-check-name aka)
-           (bbdb-record-set-aka record aka)))
+           (setf (bbdb-record-aka record) aka)))
 
         (`:mail
          (let ((mail (bbdb-split-maybe 'mail (pop spec))))
            (if check (bbdb-check-type mail (bbdb-record-mail record-type) t))
            (bbdb-check-mail mail)
-           (bbdb-record-set-mail record mail)))
+           (setf (bbdb-record-mail record) mail)))
 
         (`:phone
          (let ((phone (pop spec)))
            (if check (bbdb-check-type phone (bbdb-record-phone record-type) t))
-           (bbdb-record-set-phone record phone)))
+           (setf (bbdb-record-phone record) phone)))
 
         (`:address
          (let ((address (pop spec)))
            (if check (bbdb-check-type address (bbdb-record-address record-type) t))
-           (bbdb-record-set-address record address)))
+           (setf (bbdb-record-address record) address)))
 
         (`:xfields
          (let ((xfields (pop spec)))
            (if check (bbdb-check-type xfields (bbdb-record-xfields record-type) t))
-           (bbdb-record-set-xfields record xfields)))
+           (setf (bbdb-record-xfields record) xfields)))
 
         (`:uuid
          (let ((uuid (pop spec)))
            (if check (bbdb-check-type uuid (bbdb-record-uuid record-type) t))
-           (bbdb-record-set-uuid record uuid)))
+           (setf (bbdb-record-uuid record) uuid)))
 
         (`:creation-date
          (let ((creation-date (pop spec)))
            (if check (bbdb-check-type
                       creation-date (bbdb-record-creation-date record-type) t))
-           (bbdb-record-set-creation-date record creation-date)))
+           (setf (bbdb-record-creation-date record) creation-date)))
 
         (_ (error "Keyword `%s' undefined" keyw))))
 
@@ -1362,7 +1363,7 @@ If the country field of ADDRESS is nonempty and IGNORE-COUNTRY is nil,
 use the rule from `bbdb-address-format-list' matching this country.
 Otherwise, use the default rule according to `bbdb-address-format-list'."
   (unless address
-    (setq address (make-vector bbdb-address-length nil)))
+    (setq address (bbdb-address--make)))
   (unless label
     (setq label (bbdb-read-string "Label: "
                                   (bbdb-address-label address)
@@ -1410,19 +1411,20 @@ Otherwise, use the default rule according to `bbdb-address-format-list'."
                       "Country: " (or (bbdb-address-country address)
                                       bbdb-default-country)
                       bbdb-country-list))))))
-    (bbdb-address-set-label address label)
-    (bbdb-address-set-streets address (elt new-addr 0))
-    (bbdb-address-set-city address (elt new-addr 1))
-    (bbdb-address-set-state address (elt new-addr 2))
-    (bbdb-address-set-postcode address (elt new-addr 3))
-    (if (string= "" (bbdb-concat "" (elt new-addr 0) (elt new-addr 1)
-                                 (elt new-addr 2) (elt new-addr 3)
-                                 (elt new-addr 4)))
-        ;; User did not enter anything. this causes a display bug.
-        ;; The following is a temporary fix.  Ideally, we would simply discard
-        ;; the entire address, but that requires bigger hacking.
-        (bbdb-address-set-country address "Emacs")
-      (bbdb-address-set-country address (elt new-addr 4)))
+    (setf (bbdb-address-label address) label)
+    (setf (bbdb-address-streets address) (elt new-addr 0))
+    (setf (bbdb-address-city address) (elt new-addr 1))
+    (setf (bbdb-address-state address) (elt new-addr 2))
+    (setf (bbdb-address-postcode address) (elt new-addr 3))
+    (setf (bbdb-address-country address)
+          (if (string= "" (bbdb-concat "" (elt new-addr 0) (elt new-addr 1)
+                                       (elt new-addr 2) (elt new-addr 3)
+                                       (elt new-addr 4)))
+              ;; User did not enter anything. this causes a display bug.
+              ;; The following is a temporary fix.  Ideally, we would simply discard
+              ;; the entire address, but that requires bigger hacking.
+              "Emacs"
+            (elt new-addr 4)))
     address))
 
 (defun bbdb-edit-address-street (streets)
@@ -1469,7 +1471,7 @@ If LABEL is nil, edit the label sub-field of PHONE as well."
   ;; two or four elements.  We do not know whether after editing PHONE
   ;; we still have a number requiring the same format as PHONE.
   ;; So we throw away the argument PHONE and return a new vector.
-  (apply #'vector
+  (apply #'bbdb-phone--make
          (or label
              (bbdb-read-string "Label: "
                                (and phone (bbdb-phone-label phone))
@@ -1857,9 +1859,11 @@ in `bbdb-change-hook')."
   (interactive (list (bbdb-do-records) t))
   (bbdb-editable)
   (dolist (record (bbdb-record-list records))
-    (bbdb-record-set-address
-     record (sort (bbdb-record-address record)
-                  (lambda (xx yy) (string< (aref xx 0) (aref yy 0)))))
+    (setf (bbdb-record-address record)
+          (sort (bbdb-record-address record)
+                ;; FIXME: Should these `aref's be replaced by
+                ;; `bbdb-address-label'?
+                (lambda (xx yy) (string< (aref xx 0) (aref yy 0)))))
     (if update
         (bbdb-change-record record))))
 
@@ -1874,9 +1878,11 @@ in `bbdb-change-hook')."
   (interactive (list (bbdb-do-records) t))
   (bbdb-editable)
   (dolist (record (bbdb-record-list records))
-    (bbdb-record-set-phone
-     record (sort (bbdb-record-phone record)
-                  (lambda (xx yy) (string< (aref xx 0) (aref yy 0)))))
+    (setf (bbdb-record-phone record)
+          (sort (bbdb-record-phone record)
+                ;; FIXME: Should these `aref's be replaced by
+                ;; `bbdb-phone-label'?
+                (lambda (xx yy) (string< (aref xx 0) (aref yy 0)))))
     (if update
         (bbdb-change-record record))))
 
@@ -1891,11 +1897,11 @@ in `bbdb-change-hook')."
   (interactive (list (bbdb-do-records) t))
   (bbdb-editable)
   (dolist (record (bbdb-record-list records))
-    (bbdb-record-set-xfields
-     record (sort (bbdb-record-xfields record)
-                  (lambda (a b)
-                    (< (or (cdr (assq (car a) bbdb-xfields-sort-order)) 100)
-                       (or (cdr (assq (car b) bbdb-xfields-sort-order)) 100)))))
+    (setf (bbdb-record-xfields record)
+          (sort (bbdb-record-xfields record)
+                (lambda (a b)
+                  (< (or (cdr (assq (car a) bbdb-xfields-sort-order)) 100)
+                     (or (cdr (assq (car b) bbdb-xfields-sort-order)) 100)))))
     (if update
         (bbdb-change-record record))))
 (define-obsolete-function-alias 'bbdb-sort-notes #'bbdb-sort-xfields "3.0")
@@ -2108,7 +2114,7 @@ Completion is done according to `bbdb-completion-list'.  If the user
 just hits return, nil is returned.  Otherwise, a valid response is forced."
   (let* ((completion-ignore-case t)
          (string (completing-read prompt bbdb-hashtable
-                                  'bbdb-completion-predicate t)))
+                                  #'bbdb-completion-predicate t)))
     (unless (string= "" string)
       (let (records)
         (dolist (record (gethash string bbdb-hashtable))
@@ -2224,7 +2230,7 @@ as part of the MUA insinuation."
          (completion-ignore-case t)
          (completion (and orig
                           (try-completion orig bbdb-hashtable
-                                          'bbdb-completion-predicate)))
+                                          #'bbdb-completion-predicate)))
          all-completions dwim-completions one-record)
 
     (unless done
@@ -2243,7 +2249,7 @@ as part of the MUA insinuation."
           (setq completion (substring completion 0 (match-beginning 0))))
 
       (setq all-completions (all-completions orig bbdb-hashtable
-                                             'bbdb-completion-predicate))
+                                             #'bbdb-completion-predicate))
       ;; Resolve the records matching ORIG:
       ;; Multiple completions may match the same record
       (let ((records (delete-dups
@@ -2716,7 +2722,7 @@ is non-nil.  Do not dial the extension."
       (setq phone (car (bbdb-record-phone (bbdb-current-record)))))
   (if (eq (car-safe phone) 'phone)
       (setq phone (car (cdr phone))))
-  (or (vectorp phone) (error "Not on a phone field"))
+  (or (bbdb-phone-p phone) (error "Not on a phone field"))
 
   (let ((number (bbdb-phone-string phone))
         shortnumber)

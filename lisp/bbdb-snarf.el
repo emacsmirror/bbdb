@@ -1,6 +1,6 @@
 ;;; bbdb-snarf.el --- convert free-form text to BBDB records -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -189,8 +189,8 @@ The first subexpression becomes the URL."
       (let ((name (match-string 1)))
         (replace-match "")
         (setq name (bbdb-divide-name name))
-        (bbdb-record-set-firstname record (car name))
-        (bbdb-record-set-lastname record (cdr name)))))
+        (setf (bbdb-record-firstname record) (car name))
+        (setf (bbdb-record-lastname record) (cdr name)))))
 
 (defun bbdb-snarf-name-mail (record)
   "Snarf name from mail address for RECORD."
@@ -202,8 +202,8 @@ The first subexpression becomes the URL."
                (setq name (car (bbdb-extract-address-components
                                 (car (bbdb-record-mail record)))))
                (setq name (bbdb-divide-name name)))
-      (bbdb-record-set-firstname record (car name))
-      (bbdb-record-set-lastname record (cadr name)))))
+      (setf (bbdb-record-firstname record) (car name))
+      (setf (bbdb-record-lastname record) (cadr name)))))
 
 (defun bbdb-snarf-mail-address (record)
   "Snarf name and mail address for RECORD."
@@ -212,9 +212,9 @@ The first subexpression becomes the URL."
   ;; a more complex rule, the buffer should be narrowed appropriately.
   (let* ((data (bbdb-extract-address-components (buffer-string)))
          (name (and (car data) (bbdb-divide-name (car data)))))
-    (bbdb-record-set-firstname record (car name))
-    (bbdb-record-set-lastname  record (cdr name))
-    (bbdb-record-set-mail record (list (cadr data)))
+    (setf (bbdb-record-firstname record) (car name))
+    (setf (bbdb-record-lastname  record) (cdr name))
+    (setf (bbdb-record-mail record) (list (cadr data)))
     (delete-region (point-min) (point-max))))
 
 (defun bbdb-snarf-mail (record)
@@ -224,7 +224,7 @@ This uses the first subexpresion of `bbdb-snarf-mail-regexp'."
     (while (re-search-forward bbdb-snarf-mail-regexp nil t)
       (push (match-string 1) mails)
       (replace-match ""))
-    (bbdb-record-set-mail record (nconc (bbdb-record-mail record) mails))))
+    (setf (bbdb-record-mail record) (nconc (bbdb-record-mail record) mails))))
 
 (defun bbdb-snarf-label (field)
   "Extract the label before point, or return default label for FIELD."
@@ -250,8 +250,8 @@ This uses the first subexpresion of `bbdb-snarf-phone-nanp-regexp'."
                          (bbdb-parse-phone (match-string 1))))
               phones)
         (replace-match "")))
-    (bbdb-record-set-phone record (nconc (bbdb-record-phone record)
-                                         (nreverse phones)))))
+    (setf (bbdb-record-phone record) (nconc (bbdb-record-phone record)
+                                            (nreverse phones)))))
 
 (defun bbdb-snarf-phone-eu (record &optional phone-regexp)
   "Snarf European phone numbers for RECORD.
@@ -259,41 +259,44 @@ PHONE-REGEXP is the regexp to match a phone number.
 It defaults to `bbdb-snarf-phone-eu-regexp'."
   (let ((case-fold-search t) phones)
     (while (re-search-forward (or phone-regexp
-                                  bbdb-snarf-phone-eu-regexp) nil t)
+                                  bbdb-snarf-phone-eu-regexp)
+                              nil t)
       (goto-char (match-beginning 0))
       (push (vector (bbdb-snarf-label 'phone)
                     (match-string 1))
             phones)
       (replace-match ""))
-    (bbdb-record-set-phone record (nconc (bbdb-record-phone record)
-                                         (nreverse phones)))))
+    (setf (bbdb-record-phone record) (nconc (bbdb-record-phone record)
+                                            (nreverse phones)))))
 
 (defun bbdb-snarf-streets (address)
   "Snarf streets for ADDRESS.  This assumes a narrowed region."
-  (bbdb-address-set-streets address (bbdb-split "\n" (buffer-string)))
+  (setf (bbdb-address-streets address) (bbdb-split "\n" (buffer-string)))
   (delete-region (point-min) (point-max)))
 
 (defun bbdb-snarf-address-us (record)
   "Snarf a US address for RECORD."
-  (let ((address (make-vector bbdb-address-length nil)))
+  (let ((address (bbdb-address--make)))
     (cond ((re-search-forward bbdb-snarf-postcode-us-regexp nil t)
            ;; Streets, City, State Postcode
            (save-restriction
              (narrow-to-region (point-min) (match-end 0))
              ;; Postcode
              (goto-char (match-beginning 0))
-             (bbdb-address-set-postcode address
-              (bbdb-parse-postcode (match-string 1)))
+             (setf (bbdb-address-postcode address)
+                   (bbdb-parse-postcode (match-string 1)))
              ;; State
              (skip-chars-backward " \t")
              (let ((pos (point)))
                (skip-chars-backward "^ \t,")
-               (bbdb-address-set-state address (buffer-substring (point) pos)))
+               (setf (bbdb-address-state address)
+                     (buffer-substring (point) pos)))
              ;; City
              (skip-chars-backward " \t,")
              (let ((pos (point)))
                (beginning-of-line)
-               (bbdb-address-set-city address (buffer-substring (point) pos)))
+               (setf (bbdb-address-city address)
+                     (buffer-substring (point) pos)))
              ;; Toss it
              (forward-char -1)
              (delete-region (point) (point-max))
@@ -303,8 +306,8 @@ It defaults to `bbdb-snarf-phone-eu-regexp'."
           ;; Try for just Streets, City, State
           ((let (case-fold-search)
              (re-search-forward "^\\(.*\\), \\([A-Z][A-Za-z]\\)$" nil t))
-           (bbdb-address-set-city address (match-string 1))
-           (bbdb-address-set-state address (match-string 2))
+           (setf (bbdb-address-city address) (match-string 1))
+           (setf (bbdb-address-state address) (match-string 2))
            (replace-match "")
            (save-restriction
              (narrow-to-region (point-min) (match-beginning 0))
@@ -312,13 +315,13 @@ It defaults to `bbdb-snarf-phone-eu-regexp'."
              (bbdb-snarf-streets address))))
     (when (bbdb-address-city address)
       (if bbdb-snarf-address-us-country
-          (bbdb-address-set-country address bbdb-snarf-address-us-country))
+          (setf (bbdb-address-country address) bbdb-snarf-address-us-country))
       ;; Fixme: There are no labels anymore.  `bbdb-snarf-streets' snarfed
       ;; everything that was left!
-      (bbdb-address-set-label address (bbdb-snarf-label 'address))
-      (bbdb-record-set-address record
-                               (nconc (bbdb-record-address record)
-                                      (list address))))))
+      (setf (bbdb-address-label address) (bbdb-snarf-label 'address))
+      (setf (bbdb-record-address record)
+            (nconc (bbdb-record-address record)
+                   (list address))))))
 
 (defun bbdb-snarf-address-eu (record &optional postcode-regexp country)
   "Snarf a European address for RECORD.
@@ -328,27 +331,29 @@ is used in many continental European countries.
 POSTCODE-REGEXP defaults to `bbdb-snarf-postcode-eu-regexp'.
 COUNTRY is the country to use.  It defaults to `bbdb-snarf-address-eu-country'."
   (when (re-search-forward (or postcode-regexp
-                               bbdb-snarf-postcode-eu-regexp) nil t)
-    (let ((address (make-vector bbdb-address-length nil)))
+                               bbdb-snarf-postcode-eu-regexp)
+                           nil t)
+    (let ((address (bbdb-address--make)))
       (save-restriction
         (goto-char (match-end 0))
         (narrow-to-region (point-min) (line-end-position))
         ;; Postcode
-        (bbdb-address-set-postcode address (match-string 1))
+        (setf (bbdb-address-postcode address) (match-string 1))
         ;; City
         (skip-chars-forward " \t")
-        (bbdb-address-set-city address (buffer-substring (point) (point-max)))
+        (setf (bbdb-address-city address)
+              (buffer-substring (point) (point-max)))
         ;; Toss it
         (delete-region (match-beginning 0) (point-max))
         ;; Streets
         (goto-char (point-min))
         (bbdb-snarf-streets address))
       (unless country (setq country bbdb-snarf-address-eu-country))
-      (if country (bbdb-address-set-country address country))
-      (bbdb-address-set-label address (bbdb-snarf-label 'address))
-      (bbdb-record-set-address record
-                               (nconc (bbdb-record-address record)
-                                      (list address))))))
+      (if country (setf (bbdb-address-country address) country))
+      (setf (bbdb-address-label address) (bbdb-snarf-label 'address))
+      (setf (bbdb-record-address record)
+            (nconc (bbdb-record-address record)
+                   (list address))))))
 
 (defun bbdb-snarf-url (record)
   "Snarf URL for RECORD.
@@ -356,19 +361,17 @@ This uses the first subexpresion of `bbdb-snarf-url-regexp'."
   (when (and bbdb-snarf-url
              (let ((case-fold-search t))
                (re-search-forward bbdb-snarf-url-regexp nil t)))
-    (bbdb-record-set-xfields
-     record
-     (nconc (bbdb-record-xfields record)
-            (list (cons bbdb-snarf-url (match-string 1)))))
+    (setf (bbdb-record-xfields record)
+          (nconc (bbdb-record-xfields record)
+                 (list (cons bbdb-snarf-url (match-string 1)))))
     (replace-match "")))
 
 (defun bbdb-snarf-notes (record)
   "Snarf notes for RECORD."
   (when (/= (point-min) (point-max))
-    (bbdb-record-set-xfields
-     record
-     (nconc (bbdb-record-xfields record)
-            (list (cons bbdb-default-xfield (buffer-string)))))
+    (setf (bbdb-record-xfields record)
+          (nconc (bbdb-record-xfields record)
+                 (list (cons bbdb-default-xfield (buffer-string)))))
     (erase-buffer)))
 
 (defsubst bbdb-snarf-rule-interactive ()

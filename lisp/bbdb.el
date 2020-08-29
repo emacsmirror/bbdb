@@ -1,10 +1,10 @@
 ;;; bbdb.el --- core of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
 
 ;; Maintainer: Roland Winkler <winkler@gnu.org>
 ;; Version: 3.2
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -2344,57 +2344,68 @@ This strips garbage from the user full NAME string."
   (substring-no-properties name))
 
 ;; BBDB data structure
-(defmacro bbdb-defstruct (name &rest elts)
-  ;; FIXME: Use cl-defstruct instead!
-  "Define two functions to operate on vector NAME for each symbol ELT in ELTS.
-The function bbdb-NAME-ELT returns the element ELT in vector NAME.
-The function bbdb-NAME-set-ELT sets ELT.
-Also define a constant bbdb-NAME-length that holds the number of ELTS
-in vector NAME."
+
+(defmacro bbdb--defun-obsolete-setters (type &optional fields)
+  "Define obsolete setters that used to be defined by the old `bbdb-defstruct'."
   (declare (indent 1))
-  (let* ((count 0)
-         (sname (symbol-name name))
-         (uname (upcase sname))
-         (cname (concat "bbdb-" sname "-"))
-         body)
-    (dolist (elt elts)
-      (let* ((selt (symbol-name elt))
-             (setname  (intern (concat cname "set-" selt))))
-        (push (list 'defsubst (intern (concat cname selt)) `(,name)
-                    (format "For BBDB %s read element %i `%s'."
-                            uname count selt)
-                    ;; Use `elt' instead of `aref' so that these functions
-                    ;; also work for the `bbdb-record-type' pseudo-code.
-                    `(elt ,name ,count))
-              body)
-        (push (list 'defsubst setname `(,name value)
-                    (format "For BBDB %s set element %i `%s' to VALUE.  \
-Return VALUE.
-Do not call this function directly.  Call instead `bbdb-record-set-field'
-which ensures the integrity of the database.  Also, this makes your code
-more robust with respect to possible future changes of BBDB's innermost
-internals."
-                            uname count selt)
-                    `(aset ,name ,count value))
-              body))
-      (setq count (1+ count)))
-    (push (list 'defconst (intern (concat cname "length")) count
-                (concat "Length of BBDB `" sname "'."))
-          body)
-    (cons 'progn body)))
+  (unless fields
+    ;; This only works in Emacs≥25!
+    (let* ((class (cl-find-class type))
+           (slots (cl--class-slots class)))
+      (setq fields (mapcar #'cl--slot-descriptor-name slots))))
+  `(progn
+     ,@(mapcar (lambda (field)
+                 (let ((accessor (intern (format "%s-%s" type field))))
+                   `(defun ,(intern (format "%s-set-%s" type field)) (obj val)
+                      (declare (obsolete
+                                ,(format "use (setf (%s OBJ) VAL)) instead"
+                                         accessor)
+                                "BBDB-3.3"))
+                      (setf (,accessor obj) val))))
+               fields)))
 
 ;; Define RECORD:
-(bbdb-defstruct record
+(defalias 'bbdb-record-p #'vectorp)
+(cl-defstruct (bbdb-record
+               (:type vector)
+               (:constructor nil)
+               (:constructor bbdb-record--make ()))
   firstname lastname affix aka organization phone address mail xfields
   uuid creation-date timestamp cache)
+(bbdb--defun-obsolete-setters bbdb-record
+  (firstname lastname affix aka organization phone address mail xfields
+   uuid creation-date timestamp cache))
 
 ;; Define PHONE:
-(bbdb-defstruct phone
+;; FIXME: Currently, the PHONE structure can have two internal formats.
+;; - It can be a vector with elements (LABEL AREA EXCHANGE SUFFIX EXTENSION),
+;;   where LABEL is a string and the remaining elements are integer numbers.
+;;   This scheme refers to the North American Numbering Plan (NANP).
+;; - It can be a vector with elements (LABEL STRING) both of which are strings.
+;; Does the NANP format have any real benefits for NANP numbers?
+;; There should be only one internal format for all phone numbers.  Likely,
+;; this scheme should represent all phone numbers as strings.
+;; Also, it should allow comments as a separate string.
+;; Inspired by RFC3966, it could be something like
+;;   [country code [area code [local number]]] [extension} [comment]
+;; However, this will often require sophisticated parsing.  Is it
+;; worth the effort compared with using a single string?
+(defalias 'bbdb-phone-p #'vectorp)
+(defalias 'bbdb-phone--make #'vector)
+(cl-defstruct (bbdb-phone
+               (:type vector)
+               (:constructor nil))
   label area exchange suffix extension)
+(bbdb--defun-obsolete-setters bbdb-phone (label area exchange suffix extension))
 
 ;; Define ADDRESS:
-(bbdb-defstruct address
+(cl-defstruct (bbdb-address
+               (:type vector)
+               (:constructor nil)
+               (:constructor bbdb-address--make ()))
   label streets city state postcode country)
+(bbdb--defun-obsolete-setters bbdb-address
+  (label streets city state postcode country))
 
 ;; Define record CACHE:
 ;; - fl-name (first and last name of the person referred to by the record),
@@ -2403,7 +2414,10 @@ internals."
 ;; - mail-canon (list of canonical mail addresses)
 ;; - sortkey (the concatenation of the elements used for sorting the record),
 ;; - marker  (position of beginning of record in `bbdb-file')
-(bbdb-defstruct cache
+(cl-defstruct (bbdb-cache
+               (:type vector)
+               (:constructor nil)
+               (:constructor bbdb-cache--make ()))
   fl-name lf-name mail-aka mail-canon sortkey marker)
 
 (defsubst bbdb-record-mail-aka (record)
@@ -2417,8 +2431,8 @@ internals."
 (defun bbdb-empty-record ()
   "Return a new empty record structure with a cache.
 It is the caller's responsibility to make the new record known to BBDB."
-  (let ((record (make-vector bbdb-record-length nil)))
-    (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
+  (let ((record (bbdb-record--make)))
+    (setf (bbdb-record-cache record) (bbdb-cache--make))
     record))
 
 ;; `bbdb-hashtable' associates with each KEY a list of matching records.
@@ -2510,10 +2524,10 @@ KEY must be a string or nil.  Empty strings and nil are ignored."
         (bbdb-puthash (car address) record))
       (push (nth 1 address) mail-canon)
       (bbdb-puthash (nth 1 address) record))
-    (bbdb-cache-set-mail-aka (bbdb-record-cache record)
-                             (nreverse mail-aka))
-    (bbdb-cache-set-mail-canon (bbdb-record-cache record)
-                               (nreverse mail-canon))))
+    (setf (bbdb-cache-mail-aka (bbdb-record-cache record))
+          (nreverse mail-aka))
+    (setf (bbdb-cache-mail-canon (bbdb-record-cache record))
+          (nreverse mail-canon))))
 
 (defun bbdb-hash-update (record old new)
   "Update hash for RECORD.  Remove OLD, insert NEW.
@@ -2601,16 +2615,16 @@ Set full name in cache and hash.  Return first-last name."
     (if lf-name (bbdb-remhash lf-name record)))
   (if (eq t first)
       (setq first (bbdb-record-firstname record))
-    (bbdb-record-set-firstname record first))
+    (setf (bbdb-record-firstname record) first))
   (if (eq t last)
       (setq last (bbdb-record-lastname record))
-    (bbdb-record-set-lastname record last))
+    (setf (bbdb-record-lastname record) last))
   (let ((fl-name (bbdb-concat 'name-first-last first last))
         (lf-name (bbdb-concat 'name-last-first last first))
         (cache (bbdb-record-cache record)))
     ;; Set cache of RECORD
-    (bbdb-cache-set-fl-name cache fl-name)
-    (bbdb-cache-set-lf-name cache lf-name)
+    (setf (bbdb-cache-fl-name cache) fl-name)
+    (setf (bbdb-cache-lf-name cache) lf-name)
     ;; Set hash.  For convenience, the hash contains the full name
     ;; as first-last and last-fist.
     (bbdb-puthash fl-name record)
@@ -2625,12 +2639,11 @@ Set and store it if necessary."
 
 (defun bbdb-record-set-sortkey (record)
   "Record cache function: Set and return RECORD's sortkey."
-  (bbdb-cache-set-sortkey
-   (bbdb-record-cache record)
-   (downcase
-    (bbdb-concat "" (bbdb-record-lastname record)
-                 (bbdb-record-firstname record)
-                 (bbdb-record-organization record)))))
+  (setf (bbdb-cache-sortkey (bbdb-record-cache record))
+        (downcase
+         (bbdb-concat "" (bbdb-record-lastname record)
+                      (bbdb-record-firstname record)
+                      (bbdb-record-organization record)))))
 
 (defsubst bbdb-record-marker (record)
   "Record cache function: Return the marker for RECORD."
@@ -2638,7 +2651,7 @@ Set and store it if necessary."
 
 (defsubst bbdb-record-set-marker (record marker)
   "Record cache function: Set and return RECORD's MARKER."
-  (bbdb-cache-set-marker (bbdb-record-cache record) marker))
+  (setf (bbdb-cache-marker (bbdb-record-cache record)) marker))
 
 (defsubst bbdb-record-xfield (record label)
   "For RECORD return value of xfield LABEL.
@@ -2688,16 +2701,17 @@ Return VALUE."
            (setcdr old-xfield value))
           (value ; new xfield
            (bbdb-pushnewq label bbdb-xfield-label-list)
-           (bbdb-record-set-xfields record
-                                    (append (bbdb-record-xfields record)
-                                            (list (cons label value)))))
+           (setf (bbdb-record-xfields record)
+                 (append (bbdb-record-xfields record)
+                         (list (cons label value)))))
           (old-xfield ; remove
-           (bbdb-record-set-xfields record
-                                    (delq old-xfield
-                                          (bbdb-record-xfields record))))))
+           (setf (bbdb-record-xfields record)
+                 (delq old-xfield
+                       (bbdb-record-xfields record))))))
   value)
 
 (defun bbdb-check-type (object type &optional abort extended)
+  ;; FIXME: Use `cl-typep'?
   "Return non-nil if OBJECT is of type TYPE.
 TYPE is a pseudo-code as in `bbdb-record-type'.
 If ABORT is non-nil, abort with error message if type checking fails.
@@ -2722,7 +2736,8 @@ symbols, numbers, markers, and strings."
                            (setq tmp (= type object)) t)
                           ((stringp type)
                            (setq tmp (and (stringp object)
-                                          (string= type object))) t)))
+                                          (string= type object)))
+                           t)))
                tmp)
               ((not (consp type))
                (error "Atomic type `%s' undefined" type))
@@ -2838,6 +2853,7 @@ See also `bbdb-record-set-field'."
 (define-obsolete-function-alias 'bbdb-record-get-field #'bbdb-record-field "3.0")
 
 (defun bbdb-record-set-field (record field value &optional merge check)
+  ;; FIXME: No caller passes the `check' argument!
   "For RECORD set FIELD to VALUE.  Return VALUE.
 If MERGE is non-nil, merge VALUE with the current value of FIELD.
 If CHECK is non-nil, check syntactically whether FIELD may take VALUE.
@@ -2867,7 +2883,8 @@ See also `bbdb-record-field'."
   (bbdb-editable)
   (if (memq field '(name-lf mail-aka mail-canon aka-all))
       (error "`%s' is not allowed as the name of a field" field))
-  (let ((record-type (cdr bbdb-record-type)))
+  ;; FIXME: Use something like `bbdb-record--make' i.s.o `vector'.
+  (let ((record-type (apply #'vector (cdr bbdb-record-type))))
     (cond ((eq field 'firstname) ; First name
            (if merge (error "Does not merge names"))
            (if check (bbdb-check-type value (bbdb-record-firstname record-type) t))
@@ -2896,7 +2913,7 @@ See also `bbdb-record-field'."
                                                    value 'bbdb-string=)))
            (if check (bbdb-check-type value (bbdb-record-affix record-type) t))
            (setq value (bbdb-list-strings value))
-           (bbdb-record-set-affix record value))
+           (setf (bbdb-record-affix record) value))
 
           ;; Organization
           ((eq field 'organization)
@@ -2907,7 +2924,7 @@ See also `bbdb-record-field'."
            (bbdb-hash-update record (bbdb-record-organization record) value)
            (dolist (organization value)
              (bbdb-pushnew organization bbdb-organization-list))
-           (bbdb-record-set-organization record value))
+           (setf (bbdb-record-organization record) value))
 
           ;; AKA
           ((eq field 'aka)
@@ -2917,7 +2934,7 @@ See also `bbdb-record-field'."
            (setq value (bbdb-list-strings value))
            (bbdb-check-name value record)
            (bbdb-hash-update record (bbdb-record-aka record) value)
-           (bbdb-record-set-aka record value))
+           (setf (bbdb-record-aka record) value))
 
           ;; Mail
           ((eq field 'mail)
@@ -2930,7 +2947,7 @@ See also `bbdb-record-field'."
              (bbdb-remhash aka record))
            (dolist (mail (bbdb-record-mail-canon record))
              (bbdb-remhash mail record))
-           (bbdb-record-set-mail record value)
+           (setf (bbdb-record-mail record) value)
            (bbdb-puthash-mail record))
 
           ;; Phone
@@ -2940,7 +2957,7 @@ See also `bbdb-record-field'."
            (if check (bbdb-check-type value (bbdb-record-phone record-type) t))
            (dolist (phone value)
              (bbdb-pushnew (bbdb-phone-label phone) bbdb-phone-label-list))
-           (bbdb-record-set-phone record value))
+           (setf (bbdb-record-phone record) value))
 
           ;; Address
           ((eq field 'address)
@@ -2955,7 +2972,7 @@ See also `bbdb-record-field'."
              (bbdb-pushnewt (bbdb-address-state address) bbdb-state-list)
              (bbdb-pushnewt (bbdb-address-postcode address) bbdb-postcode-list)
              (bbdb-pushnewt (bbdb-address-country address) bbdb-country-list))
-           (bbdb-record-set-address record value))
+           (setf (bbdb-record-address record) value))
 
           ;; uuid
           ((eq field 'uuid)
@@ -2964,20 +2981,20 @@ See also `bbdb-record-field'."
            (let ((old-uuid (bbdb-record-uuid record)))
              (unless (string= old-uuid value)
                (remhash old-uuid bbdb-uuid-table)
-               (bbdb-record-set-uuid record value)
+               (setf (bbdb-record-uuid record) value)
                (puthash value record bbdb-uuid-table))))
 
           ;; creation-date
           ((eq field 'creation-date)
            ;; MERGE not meaningful
            (if check (bbdb-check-type value (bbdb-record-creation-date record-type) t))
-           (bbdb-record-set-creation-date record value))
+           (setf (bbdb-record-creation-date record) value))
 
           ;; timestamp
           ((eq field 'timestamp)
            ;; MERGE not meaningful
            (if check (bbdb-check-type value (bbdb-record-timestamp record-type) t))
-           (bbdb-record-set-timestamp record value))
+           (setf (bbdb-record-timestamp record) value))
 
           ;; all xfields
           ((eq field 'xfields)
@@ -2997,7 +3014,7 @@ See also `bbdb-record-field'."
                (when (and (cdr xfield) (not (equal "" (cdr xfield))))
                  (push xfield new-xfields)
                  (bbdb-pushnewq (car xfield) bbdb-xfield-label-list)))
-             (bbdb-record-set-xfields record (nreverse new-xfields))))
+             (setf (bbdb-record-xfields record) (nreverse new-xfields))))
 
           ;; Single xfield
           ((symbolp field)
@@ -3107,7 +3124,7 @@ Do this only if `bbdb-check-postcode' is non-nil."
     string))
 
 (defun bbdb-phone-string (phone)
-  "Massage string PHONE into a standard format."
+  "Massage vector PHONE into a standard format."
   ;; Phone numbers should come in two forms:
   (if (= 2 (length phone))
       ;; (1) ["where" "the number"]
@@ -3268,7 +3285,10 @@ BBDB is not editable if it is read-only."
   t)
 
 ;;;###autoload
-(defsubst bbdb-records ()
+(defun bbdb-records ()
+  ;; We used to define it as a `defsubst' but those are treated differently
+  ;; by the ;;;###autoload machinery: calling the function didn't load
+  ;; bbdb.el, so the call to bbdb-buffer then failed :-(
   "Return a list of all BBDB records; read in and parse the db if necessary.
 This function also notices if the corresponding file on disk has been modified."
   (with-current-buffer (bbdb-buffer)
@@ -3405,9 +3425,9 @@ If `bbdb-file' uses an outdated format, migrate to `bbdb-file-format'."
               (unless (looking-at "\\[")
                 (error "BBDB corrupted: junk between records at %s" (point))))
 
-            (bbdb-cache-set-marker
-             (bbdb-record-set-cache record (make-vector bbdb-cache-length nil))
-             (point-marker))
+            (setf (bbdb-cache-marker
+                   (setf (bbdb-record-cache record) (bbdb-cache--make)))
+                  (point-marker))
             (forward-line 1)
 
             ;; Every record must have a unique uuid in `bbdb-uuid-table'.
@@ -3552,12 +3572,12 @@ They are present only for backward compatibility."
                                          bbdb-end-marker))))
                                 (let ((cache (bbdb-record-cache record))
                                       (inhibit-quit t))
-                                  (bbdb-record-set-cache record nil)
+                                  (setf (bbdb-record-cache record) nil)
                                   (prog1 (bbdb-with-print-loadably
                                            (prin1-to-string record))
-                                    (bbdb-record-set-cache record cache))))))
-          (bbdb-record-set-timestamp
-           record (format-time-string bbdb-time-stamp-format nil t))
+                                    (setf (bbdb-record-cache record) cache))))))
+          (setf (bbdb-record-timestamp record)
+                (format-time-string bbdb-time-stamp-format nil t))
           (run-hook-with-args 'bbdb-change-hook record)
           (let ((sort (not (equal (bbdb-cache-sortkey (bbdb-record-cache record))
                                   (bbdb-record-set-sortkey record)))))
@@ -3575,12 +3595,12 @@ They are present only for backward compatibility."
 
       ;; Record is new and not yet in BBDB.
       (unless (bbdb-record-cache record)
-        (bbdb-record-set-cache record (make-vector bbdb-cache-length nil)))
+        (setf (bbdb-record-cache record) (bbdb-cache--make)))
       (unless (bbdb-record-uuid record)
-        (bbdb-record-set-uuid record (bbdb-uuid)))
+        (setf (bbdb-record-uuid record) (bbdb-uuid)))
       (unless (bbdb-record-creation-date record)
-        (bbdb-record-set-creation-date
-         record (format-time-string bbdb-time-stamp-format nil t))
+        (setf (bbdb-record-creation-date record)
+              (format-time-string bbdb-time-stamp-format nil t))
         (run-hook-with-args 'bbdb-create-hook record))
 
       (let ((old-record (gethash (bbdb-record-uuid record) bbdb-uuid-table)))
@@ -3590,8 +3610,8 @@ They are present only for backward compatibility."
                      record old-record)
 
           ;; RECORD is really new.
-          (bbdb-record-set-timestamp
-           record (format-time-string bbdb-time-stamp-format nil t))
+          (setf (bbdb-record-timestamp record)
+                (format-time-string bbdb-time-stamp-format nil t))
           (run-hook-with-args 'bbdb-change-hook record)
           (bbdb-register-record record) ; Call this earlier?
           (bbdb-insert-record-internal record)
@@ -3661,11 +3681,11 @@ that calls the hooks, too."
         (if (and (/= point bbdb-end-marker)
                  (not (looking-at "^\\[")))
             (error "Not inserting before a record (%s)" point)))
-      (bbdb-record-set-cache record nil)
+      (setf (bbdb-record-cache record) nil)
       (insert-before-markers
        (bbdb-with-print-loadably (prin1-to-string record)) "\n")
       (set-marker (bbdb-cache-marker cache) point)
-      (bbdb-record-set-cache record cache))
+      (setf (bbdb-record-cache record) cache))
     record))
 
 (defun bbdb-overwrite-record-internal (record)
@@ -3687,13 +3707,13 @@ that calls the hooks, too."
                  (not (looking-at "\\[")))
             (error "Not inserting before a record (%s)" (point))))
 
-      (bbdb-record-set-cache record nil)
+      (setf (bbdb-record-cache record) nil)
       (insert (bbdb-with-print-loadably (prin1-to-string record)) "\n")
       (delete-region (point)
                      (if (cdr tail)
                          (bbdb-record-marker (car (cdr tail)))
                        bbdb-end-marker))
-      (bbdb-record-set-cache record cache)
+      (setf (bbdb-record-cache record) cache)
 
       (bbdb-debug
         (if (<= (if (cdr tail)
@@ -4721,9 +4741,9 @@ however, after having used other programs to add records to the BBDB."
             ;; and update the cache's marker.
             (setq cache (bbdb-record-cache record))
             (set-marker (bbdb-cache-marker cache) (point))
-            (bbdb-record-set-cache record nil)
+            (setf (bbdb-record-cache record) nil)
             (bbdb-with-print-loadably (prin1 record buf))
-            (bbdb-record-set-cache record cache)
+            (setf (bbdb-record-cache record) cache)
             (insert ?\n)))
         (dolist (buffer (buffer-list))
           (with-current-buffer buffer
