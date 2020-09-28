@@ -1,7 +1,7 @@
 ;;; bbdb-sc.el --- BBDB interface to Supercite -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2020 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -71,12 +71,12 @@
 (require 'bbdb-mua)
 (require 'supercite)
 
+(define-obsolete-variable-alias 'bbdb/sc-attribution-field
+  'bbdb-sc-attribution-field)
 (defcustom bbdb-sc-attribution-field 'attribution
   "The BBDB xfield used for Supercite attribution."
   :group 'bbdb-utilities-sc
   :type '(symbol :tag "Field name"))
-(define-obsolete-variable-alias 'bbdb/sc-attribution-field
-  'bbdb-sc-attribution-field)
 
 (defcustom bbdb-sc-update-records-p 'search
   "How `bbdb-sc-set-attrib' updates BBDB records automatically.

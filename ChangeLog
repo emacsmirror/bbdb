@@ -1,3 +1,6 @@
+2020-09-28  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-sc.el (bbdb-sc-attribution-field): Quieten compiler.
+
 2020-09-28  Stefan Monnier <monnier@iro.umontreal.ca>
 	* lisp/bbdb.el, lisp/bbdb-tex.el, lisp/bbdb-migrate.el: Require
 	cl-lib.
