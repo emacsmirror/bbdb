@@ -181,6 +181,8 @@ With prefix ARG a negative number, do not invert next search."
   (bbdb-prefix-message))
 
 (defmacro bbdb-search (records &rest spec)
+  ;; FIXME: Provide a functional interface so client code can be compiled
+  ;; without having BBDB around!
   "Search RECORDS for fields matching SPEC.
 The following keywords are supported in SPEC to search fields in RECORDS
 matching the regexps RE:

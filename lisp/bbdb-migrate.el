@@ -37,6 +37,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'bbdb)
 
 ;;; Migrating the BBDB

@@ -1,4 +1,8 @@
-2020-08-29  David Maus <lists@dmaus.name>
+2020-09-28  Stefan Monnier <monnier@iro.umontreal.ca>
+	* lisp/bbdb.el, lisp/bbdb-tex.el, lisp/bbdb-migrate.el: Require
+	cl-lib.
+
+2020-08-29  David Maus <dmause@dmaus.name>
 	Use wl sticky buffer name if necessary.
 	* lisp/bbdb-wl.el (bbdb/wl-header): Use wl sticky buffer name if
 	necessary.

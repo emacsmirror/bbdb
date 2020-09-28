@@ -1,6 +1,6 @@
 ;;; bbdb-tex.el --- feed BBDB into LaTeX  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
 
 ;; Authors: Boris Goldowsky <boris@cs.rochester.edu>
 ;;          Dirk Grunwald <grunwald@cs.colorado.edu>
@@ -103,6 +103,7 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl-lib))
 (require 'bbdb)
 (require 'bbdb-com)
 

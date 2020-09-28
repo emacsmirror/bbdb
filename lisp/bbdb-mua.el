@@ -1,6 +1,6 @@
 ;;; bbdb-mua.el --- various MUA functionality for BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2018  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -240,7 +240,7 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
   ;; with the chain `bbdb-mua-auto-update-p' -> `bbdb-select-message'
   ;; -> `bbdb-update-records-p'.
   (while (and (functionp update-p)
-              ;; Bad! `search' is a function in `cl-seq.el'.
+              ;; Bad! `search' is a function in `cl.el'.
               (not (eq update-p 'search)))
     (setq update-p (funcall update-p)))
   (cond ((eq t update-p)

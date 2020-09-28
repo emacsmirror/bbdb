@@ -37,6 +37,7 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl-lib))
 (require 'timezone)
 (require 'bbdb-site)
 
