@@ -1,3 +1,7 @@
+2021-01-07  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-sc.el: Add third arg to define-obsolete-variable-alias
+	and define-obsolete-function-alias.
+
 2020-09-28  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-sc.el (bbdb-sc-attribution-field): Quieten compiler.
 
@@ -2461,7 +2465,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010-2017 Free Software Foundation, Inc.
+  Copyright (C) 2010-2021 Free Software Foundation, Inc.
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 
