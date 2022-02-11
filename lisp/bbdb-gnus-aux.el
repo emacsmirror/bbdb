@@ -1,7 +1,7 @@
 ;;; bbdb-gnus-aux.el --- aux parts of BBDB interface to Gnus -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2022 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -332,8 +332,8 @@ Uwe Brauer
            imap: testimap
 
 This function uses `regexp-opt' to generate the mail-regexp which automatically
-`regexp-quote's its arguments.  Please note: in order that this will work
-with the `nnimap-split-fancy' method you have to use macros, that is your setting
+`regexp-quote's its arguments.  Please note: in order that this will work with
+the `nnimap-split-fancy' method you have to use macros, that is your setting
 will look like:
 
 \(setq nnimap-split-rule  'nnimap-split-fancy

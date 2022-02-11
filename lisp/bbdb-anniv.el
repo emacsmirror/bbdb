@@ -1,6 +1,6 @@
 ;;; bbdb-anniv.el --- get anniversaries from BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2011-2022  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 

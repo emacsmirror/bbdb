@@ -1,6 +1,6 @@
 # lisp/Makefile.am for BBDB
 #
-# Copyright (C) 2010-2017 Roland Winkler <winkler@gnu.org>
+# Copyright (C) 2010-2022 Roland Winkler <winkler@gnu.org>
 
 # Author: Roland Winkler <winkler@gnu.org>
 #  	  Christian Egli <christian.egli@sbs.ch>

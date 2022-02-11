@@ -1,6 +1,6 @@
 ;;; bbdb-message.el --- BBDB interface to Mail Composition Packages. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 

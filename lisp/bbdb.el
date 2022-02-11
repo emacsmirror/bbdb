@@ -1,6 +1,6 @@
 ;;; bbdb.el --- core of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
 
 ;; Maintainer: Roland Winkler <winkler@gnu.org>
 ;; Version: 3.2
@@ -37,7 +37,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'timezone)
 (require 'bbdb-site)
 
@@ -1352,7 +1352,7 @@ For merging xfield LABEL, this will use MERGE-FUN."
   '(name mail message-name message-mail message-address)
   "List of FIELDs considered by `bbdb-mua-summary-unify'.
 For the RECORD matching the address of a message, `bbdb-mua-summary-unify'
-returns the first non-empty field value matching an element FIELD from this list.
+returns the first non-empty field value matching an element FIELD of this list.
 Each element FIELD may be a valid argument of `bbdb-record-field' for RECORD.
 In addition, this list may also include the following elements:
   message-name     The name in the address of the message

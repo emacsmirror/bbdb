@@ -1,6 +1,6 @@
 ;;; bbdb-ispell.el --- export names from BBDB to personal ispell dictionaries -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2011-2022  Free Software Foundation, Inc.
 
 ;; Author: Ivan Kanis <ivan.kanis@googlemail.com>
 

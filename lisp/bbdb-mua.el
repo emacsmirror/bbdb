@@ -1,6 +1,6 @@
 ;;; bbdb-mua.el --- various MUA functionality for BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -1011,8 +1011,8 @@ in the MUA Summary buffer.
 Unification uses `bbdb-mua-summary-unification-list' (see there).
 The first match in this list becomes the text string displayed
 for a message in the MUA Summary buffer instead of ADDRESS.
-If variable `bbdb-mua-summary-mark' is non-nil use it to precede known addresses.
-Return the unified mail address.
+If variable `bbdb-mua-summary-mark' is non-nil use it to precede
+known addresses.  Return the unified mail address.
 
 Currently this works with Gnus and VM.  It requires the BBDB insinuation
 of these MUAs.  Also, the MUA Summary format string must use

@@ -1,6 +1,6 @@
 ;;; bbdb-com.el --- user-level commands of BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -877,7 +877,8 @@ FIRST-AND-LAST controls the reading mode:
 If it is 'first-last read first and last name separately.
 If it is 'last-first read last and first name separately.
 If it is 'fullname read full name at once.
-If it is t read name parts separately, obeying `bbdb-read-name-format' if possible.
+If it is t read name parts separately, obeying
+`bbdb-read-name-format' if possible.
 Otherwise use `bbdb-read-name-format'.
 DFIRST and DLAST are default values for the first and last name.
 Return cons with first and last name."

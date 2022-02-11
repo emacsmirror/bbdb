@@ -1,6 +1,6 @@
 ;;; bbdb-snarf.el --- convert free-form text to BBDB records -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 

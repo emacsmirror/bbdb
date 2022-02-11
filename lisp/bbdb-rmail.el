@@ -1,6 +1,6 @@
 ;;; bbdb-rmail.el --- BBDB interface to Rmail -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2018  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
