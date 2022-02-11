@@ -1,4 +1,8 @@
 2022-02-10  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-mua-update-records): New versions of mu4e
+	use gnus-article-buffer instead of mu4e~view-buffer-name.
+
+2022-02-10  Roland Winkler  <winkler@gnu.org>
 	Update copyright.  Quieten compiler.
 	* lisp/bbdb.el: Require cl-lib.
 

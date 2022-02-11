@@ -55,8 +55,6 @@
   (autoload 'mh-show "mh-show")
   (defvar mh-show-buffer)
 
-  (defvar mu4e~view-buffer-name)
-
   (autoload 'bbdb/wl-header "bbdb-wl")
 
   (autoload 'message-field-value "message")
@@ -604,7 +602,9 @@ If SORT is non-nil, sort records according to `bbdb-record-lessp'."
                              update-p sort))
        ;; mu4e
        ((eq mua 'mu4e)
-        (set-buffer mu4e~view-buffer-name)
+        (set-buffer (if (boundp 'mu4e~view-buffer-name)
+                        mu4e~view-buffer-name ; old version of mu4e
+                      gnus-article-buffer))
         (bbdb-update-records (bbdb-get-address-components header-class)
                              update-p sort))
        ;; Wanderlust
