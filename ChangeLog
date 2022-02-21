@@ -1,4 +1,27 @@
 2022-02-20  Roland Winkler  <winkler@gnu.org>
+	Establish record-addresses associations before annotating records.
+	* lisp/bbdb.el (bbdb-mua-interactive-action): Renamed from
+	bbdb-mua-update-interactive-p.
+	(bbdb-mua-auto-action): Renamed from bbdb-mua-auto-update-p.
+	(bbdb-mua-action): Renamed from bbdb-update-records-p.
+	(bbdb-message-clean-mail-function): Renamed from
+	bbdb-canonicalize-mail-function.
+	(bbdb-message-ignore-mail-re, bbdb-message-ignore-name-re)
+	(bbdb-record-address-alist-function): New variables.
+	(bbdb-offer-to-create): Internal variable removed.
+	(bbdb-clean-address-components): Use bbdb-message-ignore-mail-re
+	and bbdb-message-ignore-name-re.
+	* lisp/bbdb-mua.el (bbdb-mua-interactive-action): Renamed from
+	bbdb-mua-update-interactive-p.
+	(bbdb-update-records): Establish record-addresses associations
+	before annotating records.  Use
+	bbdb-record-address-alist-function.
+	(bbdb-query-create): Provide return value.
+	(bbdb-annotate-message): Perform action per record and
+	address-list.
+	* README: Update lingo.
+
+2022-02-20  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el, configure.ac: Increase version number to 3.2.1.
 
 2022-02-10  Roland Winkler  <winkler@gnu.org>

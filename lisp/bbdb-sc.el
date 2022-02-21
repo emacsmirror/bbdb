@@ -80,7 +80,7 @@
 
 (defcustom bbdb-sc-update-records-p 'search
   "How `bbdb-sc-set-attrib' updates BBDB records automatically.
-This may take the same values as arg UPDATE-P of `bbdb-update-records'."
+This may take the same values as arg ACTION of `bbdb-update-records'."
   :group 'bbdb-utilities-sc
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records" search)

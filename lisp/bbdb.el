@@ -797,7 +797,9 @@ Any other symbol is interpreted as the label of an xfield."
   :group 'bbdb-mua
   :type '(symbol :tag "Field to edit"))
 
-(defcustom bbdb-mua-update-interactive-p '(search . query)
+(define-obsolete-variable-alias 'bbdb-mua-update-interactive-p
+  'bbdb-mua-interactive-action "3.0")
+(defcustom bbdb-mua-interactive-action '(search . query)
   "How BBDB's interactive MUA commands update BBDB records.
 This is a cons pair (WITHOUT-PREFIX . WITH-PREFIX).
 The car is used if the command is called without a prefix.
@@ -833,7 +835,9 @@ WITHOUT-PREFIX and WITH-PREFIX may take the values
                        (function :tag "User-defined function")
                        (const :tag "read arg interactively" read))))
 
-(defcustom bbdb-mua-auto-update-p 'bbdb-select-message
+(define-obsolete-variable-alias 'bbdb-mua-auto-update-p
+  'bbdb-mua-auto-action "3.0")
+(defcustom bbdb-mua-auto-action 'bbdb-select-message
   "How `bbdb-mua-auto-update' updates BBDB records automatically.
 
 Allowed values are (here ADDRESS is an email address found in a message):
@@ -861,10 +865,12 @@ for the respective MUAs in your init file."
                  (const :tag "annotate all messages" create)
                  (function :tag "User-defined function")))
 
-(defcustom bbdb-update-records-p 'search
+(define-obsolete-variable-alias 'bbdb-update-records-p
+  'bbdb-mua-action "3.0")
+(defcustom bbdb-mua-action 'search
   "Return value for `bbdb-select-message' and friends.
 These functions can select messages for further processing by BBDB,
-The amount of subsequent processing is determined by `bbdb-update-records-p'.
+The amount of subsequent processing is determined by `bbdb-mua-action'.
 
 Allowed values are (here ADDRESS is an email address selected
 by `bbdb-select-message'):
@@ -889,7 +895,7 @@ by `bbdb-select-message'):
                  (function :tag "User-defined function")))
 
 (defcustom bbdb-message-headers
-  '((sender     "From" "Resent-From" "Reply-To" "Sender")
+  '((sender     "Resent-From" "Reply-To" "From" "Sender")
     (recipients "Resent-To" "Resent-CC" "To" "CC" "BCC"))
   "Alist of headers to search for sender and recipients mail addresses.
 Each element is of the form
@@ -897,7 +903,9 @@ Each element is of the form
   (CLASS HEADER ...)
 
 The symbol CLASS defines a class of headers.
-The strings HEADER belong to CLASS."
+The strings HEADER belong to CLASS.
+The most important HEADERs should appear first.
+If `bbdb-message-all-addresses' is nil, use only the first matching header."
   :group 'bbdb-mua
   :type 'list)
 
@@ -954,7 +962,8 @@ See also `bbdb-accept-message-alist', which has the opposite effect."
 
 (defcustom bbdb-user-mail-address-re
   (and (stringp user-mail-address)
-       (string-match "\\`\\([^@]*\\)\\(@\\|\\'\\)" user-mail-address)
+       (let ((case-fold-search t))
+         (string-match "\\`\\([^@]*\\)\\(@\\|\\'\\)" user-mail-address))
        (concat "\\<" (regexp-quote (match-string 1 user-mail-address)) "\\>"))
   "A regular expression matching your mail addresses.
 Several BBDB commands extract either the sender or the recipients' email
@@ -974,7 +983,7 @@ Allowed values are:
  t           Automatically change the name to the new value.
  query       Query whether to use the new name.
  nil         Ignore the new name.
- a number    Number of seconds BBDB displays the name mismatch.
+ a number    Number of seconds BBDB displays the name mismatch
                (without further action).
  a function  This is called with two args, the record and the new name.
                It should return one of the above values.
@@ -1052,7 +1061,9 @@ See also `bbdb-add-mails'."
                  (function :tag "Function for analyzing primary handling")
                  (regexp :tag "If the new mail address matches this regexp put it at the end.")))
 
-(defcustom bbdb-canonicalize-mail-function #'bbdb-string-trim
+(define-obsolete-variable-alias 'bbdb-canonicalize-mail-function
+  'bbdb-message-clean-mail-function "3.3")
+(defcustom bbdb-message-clean-mail-function #'bbdb-string-trim
   "If non-nil, it should be a function of one arg: a mail address string.
 When BBDB \"notices\" a message, the corresponding mail addresses are passed
 to this function first.  It acts as a kind of \"filter\" to transform
@@ -1063,6 +1074,16 @@ If this function returns nil, BBDB assumes that there is no mail address.
 See also `bbdb-ignore-redundant-mails'."
   :group 'bbdb-mua
   :type 'function)
+
+(defcustom bbdb-message-ignore-mail-re nil
+  "If non-nil, mail addresses matching this regexp are ignored.
+This can be something like \"not?[-_]?reply@\".
+This variable applies to the case where the name associated with a mail address
+matches an existing record.  Unlike `bbdb-ignore-redundant-mails', it also
+applies to new records.  See also `bbdb-message-clean-mail-function'."
+  :group 'bbdb-mua
+  :type '(choice (const :tag "Do nothing" nil)
+                 (regexp :tag "If a mail address matches this regexp ignore it.")))
 
 (define-obsolete-variable-alias 'bbdb-canonicalize-redundant-mails
   'bbdb-ignore-redundant-mails "3.0")
@@ -1083,7 +1104,8 @@ Allowed values are:
                It should return one of the above values.
  a regexp    If the new mail address matches this regexp never ignore
                this mail address.  Otherwise query to ignore it.
-See also `bbdb-add-mails' and `bbdb-canonicalize-mail-function'."
+See also `bbdb-add-mails', `bbdb-message-clean-mail-function',
+and 'bbdb-message-ignore-mail-re'."
   :group 'bbdb-mua
   :type '(choice (const :tag "Automatically ignore redundant mail addresses" t)
                  (const :tag "Query whether to ignore them" query)
@@ -1095,7 +1117,27 @@ See also `bbdb-add-mails' and `bbdb-canonicalize-mail-function'."
 (defcustom bbdb-message-clean-name-function #'bbdb-message-clean-name-default
   "Function to clean up the name in the header of a message.
 It takes one argument, the name as extracted by
-`mail-extract-address-components'."
+`mail-extract-address-components'.
+If this function returns nil, BBDB assumes that there is no name."
+  :group 'bbdb-mua
+  :type 'function)
+
+(defcustom bbdb-message-ignore-name-re nil
+  "If non-nil, names in a message matching this regexp are ignored."
+  :group 'bbdb-mua
+  :type '(choice (const :tag "Do nothing" nil)
+                 (regexp :tag "If a name matches this regexp ignore it.")))
+
+(defcustom bbdb-record-address-alist-function #'identity
+  "Function massaging the record-addresses associations for annotating records.
+The argument of this function is an alist with elements
+  (RECORD (ADDRESS1 ADDRESS2 ...))
+RECORD is the record that will be annotated.  Each element ADDRESS is a list
+  (NAME MAIL HEADER HEADER-CLASS MUA)
+as returned by `bbdb-get-address-components'.  RECORD may be nil
+when no existing record matches an address.  In such a case, there is
+only one element ADDRESS that BBDB uses to create a new record.
+The return value should be an alist with the same structure as the argument."
   :group 'bbdb-mua
   :type 'function)
 
@@ -1154,7 +1196,7 @@ Hook is run with one argument, the record."
 This automatically annotates the BBDB record of the sender or recipient
 of a message based on the value of a header such as the Subject header.
 This requires that `bbdb-notice-mail-hook' contains `bbdb-auto-notes'
-and that the record already exists or `bbdb-update-records-p' returns such that
+and that the record already exists or `bbdb-mua-action' returns such that
 the record will be created.  Messages matching `bbdb-auto-notes-ignore-messages'
 are ignored.
 
@@ -1709,11 +1751,8 @@ See also `bbdb-silent'.")
 (defvar bbdb-append-display nil
   "Controls the behavior of the command `bbdb-append-display'.")
 
-(defvar bbdb-offer-to-create nil
-  "For communication between `bbdb-update-records' and `bbdb-query-create'.")
-
 (defvar bbdb-update-records-address nil
-  "For communication between `bbdb-update-records' and `bbdb-query-create'.
+  "For `bbdb-notice-mail-hook'.
 It is a list with elements (NAME MAIL HEADER HEADER-CLASS MUA).")
 
 ;;; Buffer-local variables for the database.
@@ -2165,7 +2204,8 @@ Used with variable `bbdb-add-name' and friends."
   (cond ((functionp spec)
          (funcall spec record string))
         ((stringp spec)
-         (unless (string-match spec string) 'query)) ; be least aggressive
+         (unless (let ((case-fold-search t))
+                   (string-match spec string) 'query))) ; be least aggressive
         (spec)))
 
 (defsubst bbdb-eval-spec (spec prompt)
@@ -2179,16 +2219,25 @@ Used with return values of `bbdb-add-job'."
 
 (defun bbdb-clean-address-components (components)
   "Clean mail address COMPONENTS.
-COMPONENTS is a list (FULL-NAME CANONICAL-ADDRESS) as returned
+COMPONENTS is a list (NAME MAIL) as returned
 by `mail-extract-address-components'.
-Pass FULL-NAME through `bbdb-message-clean-name-function'
-and CANONICAL-ADDRESS through `bbdb-canonicalize-mail-function'."
-  (list (if (car components)
-            (funcall (or bbdb-message-clean-name-function #'identity)
-                     (car components)))
-        (if (cadr components)
-            (funcall (or bbdb-canonicalize-mail-function #'bbdb-string-trim)
-                     (cadr components)))))
+Pass NAME through `bbdb-message-clean-name-function'
+and MAIL through `bbdb-message-clean-mail-function'."
+  (let ((name (car components))
+        (mail (cadr components)))
+    (if (and name bbdb-message-clean-name-function)
+        (setq name (funcall bbdb-message-clean-name-function name)))
+    (if (and name bbdb-message-ignore-name-re
+             (let ((case-fold-search t))
+               (string-match bbdb-message-ignore-name-re name)))
+        (setq name nil))
+    (if (and mail bbdb-message-clean-mail-function)
+        (setq mail (funcall bbdb-message-clean-mail-function mail)))
+    (if (and mail bbdb-message-ignore-mail-re
+             (let ((case-fold-search t))
+               (string-match bbdb-message-ignore-mail-re mail)))
+        (setq mail nil))
+    (list name mail)))
 
 (defun bbdb-extract-address-components (address &optional all)
   "Given an RFC-822 address ADDRESS, extract full name and canonical address.
@@ -2211,7 +2260,7 @@ from the outside world.  Yet when analyzing the mail addresses stored
 in BBDB, this pollutes the mail-aka space.  So we define here
 an intentionally much simpler function for decomposing the names
 and canonical addresses in the mail field of BBDB records."
-  (let (name address)
+  (let ((case-fold-search t) name address)
     ;; First find the address - the thing with the @ in it.
     (cond (;; Check `<foo@bar>' first in order to handle the quite common
 	   ;; form `"abc@xyz" <foo@bar>' (i.e. `@' as part of a comment)
@@ -2248,7 +2297,7 @@ Used by  `bbdb-canonicalize-mail-1'.  See also `bbdb-ignore-redundant-mails'."
   :type '(regexp :tag "Regexp matching sites"))
 
 (defun bbdb-canonicalize-mail-1 (address)
-  "Example of `bbdb-canonicalize-mail-function'.
+  "Example of `bbdb-message-clean-mail-function'.
 However, this function is too specific to be useful for the general user.
 Take it as a source of inspiration for what can be done."
   (setq address (bbdb-string-trim address))

@@ -133,8 +133,8 @@ MIME encoded headers are decoded.  Return nil if HEADER does not exist."
 
 ;;;###autoload
 (defun bbdb-accept-message (&optional invert)
-  "For use with variable `bbdb-mua-update-interactive-p' and friends.
-Return the value of variable `bbdb-update-records-p' for messages matching
+  "For use with variable `bbdb-mua-interactive-action' and friends.
+Return the value of variable `bbdb-mua-action' for messages matching
 `bbdb-accept-message-alist'.  If INVERT is non-nil, accept messages
 not matching `bbdb-ignore-message-alist'."
   (let ((rest (if invert bbdb-ignore-message-alist
@@ -147,20 +147,20 @@ not matching `bbdb-ignore-message-alist'."
           (if (bbdb-message-header-re header (cdr elt))
               (setq done t)))))
     (if invert (setq done (not done)))
-    (if done bbdb-update-records-p)))
+    (if done bbdb-mua-action)))
 
 ;;;###autoload
 (defun bbdb-ignore-message (&optional invert)
-  "For use with variable `bbdb-mua-update-interactive-p' and friends.
-Return the value of variable `bbdb-update-records-p' for messages not matching
+  "For use with variable `bbdb-mua-interactive-action' and friends.
+Return the value of variable `bbdb-mua-action' for messages not matching
 `bbdb-ignore-message-alist'.  If INVERT is non-nil, accept messages
 matching `bbdb-accept-message-alist'."
   (bbdb-accept-message (not invert)))
 
 ;;;###autoload
 (defun bbdb-select-message ()
-  "For use with variable `bbdb-mua-update-interactive-p' and friends.
-Return the value of variable `bbdb-update-records-p' for messages both matching
+  "For use with variable `bbdb-mua-interactive-action' and friends.
+Return the value of variable `bbdb-mua-action' for messages both matching
 `bbdb-accept-message-alist' and not matching `bbdb-ignore-message-alist'."
   (and (bbdb-accept-message)
        (bbdb-ignore-message)))
@@ -211,11 +211,11 @@ is ignored. If IGNORE-ADDRESS is nil, use value of `bbdb-user-mail-address-re'."
                (bbdb-get-address-components nil ignore-address))))))
 
 ;;;###autoload
-(defun bbdb-update-records (address-list &optional update-p sort)
+(defun bbdb-update-records (address-list &optional action sort)
   "Return the list of BBDB records matching ADDRESS-LIST.
 ADDRESS-LIST is a list of mail addresses.  (It can be extracted from
 a mail message using `bbdb-get-address-components'.)
-UPDATE-P may take the following values:
+ACTION may take the following values:
  search       Search for existing records matching ADDRESS.
  update       Search for existing records matching ADDRESS;
                 update name and mail field if necessary.
@@ -228,187 +228,179 @@ UPDATE-P may take the following values:
                 It should return one of the above values.
 
 If SORT is non-nil, sort records according to `bbdb-record-lessp'.
-Ottherwise, the records are ordered according to ADDRESS-LIST.
+Otherwise, the records are ordered according to ADDRESS-LIST.
 
 Usually this function is called by the wrapper `bbdb-mua-update-records'."
-  ;; UPDATE-P allows filtering of complete messages.
+  ;; ACTION allows filtering of complete messages.
   ;; Filtering of individual addresses within an accepted message
   ;; is done by `bbdb-get-address-components' using `bbdb-user-mail-address-re'.
-  ;; We resolve UPDATE-P repeatedly.  This is needed, for example,
-  ;; with the chain `bbdb-mua-auto-update-p' -> `bbdb-select-message'
-  ;; -> `bbdb-update-records-p'.
-  (while (and (functionp update-p)
+  ;; We resolve ACTION repeatedly.  This is needed, for example,
+  ;; with the chain `bbdb-mua-auto-action' -> `bbdb-select-message'
+  ;; -> `bbdb-mua-action'.
+  (while (and (functionp action)
               ;; Bad! `search' is a function in `cl.el'.
-              (not (eq update-p 'search)))
-    (setq update-p (funcall update-p)))
-  (cond ((eq t update-p)
-         (setq update-p 'create))
-        ((not (memq update-p '(search update query create nil)))
-         (error "Illegal value of arg update-p: %s" update-p)))
+              (not (eq action 'search)))
+    (setq action (funcall action)))
+  (cond ((eq t action)
+         (setq action 'create))
+        ((not (memq action '(search update query create nil)))
+         (error "Illegal value of arg action: %s" action)))
 
-  (let (;; `bbdb-update-records-p' and `bbdb-offer-to-create' are used here
-        ;; as internal variables for communication with `bbdb-query-create'.
-        ;; This does not affect the value of the global user variable
-        ;; `bbdb-update-records-p'.
-        (bbdb-offer-to-create 'start)
-        (bbdb-update-records-p update-p)
-        address records)
+  (let (records-alist records elt)
+    ;; association list: records -> addresses
+    (dolist (address (nreverse address-list))
+      (let* ((mail (nth 1 address)) ; possibly nil
+             (name (unless (equal mail (car address))
+                     (car address)))
+             (records (bbdb-message-search name mail)))
+        (if records
+            (dolist (record records) ; order of RECORDS insignificant!
+              ;; Accumulate list of addresses for each RECORD.
+              (if (setq elt (assq record records-alist))
+                  (setcar (cdr elt) (cons address (cadr elt)))
+                (push (list record (list address)) records-alist)))
+          ;; We do not yet have a record for the address
+          (when (or name mail) ; ignore empty addresses
+            ;; If there is no NAME, try to use MAIL as NAME
+            ;; (but only if we do not yet have a record for MAIL).
+            (if (and mail bbdb-message-mail-as-name
+                     (or (null name)
+                         (string= "" name)))
+                ;; Clean MAIL as if it was a NAME.
+                (setcar address (funcall bbdb-message-clean-name-function mail)))
+            (push (list nil (list address)) records-alist)))))
 
-    (when update-p
-      (while (setq address (pop address-list))
-        (let* ((bbdb-update-records-address address)
-               hits
-               (task
-                (catch 'done
-                  (setq hits
-                        ;; We put the call of `bbdb-notice-mail-hook'
-                        ;; into `bbdb-annotate-message' so that this hook
-                        ;; runs only if the user agreed to change a record.
-                        (cond ((or bbdb-read-only
-                                   (eq bbdb-update-records-p 'search))
-                               ;; Search for records having this mail address
-                               ;; but do not modify an existing record.
-                               ;; This does not run `bbdb-notice-mail-hook'.
-                               (bbdb-message-search (car address)
-                                                    (cadr address)))
-                              ((eq bbdb-update-records-p 'update)
-                               (bbdb-annotate-message address 'update))
-                              ((eq bbdb-update-records-p 'query)
-                               (bbdb-annotate-message
-                                address 'bbdb-query-create))
-                              ((eq bbdb-update-records-p 'create)
-                               (bbdb-annotate-message address 'create))))
-                  nil)))
+    (if bbdb-record-address-alist-function
+        (setq records-alist (funcall bbdb-record-address-alist-function
+                                     records-alist)))
+
+    (let (task)
+      (while (setq elt (pop records-alist))
+        (let* ((record (nth 0 elt))
+               (address (nth 0 (nth 1 elt)))
+               (mail (or (nth 0 address) (nth 1 address))))
+          (when (and (not record) mail (eq action 'query) (not bbdb-read-only))
+            (setq task (bbdb-query-create mail))
+            (if (memq task '(search create update))
+                (setq action task)))
           (cond ((eq task 'quit)
-                 (setq address-list nil))
-                ((not (eq task 'next))
-                 (dolist (hit (delq nil (nreverse hits)))
-                   (bbdb-pushnew hit records))))
-          (if (and records (not bbdb-message-all-addresses))
-              (setq address-list nil))))
-      (setq records
-            (if sort (sort records 'bbdb-record-lessp)
-              ;; Make RECORDS a list ordered like ADDRESS-LIST.
-              (nreverse records))))
+                 (setq records-alist nil))
+                ((eq task 'next)) ; do nothing
+                ((not (or record mail))) ; do nothing
+                ((or bbdb-read-only (eq action 'search))
+                 (if record (push record records)))
+                (t
+                 (if (or (eq action 'create)
+                         (eq task 'create-current) ; and (eq action 'query)
+                         (and record (eq action 'update)))
+                     ;; If we have more than one record, all but the first
+                     ;; one are new.  So no need to worry about duplicates.
+                     (setq records
+                           (nconc (bbdb-annotate-message record
+                                                         (nth 1 elt) action)
+                                  records))))))
+        (if (and records (not bbdb-message-all-addresses))
+            (setq records-alist nil))))
 
-    ;; `bbdb-message-search' might yield multiple records
-    (if (and records (not bbdb-message-all-addresses))
-        (setq records (list (car records))))
+    (setq records
+          ;; Sorting RECORDS is useful when RECORDS are displayed.
+          (if sort (sort records 'bbdb-record-lessp)
+            ;; Make RECORDS a list ordered like ADDRESS-LIST.
+            ;; Useful if RECORDS are processed further.
+            (nreverse records)))
 
     (unless bbdb-read-only
-      (bbdb-editable)
       (dolist (record records)
         (run-hook-with-args 'bbdb-notice-record-hook record)))
 
     records))
 
-(defun bbdb-query-create ()
-  "Interactive query used by `bbdb-update-records'.
-Return t if the record should be created or `nil' otherwise.
-Honor previous answers such as `!'."
-  (let ((task bbdb-offer-to-create))
-    ;; If we have remembered what the user typed previously,
-    ;; `bbdb-offer-to-create' holds a character, i.e., a number.
-    ;; -- Right now, we only remember "!".
-    (when (not (integerp task))
-      (let ((prompt (format "%s is not in BBDB; add? (y,!,n,s,q,?) "
-                            (or (nth 0 bbdb-update-records-address)
-                                (nth 1 bbdb-update-records-address))))
-            event)
-        (while (not event)
-          (setq event (read-key-sequence prompt))
-          (setq event (if (stringp event) (aref event 0))))
-        (setq task event)
-        (message ""))) ; clear the message buffer
+(defun bbdb-query-create (mail)
+  "Query action for MAIL address not yet known to BBDB.
+Used by `bbdb-update-records'.  Return values include:
+ create-current [y] Create a new record for MAIL.
+ create         [!] Switch to create mode for remaining addresses.
+ search         [s] Switch to search mode for remaining addresses.
+ update         [u] Switch to update mode for remaining addresses.
+ next           [n] Continue with next mail address, skip MAIL.
+ quit           [q] Quit, ignore all remaining MAIL addresses."
+  (let ((prompt (format "%s is not in BBDB; add? (y,!,s,u,n,q,?) " mail))
+        task action)
+    (save-window-excursion
+      (while (not action)
+        (setq task nil)
+        (while (not task)
+          (setq task (read-key-sequence prompt))
+          (setq task (if (stringp task) (aref task 0))))
+        (message "") ; clear the message buffer
 
-    (cond ((eq task ?y)
-           t)
-          ((eq task ?!)
-           (setq bbdb-offer-to-create task)
-           t)
-          ((or (eq task ?n)
-               (eq task ?\s))
-           (throw 'done 'next))
-          ((or (eq task ?q)
-               (eq task ?\a)) ; ?\a = C-g
-           (throw 'done 'quit))
-          ((eq task ?s)
-           (setq bbdb-update-records-p 'search)
-           (throw 'done 'next))
-          (t ; any other key sequence
-           (save-window-excursion
-             (let* ((buffer (get-buffer-create " *BBDB Help*"))
-                    (window (or (get-buffer-window buffer)
-                                (split-window (get-lru-window)))))
-               (with-current-buffer buffer
-                 (special-mode)
-                 (let (buffer-read-only)
-                   (erase-buffer)
-                   (insert
-                    "Your answer controls how BBDB updates/searches for records.
+        (setq action
+              (cond ((eq task ?y)
+                     'create-current)
+                    ((eq task ?!)
+                     'create)
+                    ((eq task ?s)
+                     'search)
+                    ((eq task ?u)
+                     'update)
+                    ((or (eq task ?n)
+                         (eq task ?\s))
+                     'next)
+                    ((or (eq task ?q)
+                         (eq task ?\a)) ; ?\a = C-g
+                     'quit)
+                    (t ; any other key sequence
+                     (let* ((buffer (get-buffer-create " *BBDB Help*"))
+                            (window (or (get-buffer-window buffer)
+                                        (split-window (get-lru-window)))))
+                       (with-current-buffer buffer
+                         (special-mode)
+                         (let (buffer-read-only)
+                           (erase-buffer)
+                           (insert
+                            "Your answer controls how BBDB updates/searches for records.
 
-Type ?  for this help.
-Type y  to add the current record.
-Type !  to add all remaining records.
-Type n  to skip the current record. (You might also type space)
-Type s  to switch from annotate to search mode.
-Type q  to quit updating records.  No more search or annotation is done.")
-                   (set-buffer-modified-p nil)
-                   (goto-char (point-min)))
-                 (set-window-buffer window buffer)
-                 (fit-window-to-buffer window)))
-             ;; Try again!
-             (bbdb-query-create))))))
+y  Create a new record for the current address.
+!  Switch to create mode.
+s  Switch to search mode.
+u  Switch to update mode.
+n  Continue with next address, skip the current address.
+q  Quit updating records.
+?  This help.")
+                           (set-buffer-modified-p nil)
+                           (goto-char (point-min)))
+                         (set-window-buffer window buffer)
+                         (fit-window-to-buffer window)))
+                     nil))))) ;; Try again!
+    action))
 
-
+(defun bbdb-annotate-message (record address-list action)
+  "Anotate RECORD using ADDRESS-LIST.
+ADDRESS-LIST has elements (NAME MAIL HEADER HEADER-CLASS MUA)
+as returned by `bbdb-get-address-components'.
+ACTION controls whether new records beyond RECORD may be created.
+ACTION may take the values:
+ update or nil  Update RECORD, but do not create new records.
+ query          Query interactively whether to create new records.
+ create or t    Permit creating new records.
+Return the records matching ADDRESS."
+  (let ((new (not record))
+        (record (or record (bbdb-empty-record)))
+        records)
 
-(defun bbdb-annotate-message (address &optional update-p)
-  "Fill the records for message ADDRESS with as much info as possible.
-If a record for ADDRESS does not yet exist, UPDATE-P controls whether
-a new record is created for ADDRESS.  UPDATE-P may take the values:
- update or nil  Update existing records, never create a new record.
- query          Query interactively whether to create a new record.
- create or t    Create a new record.
- a function     This functions will be called with no arguments.
-                  It should return one of the above values.
-Return the records matching ADDRESS or nil."
-  (let* ((mail (nth 1 address)) ; possibly nil
-         (name (unless (equal mail (car address))
-                 (car address)))
-         (records (bbdb-message-search name mail))
-         created-p new-records)
-    (if (and (not records) (functionp update-p))
-        (setq update-p (funcall update-p)))
-    (cond ((eq t update-p) (setq update-p 'create))
-          ((not update-p) (setq update-p 'update)))
-
-    ;; Create a new record if nothing else fits.
-    ;; In this way, we can fill the slots of the new record with
-    ;; the same code that updates the slots of existing records.
-    (unless (or records
-                (eq update-p 'update)
-                (not (or name mail)))
-      ;; If there is no name, try to use the mail address as name
-      (if (and bbdb-message-mail-as-name mail
-               (or (null name)
-                   (string= "" name)))
-          (setq name (funcall bbdb-message-clean-name-function mail)))
-      (if (or (eq update-p 'create)
-              (and (eq update-p 'query)
-                   (y-or-n-p (format "%s is not in the BBDB.  Add? "
-                                     (or name mail)))))
-          (setq records (list (bbdb-empty-record))
-                created-p t)))
-
-    (dolist (record records)
-      (let* ((old-name (bbdb-record-name record))
+    (dolist (address address-list)
+      (let* ((record record) ; possibly changed below
+             (mail (nth 1 address)) ; possibly nil
+             (name (unless (equal mail (nth 0 address))
+                     (nth 0 address)))
              (fullname (bbdb-divide-name (or name "")))
              (fname (car fullname))
              (lname (cdr fullname))
-             (mail mail) ;; possibly changed below
-             (created-p created-p)
-             (update-p update-p)
-             change-p add-mails add-name ignore-redundant)
+             (old-name (bbdb-record-name record)) ; possibly ""
+             (old-name-nonempty (not (string= "" old-name)))
+             change add-mails add-name ignore-redundant)
+        ;; Is there anything meaningful we could do with the other elements
+        ;; in ADDRESS?
 
         ;; Analyze the name part of the record.
         (cond ((or (not name)
@@ -418,7 +410,7 @@ Return the records matching ADDRESS or nil."
                         (equal lname (bbdb-record-lastname record))) ; nil
                    (member-ignore-case name (bbdb-record-aka record)))) ; do nothing
 
-              (created-p ; new record
+              (new ; new record
                (bbdb-record-set-field record 'name (cons fname lname)))
 
               ((not (setq add-name (bbdb-add-job bbdb-add-name record name)))) ; do nothing
@@ -430,31 +422,30 @@ Return the records matching ADDRESS or nil."
                  (sit-for add-name)))
 
               ((bbdb-eval-spec add-name
-                               (if old-name
+                               (if old-name-nonempty
                                    (format "Change name \"%s\" to \"%s\"? "
                                            old-name name)
                                  (format "Assign name \"%s\" to address \"%s\"? "
                                          name (car (bbdb-record-mail record)))))
                ;; Keep old-name as AKA?
-               (when (and old-name
-                          (not (member-ignore-case old-name (bbdb-record-aka record))))
-                 (if (bbdb-eval-spec (bbdb-add-job bbdb-add-aka record old-name)
-                                     (format "Keep name \"%s\" as an AKA? " old-name))
-                     (bbdb-record-set-field
-                      record 'aka (cons old-name (bbdb-record-aka record)))
-                   (bbdb-remhash old-name record)))
+               (if (and old-name-nonempty
+                        (not (member-ignore-case old-name (bbdb-record-aka record)))
+                        (bbdb-eval-spec (bbdb-add-job bbdb-add-aka record old-name)
+                                        (format "Keep name \"%s\" as an AKA? " old-name)))
+                   (bbdb-record-set-field
+                    record 'aka (cons old-name (bbdb-record-aka record))))
                (bbdb-record-set-field record 'name (cons fname lname))
-               (setq change-p 'name))
+               (setq change 'name))
 
               ;; make new name an AKA?
-              ((and old-name
+              ((and old-name-nonempty
                     (not (member-ignore-case name (bbdb-record-aka record)))
                     (bbdb-eval-spec (bbdb-add-job bbdb-add-aka record name)
                                     (format "Make \"%s\" an alternate for \"%s\"? "
                                             name old-name)))
                (bbdb-record-set-field
                 record 'aka (cons name (bbdb-record-aka record)))
-               (setq change-p 'name)))
+               (setq change 'name)))
 
         ;; Is MAIL redundant compared with the mail addresses
         ;; that are already known for RECORD?
@@ -478,11 +469,11 @@ Return the records matching ADDRESS or nil."
                              (y-or-n-p (format "Ignore redundant mail %s?" mail)))
                          (setq mail redundant))))))
 
-        ;; Analyze the mail part of the new records
+        ;; Analyze the mail part of the new record
         (cond ((or (not mail) (equal mail "???")
                    (member-ignore-case mail (bbdb-record-mail-canon record)))) ; do nothing
 
-              (created-p ; new record
+              (new ; new record
                (bbdb-record-set-field record 'mail (list mail)))
 
               ((not (setq add-mails (bbdb-add-job bbdb-add-mails record mail)))) ; do nothing
@@ -497,17 +488,19 @@ Return the records matching ADDRESS or nil."
                    bbdb-silent
                    (y-or-n-p (format "Add address \"%s\" to %s? " mail
                                      (bbdb-record-name record)))
-                   (and (or (and (functionp update-p)
-                                 (progn (setq update-p (funcall update-p)) nil))
-                            (memq update-p '(t create))
-                            (and (eq update-p 'query)
+                   ;; The user decided interactively not to add MAIL
+                   ;; to the existing record for NAME.  Then, if ACTION
+                   ;; is create or the user confirms after query,
+                   ;; we make a new record for NAME and MAIL.
+                   (and (or (memq action '(t create))
+                            (and (eq action 'query)
                                  (y-or-n-p
                                   (format "Create a new record for %s? "
                                           (bbdb-record-name record)))))
                         (progn
                           (setq record (bbdb-empty-record))
                           (bbdb-record-set-name record fname lname)
-                          (setq created-p t))))
+                          (setq new t))))
 
                (let ((mails (bbdb-record-mail record)))
                  (if ignore-redundant
@@ -543,19 +536,20 @@ Return the records matching ADDRESS or nil."
                                            (format "Make \"%s\" the primary address? " mail)))
                       (cons mail mails)
                     (nconc mails (list mail))))
-                 (unless change-p (setq change-p t)))))
+                 (unless change (setq change t)))))
 
-        (cond (created-p
+        (cond (new
                (unless bbdb-silent
                  (if (bbdb-record-name record)
                      (message "created %s's record with address \"%s\""
                               (bbdb-record-name record) mail)
                    (message "created record with naked address \"%s\"" mail)))
+               (setq new nil)
                (bbdb-change-record record))
 
-              (change-p
+              (change
                (unless bbdb-silent
-                 (cond ((eq change-p 'name)
+                 (cond ((eq change 'name)
                         (message "noticed \"%s\"" (bbdb-record-name record)))
                        ((bbdb-record-name record)
                         (message "noticed %s's address \"%s\""
@@ -564,16 +558,23 @@ Return the records matching ADDRESS or nil."
                         (message "noticed naked address \"%s\"" mail))))
                (bbdb-change-record record)))
 
-        (run-hook-with-args 'bbdb-notice-mail-hook record)
-        (push record new-records)))
+        ;; `bbdb-notice-mail-hook' runs only if the user agreed to change
+        ;; a record.  It runs for every ADDRESS.  Use ‘bbdb-notice-record-hook’
+        ;; if you want to notice each record only once per message.
+        ;; We make ADDRESS available to `bbdb-notice-mail-hook'
+        ;; via `bbdb-update-records-address'.
+        (let ((bbdb-update-records-address address))
+          (run-hook-with-args 'bbdb-notice-mail-hook record))
+        (push record records)))
 
-    (nreverse new-records)))
+    ;; Return records
+    records))
 
-(defun bbdb-mua-update-records (&optional header-class update-p sort)
+(defun bbdb-mua-update-records (&optional header-class action sort)
   "Wrapper for `bbdb-update-records'.
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'.
-UPDATE-P is defined in `bbdb-update-records'.
+ACTION is defined in `bbdb-update-records'.
 If SORT is non-nil, sort records according to `bbdb-record-lessp'."
   (let ((mua (bbdb-mua)))
     (save-current-buffer
@@ -584,37 +585,37 @@ If SORT is non-nil, sort records according to `bbdb-record-lessp'."
         (vm-error-if-folder-empty)
         (let ((enable-local-variables t))  ; ...or vm bind this to nil.
           (bbdb-update-records (bbdb-get-address-components header-class)
-                               update-p sort)))
+                               action sort)))
        ;; Gnus
        ((eq mua 'gnus)
         (set-buffer gnus-article-buffer)
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p sort))
+                             action sort))
        ;; MH-E
        ((eq mua 'mh)
         (if mh-show-buffer (set-buffer mh-show-buffer))
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p sort))
+                             action sort))
        ;; Rmail
        ((eq mua 'rmail)
         (set-buffer rmail-buffer)
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p sort))
+                             action sort))
        ;; mu4e
        ((eq mua 'mu4e)
         (set-buffer (if (boundp 'mu4e~view-buffer-name)
                         mu4e~view-buffer-name ; old version of mu4e
                       gnus-article-buffer))
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p sort))
+                             action sort))
        ;; Wanderlust
        ((eq mua 'wl)
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p sort))
+                             action sort))
       ;; Message and Mail
        ((memq mua '(message mail))
         (bbdb-update-records (bbdb-get-address-components header-class)
-                             update-p sort))))))
+                             action sort))))))
 
 (defmacro bbdb-mua-wrapper (&rest body)
   "Perform BODY in a MUA buffer."
@@ -634,23 +635,26 @@ If SORT is non-nil, sort records according to `bbdb-record-lessp'."
             ;; rmail, mail, message, mu4e and wl do not require any wrapper
             ,@body))))
 
-(defun bbdb-mua-update-interactive-p ()
-  "Interactive spec for arg UPDATE-P of `bbdb-mua-display-records' and friends.
+(define-obsolete-function-alias 'bbdb-mua-update-interactive-p
+  #'bbdb-mua-interactive-action "3.0")
+(defun bbdb-mua-interactive-action ()
+  "Interactive spec for arg ACTION of `bbdb-mua-display-records' and friends.
 If these commands are called without a prefix, the value of their arg
-UPDATE-P is the car of the variable `bbdb-mua-update-interactive-p'.
-Called with a prefix, the value of UPDATE-P is the cdr of this variable."
-  (let ((update-p (if current-prefix-arg
-                      (cdr bbdb-mua-update-interactive-p)
-                    (car bbdb-mua-update-interactive-p))))
-    (if (eq update-p 'read)
+ACTION is the car of the variable `bbdb-mua-interactive-action'.
+Called with a prefix, the value of ACTION is the cdr of this variable."
+  (let ((action (if current-prefix-arg
+                    (cdr bbdb-mua-interactive-action)
+                  (car bbdb-mua-interactive-action))))
+    (if (eq action 'read)
         (let ((str (completing-read "Action: " '((query) (search) (create))
                                     nil t)))
           (unless (string= "" str) (intern str))) ; nil otherwise
-      update-p)))
+      action)))
 
 (defun bbdb-mua-window-p ()
   "Return lambda function matching the MUA window.
-This return value can be used as arg HORIZ-P of `bbdb-display-records'."
+This return value can be used as arg HORIZ-P of
+`bbdb-pop-up-window' and `bbdb-display-records'."
   (let ((mm-alist bbdb-mua-mode-alist)
         elt fun)
     (while (setq elt (cdr (pop mm-alist)))
@@ -662,24 +666,24 @@ This return value can be used as arg HORIZ-P of `bbdb-display-records'."
     fun))
 
 ;;;###autoload
-(defun bbdb-mua-display-records (&optional header-class update-p all)
+(defun bbdb-mua-display-records (&optional header-class action all)
   "Display the BBDB record(s) for the addresses in this message.
 This looks into the headers of a message according to HEADER-CLASS.
 Then for the mail addresses found the corresponding BBDB records are displayed.
-UPDATE-P determines whether only existing BBDB records are displayed
+ACTION determines whether only existing BBDB records are displayed
 or whether also new records are created for these mail addresses.
 
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'.
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, see function `bbdb-mua-interactive-action'.
 If ALL is non-nil, bind `bbdb-message-all-addresses' to ALL."
-  (interactive (list nil (bbdb-mua-update-interactive-p)))
+  (interactive (list nil (bbdb-mua-interactive-action)))
   (let ((bbdb-pop-up-window-size bbdb-mua-pop-up-window-size)
         (bbdb-message-all-addresses (or all bbdb-message-all-addresses))
         records)
     (bbdb-mua-wrapper
-     (setq records (bbdb-mua-update-records header-class update-p t)))
+     (setq records (bbdb-mua-update-records header-class action t)))
     (if records (bbdb-display-records records nil nil nil (bbdb-mua-window-p)))
     records))
 
@@ -688,36 +692,36 @@ If ALL is non-nil, bind `bbdb-message-all-addresses' to ALL."
 ;; modify or adapt these simple commands to your liking.
 
 ;;;###autoload
-(defun bbdb-mua-display-sender (&optional update-p)
+(defun bbdb-mua-display-sender (&optional action)
   "Display the BBDB record(s) for the sender of this message.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'."
-  (interactive (list (bbdb-mua-update-interactive-p)))
-  (bbdb-mua-display-records 'sender update-p))
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, see function `bbdb-mua-interactive-action'."
+  (interactive (list (bbdb-mua-interactive-action)))
+  (bbdb-mua-display-records 'sender action))
 
 ;;;###autoload
-(defun bbdb-mua-display-recipients (&optional update-p)
+(defun bbdb-mua-display-recipients (&optional action)
   "Display the BBDB record(s) for the recipients of this message.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'."
-  (interactive (list (bbdb-mua-update-interactive-p)))
-  (bbdb-mua-display-records 'recipients update-p))
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, see function `bbdb-mua-interactive-action'."
+  (interactive (list (bbdb-mua-interactive-action)))
+  (bbdb-mua-display-records 'recipients action))
 
 ;;;###autoload
-(defun bbdb-mua-display-all-records (&optional update-p)
+(defun bbdb-mua-display-all-records (&optional action)
   "Display the BBDB record(s) for all addresses in this message.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'."
-  (interactive (list (bbdb-mua-update-interactive-p)))
-  (bbdb-mua-display-records nil update-p t))
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, see function `bbdb-mua-interactive-action'."
+  (interactive (list (bbdb-mua-interactive-action)))
+  (bbdb-mua-display-records nil action t))
 
 ;;;###autoload
-(defun bbdb-mua-display-all-recipients (&optional update-p)
+(defun bbdb-mua-display-all-recipients (&optional action)
   "Display BBDB records for all recipients of this message.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'."
-  (interactive (list (bbdb-mua-update-interactive-p)))
-  (bbdb-mua-display-records 'recipients update-p t))
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, see function `bbdb-mua-interactive-action'."
+  (interactive (list (bbdb-mua-interactive-action)))
+  (bbdb-mua-display-records 'recipients action t))
 
 ;; The commands `bbdb-annotate-record' and `bbdb-mua-edit-field'
 ;; have kind of similar goals, yet they use rather different strategies.
@@ -743,18 +747,18 @@ If ANNOTATION is an empty string and REPLACE is non-nil, delete FIELD."
   (bbdb-record-set-field record field annotation (not replace))
   (bbdb-change-record record))
 
-;; FIXME: For interactive calls of the following commands, the arg UPDATE-P
+;; FIXME: For interactive calls of the following commands, the arg ACTION
 ;; should have the same meaning as for `bbdb-mua-display-records',
-;; that is, it should use `bbdb-mua-update-interactive-p'.
+;; that is, it should use `bbdb-mua-interactive-action'.
 ;; But here the prefix arg is already used in a different way.
 ;; We could possibly solve this problem if all `bbdb-mua-*' commands
 ;; used another prefix arg that is consistently used only for
-;; `bbdb-mua-update-interactive-p'.
+;; `bbdb-mua-interactive-action'.
 ;; Yet this prefix arg must be defined within the key space of the MUA(s).
 ;; This results in lots of conflicts...
 ;;
 ;; Current workaround:
-;; These commands use merely the car of `bbdb-mua-update-interactive-p'.
+;; These commands use merely the car of `bbdb-mua-interactive-action'.
 ;; If one day someone proposes a smart solution to this problem (suggestions
 ;; welcome!), this solution will hopefully include the current workaround
 ;; as a subset of all its features.
@@ -771,35 +775,36 @@ If ANNOTATION is an empty string and REPLACE is non-nil, delete FIELD."
                  bbdb-annotate-field)))
     (list (read-string (format "Annotate `%s': " field))
           field current-prefix-arg
-          (car bbdb-mua-update-interactive-p))))
+          (car bbdb-mua-interactive-action))))
 
 ;;;###autoload
-(defun bbdb-mua-annotate-sender (annotation &optional field replace update-p)
+(defun bbdb-mua-annotate-sender (annotation &optional field replace action)
   "Add ANNOTATION to field FIELD of the BBDB record(s) of message sender(s).
 FIELD defaults to `bbdb-annotate-field'.
 If REPLACE is non-nil, ANNOTATION replaces the content of FIELD.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, use car of `bbdb-mua-update-interactive-p'."
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, use car of `bbdb-mua-interactive-action'."
   (interactive (bbdb-mua-annotate-field-interactive))
   (bbdb-mua-wrapper
-   (dolist (record (bbdb-mua-update-records 'sender update-p))
+   (dolist (record (bbdb-mua-update-records 'sender action))
      (bbdb-annotate-record record annotation field replace))))
 
 ;;;###autoload
 (defun bbdb-mua-annotate-recipients (annotation &optional field replace
-                                                update-p)
+                                                action)
   "Add ANNOTATION to field FIELD of the BBDB records of message recipients.
 FIELD defaults to `bbdb-annotate-field'.
 If REPLACE is non-nil, ANNOTATION replaces the content of FIELD.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, use car of `bbdb-mua-update-interactive-p'."
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, use car of `bbdb-mua-interactive-action'."
   (interactive (bbdb-mua-annotate-field-interactive))
   (bbdb-mua-wrapper
-   (dolist (record (bbdb-mua-update-records 'recipients update-p))
+   (dolist (record (bbdb-mua-update-records 'recipients action))
      (bbdb-annotate-record record annotation field replace))))
 
 (defun bbdb-mua-edit-field-interactive ()
-  "Interactive specification for command `bbdb-mua-edit-field' and friends."
+  "Interactive specification for command `bbdb-mua-edit-field' and friends.
+This uses `bbdb-mua-interactive-action'."
   (bbdb-editable)
   (list (if (eq 'all-fields bbdb-mua-edit-field)
             (intern (completing-read
@@ -808,14 +813,14 @@ For interactive calls, use car of `bbdb-mua-update-interactive-p'."
                              (append '(name affix organization aka mail)
                                      bbdb-xfield-label-list))))
           bbdb-mua-edit-field)
-        (bbdb-mua-update-interactive-p)))
+        (bbdb-mua-interactive-action)))
 
 ;;;###autoload
-(defun bbdb-mua-edit-field (&optional field update-p header-class)
+(defun bbdb-mua-edit-field (&optional field action header-class)
   "Edit FIELD of the BBDB record(s) of message sender(s) or recipients.
 FIELD defaults to value of variable `bbdb-mua-edit-field'.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'.
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, see function `bbdb-mua-interactive-action'.
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'."
   (interactive (bbdb-mua-edit-field-interactive))
@@ -824,7 +829,7 @@ use all classes in `bbdb-message-headers'."
         ((not field)
          (setq field bbdb-mua-edit-field)))
   (bbdb-mua-wrapper
-   (let ((records (bbdb-mua-update-records header-class update-p))
+   (let ((records (bbdb-mua-update-records header-class action))
          (bbdb-pop-up-window-size bbdb-mua-pop-up-window-size))
      (when records
        (bbdb-display-records records nil nil nil (bbdb-mua-window-p))
@@ -832,38 +837,38 @@ use all classes in `bbdb-message-headers'."
          (bbdb-edit-field record field))))))
 
 ;;;###autoload
-(defun bbdb-mua-edit-field-sender (&optional field update-p)
+(defun bbdb-mua-edit-field-sender (&optional field action)
   "Edit FIELD of record corresponding to sender of this message.
 FIELD defaults to value of variable `bbdb-mua-edit-field'.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'."
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, see function `bbdb-mua-interactive-action'."
   (interactive (bbdb-mua-edit-field-interactive))
-  (bbdb-mua-edit-field field update-p 'sender))
+  (bbdb-mua-edit-field field action 'sender))
 
 ;;;###autoload
-(defun bbdb-mua-edit-field-recipients (&optional field update-p)
+(defun bbdb-mua-edit-field-recipients (&optional field action)
   "Edit FIELD of record corresponding to recipient of this message.
 FIELD defaults to value of variable `bbdb-mua-edit-field'.
-UPDATE-P may take the same values as `bbdb-update-records-p'.
-For interactive calls, see function `bbdb-mua-update-interactive-p'."
+ACTION may take the same values as `bbdb-mua-action'.
+For interactive calls, see function `bbdb-mua-interactive-action'."
   (interactive (bbdb-mua-edit-field-interactive))
-  (bbdb-mua-edit-field field update-p 'recipients))
+  (bbdb-mua-edit-field field action 'recipients))
 
 ;; Functions for noninteractive use in MUA hooks
 
 ;;;###autoload
-(defun bbdb-mua-auto-update (&optional header-class update-p)
+(defun bbdb-mua-auto-update (&optional header-class action)
   "Update BBDB automatically based on incoming and outgoing messages.
 This looks into the headers of a message according to HEADER-CLASS.
 Then for the mail addresses found the corresponding BBDB records are updated.
-UPDATE-P determines whether only existing BBDB records are taken
+ACTION determines whether only existing BBDB records are taken
 or whether also new records are created for these mail addresses.
 Return matching records.
 
 HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'.
-UPDATE-P may take the same values as `bbdb-mua-auto-update-p'.
-If UPDATE-P is nil, use `bbdb-mua-auto-update-p' (which see).
+ACTION may take the same values as `bbdb-mua-auto-action'.
+If ACTION is nil, use `bbdb-mua-auto-action' (which see).
 
 If `bbdb-mua-pop-up' is non-nil, BBDB pops up the *BBDB* buffer
 along with the MUA window(s), displaying the matching records
@@ -876,8 +881,8 @@ into the respective MUA hooks.
 See `bbdb-mua-display-records' and friends for interactive commands."
   (let* ((bbdb-silent-internal t)
          (records (bbdb-mua-update-records header-class
-                                           (or update-p
-                                               bbdb-mua-auto-update-p)))
+                                           (or action
+                                               bbdb-mua-auto-action)))
          (bbdb-pop-up-window-size bbdb-mua-pop-up-window-size))
     (if bbdb-mua-pop-up
         (if records
