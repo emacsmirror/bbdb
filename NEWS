@@ -1,9 +1,12 @@
 BBDB NEWS -- history of user-visible changes.
 
-Copyright (C) 2013-2017 Free Software Foundation, Inc.
+Copyright (C) 2013-2022 Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 This file is about changes in BBDB version 3.
+
+* BBDB 3.2.1
+** Bug fixes
 
 * BBDB 3.2
 ** BBDB 3.2 requires GNU Emacs 24 or newer.
@@ -40,7 +43,7 @@ Initial release
 
 
 ----------------------------------------------------------------------
-Copyright (C) 2013-2017 Free Software Foundation, Inc.
+Copyright (C) 2013-2022 Free Software Foundation, Inc.
 
 This file is part of the Insidious Big Brother Database (aka BBDB),
 

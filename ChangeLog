@@ -1,3 +1,6 @@
+2022-02-20  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el, configure.ac: Increase version number to 3.2.1.
+
 2022-02-10  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-mua-update-records): New versions of mu4e
 	use gnus-article-buffer instead of mu4e~view-buffer-name.

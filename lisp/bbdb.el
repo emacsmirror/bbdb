@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
 
 ;; Maintainer: Roland Winkler <winkler@gnu.org>
-;; Version: 3.2
+;; Version: 3.2.1
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
