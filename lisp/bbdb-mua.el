@@ -133,7 +133,7 @@ MIME encoded headers are decoded.  Return nil if HEADER does not exist."
 
 ;;;###autoload
 (defun bbdb-accept-message (&optional invert)
-  "For use with variable `bbdb-mua-interactive-action' and friends.
+  "For use with variable `bbdb-mua-auto-action' and friends.
 Return the value of variable `bbdb-mua-action' for messages matching
 `bbdb-accept-message-alist'.  If INVERT is non-nil, accept messages
 not matching `bbdb-ignore-message-alist'."
@@ -151,7 +151,7 @@ not matching `bbdb-ignore-message-alist'."
 
 ;;;###autoload
 (defun bbdb-ignore-message (&optional invert)
-  "For use with variable `bbdb-mua-interactive-action' and friends.
+  "For use with variable `bbdb-mua-auto-action' and friends.
 Return the value of variable `bbdb-mua-action' for messages not matching
 `bbdb-ignore-message-alist'.  If INVERT is non-nil, accept messages
 matching `bbdb-accept-message-alist'."
@@ -159,7 +159,7 @@ matching `bbdb-accept-message-alist'."
 
 ;;;###autoload
 (defun bbdb-select-message ()
-  "For use with variable `bbdb-mua-interactive-action' and friends.
+  "For use with variable `bbdb-mua-auto-action' and friends.
 Return the value of variable `bbdb-mua-action' for messages both matching
 `bbdb-accept-message-alist' and not matching `bbdb-ignore-message-alist'."
   (and (bbdb-accept-message)
@@ -274,33 +274,31 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
         (setq records-alist (funcall bbdb-record-address-alist-function
                                      records-alist)))
 
-    (let (task)
-      (while (setq elt (pop records-alist))
-        (let* ((record (nth 0 elt))
-               (address (nth 0 (nth 1 elt)))
-               (mail (or (nth 0 address) (nth 1 address))))
-          (when (and (not record) mail (eq action 'query) (not bbdb-read-only))
-            (setq task (bbdb-query-create mail))
-            (if (memq task '(search create update))
-                (setq action task)))
-          (cond ((eq task 'quit)
-                 (setq records-alist nil))
-                ((eq task 'next)) ; do nothing
-                ((not (or record mail))) ; do nothing
-                ((or bbdb-read-only (eq action 'search))
-                 (if record (push record records)))
-                (t
-                 (if (or (eq action 'create)
-                         (eq task 'create-current) ; and (eq action 'query)
-                         (and record (eq action 'update)))
-                     ;; If we have more than one record, all but the first
-                     ;; one are new.  So no need to worry about duplicates.
-                     (setq records
-                           (nconc (bbdb-annotate-message record
-                                                         (nth 1 elt) action)
-                                  records))))))
-        (if (and records (not bbdb-message-all-addresses))
-            (setq records-alist nil))))
+    (while (setq elt (pop records-alist))
+      (let* ((record (nth 0 elt))
+             (address (nth 0 (nth 1 elt)))
+             (mail (or (nth 0 address) (nth 1 address)))
+             task)
+        (when (and (not record) mail (eq action 'query) (not bbdb-read-only))
+          (setq task (bbdb-query-create mail))
+          (if (memq task '(search create update))
+              (setq action task)))
+        (cond ((eq task 'quit)
+               (setq records-alist nil))
+              ((eq task 'next)) ; do nothing
+              ((not (or record mail))) ; do nothing
+              ((or bbdb-read-only (eq action 'search))
+               (if record (push record records)))
+              ((or (eq action 'create)
+                   (eq task 'create-current) ; and (eq action 'query)
+                   (and record (memq action '(query update))))
+               ;; If we have more than one record, all but the first
+               ;; one are new.  So no need to worry about duplicates.
+               (setq records
+                     (nconc (bbdb-annotate-message record (nth 1 elt) action)
+                            records)))))
+      (if (and records (not bbdb-message-all-addresses))
+            (setq records-alist nil)))
 
     (setq records
           ;; Sorting RECORDS is useful when RECORDS are displayed.
@@ -375,7 +373,7 @@ q  Quit updating records.
     action))
 
 (defun bbdb-annotate-message (record address-list action)
-  "Anotate RECORD using ADDRESS-LIST.
+  "Anotate RECORD using ADDRESS-LIST.  If RECORD is nil, create new record.
 ADDRESS-LIST has elements (NAME MAIL HEADER HEADER-CLASS MUA)
 as returned by `bbdb-get-address-components'.
 ACTION controls whether new records beyond RECORD may be created.
@@ -384,6 +382,8 @@ ACTION may take the values:
  query          Query interactively whether to create new records.
  create or t    Permit creating new records.
 Return the records matching ADDRESS."
+  ;; NEW non-nil is possible only with ACTIONs query and create,
+  ;; but ACTION update implies that RECORD exists already (NEW nil).
   (let ((new (not record))
         (record (or record (bbdb-empty-record)))
         records)

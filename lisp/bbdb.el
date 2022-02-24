@@ -1,4 +1,4 @@
-;;; bbdb.el --- core of BBDB -*- lexical-binding: t -*-
+;;; bbdb.el --- Big Brother DataBase -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
 
@@ -852,8 +852,7 @@ Allowed values are (here ADDRESS is an email address found in a message):
  a function   This functions will be called with no arguments.
                 It should return one of the above values.
                 For an example, see `bbdb-select-message' with
-                `bbdb-mua-update-records-p', `bbdb-accept-message-alist'
-                and `bbdb-ignore-message-alist'.
+                `bbdb-accept-message-alist' and `bbdb-ignore-message-alist'.
 
 To initiate auto-updating of BBDB records, call `bbdb-mua-auto-update-init'
 for the respective MUAs in your init file."
@@ -884,8 +883,6 @@ by `bbdb-select-message'):
                 create a new record if it does not yet exist.
  a function   This functions will be called with no arguments.
                 It should return one of the above values."
-  ;; Also: Used for communication between `bbdb-update-records'
-  ;; and `bbdb-query-create'.
   :group 'bbdb-mua
   :type '(choice (const :tag "do nothing" nil)
                  (const :tag "search for existing records" search)
