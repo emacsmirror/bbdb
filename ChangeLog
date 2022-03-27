@@ -1,4 +1,20 @@
 2022-03-26  Roland Winkler  <winkler@gnu.org>
+	Support snarfing vCards.
+	* lisp/bbdb.el (bbdb-utilities-vcard): New custom group.
+	* lisp/bbdb-snarf.el (bbdb-snarf-rule-alist): New rule vcard.
+	(bbdb-snarf-vcard, bbdb-snarf-ignore-mail-re): New user variables.
+	(bbdb-snarf-sanity-check, bbdb-snarf-vcard-property)
+	(bbdb-snarf-vcard-name, bbdb-snarf-vcard-adr)
+	(bbdb-snarf-vcard-nickname, bbdb-snarf-vcard-email)
+	(bbdb-snarf-vcard-tel, bbdb-snarf-vcard-org, bbdb-snarf-vcard-uid)
+	(bbdb-snarf-vcard-url, bbdb-snarf-vcard-note): New functions.
+	(bbdb-snarf-vcard, bbdb-snarf-vcard-buffer): New commands.
+	(bbdb-snarf-paragraph, bbdb-snarf-yank, bbdb-snarf): New optional
+	arg no-display.
+	(bbdb-snarf): Discard record if it does not have a name or mail.
+	(bbdb-snarf-mail-address): Make it more robust.
+
+2022-03-26  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb.el, configure.ac: Increase version number to 3.2.2.
 
 2022-03-26  Sam Steingold  <sds@gnu.org>

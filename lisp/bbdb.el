@@ -135,6 +135,11 @@
   :group 'bbdb-utilities)
 (put 'bbdb-utilities-snarf 'custom-loads '(bbdb-snarf))
 
+(defgroup bbdb-utilities-vcard nil
+  "Customizations for BBDB vCard interface"
+  :group 'bbdb-utilities)
+(put 'bbdb-utilities-snarf 'custom-loads '(bbdb-snarf))
+
 (defgroup bbdb-utilities-pgp nil
   "Customizations for BBDB pgp"
   :group 'bbdb-utilities)

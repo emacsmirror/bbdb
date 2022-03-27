@@ -22,17 +22,27 @@
 ;; The commands `bbdb-snarf', `bbdb-snarf-yank' and `bbdb-snarf-paragraph'
 ;; create BBDB records by picking the name, addresses, phones, etc.
 ;; out of a (buffer) string.  Things are recognized by context (e.g., URLs
-;; start with http:// or www.).  See `bbdb-snarf-rule-alist' for details.
+;; start with http:// or www.).
 ;;
+;; The code uses a modular format based on rules and rule elements that
+;; should facilitate customization.  See `bbdb-snarf-rule-alist' for details.
+;; The default rule is `bbdb-snarf-rule-default'.
+;;
+;; The rule `us' is intended for text that includes US addresses.
 ;; The rule `eu' should work out of the box for many continental
 ;; European countries.  It can be further customized by defining
 ;; a suitable postcode regexp passed to `bbdb-snarf-address-eu'.
+;;
 ;; `mail' is a simple rule that can pick a single mail address from,
 ;; say, a long list of mail addresses in a message.
 ;;
-;; RW: `bbdb-snarf' is an interesting proof of concept.  Yet I find
-;; its snarfing algorithms often too simplistic to be useful in real life.
-;; How can this possibly be improved?  Suggestions welcome.
+;; The rule `vcard' is for importing vCard records into BBDB.
+;; Use it with the commands `bbdb-snarf-vcard' and `bbdb-snarf-vcard-buffer'.
+;;
+;; The default snarf rules include the element `bbdb-snarf-sanity-check',
+;; which performs sanity checks before actually creating a new record.
+;; Currently, this only ignores mail addresses that match
+;; `bbdb-snarf-ignore-mail-re'.  Suggestions welcome to extend this mechanism.
 
 ;;; Code:
 
@@ -48,7 +58,8 @@
         bbdb-snarf-address-us
         bbdb-snarf-empty-lines
         bbdb-snarf-notes
-        bbdb-snarf-name-mail) ; currently useless
+        bbdb-snarf-name-mail ; currently useless
+        bbdb-snarf-sanity-check)
     (eu bbdb-snarf-surrounding-space
         bbdb-snarf-phone-eu
         bbdb-snarf-url
@@ -58,8 +69,20 @@
         bbdb-snarf-address-eu
         bbdb-snarf-empty-lines
         bbdb-snarf-notes
-        bbdb-snarf-name-mail) ; currently useless
-   (mail bbdb-snarf-mail-address))
+        bbdb-snarf-name-mail ; currently useless
+        bbdb-snarf-sanity-check)
+   (mail bbdb-snarf-mail-address
+         bbdb-snarf-sanity-check)
+   (vcard bbdb-snarf-vcard-name
+          bbdb-snarf-vcard-nickname
+          bbdb-snarf-vcard-email
+          bbdb-snarf-vcard-tel
+          bbdb-snarf-vcard-adr
+          bbdb-snarf-vcard-org
+          bbdb-snarf-vcard-uid
+          bbdb-snarf-vcard-url
+          bbdb-snarf-vcard-note
+          bbdb-snarf-sanity-check))
   "Alist of rules for snarfing.
 Each rule is of the form (KEY FUNCTION FUNCTION ...).
 The symbol KEY identifies the rule, see also `bbdb-snarf-rule-default'.
@@ -73,7 +96,10 @@ that it has processed so that the remaining FUNCTIONs operate only
 on those parts that were not yet snarfed.  The order of the FUNCTION calls
 in a rule is then crucial.
 Unlike other parts of BBDB, FUNCTIONs need not update the cache and
-hash table for RECORD which is done at the end by `bbdb-snarf'."
+hash table for RECORD which is done at the end by `bbdb-snarf'.
+Rules may include a santity check for RECORD like `bbdb-snarf-santity-check'.
+Usually, this should be the last FUNCTION in a rule.  This may turn RECORD
+into an empty record that will be discarded."
   :group 'bbdb-utilities-snarf
   :type '(repeat (cons (symbol :tag "Key")
                        (repeat (function :tag "Snarf function")))))
@@ -168,6 +194,29 @@ The first subexpression becomes the URL."
   :group 'bbdb-utilities-snarf
   :type 'regexp)
 
+(defcustom bbdb-snarf-vcard 'vcard
+  "Default rule for snarfing vCards."
+  :group 'bbdb-utilities-vcard
+  :type 'symbol)
+
+(defcustom bbdb-snarf-ignore-mail-re
+  (regexp-opt '("noreply" "no-reply" "donotreply" "do-not-reply" "notify"))
+  "`bbdb-snarf-sanity-check' ignores mail addresses matching this regexp."
+  :group 'bbdb-utilities-snarf
+  :type 'regexp)
+
+(defun bbdb-snarf-sanity-check (record)
+  "Sanity check of snarfed RECORD.
+This may turn RECORD into an empty record that will be discarded.
+Usually, this should be the last element of any snarfing rule."
+  ;; Fixme: Are there other things we may want to add here?
+  (let (mails)
+    (mapc (lambda (mail)
+            (unless (string-match bbdb-snarf-ignore-mail-re mail)
+              (bbdb-pushnew mail mails)))
+          (nreverse (bbdb-record-mail record)))
+    (setf (bbdb-record-mail record) mails)))
+
 (defun bbdb-snarf-surrounding-space (_record)
   "Discard beginning and trailing space when snarfing RECORD."
   (while (re-search-forward "^[ \t]+" nil t)
@@ -211,11 +260,19 @@ The first subexpression becomes the URL."
   ;; the following quite powerful.  If this function is used as part of
   ;; a more complex rule, the buffer should be narrowed appropriately.
   (let* ((data (bbdb-extract-address-components (buffer-string)))
-         (name (and (car data) (bbdb-divide-name (car data)))))
-    (setf (bbdb-record-firstname record) (car name))
-    (setf (bbdb-record-lastname  record) (cdr name))
-    (setf (bbdb-record-mail record) (list (cadr data)))
-    (delete-region (point-min) (point-max))))
+         (name (and (car data) (bbdb-divide-name (car data))))
+         (mail (cadr data)))
+    (if (string-match "@" mail)
+        (progn
+          (setf (bbdb-record-firstname record) (car name))
+          (setf (bbdb-record-lastname  record) (cdr name))
+          (setf (bbdb-record-mail record) (list (cadr data)))
+          (delete-region (point-min) (point-max)))
+      ;; Something went wrong
+      (goto-char (point-min))
+      (bbdb-snarf-mail record)
+      (goto-char (point-min))
+      (bbdb-snarf-name record))))
 
 (defun bbdb-snarf-mail (record)
   "Snarf mail addresses for RECORD.
@@ -374,6 +431,298 @@ This uses the first subexpresion of `bbdb-snarf-url-regexp'."
                  (list (cons bbdb-default-xfield (buffer-string)))))
     (erase-buffer)))
 
+;; vCard format (version 4.0)
+;; https://datatracker.ietf.org/doc/html/rfc6350
+
+;; The following parsing code partly duplicates vcard-parse from GNU Elpa.
+;; But we try to avoid that BBDB depends on packages outside Emacs core.
+(defun bbdb-snarf-vcard-property (property &optional sep)
+  "Return vCard property PROPERTY.
+The return value is a list with elements (VALUE (PAR . VAL) (PAR . VAL) ...)
+for each instance of PROPERTY in the vCard.  String VALUE is the value
+of the instance of  PROPERTY.  With separator SEP non-nil, VALUE is a list
+of split values of the instance of PROPERTY.  PAR is a parameter of the
+instance of PROPERTY with value VAL.  If PROPERTY is not found return nil.
+Delete all instances of PROPERTY from the snarfing buffer."
+  ;; Possible extensions of this code that are not yet implemented:
+  ;; - Property value escaping (RFC 6350, Sec. 3.4)
+  ;; - Parameter values VAL that can themselves be broken into lists
+  ;;   of strings (RFC 6350, Sec. 4).
+  (goto-char (point-min))
+  ;; RFC 6350: property names and parameter names are case-insensitive
+  ;; (relevant for parsing).  Parameter values may be case-sensitive
+  ;; or case-insensitive (irrelevant for parsing).
+  (let ((case-fold-search t)
+        (prop-re (concat "^" property "\\>"))
+        prop-list)
+    (while (re-search-forward prop-re nil t)
+      (let* ((beg (match-beginning 0))
+             (start (match-end 0))
+             (end (save-excursion
+                    (re-search-forward "\n[^ ]" nil t)
+                    (match-beginning 0)))
+             ;; Convert physical lines to one logical line.
+             (str (replace-regexp-in-string
+                   "\n " "" (buffer-substring-no-properties start end)))
+             par-list)
+        (delete-region beg (1+ end))
+        (with-temp-buffer
+          (insert str)
+          (goto-char (point-min))
+          ;; This ignores the possiblity that `;' and `:' may appear
+          ;; in parameter values that are quoted strings.  Bother?
+          (while (looking-at ";\\([^;:]+\\)")
+            (goto-char (match-end 0))
+            (let ((par (match-string 1)))
+              ;; We try to split the property parameters into pairs PAR=VAL.
+              ;; If this fails, we include the dangling VAL with PAR being nil.
+              ;; Certain parameter values may be comma-separated lists.
+              ;; Fixme: Use custom var `bbdb-vcard-parameter-sep-alist'
+              ;; with elements (PAR . SEP).
+              (if (string-match "\\`\\([^=]+\\)=\\([^=]+\\)\\'" par)
+                  (push (cons (match-string 1 par) (match-string 2 par))
+                        par-list)
+                (push (cons nil par) par-list))))
+          (let ((value (buffer-substring-no-properties
+                        (1+ (point)) (point-max))))
+            ;; Again, this ignores the possiblity that `;' and `:'
+            ;; may appear in property values inside quoted strings.
+            (push (cons (if sep (split-string value sep) value)
+                        (nreverse par-list))
+                  prop-list)))))
+
+    ;; We try to sort multiple instances of PROPERTY based on
+    ;; the PREF parameter.  Absence of PREF counts as PREF=100.
+    (sort (nreverse prop-list)
+          (lambda (p1 p2)
+            (cl-flet ((num (p)
+                        (let* ((r (assoc-string "PREF" p t))
+                               ;; If `string-to-number' fails it returns 0.
+                               (n (or (and r (string-to-number (cdr r))) 100)))
+                          (if (zerop n) 100 n))))
+              (< (num p1) (num p2)))))))
+
+(defun bbdb-snarf-vcard-name (record)
+  "Snarf vCard properties N and/or FN => BBDB name and aka."
+  ;; We give the structured N property precedence over the unstructured
+  ;; FN property.  This choice may depend on details.
+  ;; N may be present exactly once (it should be present for X.520 cards).
+  ;; One or more FNs must be present per vCard.
+  ;; We process all instances of N and FN and try to avoid duplicates.
+  ;; The following code is supposed to accept some variations of RFC 6350.
+  (let ((fn-list (bbdb-snarf-vcard-property "FN"))
+        (n-list (bbdb-snarf-vcard-property "N" ";"))
+        (affix (nreverse (bbdb-record-affix record)))
+        (aka (nreverse (bbdb-record-aka record)))
+        first last name)
+    ;; N:last;first;middle;prefix;suffix
+    ;; Each of these components may have multiple values separated by ","
+    ;; (not yet implemented).
+    (let ((n (caar n-list)))
+      (when (nth 1 n) ; N is properly structured
+        (pop n-list)
+        (setq last (nth 0 n)
+              first (bbdb-concat " " (nth 1 n) (nth 2 n)))
+        (setq name (bbdb-concat 'name-first-last first last))
+        (bbdb-pushnewt (nth 3 n) affix)   ; prefix
+        (bbdb-pushnewt (nth 4 n) affix))) ; suffix
+
+    ;; FN:formatted_name
+    (when (and (not name) fn-list)
+      (setq name (car (pop fn-list)))
+      (let ((first-last (bbdb-divide-name name)))
+        (setq first (car first-last)
+              last (cdr first-last))))
+
+    ;; last attempt for NAME: try to use an unstructured property N
+    (when (and (not name) (caar n-list))
+      (setq name (car (pop n-list)))
+      (let ((first-last (bbdb-divide-name name)))
+        (setq first (car first-last)
+              last (cdr first-last))))
+
+    ;; Though N should be present only once...
+    (mapc (lambda (n)
+            (let* ((val (car n))
+                   (a (if (not (nth 1 val))
+                          (nth 0 val)
+                        (bbdb-pushnewt (nth 3 val) affix) ; prefix
+                        (bbdb-pushnewt (nth 4 val) affix) ; suffix
+                        (bbdb-concat " " (nth 1 val) (nth 2 val) (nth 0 val)))))
+              (unless (string= a name) (bbdb-pushnew a aka))))
+          n-list)
+
+    (mapc (lambda (fn) (unless (string= name (car fn))
+                         (bbdb-pushnew (car fn) aka)))
+          fn-list)
+
+    (setf (bbdb-record-firstname record) first)
+    (setf (bbdb-record-lastname record) last)
+    (setf (bbdb-record-affix record) (nreverse affix))
+    (setf (bbdb-record-aka record) (nreverse aka))))
+
+;; The following functions use repeatedly `nreverse' so that they append
+;; their stuff at the end of what we may already have in a BBDB field.
+;; Note also that `bbdb-snarf-vcard-property' sorts the instances
+;; of a vCard property based on the vCard PREF parameter.  Preserve this!
+
+(defun bbdb-snarf-vcard-adr (record)
+  "Snarf vCard property ADR => BBDB address."
+  ;; One or more ADRs may be present per vCard.
+  (let ((addresses (nreverse (bbdb-record-address record))))
+    (dolist (adr (bbdb-snarf-vcard-property "ADR" ";"))
+      (let ((address (bbdb-address--make))
+            (adr-list (car adr))
+            streets)
+        ;; This code cannot (yet) handle unstructured addresses
+        ;; that violate RFC 6350.
+        (if (not (nth 1 adr-list))
+            (progn (message "Unstructured vCard address: not implemented")
+                   (sit-for 1))
+          (setf (bbdb-address-label address)
+                (or (cdr (assoc-string "TYPE" (cdr adr) t))
+                    (cdr (assq 'address bbdb-snarf-default-label-alist))))
+          ;; (0) PO box  (1) extended address  (2) street  (3) city
+          ;; (4) region  (5) postal code  (6) country
+          (cl-flet ((str (n) (let ((elt (nth n adr-list)))
+                               (and (stringp elt) (not (string= "" elt))))))
+            ;; Make "PO Box" and "Apt" customizable?
+            ;; Useful values may depend on the country of ADR.
+            ;; RFC 6350: the components (0) and (1) should be empty!
+            (if (str 0) (push (concat "PO Box " (nth 0 adr-list)) streets))
+            (if (str 1) (push (concat "Apt " (nth 1 adr-list)) streets))
+            ;; (2) street may be a comma-separated list of values.
+            (if (str 2) (setq streets (nconc (nreverse (split-string (nth 2 adr-list)
+                                                                     "," t))
+                                             streets)))
+            (setf (bbdb-address-streets address) (nreverse streets))
+            (if (str 3) (setf (bbdb-address-city address) (nth 3 adr-list)))
+            (if (str 4) (setf (bbdb-address-state address) (nth 4 adr-list)))
+            (if (str 5) (setf (bbdb-address-postcode address) (nth 5 adr-list)))
+            (if (str 6) (setf (bbdb-address-country address) (nth 6 adr-list))))
+          (push address addresses))))
+    (setf (bbdb-record-address record) (nreverse addresses))))
+
+;; The following functions `bbdb-snarf-vcard-...' are pretty simple.
+;; It may be easier to customize these functions directly than implementing
+;; some fancy user-variable-based customizations of these functions.
+
+(defun bbdb-snarf-vcard-nickname (record)
+  "Snarf vCard property NICKNAME => BBDB aka."
+  ;; One or more NICKNAMEs may be present per vCard.
+  (let ((aka (nreverse (bbdb-record-aka record))))
+    ;; This ignores any parameters of property NICKNAME!
+    (mapc (lambda (nickname) ; list of values
+            (mapc (lambda (n) (bbdb-pushnew n aka))
+                  (car nickname)))
+          (bbdb-snarf-vcard-property "NICKNAME" ","))
+    (setf (bbdb-record-aka record) (nreverse aka))))
+
+(defun bbdb-snarf-vcard-email (record)
+  "Snarf vCard property EMAIL => BBDB mail."
+  ;; One or more EMAILs may be present per vCard.
+  (let ((mail (nreverse (bbdb-record-mail record))))
+    ;; This ignores any parameters of property EMAIL!
+    (mapc (lambda (elt) (bbdb-pushnew (car elt) mail))
+          (bbdb-snarf-vcard-property "EMAIL"))
+    (setf (bbdb-record-mail record) (nreverse mail))))
+
+(defun bbdb-snarf-vcard-tel (record)
+  "Snarf vCard property TEL => BBDB phone."
+  ;; One or more TELs may be present per vCard.
+  (let ((phones (nreverse (bbdb-record-phone record))))
+    (mapc (lambda (phone)
+            (bbdb-pushnew
+             (vconcat (list (or (cdr (assoc-string "TYPE" (cdr phone) t))
+                                (cdr (assq 'phone bbdb-snarf-default-label-alist))))
+                      (bbdb-parse-phone (car phone)))
+             phones))
+          (bbdb-snarf-vcard-property "TEL"))
+    (setf (bbdb-record-phone record) (nreverse phones))))
+
+(defun bbdb-snarf-vcard-org (record)
+  "Snarf vCard property ORG => BBDB organization."
+  ;; One or more ORGs may be present per vCard.
+  (let ((orgs (nreverse (bbdb-record-organization record))))
+    ;; This ignores any parameters of property ORG!
+    (mapc (lambda (org) ; list of values
+            (mapc (lambda (o) (bbdb-pushnew o orgs))
+                  (car org)))
+          (bbdb-snarf-vcard-property "ORG" ","))
+    (setf (bbdb-record-organization record) (nreverse orgs))))
+
+(defun bbdb-snarf-vcard-uid (record)
+  "Snarf vCard property UID => BBDB uuid."
+  ;; The vCard UID property need not be a UUID.  We use it anyway
+  ;; inside BBDB for the uuid field of RECORD and hope for the best.
+  ;; Uniqueness of the (U)UID is really all that matters for BBDB.
+  ;; Exactly one UID may be present per vCard.
+  (setf (bbdb-record-uuid record)
+        (caar (bbdb-snarf-vcard-property "UID"))))
+
+(defun bbdb-snarf-vcard-url (record)
+  "Snarf vCard property URL => BBDB xfield `bbdb-snarf-url'."
+  ;; One or more URLs may be present per vCard.
+  (if bbdb-snarf-url
+      (let ((url (nreverse (bbdb-record-xfield-split record bbdb-snarf-url))))
+        (mapc (lambda (u) (bbdb-pushnew (car u) url))
+              (bbdb-snarf-vcard-property "URL"))
+        (bbdb-record-set-xfield record bbdb-snarf-url
+                                (bbdb-concat bbdb-snarf-url (nreverse url))))))
+
+(defun bbdb-snarf-vcard-note (record)
+  "Snarf vCard property NOTE => BBDB `bbdb-default-xfield'."
+  ;; One or more NOTEs may be present per vCard.
+  (dolist (note (bbdb-snarf-vcard-property "NOTE"))
+    ;; We could put NOTE into the xfield specified by NOTE's TYPE parameter.
+    (let ((xfield bbdb-default-xfield))
+      (bbdb-record-set-xfield record xfield
+                              (concat (bbdb-record-xfield record xfield)
+                                      "\n" (car note))))))
+
+;; Suggestions for more functions `bbdb-snarf-vcard-...' welcome!
+
+;;;###autoload
+(defun bbdb-snarf-vcard (&optional pos rule no-display)
+  "Snarf BBDB record from vCard around position POS using RULE.
+The vCard is the one that contains POS or follows POS.
+POS defaults to the position of point.
+RULE defaults to `bbdb-snarf-vcard'.  See `bbdb-snarf-rule-alist' for details.
+Return record.  Also, display the record unless NO-DISPLAY is non-nil."
+  (interactive (list (point) bbdb-snarf-vcard))
+  (let ((rule (or rule bbdb-snarf-vcard))
+        (pos (or pos (point)))
+        (beg-re "^BEGIN:VCARD$")
+        (limit-re "^\\(BEGIN\\|END\\):VCARD$")
+        (end-re "^END:VCARD$")
+        beg end)
+    (save-excursion
+      (goto-char pos)
+      (unless (and (setq beg (or (and (looking-at beg-re) pos)
+                                 (save-excursion
+                                   (and (re-search-backward limit-re nil t)
+                                        (match-beginning 1)))
+                                 (re-search-forward beg-re nil t)))
+                   (setq end (re-search-forward end-re nil t)))
+        (user-error "vCard not found")))
+    (bbdb-snarf (buffer-substring-no-properties beg end) rule no-display)))
+
+;;;###autoload
+(defun bbdb-snarf-vcard-buffer (&optional rule no-display)
+  "Snarf BBDB records from vCards in the current buffer.
+RULE defaults to `bbdb-snarf-vcard'.  See `bbdb-snarf-rule-alist' for details.
+Return the records.  Also, display the records unless NO-DISPLAY is non-nil."
+  (interactive (list bbdb-snarf-vcard))
+  (save-excursion
+    (let (records)
+      (goto-char (point-min))
+      (while (re-search-forward "^BEGIN:VCARD$" nil t)
+        (let ((record (bbdb-snarf-vcard (match-beginning 0) rule t)))
+          (if record (push record records))))
+      (if (and records (not no-display))
+          (bbdb-display-records records))
+      records)))
+
 (defsubst bbdb-snarf-rule-interactive ()
   "Read snarf rule interactively."
   (intern
@@ -383,12 +732,13 @@ This uses the first subexpresion of `bbdb-snarf-url-regexp'."
     (symbol-name bbdb-snarf-rule-default))))
 
 ;;;###autoload
-(defun bbdb-snarf-paragraph (pos &optional rule)
+(defun bbdb-snarf-paragraph (pos &optional rule no-display)
   "Snarf BBDB record from paragraph around position POS using RULE.
 The paragraph is the one that contains POS or follows POS.
 Interactively POS is the position of point.
 RULE defaults to `bbdb-snarf-rule-default'.
-See `bbdb-snarf-rule-alist' for details."
+See `bbdb-snarf-rule-alist' for details.
+Return record.  Also, display the record unless NO-DISPLAY is non-nil."
   (interactive (list (point) (bbdb-snarf-rule-interactive)))
   (bbdb-snarf (save-excursion
                 (goto-char pos)
@@ -397,23 +747,26 @@ See `bbdb-snarf-rule-alist' for details."
                   (buffer-substring-no-properties
                    (progn (backward-paragraph 1) (point))
                    end)))
-              rule))
+              rule no-display))
 
 ;;;###autoload
-(defun bbdb-snarf-yank (&optional rule)
+(defun bbdb-snarf-yank (&optional rule no-display)
   "Snarf a BBDB record from latest kill using RULE.
 The latest kill may also be a window system selection, see `current-kill'.
 RULE defaults to `bbdb-snarf-rule-default'.
-See `bbdb-snarf-rule-alist' for details."
+See `bbdb-snarf-rule-alist' for details.
+Return record.  Also, display the record unless NO-DISPLAY is non-nil."
   (interactive (list (bbdb-snarf-rule-interactive)))
-  (bbdb-snarf (current-kill 0) rule))
+  (bbdb-snarf (current-kill 0) rule no-display))
 
 ;;;###autoload
-(defun bbdb-snarf (string &optional rule)
-  "Snarf a BBDB record in STRING using RULE.  Display and return this record.
+(defun bbdb-snarf (string &optional rule no-display)
+  "Snarf a BBDB record in STRING using RULE.
 Interactively, STRING is the current region.
 RULE defaults to `bbdb-snarf-rule-default'.
-See `bbdb-snarf-rule-alist' for details."
+See `bbdb-snarf-rule-alist' for details.
+Return the record.  Also, displau the record unless NO-DISPLAY is non-nil.
+Discard the record and return nil if the record does not have a name or mail."
   (interactive
    (list (buffer-substring-no-properties (region-beginning) (region-end))
          (bbdb-snarf-rule-interactive)))
@@ -428,16 +781,23 @@ See `bbdb-snarf-rule-alist' for details."
               (funcall fun record))
             (cdr (assq (or rule bbdb-snarf-rule-default)
                        bbdb-snarf-rule-alist))))
-    (let ((old-record (car (bbdb-message-search
-                            (bbdb-concat 'name-first-last
-                                         (bbdb-record-firstname record)
-                                         (bbdb-record-lastname record))
-                            (car (bbdb-record-mail record))))))
-      ;; Install RECORD after searching for OLD-RECORD
-      (bbdb-change-record record)
-      (if old-record (bbdb-merge-records old-record record)))
-    (bbdb-display-records (list record))
-    record))
+    ;; Discard RECORD if it does not have a name or mail.
+    ;; Is this scheme too simplistic?
+    (if (not (or (bbdb-record-firstname record)
+                 (bbdb-record-lastname record)
+                 (bbdb-record-mail record)))
+        (progn (message "Snarfing failed") nil) ; return nil
+      (let ((old-record (car (bbdb-message-search
+                              (bbdb-concat 'name-first-last
+                                           (bbdb-record-firstname record)
+                                           (bbdb-record-lastname record))
+                              (car (bbdb-record-mail record))))))
+        (if old-record
+            (setq record (bbdb-merge-records record old-record))
+          (bbdb-change-record record)))
+      (unless no-display
+        (bbdb-display-records (list record)))
+      record)))
 
 ;; Some test cases
 ;;
@@ -485,6 +845,17 @@ See `bbdb-snarf-rule-alist' for details."
 ;; xxx.xxx@xxxx.xxx
 ;; http://www.xxx.xx
 ;; notes bla bla bla
+;;
+;; Vcard:
+;; BEGIN:VCARD
+;; VERSION:3.0
+;; FN;Pref=1;TYPE=work:Another te
+;;  st person
+;; FN:Another test person
+;; N:Person;another;test;Dr;Sen
+;; EMAIL:foo@bar.com
+;; EMAIL:bar@baz.com
+;; END:VCARD
 
 (provide 'bbdb-snarf)
 
