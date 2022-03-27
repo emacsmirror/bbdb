@@ -40,8 +40,13 @@
 (eval-and-compile
   (autoload 'gnus-fetch-original-field "gnus-utils")
   (autoload 'gnus-summary-select-article "gnus-sum")
-  (autoload 'gnus-info-params "gnus")
-  (autoload 'gnus-get-info "gnus")
+  ;; `gnus-info-params' was a macro up to Emacs 26;
+  ;; it was turned into a function starting with Emacs 27.
+  ;; If BBDB was compiled with an old version of Emacs up to Emacs 26,
+  ;; this will fail if the code is loaded into a newer version of Emacs.
+  (autoload 'gnus-info-params "gnus"
+    nil nil (string> "27" emacs-version))
+  (autoload 'gnus-get-info "gnus" nil nil 'macro)
   (defvar gnus-article-buffer)
   (defvar gnus-newsgroup-name)
 
@@ -106,7 +111,8 @@ MIME encoded headers are decoded.  Return nil if HEADER does not exist."
   ;; of a header if we request the value of the same header multiple times.
   ;; (We would reset the remember table each time we move on to a new message.)
   (let* ((mua (bbdb-mua))
-         (val (cond (;; `gnus-fetch-field' can fetch only the content of
+         (val (cond ((eq mua 'gnus)
+                     ;; `gnus-fetch-field' can fetch only the content of
                      ;; `gnus-visible-headers', but it ignores
                      ;; `gnus-ignored-headers'.  `gnus-fetch-original-field'
                      ;; uses the uncensored set of headers in

@@ -1,3 +1,6 @@
+2022-03-27  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb-mua.el (bbdb-message-header): Fix previous patch.
+
 2022-03-26  Roland Winkler  <winkler@gnu.org>
 	Support snarfing vCards.
 	* lisp/bbdb.el (bbdb-utilities-vcard): New custom group.
