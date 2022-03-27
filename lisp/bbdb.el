@@ -677,7 +677,7 @@ This variable also affects dialing."
                  (integerp val)
                  (null val))
              (set symb val)
-           (error "%s must contain digits only." symb))))
+           (user-error "%s must contain digits only." symb))))
 
 (defcustom bbdb-allow-duplicates nil
   "When non-nil BBDB allows records with duplicate names and email addresses.
@@ -1102,7 +1102,7 @@ Allowed values are:
  a regexp    If the new mail address matches this regexp never ignore
                this mail address.  Otherwise query to ignore it.
 See also `bbdb-add-mails', `bbdb-message-clean-mail-function',
-and 'bbdb-message-ignore-mail-re'."
+and `bbdb-message-ignore-mail-re'."
   :group 'bbdb-mua
   :type '(choice (const :tag "Automatically ignore redundant mail addresses" t)
                  (const :tag "Query whether to ignore them" query)
@@ -2099,18 +2099,18 @@ The return value is the new value of LISTNAME."
   "Return the record point is at.
 If FULL is non-nil record includes the display information."
   (unless (eq major-mode 'bbdb-mode)
-    (error "This only works while in BBDB buffers."))
+    (user-error "This only works while in BBDB buffers."))
   (let ((num (get-text-property (if (and (not (bobp)) (eobp))
                                     (1- (point)) (point))
                                 'bbdb-record-number))
         record)
-    (unless num (error "Not a BBDB record"))
+    (unless num (user-error "Not a BBDB record"))
     (setq record (nth num bbdb-records))
     (if full record (car record))))
 
 (defun bbdb-current-field ()
   "Return current field point is on."
-  (unless (bbdb-current-record) (error "Not a BBDB record"))
+  (unless (bbdb-current-record) (user-error "Not a BBDB record"))
   (get-text-property (point) 'bbdb-field))
 
 (defmacro bbdb-debug (&rest body)
@@ -2202,7 +2202,8 @@ Used with variable `bbdb-add-name' and friends."
          (funcall spec record string))
         ((stringp spec)
          (unless (let ((case-fold-search t))
-                   (string-match spec string) 'query))) ; be least aggressive
+                   (string-match spec string))
+           'query)) ; be least aggressive
         (spec)))
 
 (defsubst bbdb-eval-spec (spec prompt)
@@ -2602,7 +2603,7 @@ If WARN is non-nil, issue a warning instead of raising an error."
                                             name (mapconcat #'bbdb-record-name
                                                             records ", "))))
                            (if (not warn)
-                               (error msg)
+                               (user-error msg)
                              (message msg)
                              (sit-for 1)))))))
       (cond ((stringp name)
@@ -2629,7 +2630,7 @@ If WARN is non-nil, issue a warning instead of raising an error."
             (let ((msg (format "Mail `%s' is already in BBDB: %s" m
                                (mapconcat #'bbdb-record-name records ", "))))
               (if (not warn)
-                  (error msg)
+                  (user-error msg)
                 (message msg)
                 (sit-for 1))))))))
 
@@ -2738,7 +2739,7 @@ Return VALUE."
   ;; Yet the actual code would get rather confused.  So we throw an error.
   (if (memq label '(name firstname lastname affix organization
                          mail aka phone address xfields))
-      (error "xfield label `%s' illegal" label))
+      (user-error "xfield label `%s' illegal" label))
   (if (eq label 'mail-alias)
       (setq bbdb-mail-aliases-need-rebuilt 'edit))
   (if (stringp value) (setq value (bbdb-string-trim value t)))
@@ -2929,7 +2930,7 @@ Then VALUE is the value of this xfield.
 See also `bbdb-record-field'."
   (bbdb-editable)
   (if (memq field '(name-lf mail-aka mail-canon aka-all))
-      (error "`%s' is not allowed as the name of a field" field))
+      (user-error "`%s' is not allowed as the name of a field" field))
   ;; FIXME: Use something like `bbdb-record--make' i.s.o `vector'.
   (let ((record-type (apply #'vector (cdr bbdb-record-type))))
     (cond ((eq field 'firstname) ; First name
@@ -3167,7 +3168,7 @@ Do this only if `bbdb-check-postcode' is non-nil."
           (if (string-match re string)
               (setq done t postcodes nil)))
         (if done string
-          (error "not a valid postcode.")))
+          (user-error "not a valid postcode.")))
     string))
 
 (defun bbdb-phone-string (phone)
@@ -3177,11 +3178,11 @@ Do this only if `bbdb-check-postcode' is non-nil."
       ;; (1) ["where" "the number"]
       (if (stringp (aref phone 1))
           (aref phone 1)
-        (error "Not a valid phone number: %s" (aref phone 1)))
+        (user-error "Not a valid phone number: %s" (aref phone 1)))
     ;; (2) ["where" 415 555 1212 99]
     (unless (and (integerp (aref phone 2))
                  (integerp (aref phone 3)))
-      (error "Not an NANP number: %s %s" (aref phone 2) (aref phone 3)))
+      (user-error "Not an NANP number: %s %s" (aref phone 2) (aref phone 3)))
     (concat (if (/= 0 (bbdb-phone-area phone))
                 (format "(%03d) " (bbdb-phone-area phone))
                 "")
@@ -3319,7 +3320,7 @@ that window has been scrolled to the record we have just modified."
   "Ensure that BBDB is editable, otherwise throw an error.
 If BBDB is out of sync try to revert.
 BBDB is not editable if it is read-only."
-  (if bbdb-read-only (error "BBDB is read-only"))
+  (if bbdb-read-only (user-error "BBDB is read-only"))
   (let ((buffer (bbdb-buffer))) ; this reverts if necessary / possible
     ;; Is the following possible?  Superfluous tests do not hurt.
     ;; It is relevant only for editing commands in a BBDB buffer,
@@ -3378,7 +3379,7 @@ Return nil otherwise."
                     (or noconfirm
                         (yes-or-no-p "Flush your changes and revert BBDB? "))))
            (unless (file-exists-p bbdb-file)
-             (error "BBDB: file %s no longer exists" bbdb-file))
+             (user-error "BBDB: file %s no longer exists" bbdb-file))
            (kill-all-local-variables)  ; clear database
            ;; `revert-buffer-function' has the permanent-local property
            ;; So to avoid looping, we need to bind it to nil explicitly.
@@ -3596,7 +3597,7 @@ They are present only for backward compatibility."
     (sit-for 2))
 
   (if bbdb-read-only
-      (error "The Insidious Big Brother Database is read-only."))
+      (user-error "The Insidious Big Brother Database is read-only."))
   ;; The call of `bbdb-records' checks file synchronization.
   ;; If RECORD refers to an existing record that has been changed,
   ;; yet in the meanwhile we reverted the BBDB file, then RECORD
@@ -3857,8 +3858,8 @@ The formatting rules are defined in `bbdb-address-format-list'."
                          ((string-match "%C" form) ; country
                           (unless (or (not country) (string= ""  country))
                             (setq string (concat string (format (replace-regexp-in-string "%C" "%s" form t) country)))))
-                         (t (error "Malformed address format element %s" form)))))
-                (t (error "Malformed address format %s" format))))))
+                         (t (user-error "Malformed address format element %s" form)))))
+                (t (user-error "Malformed address format %s" format))))))
     (unless string
       (error "No match of `bbdb-address-format-list'"))
     string))
@@ -4700,7 +4701,7 @@ With prefix N move forward N records."
   (interactive "p")
   (let ((npoint (bbdb-scan-property 'bbdb-record-number 'integerp n)))
     (if npoint (goto-char npoint)
-      (error "No %s record" (if (< 0 n) "next" "previous")))))
+      (user-error "No %s record" (if (< 0 n) "next" "previous")))))
 
 (defun bbdb-prev-record (n)
   "Move point to the beginning of the previous BBDB record.
@@ -4718,7 +4719,7 @@ With prefix N move forward N (sub)fields."
                                   (not (eq (nth 2 p) 'field-label))))
                  n)))
     (if npoint (goto-char npoint)
-      (error "No %s field" (if (< 0 n) "next" "previous")))))
+      (user-error "No %s field" (if (< 0 n) "next" "previous")))))
 
 (defun bbdb-prev-field (n)
   "Move point to previous (sub)field.

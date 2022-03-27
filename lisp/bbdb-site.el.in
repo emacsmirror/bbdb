@@ -22,7 +22,7 @@
 (defconst bbdb-version "@PACKAGE_VERSION@" "Version of BBDB.")
 
 (if (< emacs-major-version 24)
-  (error "BBDB %s requires GNU Emacs 24 or later" bbdb-version))
+  (user-error "BBDB %s requires GNU Emacs 24 or later" bbdb-version))
 
 (defcustom bbdb-tex-path
   (let* ((default "@pkgdatadir@")

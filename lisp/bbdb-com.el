@@ -1051,7 +1051,7 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
   (interactive
    (let* ((_ (bbdb-editable))
           (record (or (bbdb-current-record)
-                      (error "Point not on a record")))
+                      (user-error "Point not on a record")))
           (list (append bbdb-xfield-label-list
                         '(affix organization aka phone address mail)))
           (field "")
@@ -1068,20 +1068,20 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
        (setq field (downcase (completing-read "Insert Field: " list))))
      (setq field (intern field))
      (if (memq field present)
-         (error "Field \"%s\" already exists" field))
+         (user-error "Field \"%s\" already exists" field))
      (list record field (bbdb-read-field record field current-prefix-arg))))
 
   (cond (;; affix
          (eq field 'affix)
          (if (bbdb-record-affix record)
-             (error "Affix field exists already"))
+             (user-error "Affix field exists already"))
          (if (stringp value)
              (setq value (bbdb-split 'affix value)))
          (bbdb-record-set-field record 'affix value))
         ;; organization
         ((eq field 'organization)
          (if (bbdb-record-organization record)
-             (error "Organization field exists already"))
+             (user-error "Organization field exists already"))
          (if (stringp value)
              (setq value (bbdb-split 'organization value)))
          (bbdb-record-set-field record 'organization value))
@@ -1098,20 +1098,20 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
         ;; mail
         ((eq field 'mail)
          (if (bbdb-record-mail record)
-             (error "Mail field exists already"))
+             (user-error "Mail field exists already"))
          (if (stringp value)
              (setq value (bbdb-split 'mail value)))
          (bbdb-record-set-field record 'mail value))
         ;; AKA
         ((eq field 'aka)
          (if (bbdb-record-aka record)
-             (error "Alternate names field exists already"))
+             (user-error "Alternate names field exists already"))
          (if (stringp value)
              (setq value (bbdb-split 'aka value)))
          (bbdb-record-set-field record 'aka value))
         ;; xfields
         ((assq field (bbdb-record-xfields record))
-         (error "Xfield \"%s\" already exists" field))
+         (user-error "Xfield \"%s\" already exists" field))
         (t
          (bbdb-record-set-xfield record field value)))
   (unless (bbdb-change-record record)
@@ -1157,7 +1157,7 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
                ;; New xfield
                (y-or-n-p
                 (format "\"%s\" is an unknown field name.  Define it? " field))
-               (error "Aborted"))
+               (user-error "Aborted"))
            (bbdb-read-xfield field init flag)))))
 
 ;;;###autoload
@@ -1180,7 +1180,7 @@ a phone number or address with VALUE being nil.
      (let* ((field-l (bbdb-current-field))
             (field (car field-l))
             (value (nth 1 field-l)))
-       (unless field (error "Point not in a field"))
+       (unless field (user-error "Point not in a field"))
        (list (bbdb-current-record)
              (if (memq field '(name affix organization aka mail phone address
                                     uuid creation-date timestamp))
@@ -1190,7 +1190,7 @@ a phone number or address with VALUE being nil.
   (let (edit-str)
     (cond ((memq field '(firstname lastname xfields))
            ;; FIXME: We could also edit first and last names.
-           (error "Field `%s' not editable this way." field))
+           (user-error "Field `%s' not editable this way." field))
           ((eq field 'name)
            (bbdb-error-retry
             (bbdb-record-set-field
@@ -1207,7 +1207,7 @@ a phone number or address with VALUE being nil.
               (bbdb-record-lastname record)))))
 
           ((eq field 'phone)
-           (unless value (error "No phone specified"))
+           (unless value (user-error "No phone specified"))
            (bbdb-record-set-field
             record field
             ;; Splice new phone value into list of phones.
@@ -1216,7 +1216,7 @@ a phone number or address with VALUE being nil.
                       (bbdb-record-edit-phone value))
               phones)))
           ((eq field 'address)
-           (unless value (error "No address specified"))
+           (unless value (user-error "No address specified"))
            (bbdb-record-edit-address value nil flag)
            (bbdb-record-set-field record field (bbdb-record-address record)))
           ((eq field 'organization)
@@ -1317,13 +1317,13 @@ to select the field."
                                (string-to-number nvalue))))))
 
   (if (memq field '(firstname lastname name-lf aka-all mail-aka mail-canon))
-      (error "Field `%s' illegal" field))
+      (user-error "Field `%s' illegal" field))
   (let ((value (if (numberp nvalue)
                    (nth nvalue (cond ((eq field 'phone) (bbdb-record-phone record))
                                      ((eq field 'address) (bbdb-record-address record))
-                                     (t (error "%s: nvalue %s meaningless" field nvalue)))))))
+                                     (t (user-error "%s: nvalue %s meaningless" field nvalue)))))))
     (if (and (numberp nvalue) (not value))
-        (error "%s: nvalue %s out of range" field nvalue))
+        (user-error "%s: nvalue %s out of range" field nvalue))
     (if (or (memq field '(name uuid creation-date))
             (and (eq field 'affix) (bbdb-record-affix record))
             (and (eq field 'organization) (bbdb-record-organization record))
@@ -1385,7 +1385,7 @@ Otherwise, use the default rule according to `bbdb-address-format-list'."
               (setq edit (nth 1 elt))))))
     (unless edit
       (setq edit (nth 1 (assq t bbdb-address-format-list))))
-    (unless edit (error "No address editing function defined"))
+    (unless edit (user-error "No address editing function defined"))
     (if (functionp edit)
         (setq new-addr (funcall edit address))
       (setq new-addr (make-vector 5 ""))
@@ -1557,9 +1557,9 @@ irrespective of the value of ARG."
          (record (and (car ident) (car (nth (car ident) bbdb-records))))
          num1 num2)
     (cond ((not (car ident))
-           (error "Point not in BBDB record"))
+           (user-error "Point not in BBDB record"))
           ((not (nth 1 ident))
-           (error "Point not in BBDB field"))
+           (user-error "Point not in BBDB field"))
           ((eq 'name (nth 1 ident))
            ;; Transpose firstname and lastname
            (bbdb-record-set-name record (bbdb-record-lastname record)
@@ -1567,15 +1567,15 @@ irrespective of the value of ARG."
           ((not (integerp arg))
            (error "Arg `%s' not an integer" arg))
           ((not (nth 2 ident))
-           (error "Point not in a transposable field"))
+           (user-error "Point not in a transposable field"))
           (t
            (if (or (use-region-p) (zerop arg))
                (let ((ident2 (bbdb-ident-point
-                              (or (mark) (error "No mark set in this buffer")))))
+                              (or (mark) (user-error "No mark set in this buffer")))))
                  (unless (and (eq (car ident) (car ident2))
                               (eq (cadr ident) (cadr ident2))
                               (integerp (nth 2 ident2)))
-                   (error "Mark (or point) not on transposable field"))
+                   (user-error "Mark (or point) not on transposable field"))
                  (setq num1 (nth 2 ident)
                        num2 (nth 2 ident2)))
              (setq num1 (1- (nth 2 ident))
@@ -1583,7 +1583,7 @@ irrespective of the value of ARG."
              (if (or (< (min num1 num2) 0)
                      (>= (max num1 num2) (length (bbdb-record-field
                                                   record (nth 1 ident)))))
-                 (error "Cannot transpose fields of different types")))
+                 (user-error "Cannot transpose fields of different types")))
            (bbdb-record-set-field
             record (nth 1 ident)
             (bbdb-list-transpose (bbdb-record-field record (nth 1 ident))
@@ -1604,7 +1604,7 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
   (interactive
    (list (bbdb-do-records) (bbdb-current-field) current-prefix-arg))
   (bbdb-editable)
-  (unless field (error "Not a field"))
+  (unless field (user-error "Not a field"))
   (setq records (bbdb-record-list records))
   (let* ((type (car field))
          (type-x (if (eq type 'xfields)
@@ -1613,7 +1613,7 @@ If prefix NOPROMPT is non-nil, do not confirm deletion."
     (if (eq type 'name)
         (bbdb-delete-records records noprompt)
       (if (memq type '(firstname lastname))
-          (error "Cannot delete field `%s'" type))
+          (user-error "Cannot delete field `%s'" type))
       (dolist (record records)
         (when (or noprompt
                   (y-or-n-p (format "delete this `%s' field (of %s)? "
@@ -1787,8 +1787,8 @@ With prefix, RECORD2 defaults to the first record with the same name."
                 (list record1))))))
 
   (bbdb-editable)
-  (cond ((eq record1 record2) (error "Records are equal"))
-        ((null record2) (error "No record to merge with")))
+  (cond ((eq record1 record2) (user-error "Records are equal"))
+        ((null record2) (user-error "No record to merge with")))
 
   ;; Merge names
   (let* ((new-name (bbdb-record-name record2))
@@ -1928,7 +1928,7 @@ If MAIL is nil use the first mail address of RECORD."
     (let ((mails (bbdb-record-mail record)))
       (setq mail (or (and (integerp mail) (nth mail mails))
                      (car mails)))))
-  (unless mail (error "Record has no mail addresses"))
+  (unless mail (user-error "Record has no mail addresses"))
   (let (name fn ln)
     (cond ((let ((address (bbdb-decompose-bbdb-address mail)))
              ;; We need to know whether we should quote the name part of MAIL
@@ -2592,7 +2592,7 @@ Rebuilding the aliases is enforced if prefix FORCE-REBUILT is t."
             (bbdb-pushnew (cons alias expansion) mail-aliases)
 
             (define-mail-abbrev alias expansion)
-            
+
             (unless (setq f-alias (abbrev-symbol alias mail-abbrevs))
               (error "Cannot find the alias"))
 
@@ -2725,7 +2725,7 @@ is non-nil.  Do not dial the extension."
       (setq phone (car (bbdb-record-phone (bbdb-current-record)))))
   (if (eq (car-safe phone) 'phone)
       (setq phone (car (cdr phone))))
-  (or (bbdb-phone-p phone) (error "Not on a phone field"))
+  (or (bbdb-phone-p phone) (user-error "Not on a phone field"))
 
   (let ((number (bbdb-phone-string phone))
         shortnumber)
@@ -2785,7 +2785,7 @@ Default is the first URL."
 (defun bbdb-grab-url (record url)
   "Grab URL and store it in RECORD."
   (interactive (let ((url (browse-url-url-at-point)))
-                 (unless url (error "No URL at point"))
+                 (unless url (user-error "No URL at point"))
                  (list (bbdb-completing-read-record
                         (format "Add `%s' for: " url))
                        url)))
@@ -2823,7 +2823,7 @@ Interactively, use BBDB prefix \
    (list (bbdb-do-records t) (bbdb-current-field)
          (and current-prefix-arg
               (prefix-numeric-value current-prefix-arg))))
-  (unless field (error "Not a field"))
+  (unless field (user-error "Not a field"))
   (let* ((type (if (eq (car field) 'xfields)
                    (car (nth 1 field))
                  (car field)))

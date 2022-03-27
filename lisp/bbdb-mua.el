@@ -89,7 +89,7 @@ Return values include
       (if (memq major-mode (cdr elt))
           (setq mua (car elt)
                 mm-alist nil)))
-    (or mua (error "BBDB: MUA `%s' not supported" major-mode))))
+    (or mua (user-error "BBDB: MUA `%s' not supported" major-mode))))
 
 ;;;###autoload
 (defun bbdb-message-header (header)
@@ -244,7 +244,7 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
   (cond ((eq t action)
          (setq action 'create))
         ((not (memq action '(search update query create nil)))
-         (error "Illegal value of arg action: %s" action)))
+         (user-error "Illegal value of arg action: %s" action)))
 
   (let (records-alist records elt)
     ;; association list: records -> addresses
@@ -739,7 +739,7 @@ FIELD defaults to `bbdb-annotate-field'.
 If REPLACE is non-nil, ANNOTATION replaces the content of FIELD.
 If ANNOTATION is an empty string and REPLACE is non-nil, delete FIELD."
   (if (memq field '(name firstname lastname phone address xfields))
-      (error "Field `%s' illegal" field))
+      (user-error "Field `%s' illegal" field))
   (setq annotation (bbdb-string-trim annotation))
   (cond ((memq field '(affix organization mail aka))
          (setq annotation (list annotation)))
@@ -825,7 +825,7 @@ HEADER-CLASS is defined in `bbdb-message-headers'.  If it is nil,
 use all classes in `bbdb-message-headers'."
   (interactive (bbdb-mua-edit-field-interactive))
   (cond ((memq field '(firstname lastname address phone xfields))
-         (error "Field `%s' not editable this way" field))
+         (user-error "Field `%s' not editable this way" field))
         ((not field)
          (setq field bbdb-mua-edit-field)))
   (bbdb-mua-wrapper

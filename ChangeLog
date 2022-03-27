@@ -1,3 +1,8 @@
+2022-03-26  Roland Winkler  <winkler@gnu.org>
+	* lisp/bbdb.el, lisp/bbdb-site.el.in, lisp/bbdb-com.el,
+	lisp/bbdb-mua.el, lisp/bbdb-tex.el: Use user-error where
+	appropriate.
+
 2022-02-23  Roland Winkler  <winkler@gnu.org>
 	Bugfix and polish previous patch.
 	* lisp/bbdb.el (bbdb-mua-auto-action): Fix docstring.

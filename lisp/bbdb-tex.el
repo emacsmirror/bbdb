@@ -479,7 +479,7 @@ RULE should be an element of `bbdb-tex-alist'."
                                     (insert (format fmt (car first-last) (cadr first-last))))
                                    ((eq 1 (length first-last))
                                     (insert (format fmt "" (car first-last))))
-                                   (t (error "TeX name %s cannot be split" tex-name))))
+                                   (t (user-error "TeX name %s cannot be split" tex-name))))
                          (insert (format fmt
                                          (bbdb-tex-field 'firstname firstname)
                                          (bbdb-tex-field 'lastname  lastname))))))
