@@ -40,7 +40,10 @@
 (eval-and-compile
   (autoload 'gnus-fetch-original-field "gnus-utils")
   (autoload 'gnus-summary-select-article "gnus-sum")
+  (autoload 'gnus-info-params "gnus")
+  (autoload 'gnus-get-info "gnus")
   (defvar gnus-article-buffer)
+  (defvar gnus-newsgroup-name)
 
   (autoload 'bbdb/vm-header "bbdb-vm")
   (autoload 'vm-follow-summary-cursor "vm-motion")
@@ -103,15 +106,26 @@ MIME encoded headers are decoded.  Return nil if HEADER does not exist."
   ;; of a header if we request the value of the same header multiple times.
   ;; (We would reset the remember table each time we move on to a new message.)
   (let* ((mua (bbdb-mua))
-         (val (cond (;; It seems that `gnus-fetch-field' fetches decoded content of
-                     ;; `gnus-visible-headers', ignoring `gnus-ignored-headers'.
-                     ;; Here we use instead `gnus-fetch-original-field' that fetches
-                     ;; the encoded content of `gnus-original-article-buffer'.
-                     ;; Decoding makes this possibly a bit slower, but something like
-                     ;; `bbdb-select-message' does not get fooled by an apparent
-                     ;; absence of some headers.
-                     ;; See http://permalink.gmane.org/gmane.emacs.gnus.general/78741
-                     (eq mua 'gnus) (gnus-fetch-original-field header))
+         (val (cond (;; `gnus-fetch-field' can fetch only the content of
+                     ;; `gnus-visible-headers', but it ignores
+                     ;; `gnus-ignored-headers'.  `gnus-fetch-original-field'
+                     ;; uses the uncensored set of headers in
+                     ;; `gnus-original-article-buffer'.  The latter headers are
+                     ;; encoded, so that decoding makes this slower, but BBDB
+                     ;; does not get fooled by an apparent absence of some
+                     ;; headers.  (See gmane.emacs.gnus.general #78741)
+                     (or (gnus-fetch-original-field header)
+                         ;; `gnus-fetch-original-field' returns nil in nndoc
+                         ;; groups (digests) because `gnus-original-article-buffer'
+                         ;; is empty for the nndoc summary buffer, but not for
+                         ;; the parent summary buffer. (bug#54423)
+                         (let ((parent-summary-buffer
+                                (cadr (assq 'quit-config
+                                            (gnus-info-params
+                                             (gnus-get-info gnus-newsgroup-name))))))
+                           (and parent-summary-buffer
+                                (with-current-buffer parent-summary-buffer
+                                  (gnus-fetch-original-field header))))))
                     ((eq mua 'vm) (bbdb/vm-header header))
                     ((eq mua 'rmail)
                      (with-current-buffer rmail-buffer
