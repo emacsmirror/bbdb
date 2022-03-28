@@ -5,6 +5,21 @@ See the end of the file for license conditions.
 
 This file is about changes in BBDB version 3.
 
+* BBDB 3.2.2a
+** Bug fixes
+
+** New user variables bbdb-message-ignore-mail-re,
+bbdb-message-ignore-name-re, and bbdb-record-address-alist-function
+
+** Yet experimental code for snarfing vCards.
+It may change in later versions of BBDB.  See bbdb-snarf.el.
+
+** Changes to adapt BBDB to Emacs coding conventions
+bbdb-mua-interactive-action renamed from bbdb-mua-update-interactive-p.
+bbdb-mua-auto-action renamed from bbdb-mua-auto-update-p.
+bbdb-mua-action renamed from bbdb-update-records-p.
+
+
 * BBDB 3.2.1
 ** Bug fixes
 

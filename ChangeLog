@@ -1,3 +1,8 @@
+2022-03-28  Roland Winkler  <winkler@gnu.org>
+	Increase version number to 3.2.2a.
+	* lisp/bbdb.el, configure.ac: Increase version number to 3.2.2a.
+	* NEWS: Updated.
+
 2022-03-27  Roland Winkler  <winkler@gnu.org>
 	* lisp/bbdb-mua.el (bbdb-message-header): Fix previous patch.
 
