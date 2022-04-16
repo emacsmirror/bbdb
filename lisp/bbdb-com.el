@@ -871,7 +871,7 @@ but does ensure that there will not be name collisions."
 
     record))
 
-(defun bbdb-read-name (&optional first-and-last dfirst dlast)
+(defun bbdb-read-name (&optional first-and-last dfirst dlast ident)
   "Read name for a record from minibuffer.
 FIRST-AND-LAST controls the reading mode:
 If it is 'first-last read first and last name separately.
@@ -881,6 +881,7 @@ If it is t read name parts separately, obeying
 `bbdb-read-name-format' if possible.
 Otherwise use `bbdb-read-name-format'.
 DFIRST and DLAST are default values for the first and last name.
+Add optional string IDENT to the prompt as identifier when reading name.
 Return cons with first and last name."
   (unless (memq first-and-last '(first-last last-first fullname))
     ;; We do not yet know how to read the name
@@ -889,18 +890,21 @@ Return cons with first and last name."
                    (not (memq bbdb-read-name-format '(first-last last-first))))
               'first-last
             bbdb-read-name-format)))
-  (let ((name (cond ((eq first-and-last 'last-first)
-                     (let (fn ln)
-                       (setq ln (bbdb-read-string "Last Name: " dlast)
-                             fn (bbdb-read-string "First Name: " dfirst))
+  (let* ((f-prompt (concat ident "First name: "))
+         (l-prompt (concat ident "Last name: "))
+         (name (cond ((eq first-and-last 'last-first)
+                      (let (fn ln)
+                        (setq ln (bbdb-read-string l-prompt dlast)
+                              fn (bbdb-read-string f-prompt dfirst))
                        (cons fn ln)))
-                    ((eq first-and-last 'first-last)
-                     (cons (bbdb-read-string "First Name: " dfirst)
-                           (bbdb-read-string "Last Name: " dlast)))
-                    (t
-                     (bbdb-divide-name (bbdb-read-string
-                                        "Name: " (bbdb-concat 'name-first-last
-                                                              dfirst dlast)))))))
+                     ((eq first-and-last 'first-last)
+                      (cons (bbdb-read-string f-prompt dfirst)
+                            (bbdb-read-string l-prompt dlast)))
+                     (t
+                      (bbdb-divide-name (bbdb-read-string
+                                         (concat ident "Name: ")
+                                         (bbdb-concat 'name-first-last
+                                                      dfirst dlast)))))))
     (if (string= (car name) "") (setcar name nil))
     (if (string= (cdr name) "") (setcdr name nil))
     name))
@@ -944,7 +948,7 @@ The following keywords are supported in SPEC:
                    [\"label\" area-code prefix suffix extension-or-nil]
                    or [\"label\" \"phone-number\"]
 :address VAL       List of addresses.  An address is a vector of the form
-                   \[\"label\" (\"line1\" \"line2\" ... ) \"City\"
+                   [\"label\" (\"line1\" \"line2\" ... ) \"City\"
                    \"State\" \"Postcode\" \"Country\"].
 :xfields VAL       Alist associating symbols with strings.
 :uuid VAL          String, the uuid.
@@ -1161,16 +1165,22 @@ A non-nil prefix arg is passed on to `bbdb-read-field' as FLAG (see there)."
            (bbdb-read-xfield field init flag)))))
 
 ;;;###autoload
-(defun bbdb-edit-field (record field &optional value flag)
+(defun bbdb-edit-field (record field &optional value flag ident)
   "Edit the contents of FIELD of RECORD.
 If point is in the middle of a multi-line field (e.g., address),
 then the entire field is edited, not just the current line.
 For editing phone numbers or addresses, VALUE must be the phone number
 or address that gets edited. An error is thrown when attempting to edit
-a phone number or address with VALUE being nil.
+a phone number or address with VALUE being nil.  Other fields will be
+newly created when calling this function and these fields are not yet
+defined for RECORD.
 
-- The value of an xfield is a string.  With prefix FLAG the value may be
-  any lisp object."
+The value of an xfield is a string.  With prefix FLAG the value may be
+any lisp object.
+
+If optional arg IDENT is a string, when editing FIELD add this string
+to the prompt as an identifier for RECORD.  If IDENT is t, generate
+the identifier from the name or mail address of RECORD."
   (interactive
    (save-excursion
      (bbdb-editable)
@@ -1187,6 +1197,21 @@ a phone number or address with VALUE being nil.
                  field ; not an xfield
                (elt value 0)) ; xfield
              value current-prefix-arg))))
+  ;; Identifier
+  (cond ((not ident)
+         (setq ident ""))
+        ((not (stringp ident))
+         ;; as in `bbdb-display-name-organization'
+         (setq ident (if (eq 'last-first
+                             (or (bbdb-record-xfield-intern record 'name-format)
+                                 bbdb-name-format))
+                         (bbdb-record-name-lf record)
+                       ;; default: Firstname Lastname
+                       (bbdb-record-name record)))
+         (if (string= "" ident)
+             (setq ident (or (car (bbdb-record-mail record)) "???")))
+         (setq ident (format "(%s) " ident))))
+
   (let (edit-str)
     (cond ((memq field '(firstname lastname xfields))
            ;; FIXME: We could also edit first and last names.
@@ -1204,7 +1229,8 @@ a phone number or address with VALUE being nil.
                   (or (bbdb-record-xfield-intern record 'name-format)
                       flag))
               (bbdb-record-firstname record)
-              (bbdb-record-lastname record)))))
+              (bbdb-record-lastname record)
+              ident))))
 
           ((eq field 'phone)
            (unless value (user-error "No phone specified"))
@@ -1213,39 +1239,42 @@ a phone number or address with VALUE being nil.
             ;; Splice new phone value into list of phones.
             (let ((phones (bbdb-record-phone record)))
               (setcar (memq value phones)
-                      (bbdb-record-edit-phone value))
+                      (bbdb-record-edit-phone value nil ident))
               phones)))
           ((eq field 'address)
            (unless value (user-error "No address specified"))
-           (bbdb-record-edit-address value nil flag)
+           (bbdb-record-edit-address value nil flag ident)
            (bbdb-record-set-field record field (bbdb-record-address record)))
           ((eq field 'organization)
            (bbdb-record-set-field
             record field
             (bbdb-read-organization
-             (bbdb-concat field (bbdb-record-organization record)))))
+             (bbdb-concat field (bbdb-record-organization record))
+             ident)))
           ((setq edit-str (assq field '((affix . "Affix")
                                         (mail . "Mail") (aka . "AKA"))))
            (bbdb-record-set-field
             record field
             (bbdb-split field (bbdb-read-string
-                               (format "%s: " (cdr edit-str))
+                               (concat ident (cdr edit-str) ": ")
                                (bbdb-concat field
                                             (bbdb-record-field record field))))))
           ((eq field 'uuid)
            (bbdb-record-set-field
-            record 'uuid (bbdb-read-string "uuid (edit at your own risk): " (bbdb-record-uuid record))))
+            record 'uuid (bbdb-read-string (concat ident "uuid (edit at your own risk): ")
+                                           (bbdb-record-uuid record))))
           ((eq field 'creation-date)
            (bbdb-record-set-field
             record 'creation-date
-            (bbdb-read-string "creation-date: " (bbdb-record-creation-date record))))
+            (bbdb-read-string (concat ident "creation-date: ")
+                              (bbdb-record-creation-date record))))
           ;; The timestamp is set automatically whenever we save a modified record.
           ;; So any editing gets overwritten.
           ((eq field 'timestamp)) ; do nothing
           (t ; xfield
            (bbdb-record-set-xfield
             record field
-            (bbdb-read-xfield field (bbdb-record-xfield record field) flag))))
+            (bbdb-read-xfield field (bbdb-record-xfield record field) flag ident))))
     (cond ((eq field 'timestamp)
            (message "timestamp not editable"))
           ((bbdb-change-record record))
@@ -1335,40 +1364,44 @@ to select the field."
       (bbdb-insert-field record field
                          (bbdb-read-field record field)))))
 
-(defun bbdb-read-xfield (field &optional init sexp)
+(defun bbdb-read-xfield (field &optional init sexp ident)
   "Read xfield FIELD with optional INIT.
-This calls bbdb-read-xfield-FIELD if it exists."
+This calls bbdb-read-xfield-FIELD if it exists.
+Add optional string IDENT to the prompt as identifier when reading FIELD."
   (let ((read-fun (intern-soft (format "bbdb-read-xfield-%s" field))))
     (cond ((fboundp read-fun)
            (funcall read-fun init))
           ((and (not sexp) (string-or-null-p init))
-           (bbdb-read-string (format "%s: " field) init))
-          (t (read-minibuffer (format "%s (sexp): " field)
+           (bbdb-read-string (format "%s%s: " (concat ident) field) init))
+          (t (read-minibuffer (format "%s%s (sexp): " (concat ident) field)
                               (prin1-to-string init))))))
 
-(defun bbdb-read-organization (&optional init)
-  "Read organization."
-  (if (string< "24.3" (substring emacs-version 0 4))
+(defun bbdb-read-organization (&optional init ident)
+  "Read organization.
+Add optional string IDENT to the prompt as identifier when reading organization."
+  (if (string< "24.3" emacs-version)
       (let ((crm-separator
              (concat "[ \t\n]*"
                      (cadr (assq 'organization bbdb-separator-alist))
                      "[ \t\n]*"))
             (crm-local-completion-map bbdb-crm-local-completion-map))
-        (completing-read-multiple "Organizations: " bbdb-organization-list
+        (completing-read-multiple (concat ident "Organizations: ")
+                                  bbdb-organization-list
                                   nil nil init))
-    (bbdb-split 'organization (bbdb-read-string "Organizations: " init))))
+    (bbdb-split 'organization (bbdb-read-string (concat ident "Organizations: ") init))))
 
 ;; The name `bbdb-read-address' might fit better.
-(defun bbdb-record-edit-address (&optional address label ignore-country)
+(defun bbdb-record-edit-address (&optional address label ignore-country ident)
   "Edit and return ADDRESS.
 If LABEL is nil, edit the label sub-field of the address as well.
 If the country field of ADDRESS is nonempty and IGNORE-COUNTRY is nil,
 use the rule from `bbdb-address-format-list' matching this country.
-Otherwise, use the default rule according to `bbdb-address-format-list'."
+Otherwise, use the default rule according to `bbdb-address-format-list'.
+Add optional string IDENT to the prompt as identifier when editing ADDRESS."
   (unless address
     (setq address (bbdb-address--make)))
   (unless label
-    (setq label (bbdb-read-string "Label: "
+    (setq label (bbdb-read-string (concat ident "Label: ")
                                   (bbdb-address-label address)
                                   bbdb-address-label-list)))
   (let ((country (or (bbdb-address-country address) ""))
@@ -1392,27 +1425,32 @@ Otherwise, use the default rule according to `bbdb-address-format-list'."
       (dolist (elt (string-to-list edit))
         (cond ((eq elt ?s)
                (aset new-addr 0 (bbdb-edit-address-street
-                                 (bbdb-address-streets address))))
+                                 (bbdb-address-streets address)
+                                 ident)))
               ((eq elt ?c)
                (aset new-addr 1 (bbdb-read-string
-                                 "City: " (bbdb-address-city address)
+                                 (concat ident "City: ")
+                                 (bbdb-address-city address)
                                  bbdb-city-list)))
               ((eq elt ?S)
                (aset new-addr 2 (bbdb-read-string
-                                 "State: " (bbdb-address-state address)
+                                 (concat ident "State: ")
+                                 (bbdb-address-state address)
                                  bbdb-state-list)))
               ((eq elt ?p)
                (aset new-addr 3
                      (bbdb-error-retry
                       (bbdb-parse-postcode
                        (bbdb-read-string
-                        "Postcode: " (bbdb-address-postcode address)
+                        (concat ident "Postcode: ")
+                        (bbdb-address-postcode address)
                         bbdb-postcode-list)))))
               ((eq elt ?C)
                (aset new-addr 4
                      (bbdb-read-string
-                      "Country: " (or (bbdb-address-country address)
-                                      bbdb-default-country)
+                      (concat ident "Country: ")
+                      (or (bbdb-address-country address)
+                          bbdb-default-country)
                       bbdb-country-list))))))
     (setf (bbdb-address-label address) label)
     (setf (bbdb-address-streets address) (elt new-addr 0))
@@ -1430,12 +1468,14 @@ Otherwise, use the default rule according to `bbdb-address-format-list'."
             (elt new-addr 4)))
     address))
 
-(defun bbdb-edit-address-street (streets)
-  "Edit list STREETS."
+(defun bbdb-edit-address-street (streets &optional ident)
+  "Edit list STREETS.
+Add optional string IDENT to the prompt as identifier when editing STREETS."
   (let ((n 0) street list)
     (while (not (string= "" (setq street
                                   (bbdb-read-string
-                                   (format "Street, line %d: " (1+ n))
+                                   (format "%sStreet, line %d: "
+                                           (concat ident) (1+ n))
                                    (nth n streets) bbdb-street-list))))
       (push street list)
       (setq n (1+ n)))
@@ -1467,21 +1507,22 @@ Country:         country"
                           bbdb-country-list)))
 
 ;; The name `bbdb-read-phone' might fit better.
-(defun bbdb-record-edit-phone (&optional phone label)
+(defun bbdb-record-edit-phone (&optional phone label ident)
   "Edit and return PHONE.
-If LABEL is nil, edit the label sub-field of PHONE as well."
+If LABEL is nil, edit the label sub-field of PHONE as well.
+Add optional string IDENT to the prompt as identifier when editing PHONE."
   ;; Phone numbers are special.  They are vectors with either
   ;; two or four elements.  We do not know whether after editing PHONE
   ;; we still have a number requiring the same format as PHONE.
   ;; So we throw away the argument PHONE and return a new vector.
   (apply #'bbdb-phone--make
          (or label
-             (bbdb-read-string "Label: "
+             (bbdb-read-string (concat ident "Label: ")
                                (and phone (bbdb-phone-label phone))
                                bbdb-phone-label-list))
          (bbdb-error-retry
           (bbdb-parse-phone
-           (read-string "Phone: "
+           (read-string (concat ident "Phone: ")
                         (or (and phone (bbdb-phone-string phone))
                             (and (integerp bbdb-default-area-code)
                                  (format "(%03d) "
@@ -2689,7 +2730,7 @@ one arg RECORD to define the default value for ALIAS of RECORD."
                 (collection (if delete
                                 (or r-a-list (error "Record has no alias"))
                               (bbdb-get-mail-aliases))))
-            (setq a-list (if (string< "24.3" (substring emacs-version 0 4))
+            (setq a-list (if (string< "24.3" emacs-version)
                              (completing-read-multiple prompt collection nil
                                                        delete nil nil alias)
                           (bbdb-split bbdb-mail-alias-field

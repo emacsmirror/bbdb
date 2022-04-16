@@ -5,6 +5,11 @@ See the end of the file for license conditions.
 
 This file is about changes in BBDB version 3.
 
+* BBDB 3.2.2b
+** Bug fix
+
+** New optional arg ident for bbdb-edit-field.
+
 * BBDB 3.2.2a
 ** Bug fixes
 

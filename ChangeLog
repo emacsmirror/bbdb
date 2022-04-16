@@ -1,3 +1,13 @@
+2022-04-15  Roland Winkler  <winkler@gnu.org>
+	Bug fix.  New optional arg ident for bbdb-edit-field.
+	* lisp/bbdb-com.el (bbdb-edit-field, bbdb-read-name)
+	(bbdb-read-xfield, bbdb-read-organization)
+	(bbdb-record-edit-address, bbdb-edit-address-street)
+	(bbdb-record-edit-phone): New optional arg ident.
+	* lisp/bbdb-com.el (bbdb-mua-edit-field): Use it.
+	(bbdb-annotate-message): Bug fix.
+	* lisp/bbdb.el, configure.ac: Increase version number to 3.2.2b.
+
 2022-03-28  Roland Winkler  <winkler@gnu.org>
 	Increase version number to 3.2.2a.
 	* lisp/bbdb.el, configure.ac: Increase version number to 3.2.2a.

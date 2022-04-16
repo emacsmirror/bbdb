@@ -267,7 +267,15 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
          (user-error "Illegal value of arg action: %s" action)))
 
   (let (records-alist records elt)
-    ;; association list: records -> addresses
+    ;; RECORDS-ALIST associates records with mail addresses.
+    ;; Its elements are (RECORD (ADDRESS1 ADDRESS2 ...))
+    ;; Each element ADDRESS is a list (NAME MAIL HEADER HEADER-CLASS MUA)
+    ;; as returned by ‘bbdb-get-address-components’.  RECORD may be nil
+    ;; when no existing record matches an address.  In such a case, there is
+    ;; only one element ADDRESS that BBDB uses to create a new record.
+    ;; We could add optional flags at the end of the elements of RECORDS-ALIST
+    ;; (via `bbdb-record-address-alist-function') to control further processing.
+    ;; Would that be useful?
     (dolist (address (nreverse address-list))
       (let* ((mail (nth 1 address)) ; possibly nil
              (name (unless (equal mail (car address))
@@ -279,7 +287,7 @@ Usually this function is called by the wrapper `bbdb-mua-update-records'."
               (if (setq elt (assq record records-alist))
                   (setcar (cdr elt) (cons address (cadr elt)))
                 (push (list record (list address)) records-alist)))
-          ;; We do not yet have a record for the address
+          ;; We do not yet have a record for the address.
           (when (or name mail) ; ignore empty addresses
             ;; If there is no NAME, try to use MAIL as NAME
             ;; (but only if we do not yet have a record for MAIL).
@@ -585,7 +593,9 @@ Return the records matching ADDRESS."
         ;; via `bbdb-update-records-address'.
         (let ((bbdb-update-records-address address))
           (run-hook-with-args 'bbdb-notice-mail-hook record))
-        (push record records)))
+
+        ;; With multiple ADDRESSes, we loop over the same RECORD multiple times.
+        (bbdb-pushnewq record records)))
 
     ;; Return records
     records))
@@ -854,7 +864,7 @@ use all classes in `bbdb-message-headers'."
      (when records
        (bbdb-display-records records nil nil nil (bbdb-mua-window-p))
        (dolist (record records)
-         (bbdb-edit-field record field))))))
+         (bbdb-edit-field record field nil nil t))))))
 
 ;;;###autoload
 (defun bbdb-mua-edit-field-sender (&optional field action)
