@@ -1,3 +1,8 @@
+2022-07-05  Arash Esbati <arash@gnu.org>
+	Silence the compiler.
+	* lisp/bbdb.el, lisp/bbdb-com.el: Fix unescaped single quotes in
+	docstrings.
+
 2022-04-15  Roland Winkler  <winkler@gnu.org>
 	Bug fix.  New optional arg ident for bbdb-edit-field.
 	* lisp/bbdb-com.el (bbdb-edit-field, bbdb-read-name)

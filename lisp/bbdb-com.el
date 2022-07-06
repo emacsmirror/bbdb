@@ -874,9 +874,9 @@ but does ensure that there will not be name collisions."
 (defun bbdb-read-name (&optional first-and-last dfirst dlast ident)
   "Read name for a record from minibuffer.
 FIRST-AND-LAST controls the reading mode:
-If it is 'first-last read first and last name separately.
-If it is 'last-first read last and first name separately.
-If it is 'fullname read full name at once.
+If it is \\='first-last read first and last name separately.
+If it is \\='last-first read last and first name separately.
+If it is \\='fullname read full name at once.
 If it is t read name parts separately, obeying
 `bbdb-read-name-format' if possible.
 Otherwise use `bbdb-read-name-format'.
@@ -896,7 +896,7 @@ Return cons with first and last name."
                       (let (fn ln)
                         (setq ln (bbdb-read-string l-prompt dlast)
                               fn (bbdb-read-string f-prompt dfirst))
-                       (cons fn ln)))
+                        (cons fn ln)))
                      ((eq first-and-last 'first-last)
                       (cons (bbdb-read-string f-prompt dfirst)
                             (bbdb-read-string l-prompt dlast)))
@@ -1283,7 +1283,7 @@ the identifier from the name or mail address of RECORD."
 (defun bbdb-edit-foo (record field &optional nvalue)
   "For RECORD edit some FIELD (mostly interactively).
 FIELD may take the same values as the elements of the variable `bbdb-edit-foo'.
-If FIELD is 'phone or 'address, NVALUE should be an integer in order to edit
+If FIELD is \\='phone or \\='address, NVALUE should be an integer in order to edit
 the NVALUEth phone or address field; otherwise insert a new phone or address
 field.
 
@@ -1961,7 +1961,7 @@ and `bbdb-mail-name'.  However, if both the first name and last name
 are constituents of the address as in John.Doe@Some.Host,
 and `bbdb-mail-avoid-redundancy' is non-nil, then the address is used as is
 and `bbdb-mail-name-format' and `bbdb-mail-name' are ignored.
-If `bbdb-mail-avoid-redundancy' is 'mail-only the name is never included.
+If `bbdb-mail-avoid-redundancy' is \\='mail-only the name is never included.
 MAIL may be a mail address to be used for RECORD.
 If MAIL is an integer, use the MAILth mail address of RECORD.
 If MAIL is nil use the first mail address of RECORD."
@@ -2005,9 +2005,9 @@ If MAIL is nil use the first mail address of RECORD."
                           (or (string-match (concat "\\`[^!@%]*\\b" fnq
                                                     "\\b[^!%@]+\\b" lnq "\\b")
                                             mail)
-                            (string-match (concat "\\`[^!@%]*\\b" lnq
-                                                  "\\b[^!%@]+\\b" fnq "\\b")
-                                          mail))))
+                              (string-match (concat "\\`[^!@%]*\\b" lnq
+                                                    "\\b[^!%@]+\\b" fnq "\\b")
+                                            mail))))
                        ((or fn ln)
                         (string-match (concat "\\`[^!@%]*\\b"
                                               (regexp-quote (or fn ln)) "\\b")

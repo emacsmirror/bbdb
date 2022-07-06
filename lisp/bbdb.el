@@ -217,7 +217,7 @@ If this file is newer than `bbdb-file', BBDB will offer to revert."
   :type 'hook)
 
 (defcustom bbdb-create-hook nil
-  "*Hook run each time a new BBDB record is created.
+  "Hook run each time a new BBDB record is created.
 Run with one argument, the new record.  This is called before the record is
 added to the database, followed by a call of `bbdb-change-hook'.
 
@@ -228,7 +228,7 @@ and class of the mail address according to `bbdb-message-headers'."
   :type 'hook)
 
 (defcustom bbdb-change-hook nil
-  "*Hook run each time a BBDB record is changed.
+  "Hook run each time a BBDB record is changed.
 Run with one argument, the record.  This is called before the database
 is modified.  If a new bbdb record is created, `bbdb-create-hook' is called
 first, followed by a call of this hook."
@@ -306,7 +306,7 @@ See also `bbdb-mua-pop-up-window-size'."
 
 (defcustom bbdb-dedicated-window nil
   "Make *BBDB* window a dedicated window.
-Allowed values include nil (not dedicated) 'bbdb (weakly dedicated)
+Allowed values include nil (not dedicated) \\='bbdb (weakly dedicated)
 and t (strongly dedicated)."
   :group 'bbdb-record-display
   :type '(choice (const :tag "BBDB window not dedicated" nil)
@@ -338,7 +338,7 @@ OPTION-ALIST specifies the options for the layout.  Valid options are:
     Format                  one-line        multi-line        default if unset
 ------------------------------------------------------------------------------
  (toggle . BOOL)                 +               +              nil
- (order . FIELD-LIST)            +               +              '(phone ...)
+ (order . FIELD-LIST)            +               +              \\='(phone ...)
  (omit . FIELD-LIST)             +               +              nil
  (name-end . INTEGER)            +               -              40
  (indentation . INTEGER)         -               +              21
@@ -602,8 +602,8 @@ See `locate-file'."
 
 (defcustom bbdb-read-name-format 'fullname
   "Default format for reading names via `bbdb-read-name'.
-If it is 'first-last read first and last name separately.
-If it is 'last-first read last and first name separately.
+If it is \\='first-last read first and last name separately.
+If it is \\='last-first read last and first name separately.
 With any other value read full name at once.
 See also `bbdb-name-format'."
   :group 'bbdb-record-display
@@ -661,7 +661,7 @@ or if a prefix argument is given to the command `bbdb-insert-field'."
 
 (defcustom bbdb-phone-style 'nanp
   "Phone numbering plan assumed by BBDB.
-The value 'nanp refers to the North American Numbering Plan.
+The value \\='nanp refers to the North American Numbering Plan.
 The value nil refers to a free-style numbering plan.
 
 You can have both styles of phone number in your database by providing a
@@ -1334,7 +1334,7 @@ See also `bbdb-auto-notes-ignore-messages'."
 (define-obsolete-variable-alias 'bbdb-message-pop-up 'bbdb-mua-pop-up "3.0")
 (defcustom bbdb-mua-pop-up t
   "If non-nil, display an auto-updated BBDB window while using a MUA.
-If 'horiz, stack the window horizontally if there is room.
+If \\='horiz, stack the window horizontally if there is room.
 If this is nil, BBDB is updated silently.
 
 See also `bbdb-mua-pop-up-window-size' and `bbdb-horiz-pop-up-window-size'."
@@ -1505,7 +1505,7 @@ first: Generate one alias \"<alias>\" that expands to the first mail address
        of a record.
 star:  Generate a second alias \"<alias>*\" that expands to all mail addresses
        of a record.
-all:   Generate the aliases \"<alias>\" and \"<alias>*\" (as for 'star)
+all:   Generate the aliases \"<alias>\" and \"<alias>*\" (as for \\='star)
        and aliases \"<alias>n\" for each mail address, where n is the position
        of the mail address of a record."
   :group 'bbdb-sendmail
@@ -2200,7 +2200,7 @@ May be used as value of variable `bbdb-multiple-buffers'."
 (defsubst bbdb-add-job (spec record string)
   "Internal function: Evaluate SPEC for RECORD and STRING.
 If SPEC is a function call it with args RECORD and STRING.  Return value.
-If SPEC is a regexp, return 'query unless SPEC matches STRING.
+If SPEC is a regexp, return \\='query unless SPEC matches STRING.
 Otherwise return SPEC.
 Used with variable `bbdb-add-name' and friends."
   (cond ((functionp spec)
@@ -2213,7 +2213,7 @@ Used with variable `bbdb-add-name' and friends."
 
 (defsubst bbdb-eval-spec (spec prompt)
   "Internal function: Evaluate SPEC using PROMPT.
-Return t if either SPEC equals t, or SPEC equals 'query and `bbdb-silent'
+Return t if either SPEC equals t, or SPEC equals \\='query and `bbdb-silent'
 is non-nil or `y-or-no-p' returns t using PROMPT.
 Used with return values of `bbdb-add-job'."
   (or (eq spec t)
@@ -4373,7 +4373,7 @@ Finds the largest window on the screen, splits it, displaying the
 the *BBDB* buffer is already visible, in which case do nothing.)
 Select this window if SELECT is non-nil.
 
-If `bbdb-mua-pop-up' is 'horiz, and the first window matching
+If `bbdb-mua-pop-up' is \\='horiz, and the first window matching
 the predicate HORIZ-P is wider than the car of `bbdb-horiz-pop-up-window-size'
 then the window will be split horizontally rather than vertically."
   (let ((buffer (get-buffer bbdb-buffer-name)))
