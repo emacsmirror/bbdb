@@ -15,7 +15,7 @@ M-x package-install RET bbdb RET
 BBDB is also available at
 http://savannah.nongnu.org/projects/bbdb/
 To check it out, use
-git clone git://git.savannah.nongnu.org/bbdb.git
+git clone https://git.savannah.nongnu.org/git/bbdb.git
 
 Questions, comments, suggestions, and bug reports may be directed to
 the BBDB mailing list at bbdb-user@nongnu.org.
