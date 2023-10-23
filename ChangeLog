@@ -1,4 +1,9 @@
 2023-10-22  Roland Winkler  <winkler@gnu.org>
+	Silence the compiler.
+	* lisp/bbdb.el (bbdb-message-headers): Spell out :type.
+	(bbdb-display-record-one-line): Use delete-char.
+
+2023-10-22  Roland Winkler  <winkler@gnu.org>
 	Improve snarfing vCards.
 	* lisp/bbdb-snarf.el: Require qp.
 	(bbdb-snarf-vcard-adr-type-re, bbdb-snarf-vcard-tel-type-re): New

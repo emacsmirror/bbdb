@@ -909,7 +909,8 @@ The strings HEADER belong to CLASS.
 The most important HEADERs should appear first.
 If `bbdb-message-all-addresses' is nil, use only the first matching header."
   :group 'bbdb-mua
-  :type 'list)
+  :type '(repeat (cons (symbol :tag "Class")
+                       (repeat (string :tag "Header")))))
 
 (defcustom bbdb-message-all-addresses nil
   "If t `bbdb-update-records' returns all mail addresses of a message.
@@ -4043,7 +4044,7 @@ FIELD-LIST is the list of actually displayed FIELDS."
                     `(xfields ,xfield)))))))
     ;; delete the trailing "; "
     (if (looking-back "; " nil)
-        (backward-delete-char 2))
+        (delete-char -2))
     (insert "\n")))
 
 (defun bbdb-display-record-multi-line (record layout field-list)
