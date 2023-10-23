@@ -1,9 +1,9 @@
 ;;; bbdb.el --- Big Brother DataBase -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2023  Free Software Foundation, Inc.
 
 ;; Maintainer: Roland Winkler <winkler@gnu.org>
-;; Version: 3.2.2b
+;; Version: 3.2.2d
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),

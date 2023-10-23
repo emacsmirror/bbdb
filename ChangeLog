@@ -1,3 +1,6 @@
+2023-10-23  Roland Winkler  <winkler@gnu.org>
+	Increase version number to 3.2.2d.  Update copyright year.
+
 2023-10-22 jao <jao@gnu.org>
 	Support for notmuch mua.
 	* lisp/bbdb-notmuch.el: New file with auxiliary functions.
@@ -2581,7 +2584,7 @@
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2010-2021 Free Software Foundation, Inc.
+  Copyright (C) 2010-2023 Free Software Foundation, Inc.
 
   This file is part of the Insidious Big Brother Database (aka BBDB),
 

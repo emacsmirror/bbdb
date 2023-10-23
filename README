@@ -1,4 +1,4 @@
-Copyright (C) 2010-2022 Free Software Foundation, Inc.
+Copyright (C) 2010-2023 Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 BBDB is the Insidious Big Brother Database for GNU Emacs.
@@ -229,7 +229,7 @@ do not modify the records directly.  The recommended sequence of calls is
 
 ==================================================================
 
-Copyright (C) 2010-2022 Free Software Foundation, Inc.
+Copyright (C) 2010-2023 Free Software Foundation, Inc.
 
 This file is part of the Insidious Big Brother Database (aka BBDB),
 

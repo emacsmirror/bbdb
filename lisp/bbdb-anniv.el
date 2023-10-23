@@ -1,6 +1,6 @@
 ;;; bbdb-anniv.el --- get anniversaries from BBDB -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2011-2023  Free Software Foundation, Inc.
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -77,7 +77,7 @@ as format string."
 This obeys `calendar-date-style' via `diary-date-forms'.
 To enable this feature, put the following into your .emacs:
 
- \(add-hook 'diary-list-entries-hook 'bbdb-anniv-diary-entries)"
+ (add-hook \\='diary-list-entries-hook \\='bbdb-anniv-diary-entries)"
   ;; Loop over NUMBER dates starting from ORGINAL-DATE.
   (let* ((num-date (1- (calendar-absolute-from-gregorian original-date)))
          (end-date (+ num-date number)))

@@ -1,7 +1,7 @@
 # configure.ac --- configuration setup for BBDB
 
 # Copyright (C) 2000-2001 Didier Verna <didier@xemacs.org>
-# Copyright (C) 2011-2017 Roland Winkler <winkler@gnu.org>
+# Copyright (C) 2011-2023 Roland Winkler <winkler@gnu.org>
 # 
 # Author:        Didier Verna <didier@xemacs.org>
 # Maintainer:    Roland Winkler <winkler@gnu.org>
@@ -23,7 +23,7 @@
 
 AC_PREREQ([2.69])
 
-AC_INIT([bbdb],[3.2.2b],[bbdb-user@nongnu.org],[],[http://savannah.nongnu.org/projects/bbdb/]) 
+AC_INIT([bbdb],[3.2.2d],[bbdb-user@nongnu.org],[],[http://savannah.nongnu.org/projects/bbdb/]) 
 AC_CONFIG_SRCDIR([lisp/bbdb.el])
 AC_CONFIG_MACRO_DIR([m4])
 # We need GNU Automake 1.13 for AM_ELCFLAGS.

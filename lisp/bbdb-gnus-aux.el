@@ -1,7 +1,7 @@
 ;;; bbdb-gnus-aux.el --- aux parts of BBDB interface to Gnus -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993 Jamie Zawinski <jwz@netscape.com>.
-;; Copyright (C) 2010-2022 Roland Winkler <winkler@gnu.org>
+;; Copyright (C) 2010-2023 Roland Winkler <winkler@gnu.org>
 
 ;; This file is part of the Insidious Big Brother Database (aka BBDB),
 
@@ -318,12 +318,12 @@ determine the group and spooling priority for a single address."
 ;;
 ;;;###autoload
 (defun bbdb/gnus-nnimap-folder-list-from-bbdb ()
-  "Return a list of \( \"From\" mail-regexp imap-folder-name\) tuples
+  "Return a list of ( \"From\" mail-regexp imap-folder-name) tuples
 based on the contents of the bbdb.
 
-The folder-name is the value of the 'imap attribute of the BBDB record;
+The folder-name is the value of the \\='imap attribute of the BBDB record;
 the mail-regexp consists of all the mail addresses for the BBDB record
-concatenated with OR.  Records without an 'imap attribute are ignored.
+concatenated with OR.  Records without an \\='imap attribute are ignored.
 
 Here  is an example of a relevant BBDB record:
 
@@ -336,13 +336,13 @@ This function uses `regexp-opt' to generate the mail-regexp which automatically
 the `nnimap-split-fancy' method you have to use macros, that is your setting
 will look like:
 
-\(setq nnimap-split-rule  'nnimap-split-fancy
+\(setq nnimap-split-rule  \\='nnimap-split-fancy
        nnimap-split-inbox \"INBOX\"
        nnimap-split-fancy
-       `\(| ,@\(bbdb/gnus-nnimap-folder-list-from-bbdb\)
-            ... \)\)
+       \\=`(| ,@(bbdb/gnus-nnimap-folder-list-from-bbdb)
+            ... ))
 
-Note that `\( is the backquote, NOT the quote '\(."
+Note that \\=`( is the backquote, NOT the quote \\='(."
 
   (let (;; the value of the 'imap attribute of a bbdb record
         folder-attr
