@@ -63,6 +63,11 @@ VM = -eval '(unless (string= "$(VMDIR)" "") (push "$(VMDIR)" load-path))'
 WLDIR =
 WL = -eval '(unless (string= "$(WLDIR)" "") (push "$(WLDIR)" load-path))'
 
+# notmuch is not part of GNU Emacs.  If you want to use BBDB with notmuch
+# then the variable NOTMUCHDIR should point to your notmuch/lisp directory.
+NOTMUCHDIR =
+NOTMUCH = -eval '(unless (string= "$(NOTMUCHDIR)" "") (push "$(NOTMUCHDIR)" load-path))'
+
 .SUFFIXES: .elc .el .tar .Z .gz .uu
 
 SRCS =	bbdb.el bbdb-site.el bbdb-com.el bbdb-tex.el bbdb-anniv.el \
@@ -86,6 +91,7 @@ bbdb:	bbdb-loaddefs.el $(ELC)
 mu4e:	bbdb-mu4e.elc
 vm:	bbdb-vm.elc bbdb-vm-aux.elc
 wl:	bbdb-wl.elc
+notmuch:	bbdb-notmuch.elc
 
 bbdb-loaddefs.el: $(SRCS)
 #	2011-12-11: We switched from bbdb-autoloads.el to bbdb-loaddefs.el.
@@ -144,6 +150,8 @@ bbdb-mu4e.elc: bbdb-mu4e.el bbdb-mua.elc
 	$(emacs) $(MU4E) --funcall batch-byte-compile $(@:.elc=.el)
 bbdb-wl.elc: bbdb-wl.el bbdb-mua.elc
 	$(emacs_compile) $(@:.elc=.el)
+bbdb-notmuch.elc: bbdb-notmuch.el bbdb-mua.elc
+	$(emacs) $(NOTMUCH) --funcall batch-byte-compile $(@:.elc=.el)
 bbdb-vm.elc: bbdb-vm.el bbdb-mua.elc
 	$(emacs) $(VM) --funcall batch-byte-compile $(@:.elc=.el)
 bbdb-vm-aux.elc: bbdb-vm-aux.el bbdb-mua.elc

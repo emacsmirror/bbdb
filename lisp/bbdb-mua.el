@@ -65,6 +65,8 @@
 
   (autoload 'bbdb/wl-header "bbdb-wl")
 
+  (autoload 'bbdb/notmuch-header "bbdb-notmuch")
+
   (autoload 'message-field-value "message")
   (autoload 'mail-decode-encoded-word-string "mail-parse"))
 
@@ -74,6 +76,7 @@
     (rmail rmail-mode rmail-summary-mode)
     (mh mhe-mode mhe-summary-mode mh-folder-mode)
     (mu4e mu4e-view-mode)  ; Tackle `mu4e-headers-mode' later
+    (notmuch notmuch-show-mode notmuch-tree-mode)
     (wl wl-summary-mode wl-draft-mode mime-view-mode)
     (message message-mode mu4e-compose-mode notmuch-message-mode)
     (mail mail-mode))
@@ -88,6 +91,7 @@ Return values include
   vm        Viewmail
   mh        Emacs interface to the MH mail system (aka MH-E)
   mu4e      Mu4e
+  notmuch   Notmuch
   wl        Wanderlust
   message   Mail and News composition mode that goes with Gnus
   mail      Emacs Mail Mode."
@@ -138,6 +142,7 @@ MIME encoded headers are decoded.  Return nil if HEADER does not exist."
                        (rmail-get-header header)))
                     ((eq mua 'mh) (bbdb/mh-header header))
                     ((eq mua 'mu4e) (message-field-value header))
+                    ((eq mua 'notmuch) (bbdb/notmuch-header header))
                     ((eq mua 'wl) (bbdb/wl-header header))
                     ((memq mua '(message mail)) (message-field-value header))
                     (t (error "BBDB/%s: header function undefined" mua)))))
@@ -638,11 +643,16 @@ If SORT is non-nil, sort records according to `bbdb-record-lessp'."
                       gnus-article-buffer))
         (bbdb-update-records (bbdb-get-address-components header-class)
                              action sort))
+       ;; notmuch
+       ((eq mua 'notmuch)
+        (bbdb-update-records (bbdb-get-address-components header-class)
+                             action sort))
+
        ;; Wanderlust
        ((eq mua 'wl)
         (bbdb-update-records (bbdb-get-address-components header-class)
                              action sort))
-      ;; Message and Mail
+       ;; Message and Mail
        ((memq mua '(message mail))
         (bbdb-update-records (bbdb-get-address-components header-class)
                              action sort))))))
@@ -659,10 +669,11 @@ If SORT is non-nil, sort records according to `bbdb-record-lessp'."
             (save-current-buffer
               (gnus-summary-select-article) ; sets buffer `gnus-summary-buffer'
               ,@body))
-           ((memq mua '(mail message rmail mh vm mu4e wl))
+           ((memq mua '(mail message rmail mh vm mu4e notmuch wl))
             (cond ((eq mua 'vm) (vm-follow-summary-cursor))
                   ((eq mua 'mh) (mh-show)))
-            ;; rmail, mail, message, mu4e and wl do not require any wrapper
+            ;; rmail, mail, message, mu4e, notmuch and wl do not require
+            ;; any wrapper
             ,@body))))
 
 (define-obsolete-function-alias 'bbdb-mua-update-interactive-p

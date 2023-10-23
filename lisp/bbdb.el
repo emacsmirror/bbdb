@@ -1707,6 +1707,7 @@ See also `bbdb-silent'.")
 (declare-function bbdb-insinuate-mail "bbdb-message" ())
 (declare-function bbdb-insinuate-message "bbdb-message" ())
 (declare-function bbdb-insinuate-mu4e "bbdb-m4e" ())
+(declare-function bbdb-insinuate-notmuch "bbdb-notmuch" ())
 (declare-function bbdb-insinuate-sc "bbdb-sc" ())
 (declare-function bbdb-pgp "bbdb-pgp" ())
 (declare-function bbdb-insinuate-wl "bbdb-wl" ())
@@ -1732,8 +1733,9 @@ See also `bbdb-silent'.")
      ,(lambda () (add-hook 'message-setup-hook #'bbdb-insinuate-message)))
     (mu4e                       ; the mu4e user agent
      ,(lambda () (add-hook 'mu4e-main-mode-hook #'bbdb-insinuate-mu4e)))
-
-    (sc                         ; supercite
+    (notmuch                    ; the notmuch user agent
+     ,(lambda () (add-hook 'notmuch-hello-mode-hook #'bbdb-insinuate-notmuch)))
+    (sc                                 ; supercite
      ,(lambda () (add-hook 'sc-load-hook #'bbdb-insinuate-sc)))
     (anniv                      ; anniversaries
      ,(lambda () (add-hook 'diary-list-entries-hook #'bbdb-anniv-diary-entries)))
@@ -4816,6 +4818,7 @@ mail/news readers, composers, and miscellaneous packages:
   gnus       Gnus mail/news reader.
   mh-e       MH-E mail reader.
   mu4e       Mu4e mail reader.
+  notmuch    Notmuch mail reader.
   rmail      Rmail mail reader.
   vm         VM mail reader.
   mail       Mail (M-x mail).

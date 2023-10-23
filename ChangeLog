@@ -1,3 +1,13 @@
+2023-10-22 jao <jao@gnu.org>
+	Support for notmuch mua.
+	* lisp/bbdb-notmuch.el: New file with auxiliary functions.
+	* lisp/bbdb.el (bbdb-init-functions): Register notmuch.
+	* lisp/bbdb-mua.el (bbdb-message-header, bbdb-mua-update-records)
+	(bbdb-mua-wrapper): Use the functions in bbdb-notmuch.el.
+	* lisp/Makefile.am, lisp/makefile-temp: Declare bbdb-notmuch.
+	* configure.ac, m4/emacs_notmuch: New EMACS_NOTMUCH macro to
+	declare notmuch's installation directory.
+
 2023-10-22  Roland Winkler  <winkler@gnu.org>
 	Silence the compiler.
 	* lisp/bbdb.el (bbdb-message-headers): Spell out :type.

@@ -60,6 +60,12 @@ dist_lisp_LISP += bbdb-wl.el
 # in the Emacs load path when compiling BBDB with WL support.
 endif
 
+if NOTMUCH
+dist_lisp_LISP += bbdb-notmuch.el
+# We use the Automake variable AM_ELCFLAGS to include the Notmuch lisp directory
+# in the Emacs load path when compiling BBDB with Notmuch support.
+endif
+
 lisp_DATA = bbdb-loaddefs.el
 
 MOSTLYCLEANFILES = bbdb-loaddefs.el
