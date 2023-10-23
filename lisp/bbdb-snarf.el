@@ -47,6 +47,7 @@
 ;;; Code:
 
 (require 'bbdb-com)
+(require 'qp)
 
 (defcustom bbdb-snarf-rule-alist
   '((us bbdb-snarf-surrounding-space
@@ -198,6 +199,20 @@ The first subexpression becomes the URL."
   "Default rule for snarfing vCards."
   :group 'bbdb-utilities-vcard
   :type 'symbol)
+
+(defcustom bbdb-snarf-vcard-adr-type-re
+  (concat "\\`" (regexp-opt '("work" "home")) "\\'")
+  "Regexp matching the default types for vCard property ADR."
+  :group 'bbdb-utilities-vcard
+  :type 'regexp)
+
+(defcustom bbdb-snarf-vcard-tel-type-re
+  (concat "\\`" (regexp-opt '("work" "home" "text" "voice"
+                              "fax" "cell" "video" "pager" "textphone"))
+          "\\'")
+  "Regexp matching the default types for vCard property TEL."
+  :group 'bbdb-utilities-vcard
+  :type 'regexp)
 
 (defcustom bbdb-snarf-ignore-mail-re
   (regexp-opt '("noreply" "no-reply" "donotreply" "do-not-reply" "notify"))
@@ -442,7 +457,9 @@ The return value is a list with elements (VALUE (PAR . VAL) (PAR . VAL) ...)
 for each instance of PROPERTY in the vCard.  String VALUE is the value
 of the instance of  PROPERTY.  With separator SEP non-nil, VALUE is a list
 of split values of the instance of PROPERTY.  PAR is a parameter of the
-instance of PROPERTY with value VAL.  If PROPERTY is not found return nil.
+instance of PROPERTY with value VAL.  PAR may be nil if VAL is a parameter
+value that has no parameter key associated with it.
+If PROPERTY is not found return nil.
 Delete all instances of PROPERTY from the snarfing buffer."
   ;; Possible extensions of this code that are not yet implemented:
   ;; - Property value escaping (RFC 6350, Sec. 3.4)
@@ -475,16 +492,27 @@ Delete all instances of PROPERTY from the snarfing buffer."
             (goto-char (match-end 0))
             (let ((par (match-string 1)))
               ;; We try to split the property parameters into pairs PAR=VAL.
-              ;; If this fails, we include the dangling VAL with PAR being nil.
+              ;; If this fails, we include the dangling VAL with PAR being nil,
+              ;; e.g., "work" instead of "TYPE=work".
               ;; Certain parameter values may be comma-separated lists.
               ;; Fixme: Use custom var `bbdb-vcard-parameter-sep-alist'
               ;; with elements (PAR . SEP).
-              (if (string-match "\\`\\([^=]+\\)=\\([^=]+\\)\\'" par)
-                  (push (cons (match-string 1 par) (match-string 2 par))
-                        par-list)
-                (push (cons nil par) par-list))))
+              (push (if (string-match "\\`\\([^=]+\\)=\\([^=]+\\)\\'" par)
+                        (cons (match-string 1 par) (match-string 2 par))
+                      (cons nil par))
+                    par-list)))
           (let ((value (buffer-substring-no-properties
-                        (1+ (point)) (point-max))))
+                        (1+ (point)) (point-max)))
+                (encoding (cdr (bbdb-snarf-assoc
+                                "encoding" "\\`quoted-printable\\'"
+                                par-list))))
+            (when encoding
+              (if (bbdb-string= encoding "quoted-printable")
+                  ;; RFC6350 requires utf-8.
+                  (setq value (decode-coding-string
+                               (quoted-printable-decode-string value)
+                               'utf-8))
+                (user-error "Vcard encoding %s undefined" encoding)))
             ;; Again, this ignores the possiblity that `;' and `:'
             ;; may appear in property values inside quoted strings.
             (push (cons (if sep (split-string value sep) value)
@@ -501,6 +529,20 @@ Delete all instances of PROPERTY from the snarfing buffer."
                                (n (or (and r (string-to-number (cdr r))) 100)))
                           (if (zerop n) 100 n))))
               (< (num p1) (num p2)))))))
+
+(defun bbdb-snarf-assoc (key regexp alist)
+  "Return the first association in ALIST with key KEY or value matching REGEXP.
+In the latter case, the key of the association must be nil.  Case is ignored."
+  (let ((case-fold-search t)
+        done)
+    (while alist
+      (if (or (bbdb-string= key (caar alist))
+              (and (not (caar alist))
+                   (string-match regexp (cdar alist))))
+          (setq done (car alist)
+                alist nil)
+        (setq alist (cdr alist))))
+    done))
 
 (defun bbdb-snarf-vcard-name (record)
   "Snarf vCard properties N and/or FN => BBDB name and aka."
@@ -580,8 +622,9 @@ Delete all instances of PROPERTY from the snarfing buffer."
             (progn (message "Unstructured vCard address: not implemented")
                    (sit-for 1))
           (setf (bbdb-address-label address)
-                (or (cdr (assoc-string "TYPE" (cdr adr) t))
-                    (cdr (assq 'address bbdb-snarf-default-label-alist))))
+                (cdr (or (bbdb-snarf-assoc "TYPE" bbdb-snarf-vcard-adr-type-re
+                                           (cdr adr))
+                         (assq 'address bbdb-snarf-default-label-alist))))
           ;; (0) PO box  (1) extended address  (2) street  (3) city
           ;; (4) region  (5) postal code  (6) country
           (cl-flet ((str (n) (let ((elt (nth n adr-list)))
@@ -633,8 +676,9 @@ Delete all instances of PROPERTY from the snarfing buffer."
   (let ((phones (nreverse (bbdb-record-phone record))))
     (mapc (lambda (phone)
             (bbdb-pushnew
-             (vconcat (list (or (cdr (assoc-string "TYPE" (cdr phone) t))
-                                (cdr (assq 'phone bbdb-snarf-default-label-alist))))
+             (vconcat (list (cdr (or (bbdb-snarf-assoc
+                                      "TYPE" bbdb-snarf-vcard-tel-type-re (cdr phone))
+                                     (assq 'phone bbdb-snarf-default-label-alist))))
                       (bbdb-parse-phone (car phone)))
              phones))
           (bbdb-snarf-vcard-property "TEL"))
@@ -648,7 +692,7 @@ Delete all instances of PROPERTY from the snarfing buffer."
     (mapc (lambda (org) ; list of values
             (mapc (lambda (o) (bbdb-pushnew o orgs))
                   (car org)))
-          (bbdb-snarf-vcard-property "ORG" ","))
+          (bbdb-snarf-vcard-property "ORG" ";"))
     (setf (bbdb-record-organization record) (nreverse orgs))))
 
 (defun bbdb-snarf-vcard-uid (record)
@@ -695,6 +739,7 @@ Return record.  Also, display the record unless NO-DISPLAY is non-nil."
         (beg-re "^BEGIN:VCARD$")
         (limit-re "^\\(BEGIN\\|END\\):VCARD$")
         (end-re "^END:VCARD$")
+        (case-fold-search t)
         beg end)
     (save-excursion
       (goto-char pos)
@@ -714,7 +759,8 @@ RULE defaults to `bbdb-snarf-vcard'.  See `bbdb-snarf-rule-alist' for details.
 Return the records.  Also, display the records unless NO-DISPLAY is non-nil."
   (interactive (list bbdb-snarf-vcard))
   (save-excursion
-    (let (records)
+    (let ((case-fold-search t)
+          records)
       (goto-char (point-min))
       (while (re-search-forward "^BEGIN:VCARD$" nil t)
         (let ((record (bbdb-snarf-vcard (match-beginning 0) rule t)))

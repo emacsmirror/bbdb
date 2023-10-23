@@ -1,3 +1,12 @@
+2023-10-22  Roland Winkler  <winkler@gnu.org>
+	Improve snarfing vCards.
+	* lisp/bbdb-snarf.el: Require qp.
+	(bbdb-snarf-vcard-adr-type-re, bbdb-snarf-vcard-tel-type-re): New
+	user variables.
+	(bbdb-snarf-vcard-property): Handle encoded vCard properties.
+	(bbdb-snarf-assoc): New function.
+	(bbdb-snarf-vcard-adr, bbdb-snarf-vcard-tel): Use it.
+
 2022-07-05  Arash Esbati <arash@gnu.org>
 	Silence the compiler.
 	* lisp/bbdb.el, lisp/bbdb-com.el: Fix unescaped single quotes in
