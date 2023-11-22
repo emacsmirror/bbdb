@@ -24,8 +24,9 @@
 ;;; Code:
 
 (require 'bbdb)
-(require 'notmuch-show)
-(require 'notmuch-tree)
+(when t     ;Don't require during compilation, since elpa-notmuch might not be installed!
+  (require 'notmuch-show)
+  (require 'notmuch-tree))
 
 (defvar notmuch-show-mode-map)
 (defvar notmuch-tree-mode-map)

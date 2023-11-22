@@ -24,7 +24,8 @@
 ;;; Code:
 
 (require 'bbdb)
-(if t (require 'mu4e-view))
+(when t     ;Don't require during compilation, since mu4e might not be installed!
+  (require 'mu4e-view))
 
 (defvar mu4e-view-mode-map)
 
