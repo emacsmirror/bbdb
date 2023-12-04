@@ -252,7 +252,7 @@ spooled, using the addresses in the headers and information from BBDB."
     (let* ((hdr (or (mail-fetch-field "resent-from")
                     (mail-fetch-field "from")
                     (user-login-name)))
-           (rv (bbdb/gnus-split-to-group hdr t)))
+           (rv (bbdb/gnus-split-to-group (bbdb-extract-address-components hdr) t)))
       (setcdr (nth (cdr rv) prq) (list (car rv))))
     ;; do the rest of the headers
     (let ((hdr (or (concat (or (mail-fetch-field "resent-to" nil t)
@@ -283,7 +283,7 @@ spooled, using the addresses in the headers and information from BBDB."
   "This function is called from `bbdb/gnus-split-method' in order to
 determine the group and spooling priority for a single address."
   (condition-case nil
-      (let* ((tmp (bbdb-extract-address-components address))
+      (let* ((tmp address)
              (mail (cadr tmp))
              (record (car (bbdb-message-search (car tmp) mail)))
              public private rgx)
